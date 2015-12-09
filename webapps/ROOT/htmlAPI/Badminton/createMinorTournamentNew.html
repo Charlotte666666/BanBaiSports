@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+    		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+    		<title>羽球达人</title>
+    		<link href="css/mui.min.css" rel="stylesheet"/>
+    		<link href="css/mui.indexedlist.css" rel="stylesheet" />
+    		<link href="css/mui.picker.min.css" rel="stylesheet" />
+		<link href="css/mui.poppicker.css" rel="stylesheet" />
+    		<link href="css/base.css" rel="stylesheet"/>
+       	
+    		<script src="js/mui.min.js"></script>
+	</head>
+	<style>
+		* {color: #323a45;}
+		.mui-navbar-inner.mui-bar.mui-bar-nav {background-color: #18B4ED;}
+		.mui-navbar-inner.mui-bar.mui-bar-nav a {color:#fff;}
+    		.mui-navbar-inner.mui-bar.mui-bar-nav h1 {color:#fff;}
+    		.mui-navbar-inner.mui-bar.mui-bar-nav span.mui-icon {color: #fff;}
+  
+    		.mui-content ul {background-color: #fff; color: #000;}
+    		.mui-content ul li {border: #7f7f7f;}
+    		.mui-content form .mui-input-row label {width:30%;}
+    		/*.mui-content form .mui-input-row input {width:70%;}*/
+    		.mui-content form label .mui-icon-flag {color:#007AFF;}
+    		.mui-content form label .mui-icon-location {color:#CF2D28;}
+    		.mui-content .mui-icon-minus,.mui-icon-plus {color:#18b4ed;}
+    		.mui-content .mui-content-padded .mui-btn {background-color: #18b4ed; border: none; color:#fff;}
+    		
+    		#myfriends .mui-page-content .mui-input-row.mui-search input {background-color: #fff;}
+	</style>
+	
+	<body>	
+		<!-------------------------------------------主页面开始----------------------------------------------->
+		<header class="mui-navbar-inner mui-bar mui-bar-nav">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left" href="index.html"></a>
+			<h1 class="mui-center mui-title tc">创建比赛</h1>
+		</header>
+		<div class="mui-content">
+			<form class="mui-input-group mb10">
+				<div class="mui-input-row">
+					<label>比赛名称</label>
+					<input id="competitionName" type="text" class="mui-input-clear" placeholder="请输入比赛名称">
+				</div>
+				<div class="mui-input-row">
+					<label>比赛地点</label>
+					<input id="competitionLocation" type="text" class="mui-input-clear" placeholder="请输入比赛地点">
+				</div>
+			</form>
+		
+			<ul class="mui-table-view">
+				<li id="selectTournamentPlayers" class="mui-table-view-cell">
+					<a class="mui-navigate-right" href="#">
+					选择参赛队员
+					</a>
+				</li>
+				<li id="selectTime" class="mui-table-view-cell">
+					<label>选择比赛时间</label>
+					<table class="fr">
+						<tr>
+							<td><span class="mui-icon mui-icon-back tc"></span></td>
+							<td id="scheduleTime" class="tc">今天</td>
+							<td><span class="mui-icon mui-icon-forward tc"></span></td>
+						</tr>
+					</table>
+				</li>
+				<li class="mui-table-view-cell">
+					<label>选择赛制</label>
+					<table class="fr">
+						<tr>
+							<td><span class="mui-icon mui-icon-back tc"></span></td>
+							<td id="competitionType" class="tc">PK对抗赛</td>
+							<td><span class="mui-icon mui-icon-forward tc"></span></td>
+						</tr>
+					</table>
+				</li>
+			</ul>
+		
+			<ul class="mui-table-view mt10">
+				<li class="mui-table-view-cell">
+					<label>局数</label>
+					<table class="fr">
+						<tr>
+							<td><span id="roundMinus" class="mui-icon mui-icon-minus tc"></span></td>
+							<td id="round" class="tc" width="60px">11</td>
+							<td><span id="roundPlus" class="mui-icon mui-icon-plus tc"></span></td>
+						</tr>
+					</table>
+				</li>
+				<li class="mui-table-view-cell">
+					<label>分数</label>
+					<table class="fr">
+						<tr>
+							<td><span  id="normalScoreMinus" class="mui-icon mui-icon-minus tc"></span></td>
+							<td id="normalScore" class="tc" width="60px">21</td>
+							<td><span  id="normalScorePlus" class="mui-icon mui-icon-plus tc"></span></td>
+						</tr>
+					</table>
+				</li>
+				<li class="mui-table-view-cell">
+					<label>最高分</label>
+					<table class="fr">
+						<tr>
+							<td><span id="topScoreMinus" class="mui-icon mui-icon-minus tc"></span></td>
+							<td id="topScore" class="tc" width="60px">31</td>
+							<td><span id="topScorePlus" class="mui-icon mui-icon-plus tc"></span></td>
+						</tr>
+					</table>
+				</li>
+				<li class="mui-table-view-cell">
+					<label>排名条件</label>
+					<table class="fr">
+						<tr>
+							<td><span class="mui-icon mui-icon-back tc"></span></td>
+							<td id="rankCondition" class="tc">净胜局</td>
+							<td><span class="mui-icon mui-icon-forward tc"></span></td>
+						</tr>
+					</table>
+	       		</li>
+	    		</ul>
+	    
+	    		<ul id="otherLeaderButton" class="mui-table-view mt10">
+				<li class="mui-table-view-cell">
+					<span>是否邀请其他成员</span>
+					<div class="mui-switch mui-switch-mini">
+						<div class="mui-switch-handle"></div>
+					</div>
+				</li>
+			</ul>
+			<ul id="selectOtherLeader" class="mui-table-view" >
+				<li class="mui-table-view-cell">
+					<a class="mui-navigate-right" href="#">
+					<table>
+						<tr>
+							<td><img src="img/teamleader.png" width="30px" height="30px" /></td>
+							<td class="tc" width="160px">点击选择对方领队</td>
+						</tr>
+					</table>
+					</a>
+				</li>
+			</ul>
+			<div id='userResult' class="ui-alert"></div>
+			<div id="confirmCreate" class="mui-content-padded pl30 pr30">
+				<button type="button" class="mui-btn mui-btn-block">确定</button>
+			</div>
+		</div>
+		<!-------------------------------------------主页面结束----------------------------------------------->
+		<script src="js/mui.poppicker.js"></script>
+		<script src="js/mui.picker.min.js"></script>
+		<script src="js/jquery-1.10.2.min.js"></script>
+		<script>
+			/*--------------------------------------------初始化开始------------------------------------------------*/
+			$(document).ready(function(){
+				$("#selectOtherLeader").hide();
+			});
+			/*--------------------------------------------初始化结束------------------------------------------------*/
+			/*-------------------------------------------日期选择开始-----------------------------------------------*/
+			/*初始化*/
+			var d = new Date();
+			var vYear = d.getFullYear();
+			var vMon = d.getMonth() + 1;
+			var vDay = d.getDate();
+			var h = d.getHours(); 
+			var m = d.getMinutes(); 
+			s=vYear+'-'+(vMon<10 ? "0" + vMon : vMon)+'-'+(vDay<10 ? "0"+ vDay : vDay)+' '+(h<10 ? "0"+ h : h)+':'+(m<10 ? "0" + m : m);
+			document.getElementById('scheduleTime').innerText = s;//输出时间
+			
+			(function($) {
+				$.init();
+				var result = $('#scheduleTime')[0];
+				mui('#selectTime').on('tap', '#scheduleTime', function() {
+					var optionsJson = this.getAttribute('data-options') || '{}';
+					var options = JSON.parse(optionsJson);
+					var id = this.getAttribute('id');
+					/*
+					 * 首次显示时实例化组件
+					 * 示例为了简洁，将 options 放在了按钮的 dom 上
+					 * 也可以直接通过代码声明 optinos 用于实例化 DtPicker
+					 */
+					var picker = new $.DtPicker(options);
+					picker.show(function(rs) {
+						/*
+						 * rs.value 拼合后的 value
+						 * rs.text 拼合后的 text
+						 * rs.y 年，可以通过 rs.y.vaue 和 rs.y.text 获取值和文本
+						 * rs.m 月，用法同年
+						 * rs.d 日，用法同年
+						 * rs.h 时，用法同年
+						 * rs.i 分（minutes 的第二个字母），用法同年
+						 */
+						result.innerText = rs.text;
+						/* 
+						 * 返回 false 可以阻止选择框的关闭
+						 * return false;
+						 */
+						/*
+						 * 释放组件资源，释放后将将不能再操作组件
+						 * 通常情况下，不需要示放组件，new DtPicker(options) 后，可以一直使用。
+						 * 当前示例，因为内容较多，如不进行资原释放，在某些设备上会较慢。
+						 * 所以每次用完便立即调用 dispose 进行释放，下次用时再创建新实例。
+						 */
+						picker.dispose();
+					});
+				}, false);
+			})(mui);
+			/*-------------------------------------------日期选择结束-----------------------------------------------*/
+			/*-------------------------------------------选择赛制开始-----------------------------------------------*/
+			(function($, doc) {
+				$.init();
+				$.ready(function() {
+					var competitionTypePicker = new $.PopPicker();
+					competitionTypePicker.setData([{
+						value: '0',
+						text: 'PK对抗赛'
+					}, {
+						value: '1',
+						text: '个人排位赛'
+					}, {
+						value: '2',
+						text: '个人单循环'
+					}, {
+						value: '3',
+						text: '交叉双打循环赛'
+					}, {
+						value: '4',
+						text: '双打排名赛'
+					}, {
+						value: '5',
+						text: '双打单循环'
+					}]);
+					var showCompetitionType = doc.getElementById('competitionType');
+					var userResult = doc.getElementById('competitionType');
+					showCompetitionType.addEventListener('tap', function(event) {
+						competitionTypePicker.show(function(items) {
+							var str = JSON.stringify(items[0].text);
+							userResult.innerText = str.slice(1,-1);
+							//返回 false 可以阻止选择框的关闭
+							//return false;
+						});
+					}, false);
+				});
+			})(mui, document);
+			/*-------------------------------------------选择赛制结束-----------------------------------------------*/
+			/*---------------------------------------------增减开始-------------------------------------------------*/
+			var round = 11;
+			var score = 21;
+			var topScore = 31;
+			(function($, doc) {
+				$.init();
+				$.ready(function() {
+					var item3 = document.getElementById('normalScore');
+					mui('.mui-table-view-cell').on('tap', 'span', function(e) {
+						
+						if(this.parentNode.querySelector('#roundMinus')) {
+							if(round > 1){
+								round--;
+								document.getElementById("round").innerText = round;
+							}
+						} else if(this.parentNode.querySelector('#roundPlus')){
+							round++;
+							document.getElementById("round").innerText = round;
+						} else
+						
+						if(this.parentNode.querySelector('#normalScoreMinus')){
+							if(score > 1){
+								score--;
+								document.getElementById("normalScore").innerText = score;
+							}
+						} else if(this.parentNode.querySelector('#normalScorePlus')){
+							score++;
+							document.getElementById('normalScore').innerText = score;
+						} else 
+						
+						if(this.parentNode.querySelector('#topScoreMinus')){
+							if(topScore > score){
+								topScore--;
+								document.getElementById("topScore").innerText = topScore;
+							}
+						} else if(this.parentNode.querySelector('#topScorePlus')){
+							topScore++;
+							document.getElementById('topScore').innerText = topScore;
+						}
+					});
+				});
+			})(mui, document); 
+			/*---------------------------------------------增减结束-------------------------------------------------*/
+			/*-------------------------------------------排名条件开始-----------------------------------------------*/
+			(function($, doc) {
+				$.init();
+				$.ready(function() {
+					var rankConditionPicker = new $.PopPicker();
+					rankConditionPicker.setData([{
+						value: '0',
+						text: '净胜局'
+					}, {
+						value: '1',
+						text: '净胜分'
+					}]);
+					var showRankCondition = doc.getElementById('rankCondition');
+					var userResult = doc.getElementById('rankCondition');
+					showRankCondition.addEventListener('tap', function(event) {
+						rankConditionPicker.show(function(items) {
+							var str = JSON.stringify(items[0].text);
+							userResult.innerText = str.slice(1,-1);
+							//返回 false 可以阻止选择框的关闭
+							//return false;
+						});
+					}, false);
+				});
+			})(mui, document);
+			/*-------------------------------------------排名条件结束-----------------------------------------------*/
+			/*-------------------------------------------其他领队开始-----------------------------------------------*/
+			mui("#otherLeaderButton").on('toggle', '.mui-switch', function(){
+				if(event.detail.isActive){
+					$("#selectOtherLeader").show();
+				} else {
+					$("#selectOtherLeader").hide();
+				}
+			});
+			/*-------------------------------------------其他领队结束-----------------------------------------------*/
+			/*-------------------------------------------确认触发开始-----------------------------------------------*/
+			$(document).ready(function(){
+				$('#confirmCreate button').on('click', function(){
+					var competitionName = $('#competitionName').val().trim();
+					var competitionLocation = $('#competitionLocation').val().trim();
+					if(competitionName != '' && competitionLocation != ''){
+						mui.openWindow({ id:"competitionDetail.html", url:"competitionDetail.html"});
+					}
+					else {
+						mui.alert('您还有未填写的比赛信息!', '温馨提示', function() {});
+						return false;
+					}
+				});
+			});
+			/*-------------------------------------------确认触发结束-----------------------------------------------*/
+			/*-------------------------------------------页面链接切换-----------------------------------------------*/
+			/*mui("#selectTournamentPlayers").on('tap', 'a', function(e){
+				mui.openWindow({ id:"myFriendsList.html", url:"myFriendsList.html"});
+			});*/
+			mui("#selectTournamentPlayers").on('tap', 'a', function(e){
+				mui.openWindow({ id:"selectMultiFriends.html", url:"selectMultiFriends.html"});
+			});
+			/*
+			mui("#selectTournamentPlayers").on('tap', 'a', function(e){
+				mui.openWindow({ id:"selectOnePlayer.html", url:"selectOnePlayer.html"});
+			});*/
+			/*
+			mui("#confirmCreate").on('tap', 'button', function(e){
+				mui.openWindow({ id:"competitionDetail.html", url:"competitionDetail.html"});
+			});*/
+		</script>
+	</body>
+</html>

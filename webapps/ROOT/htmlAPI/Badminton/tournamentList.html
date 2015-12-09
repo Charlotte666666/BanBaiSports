@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+  	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		
+    <script src="js/mui.min.js"></script>
+    <link href="css/mui.min.css" rel="stylesheet"/>
+    <link href="css/base.css" rel="stylesheet"/>
+    <!--
+    <script type="text/javascript" charset="utf-8">
+      	mui.init();
+    </script>-->
+    <style>
+    		* {color: #323a45;}
+    		input.mui-input-clear {background-color: #fff;}
+    	    	.tournament {
+    			padding: 15px 5px;
+    			background-color: #fff;
+    			margin-bottom: 20px;
+    			border-radius: 2%;
+    			box-shadow: 5px 5px 5px #888888;
+    		}
+    		.tournament .competitionLogo img {border-radius: 50%;}
+    		.tournament tr {color: #6e6e6e;}
+    		.tournament tr:first-child {color: #000;}
+    		.tournament td {height: 20px;}
+    		.tournament .tournament-date { 
+    			height: 15px; 
+    			color: #18b4ed; 
+    			line-height: 15px;
+    		}
+    		hr {
+    			border: 0.5px solid #ccc;
+    		}
+    		.tournament tr {height: 20px;}
+    		#topPopover {
+			position: fixed;
+			top: 12px;
+			right: 6px;
+			width: 120px;
+			}
+		#topPopover .mui-popover-arrow {
+			left: auto;
+			right: 6px;
+		}
+    </style>
+</head>
+<body>
+	<div id="topPopover" class="mui-popover">
+		<div class="mui-popover-arrow mui-pull-right"></div>
+		<ul class="mui-table-view mui-pull-right">
+			<li class="mui-table-view-cell"><a id="createMinorTournamentNew" href="#">创建比赛</a>
+			</li>
+			<li class="mui-table-view-cell"><a href="#">内部对抗赛</a>
+			</li>
+			<li class="mui-table-view-cell"><a href="#">待定</a>
+			</li>
+		</ul>
+	</div>	
+	<div class="mui-content">
+		<div class="mui-content-padded" style="margin: 5px;">
+			<div class="mui-input-row mui-search">
+				<input type="search" class="mui-input-clear" placeholder="搜索">
+			</div>
+		</div>
+		
+		<div class="tournament">
+			<div class="tournament-date tc mb10" height="40px">首届清华大学校友羽毛球联谊赛</div>
+			<hr></hr>
+			<div class="pl10 pr10">
+				<table width="100%" class="tl">
+					<tr>
+						<td class="competitionLogo" width="80px" rowspan=3><img src="img/VS_background_01.png" width="60px" height="60px"/></td>
+						<td class="f0d8"><img src="img/clock.png" width="10px" height="10px">&nbsp;&nbsp;2015-2-11 09:00-11:00</td>
+					</tr>
+					<tr>
+						<td class="f0d8"><img src="img/schedule_01.png" width="10px" height="14px"/>&nbsp;&nbsp;赛制：两队PK赛</td>
+					</tr>
+					<tr>
+						<td class="f0d8"><img src="img/location_02.png" width="10px" height="14px" />&nbsp;&nbsp;地点：清华大学体育馆</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		<div class="tournament">
+			<div class="tournament-date tc mb10">首届清华大学校友羽毛球联谊赛</div>
+			<hr></hr>
+			<div class="pl10 pr10">
+				<table width="100%" class="tl">
+					<tr>
+						<td class="competitionLogo" width="80px" rowspan=3><img src="img/VS_background_01.png" width="60px" height="60px"/></td>
+						<td class="f0d8"><img src="img/clock.png" width="10px" height="10px">&nbsp;&nbsp;2015-2-11 09:00-11:00</td>
+					</tr>
+					<tr>
+						<td class="f0d8"><img src="img/schedule_01.png" width="10px" height="14px"/>&nbsp;&nbsp;赛制：两队PK赛</td>
+					</tr>
+					<tr>
+						<td class="f0d8"><img src="img/location_02.png" width="10px" height="14px" />&nbsp;&nbsp;地点：清华大学体育馆</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>
+	<script>
+/*
+		window.addEventListener('triggerCreate',function(event){
+			alert("shoudao");
+			var target = document.getElementById('topPopover');
+			mui.trigger(target,'tap');
+		});
+	
+		mui(".my").on('tap', '#but', function(e){
+			alert("nima");
+			mui("#topPopover").popover("toggle");
+		});
+*/
+		var createItem1 = document.getElementById("createMinorTournamentNew");
+		var parentWebview = null;
+		createItem1.addEventListener('tap', function(e) {
+			e.stopPropagation();
+			if(parentWebview ==null){
+				parentWebview = mui.currentWebview.opener();
+			}
+			parentWebview.evalJS('mui.openWindow({ id:"createMinorTournamentNew.html", url:"createMinorTournamentNew.html"})');
+		});
+	</script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+  	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		
+    <script src="js/mui.min.js"></script>
+    <link href="css/mui.min.css" rel="stylesheet"/>
+    <link href="css/base.css" rel="stylesheet"/>
+    <!--
+    <script type="text/javascript" charset="utf-8">
+      	mui.init();
+    </script>-->
+    <style>
+    		* {color: #323a45;}
+    		header.mui-bar.mui-bar-nav {background-color: #18b4ed;}
+    		header.mui-bar.mui-bar-nav a{color:#fff;}
+    		header.mui-bar.mui-bar-nav span{color:#fff; height:1.6em}
+    		header.mui-bar.mui-bar-nav h1 {color:#fff;}
+    		header {
+    			box-shadow: none;
+    			-webkit-box-shadow:none;
+    		}
+		
+		.mui-content {margin-top: -14px;}
+		.mui-content .setplayer {
+			background-color: #fff; 
+			border-top: 1px solid #ccc; 
+			border-bottom: 1px solid #ccc;
+			margin-top: -2px;
+		}
+		footer #competitionBegin button {
+			background-color: #18B4ED;
+			border: none;
+			color: #fff;
+		}
+		footer {
+			position: absolute;
+			bottom: 0;;
+			width: 100%;
+			background-color: #fff;
+			padding-top: 10px;
+		}
+    </style>
+</head>
+<body>
+	<header class="mui-navbar-inner mui-bar mui-bar-nav">
+		<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left" href="createMinorTournamentNew.html"></a>
+		<h1 class="mui-center mui-title tc">单打循环赛名单</h1>
+	</header>
+	<div class="mui-content">
+		<ul class="mui-table-view mui-table-view-chevron">
+			<li id="selectTournamentPlayers" class="mui-table-view-cell">
+				<a class="mui-navigate-right" href="#">
+					选择参赛队员
+				</a>
+			</li>
+		</ul>
+		
+		<h6 class="ml5 mt10 mb10">群组</h6>
+		<div class="setplayer pt10 pb10 pl10">
+			<table width="100%">
+				<tr>
+					<td><img src="img/group.png" width="40px" height="40px" /></td>
+					<td class="tl" width="200px" >叶昭仪</td>
+					<td></td>
+					<td class="tc pb0" style="border-left: 1px solid #ccc;">
+						<img src="img/seed.png" width="20px" height="20px" />
+						<p style="line-height: 10px;">设为种子</p>
+					</td>
+					<td class="tc pb0" style="border-left: 1px solid #ccc;" width="50px">
+						<img src="img/trash.png" width="20px" height="20px" />
+						<p style="line-height: 10px;">删除</p>
+					</td>
+				</tr>
+			</table>	
+		</div>
+		<div class="setplayer pt10 pb10 pl10">
+			<table width="100%">
+				<tr>
+					<td><img src="img/group.png" width="40px" height="40px" /></td>
+					<td class="tl" width="200px" >王一航</td>
+					<td></td>
+					<td class="tc pb0" style="border-left: 1px solid #ccc;">
+						<img src="img/seed.png" width="20px" height="20px" />
+						<p style="line-height: 10px;">设为种子</p>
+					</td>
+					<td class="tc pb0" style="border-left: 1px solid #ccc;" width="50px">
+						<img src="img/trash.png" width="20px" height="20px" />
+						<p style="line-height: 10px;">删除</p>
+					</td>
+				</tr>
+			</table>	
+		</div>
+	</div>
+	<footer class="mui-bar-footer">
+		<div id="competitionBegin" class="pl30 pr30">
+			<button type="button" class="mui-btn mui-btn-block">开始比赛</button>
+		</div>
+	</footer>
+	<script>
+		mui("#competitionBegin").on('tap', 'button', function(e){
+				mui.openWindow({ id:"bonusResult.html", url:"bonusResult.html"});
+			});
+	</script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1,user-scalable=no">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+		<!--App自定义的css-->
+		<link rel="stylesheet" type="text/css" href="css/app.css"/>
+    		<script src="js/mui.min.js"></script>
+		<link rel="stylesheet" href="css/mui.min.css">
+    		<link href="css/base.css" rel="stylesheet"/>
+		
+	</head>
+	<style>
+		* {color: #323a45;}
+		header.mui-bar.mui-bar-nav {background-color: #18b4ed;}
+    		header.mui-bar.mui-bar-nav a{color:#fff;}
+    		header.mui-bar.mui-bar-nav span{color:#fff; height:1.6em}
+    		header.mui-bar.mui-bar-nav h1 {color:#fff;}
+    		header {
+    			box-shadow: none;
+    			-webkit-box-shadow:none;
+    		}
+		.mui-control-content {
+			background-color: white;
+			min-height: 700px;
+		}
+		.mui-control-content .mui-loading {
+			margin-top: 50px;
+		}
+
+		.mui-content #item2mobile table thead td {
+			border-left: 1px solid #ccc;
+			border-right: 1px solid #ccc;
+			color: #18B4ED;
+		}
+		.mui-content #item2mobile table thead {
+			border-top: 1px solid #18B4ED;
+			border-bottom: 1px solid #18B4ED;
+		}
+		.mui-content #item2mobile table tbody tr {
+			border-bottom: 1px solid #ccc;
+		}
+		.mui-content #item2mobile table tbody td {
+			border-left: 1px solid #ccc;
+			border-right: 1px solid #ccc;
+		}
+		</style>
+	<body>
+		<header class="mui-navbar-inner mui-bar mui-bar-nav">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left" href="#"></a>
+			<h1 class="mui-center mui-title tc">积分结果</h1>
+		</header>
+		<div class="mui-content">
+			<div id="slider" class="mui-slider">
+				<div id="sliderSegmentedControl" class="mui-slider-indicator mui-segmented-control mui-segmented-control-inverted">
+					<a class="mui-control-item" href="#item1mobile">比赛实况</a>
+					<a class="mui-control-item" href="#item2mobile">积分表</a>
+				</div>
+				<div id="sliderProgressBar" class="mui-slider-progress-bar mui-col-xs-6"></div>
+				<div class="mui-slider-group">
+					<div id="item1mobile" class="mui-slider-item mui-control-content mui-active">
+						<div id="scroll1" class="mui-scroll-wrapper">
+							<div class="mui-scroll">
+								<ul class="mui-table-view">
+									<li class="mui-table-view-cell">
+										第一个选项卡子项-1
+									</li>
+									<li class="mui-table-view-cell">
+										第一个选项卡子项-2
+									</li>
+									<li class="mui-table-view-cell">
+										第一个选项卡子项-3
+									</li>
+									<li class="mui-table-view-cell">
+										第一个选项卡子项-4
+									</li>
+									<li class="mui-table-view-cell">
+										第一个选项卡子项-4
+									</li>
+									
+								</ul>
+							</div>
+						</div>
+					</div>
+					<div id="item2mobile" class="mui-slider-item mui-control-content">
+						<div id="scroll2" class="mui-scroll-wrapper pt40">
+							<!--<div class="mui-scroll">
+								<div class="mui-loading">
+									<div class="mui-spinner">
+									</div>
+								</div>
+							</div>-->
+							<table width="100%">
+								<thead>
+									<tr class="tc">
+										<td width="10%">轮次</td>
+										<td width="20%">选手</td>
+										<td width="20%">胜负场</td>
+										<td width="15%">胜率</td>
+										<td width="15%">积分</td>
+										<td width="20%" style="color: red;">净胜分</td>
+									</tr>
+								</thead>
+								<tbody class="tc">
+									<tr>
+										<td>1</td>
+										<td>叶昭仪<br />林丹</td>
+										<td>3/2</td>
+										<td>25%</td>
+										<td>12</td>
+										<td>38</td>
+									</tr>
+									<tr>
+										<td>1</td>
+										<td>叶昭仪<br />林丹</td>
+										<td>3/2</td>
+										<td>25%</td>
+										<td>12</td>
+										<td>38</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script src="js/mui.min.js"></script>
+		<script>
+			mui.init({
+				swipeBack: false
+			});
+			
+			(function($) {
+				$('.mui-scroll-wrapper').scroll({
+					indicators: true //是否显示滚动条
+				});
+				/*
+				var html2 = '<ul class="mui-table-view"><li class="mui-table-view-cell">第二个选项卡子项-1</li><li class="mui-table-view-cell">第二个选项卡子项-2</li><li class="mui-table-view-cell">第二个选项卡子项-3</li><li class="mui-table-view-cell">第二个选项卡子项-4</li><li class="mui-table-view-cell">第二个选项卡子项-5</li></ul>';
+				var item2 = document.getElementById('item2mobile');
+				document.getElementById('slider').addEventListener('slide', function(e) {
+					if (e.detail.slideNumber === 1) {
+						if (item2.querySelector('.mui-loading')) {
+							setTimeout(function() {
+								item2.querySelector('.mui-scroll').innerHTML = html2;
+							}, 500);
+						}
+					}
+				});
+				var sliderSegmentedControl = document.getElementById('sliderSegmentedControl');
+				$('.mui-input-group').on('change', 'input', function() {
+					if (this.checked) {
+						sliderSegmentedControl.className = 'mui-slider-indicator mui-segmented-control mui-segmented-control-inverted mui-segmented-control-' + this.value;
+						//force repaint
+						sliderProgressBar.setAttribute('style', sliderProgressBar.getAttribute('style'));
+					}
+				});*/
+				sliderProgressBar.setAttribute('style', sliderProgressBar.getAttribute('style'));
+			})(mui);
+			
+			mui(".oneplayer").on('tap', 'a', function(e){
+				mui.openWindow({ id:"myFriendsList.html", url:"myFriendsList.html"});
+			});
+		</script>
+
+	</body>
+
+</html>

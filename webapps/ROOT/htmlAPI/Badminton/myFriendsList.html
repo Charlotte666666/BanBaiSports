@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+  	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		
+    <script src="js/mui.min.js"></script>
+    <link href="css/mui.min.css" rel="stylesheet"/>
+    <link href="css/base.css" rel="stylesheet"/>
+    <!--
+    <script type="text/javascript" charset="utf-8">
+      	mui.init();
+    </script>-->
+    <style>
+    		* {color: #323a45;}
+    		header.mui-bar.mui-bar-nav {background-color: #18b4ed;}
+    		header.mui-bar.mui-bar-nav a{color:#fff;}
+    		header.mui-bar.mui-bar-nav span{color:#fff; height:1.6em}
+    		header.mui-bar.mui-bar-nav h1 {color:#fff;}
+		
+    		input.mui-input-clear {background-color: #fff;}
+    		.mui-indexed-list-bar {
+    			width: 12px;
+    			position:absolute;
+    			height: 100%;
+    			z-index:10;
+    			right:5px;
+    			top:50px;
+    		}
+    </style>
+</head>
+<body>
+	<header class="mui-navbar-inner mui-bar mui-bar-nav">
+		<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left" href="createMinorTournamentNew.html"></a>
+		<button class="mui-btn mui-pull-right" style="border:none; color:#18B4ED;">确定</button>
+		<h1 class="mui-center mui-title tc">我的好友</h1>
+	</header>	
+	<div class="mui-content">
+		<div class="mui-content-padded" style="margin: 5px;">
+			<div class="mui-input-row mui-search">
+				<input type="search" class="mui-input-clear" placeholder="搜索">
+			</div>
+		</div>
+		
+		<!--
+		<div class="mui-indexed-list-bar">
+			<a href="#A">A</a>
+			<a href="#B">B</a>
+			<a href="#C">C</a>
+			<a href="#D">D</a>
+			<a href="#E">E</a>
+			<a href="#F">F</a>
+			<a href="#G">G</a>
+			<a href="#H">H</a>
+			<a href="#I">I</a>
+			<a href="#J">J</a>
+			<a href="#K">K</a>
+			<a href="#L">L</a>
+			<a href="#M">M</a>
+			<a href="#N">N</a>
+			<a href="#O">O</a>
+			<a href="#P">P</a>
+			<a href="#Q">Q</a>
+			<a href="#R">R</a>
+			<a href="#S">S</a>
+			<a href="#T">T</a>
+			<a href="#U">U</a>
+			<a href="#V">V</a>
+			<a href="#W">W</a>
+			<a href="#X">X</a>
+			<a href="#Y">Y</a>
+			<a href="#Z">Z</a>
+		</div>-->
+		
+		<h6 class="ml5">群组</h6>
+		<div id="groups">
+			<ul class="mui-table-view mui-table-view-chevron">
+				<li class="mui-table-view-cell">
+					<div class="mui-input-row mui-checkbox">
+					<table>
+						<tr>
+							<td><img src="img/group.png" width="30px" height="30px" /></td>
+							<td class="pl20 tl" width="200px">饿了吗红包群(20)</td>
+							<td class="tr"><input type="checkbox" class="mui-checkbox" /></td>
+						</tr>
+					</table>
+					</div>
+				</li>
+				<li class="mui-table-view-cell">
+					<div class="mui-input-row mui-checkbox">
+					<table>
+						<tr>
+							<td><img src="img/group.png" width="30px" height="30px" /></td>
+							<td class="pl20 tl" width="200px">半百体育(10)</td>
+							<td><input type="checkbox" class="mui-checkbox" /></td>
+						</tr>
+					</table>
+					</div>
+				</li>
+			</ul>
+		</div>
+		<h6 id="A" class="ml5">A</h6>
+		<div id="friends">
+			<ul class="mui-table-view mui-table-view-chevron">
+				<li class="mui-table-view-cell">
+					<div class="mui-input-row mui-checkbox">
+					<table>
+						<tr>
+							<td><img src="img/teamleader.png" width="30px" height="30px" /></td>
+							<td class="pl20 tl" width="200px">阿曼达</td>
+							<td class="tr"><input type="checkbox" class="mui-checkbox" /></td>
+						</tr>
+					</table>
+					</div>
+				</li>
+			</ul>
+		</div>
+		<h6 id="B" class="ml5">B</h6>
+		<div id="friends">
+			<ul class="mui-table-view mui-table-view-chevron">
+				<li class="mui-table-view-cell">
+					<div class="mui-input-row mui-checkbox">
+					<table>
+						<tr>
+							<td><img src="img/teamleader.png" width="30px" height="30px" /></td>
+							<td class="pl20 tl" width="200px">鲍威尔</td>
+							<td class="tr"><input type="checkbox" class="mui-checkbox" /></td>
+						</tr>
+					</table>
+					</div>
+				</li>
+			</ul>
+			<ul class="mui-table-view mui-table-view-chevron">
+				<li class="mui-table-view-cell">
+					<div class="mui-input-row mui-checkbox">
+					<table>
+						<tr>
+							<td><img src="img/teamleader.png" width="30px" height="30px" /></td>
+							<td class="pl20 tl" width="200px">鲍威尔</td>
+							<td class="tr"><input type="checkbox" class="mui-checkbox" /></td>
+						</tr>
+					</table>
+					</div>
+				</li>
+			</ul>
+			<ul class="mui-table-view mui-table-view-chevron">
+				<li class="mui-table-view-cell">
+					<div class="mui-input-row mui-checkbox">
+					<table>
+						<tr>
+							<td><img src="img/teamleader.png" width="30px" height="30px" /></td>
+							<td class="pl20 tl" width="200px">鲍威尔</td>
+							<td class="tr"><input type="checkbox" class="mui-checkbox" /></td>
+						</tr>
+					</table>
+					</div>
+				</li>
+			</ul>
+		</div>
+		<h6 id="C" class="ml5">C</h6>
+		<div id="friends">
+			<ul class="mui-table-view mui-table-view-chevron">
+				<li class="mui-table-view-cell">
+					<div class="mui-input-row mui-checkbox">
+					<table>
+						<tr>
+							<td><img src="img/teamleader.png" width="30px" height="30px" /></td>
+							<td class="pl20 tl" width="200px">鲍威尔</td>
+							<td class="tr"><input type="checkbox" class="mui-checkbox" /></td>
+						</tr>
+					</table>
+					</div>
+				</li>
+			</ul>
+			<ul class="mui-table-view mui-table-view-chevron">
+				<li class="mui-table-view-cell">
+					<div class="mui-input-row mui-checkbox">
+					<table>
+						<tr>
+							<td><img src="img/teamleader.png" width="30px" height="30px" /></td>
+							<td class="pl20 tl" width="200px">鲍威尔</td>
+							<td class="tr"><input type="checkbox" class="mui-checkbox" /></td>
+						</tr>
+					</table>
+					</div>
+				</li>
+			</ul>
+			<ul class="mui-table-view mui-table-view-chevron">
+				<li class="mui-table-view-cell">
+					<div class="mui-input-row mui-checkbox">
+					<table>
+						<tr>
+							<td><img src="img/teamleader.png" width="30px" height="30px" /></td>
+							<td class="pl20 tl" width="200px">鲍威尔</td>
+							<td class="tr"><input type="checkbox" class="mui-checkbox" /></td>
+						</tr>
+					</table>
+					</div>
+				</li>
+			</ul>
+		</div>
+	</div>
+	<script>
+/*
+		var createItem1 = document.getElementById("createMinorTournament");
+		var parentWebview = null;
+		createItem1.addEventListener('tap', function(e) {
+			e.stopPropagation();
+			if(parentWebview ==null){
+				parentWebview = mui.currentWebview.opener();
+			}
+			parentWebview.evalJS('mui.openWindow({ id:"createMinorTournament.html", url:"createMinorTournament.html"})');
+		});
+		*/
+	</script>
+</body>
+</html>

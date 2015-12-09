@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	
+    <script src="js/mui.min.js"></script>
+    <link href="css/mui.min.css" rel="stylesheet"/>
+    <link href="css/base.css" rel="stylesheet"/>
+    <style>
+    		header.mui-bar.mui-bar-nav {background-color: #18b4ed;}
+    		header.mui-bar.mui-bar-nav a{color:#fff;}
+    		header.mui-bar.mui-bar-nav span{color:#fff; height:1.6em}
+    		header.mui-bar.mui-bar-nav h1 {color:#fff;}
+    		input.mui-input-clear {background-color: #fff;}
+    	    	.tournament {
+    			padding: 15px 5px;
+    			background-color: #fff;
+    			border-bottom: 1px solid #c8c8c8;
+    			border-top: 1px solid #c8c8c8;
+    			margin-bottom: 20px;
+    		}
+    		.mui-popover { width:150px }
+    		.mui-content .mui-content-padded { margin: 5px }
+    </style>	
+    <script>
+		mui.init({
+			swipeBack: false,
+			statusBarBackground: '#18b4ed',
+			subpages:[{
+				url: 'tournamentList.html',
+				id: 'tournamentList.html',
+				styles: {
+					top: '45px',
+					bottom: 0,
+					bounce: 'vertical'
+				}
+			}]
+		});
+
+	</script>
+</head>
+<body>
+	<header class="mui-bar mui-bar-nav">
+		<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+		<span id="menu" class="mui-action-menu mui-icon mui-icon-plusempty mui-pull-right"></span>
+		<h1 class="mui-title">小型比赛</h1>
+	</header>
+	<!--tournamentList-->
+	<script>
+	/*
+		mui.plusReady(function() {
+			//仅支持竖屏显示
+			plus.screen.lockOrientation("portrait-primary");
+		});
+		mui("header").on('tap', '#topPopover', function(e){
+			var target = plus.webview.getWebviewById('tournamentList.html');
+			alert("nima");
+			mui.fire(target, 'triggerCreate', {
+				para: 'trigger'
+			});
+		});
+		*/
+		var menuElem = document.getElementById("menu");
+		var contentWebview = null;
+		menuElem.addEventListener('tap', function(e) {
+			//alert("fun");
+			e.stopPropagation();
+			if(contentWebview==null){
+				contentWebview = plus.webview.currentWebview().children()[0];
+			}
+			//contentWebview.evalJS('alert("hao")');
+			contentWebview.evalJS('mui("#topPopover").popover("toggle")');
+		});
+	</script>
+</body>
+</html>

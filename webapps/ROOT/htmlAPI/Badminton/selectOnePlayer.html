@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+  	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		
+    <script src="js/mui.min.js"></script>
+    <link href="css/mui.min.css" rel="stylesheet"/>
+    <link href="css/base.css" rel="stylesheet"/>
+    <!--
+    <script type="text/javascript" charset="utf-8">
+      	mui.init();
+    </script>-->
+    <style>
+    		* {color: #323a45;}
+    		header.mui-bar.mui-bar-nav {background-color: #18b4ed;}
+    		header.mui-bar.mui-bar-nav a{color:#fff;}
+    		header.mui-bar.mui-bar-nav span{color:#fff; height:1.6em}
+    		header.mui-bar.mui-bar-nav h1 {color:#fff;}
+    		header {
+    			box-shadow: none;
+    			-webkit-box-shadow:none;
+    		}
+    </style>
+</head>
+<body>
+	<header class="mui-navbar-inner mui-bar mui-bar-nav">
+		<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left" href="createMinorTournamentNew.html"></a>
+		<h1 class="mui-center mui-title tc">选择上场队员</h1>
+	</header>
+	<div class="mui-content">
+		<div class="p20">
+			<table width="100%">
+				<tr class="pt10 tc" height="120px">
+					<td id="addplayer" width="25%">
+						<a href="#"><img src="img/addplayer.png" width="65px" height="65px"/></a><br />&nbsp;
+					</td>
+					<td width="25%" class="pr">
+						<img src="img/teamleader.png" width="65px" height="65px"/><br />马天宇
+						<img src="img/playerselected.png" width="15px" height="15px" class="pa" style="top:15px; right: 10px;"/>
+					</td>
+					<td width="25%" class="pr">
+						<img src="img/teamleader.png" width="65px" height="65px"/><br />马景涛
+						<img src="img/playerselected.png" width="15px" height="15px" class="pa" style="top:15px; right: 10px;"/>
+					</td>
+					<td width="25%" class="pr">
+						<img src="img/teamleader.png" width="65px" height="65px"/><br />呵呵哒
+						<img src="img/playerselected.png" width="15px" height="15px" class="pa" style="top:15px; right: 10px;"/>
+					</td>
+				</tr>
+				<tr class="pt10 tc" height="80px">
+					<td width="25%"><img src="img/teamleader.png" width="65px" height="65px"/><br />黄勇刘</td>
+					<td width="25%"><img src="img/teamleader.png" width="65px" height="65px"/><br />马天宇</td>
+					<td width="25%"><img src="img/teamleader.png" width="65px" height="65px"/><br />马景涛</td>
+					<td width="25%"><img src="img/teamleader.png" width="65px" height="65px"/><br />呵呵哒</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+	<script>
+		mui("#addplayer").on('tap', 'a', function(e){
+			mui.openWindow({ id:"singlesRound.html", url:"singlesRound.html"});
+		});
+	</script>
+</body>
+</html>
