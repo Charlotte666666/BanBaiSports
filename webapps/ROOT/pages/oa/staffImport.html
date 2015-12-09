@@ -1,0 +1,160 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>staffImport.html</title>
+	
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<link rel="stylesheet" type="text/css" href="../../css/fileuploader.css">
+	<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/fileuploader.js"></script>
+    <script type="text/javascript">
+	      var currentTimeStamp=0; 
+		  var isSaveOK=false;
+		  var optType="";
+	      $(document).ready(function(){
+		    optType=top.getUrlParam(document.URL,"optType");
+			if(optType=="import"){
+			  $("#importBtn").show();
+			  $("#exportBtn").hide();
+			}else{
+			  $("#importBtn").hide();
+			  $("#exportBtn").show();
+			}
+		    var d=new Date();
+            currentTimeStamp = d.getTime();
+			top.sendAjaxRequest("/actions/PersonalManage.action?getHeadDept",[],getHeadDeptCallback);
+		    
+		    var uf=new qq.FileUploader({
+                 element: document.getElementById('file-uploader-fileName'),
+                 action: top.getUrlBase()+"/uploadFile",
+                 debug: false,
+				 disableDefaultDropzone: false,
+                 extraDropzones: [qq.getByClass(document, 'qq-upload-extra-drop-area')[0]],
+				 onUpload: function(id, fileName, xhr){
+				  $("#fileName").html( fileName );
+				  $("#i_fileName").val( fileName );
+				 },
+				 onProgress: function(id, fileName, loaded, total){
+				  setUploadFilePercentById( "fileNameStatus", loaded, total );
+				 },
+				 onComplete:function(id, fileName, responseJSON){
+				  try{
+				   setUploadFileStatusById( "fileNameStatus",responseJSON.success);
+				  }catch(e){}
+				 },
+				 onError: function(id, fileName, reason) {
+				 try{
+				  setUploadFileStatusById( "fileNameStatus",responseJSON.success);
+				 }catch(e){}
+				 }
+                });
+		  })
+		  
+		  function getHeadDeptCallback(obj){
+		    var ht="<select id='dept_id' style='width:120px;'>";
+		    if(obj.status==true){
+			   if(obj.body){
+			    var o=obj.body;
+				ht+="<option value='"+o.deptId+"'>"+o.name+"</option>";
+			   }
+			}
+			ht+="</select>";
+			$("#tddept").html(ht);
+			top.sendAjaxRequest("/actions/PersonalManage.action?getAllFilialeDept",[],getAllFilialeDeptCallback);
+		  }
+		  
+		  function getAllFilialeDeptCallback(obj){
+			   if(obj.status==true){
+			      if(obj.body.length>0){
+				    var o=obj.body;
+				    for(var i=0;i<o.length;i++){
+					  $("#dept_id").append("<option value='"+o[i].deptId+"'>"+o[i].name+"</option>");
+					}
+				  }
+			   }else{
+			     top.showInfoWinError("操作失败！");
+			   }
+		  }
+		  
+		  
+		  function getFileName( fileName ) {
+		    return currentTimeStamp+".xls";
+	      }
+   
+		  function setUploadFilePercentById(id,loaded, total){
+			$("#"+id).html( "已上传" + Math.round(loaded*100/total) + "% 共"+total+"B" );
+		  }
+		   
+		   function setUploadFileStatusById(id,isOK){
+			 $("#"+id).html( isOK?"<font color='green'>上传成功</font>":"<font color='red'>上传失败</font>" );
+			 if ( isOK ) {
+			   var aoData=[];
+			   var url = "/actions/User.action?insertUserImport";
+			   aoData.push( { "name": "temp", "value": currentTimeStamp+".xls" } );
+			   aoData.push( { "name": "user.deptId", "value": $("#dept_id").val() } );
+			   top.showLoadingInfo(true);
+			   top.sendAjaxRequest(url,aoData,optCallback);
+			 }
+		   }
+		   
+		   function optCallback(obj){
+			   top.showLoadingInfo(false);
+			   try{
+				if ( obj.status == true ){
+				 isSaveOK = true;
+				 top.showInfoWinOK("操作成功! 导入"+obj.msg+"条数据.");
+				 top.closeDialog();
+				}else{
+				 isSaveOK = false;
+				 top.showInfoWinError("操作失败 "+obj.msg);
+				}
+			   }catch(e){
+				  top.showInfoWinError("处理异常:"+e.message);
+			   }
+		  }
+		  
+		  function exportUser(){
+		    var aoData=[];
+			aoData.push( { "name":"filiale_id","value": $("#dept_id").val() } );
+			top.showLoadingInfo(true);
+			top.sendAjaxRequest("/actions/User.action?exportUser",aoData,exportUserCallback);
+		  }
+		  
+		  function exportUserCallback(obj){
+		    top.showLoadingInfo(false);
+		    if(obj.status==true){
+			  top.showInfoWinOK("操作成功！");
+			  var downUrl=top.getUrlBase()+"/download?filePath="+obj.msg+"&fileName=人员信息列表.xls";
+			  document.location.href=downUrl;
+			  top.closeDialog();
+			}else{
+			  top.showInfoWinError("操作失败！");
+			}
+		  }
+	</script>
+	
+  </head>
+  
+  <body>
+      <table width="100%" border="1" cellpadding="3" cellspacing="1" style="background-color: #b9d8f3;">
+	    <tr class="tr_data">
+	      <td align="right" width="45%">分公司</td>
+		  <td align="left" width="55%" id="tddept">
+		    
+		  </td>
+	    </tr>
+		<tr class="tr_data" id="importBtn">
+		  <td align="right" width="45%">文件</td>
+		  <td align="left" width="55%"><input type="hidden" value="" id="i_fileName"></input><span id="fileName"></span><span id="fileNameStatus"></span><div id="file-uploader-fileName"></div></td>
+		</tr>
+		<tr class="tr_data" id="exportBtn">
+		  <td align="center" colspan="2"><div class="buttonDivTwo"><a href="javascript:void(0)" onclick="exportUser()">导出</a></div></td>
+		</tr>
+	  </table>
+  </body>
+</html>

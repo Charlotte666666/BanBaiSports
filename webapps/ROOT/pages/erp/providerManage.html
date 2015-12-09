@@ -1,0 +1,213 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery.ui.all.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" src="../../js/checkForm.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var objs=[];
+			var optType="";
+			var dialogLevel="1";
+			$(document).ready(function() {
+			   $("#tdStatus").html( top.getCodeSelectHtml("ERP_PROV_STATUS","q_status",true) );
+			   optType=top.getUrlParam(document.URL,"optType");
+			   if ( optType == 'select' ) {
+			     $("#queryArea").hide();
+			   }
+			   var iaoColumns= [
+                               { "sTitle": "供应商名称", "mDataProp": "provider_name", "sWidth": "15%","sClass": "center",
+                                      "fnRender": function ( oObj ) {
+									       objs[objs.length]=oObj.aData;
+                                           return '<a href=\'javascript:void(0)\' onclick="showDetail(\''+oObj.aData.provider_id+'\',\''+oObj.aData.provider_name+'\')" >'+oObj.aData.provider_name+'</a>';
+                                      },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "联系人", "mDataProp": "linkman", "sWidth": "10%","sClass": "center","bUseRendered": false},
+							   { "sTitle": "固定电话", "mDataProp": "telephone", "sWidth": "10%","sClass": "center" },
+							   { "sTitle": "移动电话", "mDataProp": "mobile_phone", "sWidth": "10%", "bUseRendered": false },
+							   { "sTitle": "地址", "mDataProp": "addr", "sWidth": "15%", "bUseRendered": false},
+							   { "sTitle": "状态", "mDataProp": "status", "sWidth": "10%","sClass": "center",
+                                      "fnRender": function ( oObj ) {
+                                           return top.getCodeName( "ERP_PROV_STATUS", oObj.aData.status );
+                                      },
+                                      "bUseRendered": false
+							   },
+							   { "sTitle": "可供应的商品种类", "mDataProp": "goods_types", "sWidth": "30%", 
+							          "fnRender": function ( oObj ) {
+                                           return top.getLev2TypeNameByIds( oObj.aData.goods_types );
+                                      },
+                                      "bUseRendered": false
+							   }
+							   
+               ];
+			   
+			   if ( optType == 'select' ) {
+			       iaoColumns= [
+                               { "sTitle": "供应商名称", "mDataProp": "provider_name", "sWidth": "40%","sClass": "center",
+                                      "fnRender": function ( oObj ) {
+									       objs[objs.length]=oObj.aData;
+                                           return '<a href=\'javascript:void(0)\' onclick="showDetail(\''+oObj.aData.provider_id+'\',\''+oObj.aData.provider_name+'\')" >'+oObj.aData.provider_name+'</a>';
+                                      },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "地址", "mDataProp": "addr", "sWidth": "40%", "bUseRendered": false},
+							   { "sTitle": "状态", "mDataProp": "status", "sWidth": "20%","sClass": "center",
+                                      "fnRender": function ( oObj ) {
+                                           return top.getCodeName( "ERP_PROV_STATUS", oObj.aData.status );
+                                      },
+                                      "bUseRendered": false
+							   }
+							   
+                   ];
+			   }
+
+			   var surl=top.getUrlBase()+"/actions/ProGoods.action?getProviderList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"aaSorting": [[ 0, "asc" ]],
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+						 aoData.push( { "name": "provider.provider_name", "value": $("#q_name").val() } );
+						 aoData.push( { "name": "provider.addr", "value": $("#q_addr").val() } );
+						 aoData.push( { "name": "provider.goods_types", "value": $("#q_goods_types").val() } );
+						 var temp = $("#q_status").val();
+						 if ( temp == '' ) temp =-1;
+						 aoData.push( { "name": "provider.status", "value": temp } );
+						 aoData.push( { "name": "provider.provider_id", "value": -1 } );
+			        },
+			        "sDom": "frtlip",
+				    "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+			    objs=[];
+				oTable.fnDraw();
+			}
+			
+			function queryBySelectedType(tid,tname){
+			    $("#q_goods_types").val(tid);
+				doQuery();
+			}
+			
+			function showDetail(infoId,infoName){
+			    if ( optType == 'select' ) {
+				   var obj={
+						"provider":infoId,
+						"providerName":infoName
+				   };
+				   top.setTempValue(obj);
+				   if ( dialogLevel == "1" ) {
+					 top.closeSelectDialog();
+				   } else top.closeSelectDialog2();
+				   return ;
+				}
+			
+			    top.setTempValue( getObj(infoId) );
+			    var xurl="pages/erp/providerInfo.html?opt=update&infoId="+infoId;
+	            top.openDialog("供应商明细信息",xurl,true,600,500,saveCallBack);
+			}
+			
+			function addInfo(){
+			    var xurl="pages/erp/providerInfo.html?opt=create";
+				top.openDialog("添加供应商信息",xurl,true,600,500,saveCallBack);
+			}
+			
+			function saveCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				  
+				}
+			}
+			
+			function getObj(infoId){
+			   for ( var i=0;i<objs.length;i++ ) {
+			     if ( objs[i].provider_id == infoId ) return objs[i];
+			   }
+			   return null;
+			}
+			
+			function selectGoodsType(){
+			   var xurl="pages/erp/selectGoodsType.html?type=lev2";
+	           top.openSelectDialog("选择商品类型",xurl,300,450,selectTypeCallback);
+			}
+			
+			function selectTypeCallback(){
+			   try{
+	             var obj = top.getTempValue();
+	             if ( obj.nodeId == -1 ) return ;
+				 var sid="";
+				 var sname="";
+	             if ( obj.nodeId == -2 ) {
+	                 sid = "";
+	                 sname = "";
+	             } else {
+	            	 sid = obj.nodeId;
+                     sname = obj.nodeName;
+	             }
+	             $("#q_goods_types").val( sid );
+	             $("#q_goods_types_name").val( sname );
+	           }catch(e){
+	           }
+		   }
+		</script>
+	</head>
+	<body>
+	    <input type="hidden" id="q_goods_types" value="" />
+		<div width="100%">
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			     <tr id="queryArea">
+			      <td align="right" width="10%">供应商名称:</td><td align="left" width="15%"><input type="text" id="q_name" value="" size="20" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+				  <td align="right" width="10%">地址:</td><td align="left" width="12%"><input type="text" id="q_addr" value="" size="15" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+				  <td align="right" width="12%">可供应的商品种类:</td><td align="left" width="15%"><input type="text" id="q_goods_types_name" value="" readonly onclick="selectGoodsType()" size="20" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+				  <td align="right" width="8%">供应商状态:</td><td align="left" width="8%" id="tdStatus"></td>
+				  <td align="center" width="10%"><span class="buttonTwo"><a href="javascript:doQuery()">查询</a></span></td>
+			     </tr>
+				 <tr bgcolor="#C6DEFF">
+			      <td colspan="9">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				    <td>&nbsp;供应商查询列表</td>
+				    <td><div id="createBtn" class="buttonDivTwo"><a href="javascript:addInfo()">添加</a></div></td>
+				   </tr></table></td>
+			     </tr>
+			</table>
+	        <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

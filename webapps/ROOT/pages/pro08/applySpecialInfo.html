@@ -1,0 +1,423 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<!--link rel="stylesheet" type="text/css" href="../../css/fileuploader.css"-->
+<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css" media="print, projection, screen">
+<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+<script src="../../js/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+<!--script type="text/javascript" src="../../js/fileuploader.js"></script-->
+<script type="text/javascript">
+
+   var optType="";
+   var infoId="";
+   var specialId=0;
+   var prisonInfo={};
+   var specialInfo={};
+   var objs=[];
+   var isSaveOK =false;
+   var checkeResult=0;
+   var prisonName="";
+   $(document).ready(function() {
+       var d=new Date();
+		timeStamp=d.getTime();
+		optType=top.getUrlParam(document.URL,"optType");
+		if(optType=="special_insert"){
+		 $("#suo_check_desc").attr("disabled",true);
+		 	$("#suo_check_time").attr("disabled",true);
+		   $("#suo_check_desc").attr("disabled",true);
+	       $("#suo_check_user").attr("disabled",true);
+		   $("#ting_check_time").attr("disabled",true);
+		   $("#ting_check_desc").attr("disabled",true);
+	       $("#ting_check_user").attr("disabled",true);
+		   $("#remark").attr("disabled",true);
+		   $("#saveBaseBtn2").hide();
+			$("#saveBaseBtn3").hide();
+			$("#checkInfo").hide();
+		}
+		else{
+		   $("#selectBtn").hide();
+		    infoId= decodeURI(top.getUrlParam(document.URL,"infoId"));
+		    specialId= decodeURI(top.getUrlParam(document.URL,"id"));
+		    queryCorrectionUser();
+			if(optType=='update'){
+			  $("#reason").attr("disabled",true);
+		      $("#address").attr("disabled",true);
+		      $("#in_date").attr("disabled",true);
+		      $("#in_time").attr("disabled",true);
+		      $("#out_date").attr("disabled",true);
+		     $("#out_time").attr("disabled",true);
+			 
+			  $("#reason").hide();
+		      $("#address").hide();
+		      $("#in_date").hide();
+		      $("#in_time").hide();
+		      $("#out_date").hide();
+		     $("#out_time").hide();
+		     $("#saveBaseBtn1").hide();
+			}
+			else{
+			 $("#suo_check_desc").attr("disabled",true);
+		 	$("#suo_check_time").attr("disabled",true);
+		   $("#suo_check_desc").attr("disabled",true);
+	       $("#suo_check_user").attr("disabled",true);
+		   $("#ting_check_time").attr("disabled",true);
+		   $("#ting_check_desc").attr("disabled",true);
+	       $("#ting_check_user").attr("disabled",true);
+		   $("#remark").attr("disabled",true);
+		   $("#saveBaseBtn2").hide();
+			$("#saveBaseBtn3").hide();
+			$("#checkInfo").hide();
+			}
+		}
+   } );
+
+   //查询服刑人员的基本信息
+   function queryCorrectionUser(){
+		var aoData=[];
+		aoData.push( { "name": "prison.prison_code", "value":infoId} );
+		top.sendAjaxRequest("/actions/Prison.action?getPrisonInfoById",aoData,prisonInfoCallback);
+   }
+   
+
+ function prisonInfoCallback(obj){
+         try{
+	     if ( obj.status == true ) {
+		   var o=obj.body;
+		   prisonInfo=o.proCorrectionInfo;
+		   prisonName=o.proCorrectionInfo.prison_name ;
+		   $("#prison_code").html( o.proCorrectionInfo.prison_code );
+	       $("#prison_name").html( o.proCorrectionInfo.prison_name );
+	       $("#prison_sex").html( top.getCodeName("SEX",o.proCorrectionInfo.prison_sex ));
+	       $("#x_9").html( top.getCodeName("CRIMINAL_TYPE",o.proCorrectionInfo.x_9) );
+	       $("#dead_line").html( o.proCorrectionInfo.dead_line );
+	       $("#correct_type").html(top.getCodeName( "CORRECT_TYPE",o.proCorrectionInfo.correct_type));
+           $("#start_date").html( top.getTimeStr(o.proCorrectionInfo.start_date,true)) ;
+	       $("#end_date").html( top.getTimeStr(o.proCorrectionInfo.end_date,true) );
+	       $("#x_8").html( o.proCorrectionInfo.x_8 );
+	       $("#x_22").html( o.proCorrectionInfo.x_22 );
+	       $("#x_20").html(top.getTimeStr(o.proCorrectionInfo.x_20,true ));
+	       $("#x_21").html(top.getTimeStr(o.proCorrectionInfo.x_21,true));
+		   $("#l_live_addr").html(o.proCorrectionInfo.live_addr);
+		   $("#dept_id").val( o.proCorrectionInfo.dept_id );
+		   }
+		 else{
+          top.showInfoWinError("操作失败");
+         }
+		 if ( optType == 'update' ) {
+		  var aoData=[];
+		  aoData.push( { "name": "special.id", "value":specialId} );
+		  top.sendAjaxRequest("/actions/ProMonitor.action?getSpecialInfoById",aoData,specialInfoCallback);
+		}
+	   }catch(e){
+	   }
+   }
+    function specialInfoCallback(obj){
+         try{
+	     if ( obj.status == true ) {
+		   var o=obj.body;
+		   specialInfo=o.specialInfo;
+		   checkeResult=o.specialInfo.check_result;
+		   if(checkeResult==0){
+			$("#tr_ting1").hide();
+			$("#tr_ting2").hide();
+			if(!top.g_isPermit('08_daily_manage_fun_01')){
+			$("#tr_suo1").hide();
+			$("#tr_suo2").hide();
+			$("#saveBaseBtn2").hide();
+			$("#saveBaseBtn3").hide();
+			$("#tr_7").hide();
+			}
+		   }
+		   if(checkeResult==1){
+			$("#suo_check_desc").attr("disabled",true);
+			$("#suo_check_desc").hide();
+			$("#tr_ting1").show();
+			$("#tr_ting2").show();
+			if(!top.g_isPermit('08_daily_manage_fun_02')){
+			$("#tr_ting1").hide();
+			$("#tr_ting2").hide();
+			$("#saveBaseBtn2").hide();
+			$("#saveBaseBtn3").hide();
+			$("#remark").hide();
+			 $("#l_remark").html(o.specialInfo.remark);	
+			}
+		   }
+		   if(checkeResult==2){
+			$("#suo_check_desc").attr("disabled",true);
+			$("#ting_check_desc").attr("disabled",true);
+			$("#suo_check_desc").hide();
+			$("#ting_check_desc").hide();
+			$("#saveBaseBtn2").hide();
+			$("#saveBaseBtn3").hide();
+			$("#remark").hide();
+			 $("#l_remark").html(o.specialInfo.remark);	
+		   }
+		   if(checkeResult==3){
+			$("#suo_check_desc").attr("disabled",true);
+			$("#ting_check_desc").attr("disabled",true);
+			$("#suo_check_desc").hide();
+			$("#ting_check_desc").hide();
+			$("#saveBaseBtn2").hide();
+			$("#saveBaseBtn3").hide();
+			$("#remark").hide();
+			 $("#l_remark").html(o.specialInfo.remark);	
+		   }
+		   
+		   $("#check_result").html(top.getCodeName("APPLY_ADDRCHANGE_RESULT",o.specialInfo.check_result));
+		   $("#prison_code").html(o.specialInfo.prison_code);
+		   $("#prison_name").html(o.specialInfo.prison_name);
+		   $("#reason").val(o.specialInfo.reason);
+		   $("#l_reason").html(o.specialInfo.reason);
+		   
+		   $("#address").val(o.specialInfo.addr);
+		   $("#l_address").html(o.specialInfo.addr);
+			
+		   $("#in_date").val(top.getTimeStr(o.specialInfo.in_date,true));
+		   $("#l_in_date").html(top.getTimeStr(o.specialInfo.in_date,true));
+		   
+		   $("#in_time").val(o.specialInfo.in_time);
+		   $("#l_in_time").html(o.specialInfo.in_time);
+		   
+		   $("#out_date").val(top.getTimeStr(o.specialInfo.out_date,true));
+		   $("#l_out_date").html(top.getTimeStr(o.specialInfo.out_date,true));
+		   
+		   $("#out_time").val(o.specialInfo.out_time);
+		   $("#l_out_time").html(o.specialInfo.out_time);
+		   
+			$("#suo_check_time").val(top.getTimeStr(o.specialInfo.suo_check_time,true));
+			$("#l_suo_check_time").html(top.getTimeStr(o.specialInfo.suo_check_time,true));
+			
+		   $("#suo_check_desc").val(o.specialInfo.suo_check_desc);
+		   $("#l_suo_check_desc").html(o.specialInfo.suo_check_desc);
+		   
+	       $("#suo_check_user").val(o.specialInfo.suo_check_user);
+		   $("#l_suo_check_user").html(o.specialInfo.suo_check_user);
+		   
+		   $("#ting_check_time").val(top.getTimeStr(o.specialInfo.ting_check_time,true));
+		   $("#l_ting_check_time").html(top.getTimeStr(o.specialInfo.ting_check_time,true));
+		   
+		   $("#ting_check_desc").val(o.specialInfo.ting_check_desc);
+		    $("#l_ting_check_desc").html(o.specialInfo.ting_check_desc);
+			
+	       $("#ting_check_user").val(o.specialInfo.ting_check_user);
+		   $("#l_ting_check_user").html(o.specialInfo.ting_check_user);
+		   
+		   $("#remark").val(o.specialInfo.remark);	
+		   
+			
+		   $("#apply_time").val(o.specialInfo.apply_time);	
+		   $("#l_apply_time").html(o.specialInfo.apply_time);	
+		   }else{
+          top.showInfoWinError("操作失败");
+         }
+	   }catch(e){
+	   }
+   }
+   
+   //保存进入特定区域的审批结果
+   function saveSpecialInfo(result){
+		
+	 var aoData=[];
+			if(result==1){
+			if(checkeResult==1){
+				checkeResult=2;
+			}else if(checkeResult==2){
+				checkeResult=2;
+			}else{
+				checkeResult=1;
+			}
+		}else if(result==2){
+			checkeResult=3;
+		}else{
+			checkeResult=0;
+		}
+		 aoData.push( { "name":"special.id", "value": specialId} );
+		 aoData.push({"name":"special.check_result", "value": checkeResult} );
+	     aoData.push( { "name": "special.prison_code", "value": infoId} );
+   	     aoData.push( { "name": "special.prison_name", "value": prisonName } );
+	     aoData.push( { "name": "special.addr", "value": $("#address").val()  } );
+		 aoData.push( { "name":"special.reason", "value": $("#reason").val()  } );
+		 aoData.push( { "name":"special.dept_id", "value": $("#dept_id").val()  } );
+	     aoData.push( { "name": "special.in_date", "value":  top.toTimestamp($("#in_date").val()) } );
+		 aoData.push( { "name": "special.in_time", "value": $("#in_time").val() } );
+		 aoData.push( { "name": "special.out_date", "value": top.toTimestamp ($("#out_date").val() )} );
+		 aoData.push( { "name": "special.out_time", "value": $("#out_time").val() } );
+		 aoData.push( { "name": "special.suo_check_desc", "value": $("#suo_check_desc").val() } );
+		 aoData.push( { "name": "special.suo_check_user", "value": $("#suo_check_user").val() } );
+		 aoData.push( { "name": "special.suo_check_time", "value":  top.toTimestamp($("#suo_check_time").val()) } );
+	     aoData.push( { "name": "special.ting_check_desc", "value": $("#ting_check_desc").val() } );
+	     aoData.push( { "name": "special.ting_check_user", "value": $("#ting_check_user").val() } );
+	     aoData.push( { "name": "special.ting_check_time", "value":  top.toTimestamp($("#ting_check_time").val()) } );
+		 aoData.push( { "name": "special.remark", "value": $("#remark").val() } );
+
+	    var xurl="/actions/ProMonitor.action?saveSpecialArea";
+		top.sendAjaxRequest(xurl,aoData,optCallback);
+   }
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功");
+		 parent.closeDialog();
+		 //doCancel();
+	    }else{
+	    	isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   function doCancel(){
+		top.closeDialog();
+   }
+   function openPrintPreview(){
+    var xurl="specialAreaApprovalPrint.html";
+	window.open(xurl,"_blank","width=900,height=800");
+   }
+   
+   function getPrisonValue(){
+	prisonInfo.prison_sex=top.getCodeName("SEX",prisonInfo.prison_sex );
+	prisonInfo.correct_type=top.getCodeName( "CORRECT_TYPE",prisonInfo.correct_type)
+	prisonInfo.start_date=top.getTimeStr(prisonInfo.start_date,true);
+	prisonInfo.end_date=top.getTimeStr(prisonInfo.end_date,true);
+	prisonInfo.x_20=top.getTimeStr(prisonInfo.x_20,true);
+	prisonInfo.x_21=top.getTimeStr(prisonInfo.x_21,true);
+	return prisonInfo;
+   }
+   
+   function getSpecialValue(){
+    specialInfo.in_date=top.getTimeStr (specialInfo.in_date,true);
+	specialInfo.out_date=top.getTimeStr (specialInfo.out_date,true);
+    specialInfo.suo_check_time=top.getTimeStr (specialInfo.suo_check_time,true);
+	specialInfo.ting_check_time=top.getTimeStr (specialInfo.ting_check_time,true);
+	return specialInfo;
+   }
+   
+ function selectPrison(){
+  var xurl="pages/pro08/selectPrison.html";
+  top.openSelectDialog("选择矫正服刑人员",xurl,1060,600,selectPrisonCallback);
+}
+
+function selectPrisonCallback(){
+	var sObj = top.getTempValue();
+	if ( sObj == null ) return ;
+	$("#prison_code").val( sObj.prison_code );
+	infoId = sObj.prison_code;
+	queryCorrectionUser();
+}
+function doBeforeClose(){
+    var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+}
+  </script> 
+</head>
+<body>
+<div>
+<br>
+	<B>申请信息</B>
+  <table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				<tr class="tr_data" height="25px">
+				    <td width="25%">编号</td><td width="25%" align="left" >
+					<table>
+					<tr height="24px">
+					<td><label id="prison_code"></label></td>
+					<td> <div id="selectBtn" class="buttonDivTwo"><a href="javascript:selectPrison()">选择</a></div></td></tr>
+					 </table>
+					</td>
+					<td width="25%">姓名</td><td width="25%" align="left" ><label id="prison_name"></label><input type="hidden" id="apply_time"/><input type="hidden" id="apply_time"/></td>
+				</tr>
+			    <tr class="tr_data" height="25px">
+				    <td>性别</td><td align="left"><label id="prison_sex"></label></td> 
+					<td >罪名</td><td align="left"><label id="x_9"></label><input type="hidden" id="dept_id"/></td>
+				</tr>
+				<tr class="tr_data" height="25px">
+				<td>刑期</td><td align="left" ><label id="dead_line"></label></td>
+				<td>矫正类别</td><td align="left"><label id="correct_type"></label></td>
+				</tr>
+				<tr class="tr_data" height="25px">
+				   <td>矫正期限</td><td align="left" colspan="3"><label id="x_8"></label></td>
+				</tr>
+				<tr class="tr_data" height="25px">
+					<td>矫正日期开始</td><td align="left" ><label id="start_date"></label></td>
+					<td>矫正日期结束</td><td align="left" ><label id="end_date"></label></td>
+				</tr>
+				<tr class="tr_data" height="25px">
+					<td>禁止令内容</td><td align="left" colspan="3"><label id="x_22"></label></td>
+				</tr>
+				<tr class="tr_data" height="25px">
+					<td>禁止期限开始日期</td>
+					<td align="left"><label id="x_20"></label></td>
+					<td>禁止期限结束日期</td>
+					<td align="left"><label id="x_21"></label></td>
+				</tr>
+				<tr class="tr_data" height="25px">
+				    <td>居住地</td><td align="left" colspan="3"><label id="l_live_addr"></label></td>
+				</tr>
+				<tr class="tr_data">
+					<td>申请进入的区域（场所）</td><td align="left" colspan="3"><label id="l_address"></label><input type="text" id="address" value="" size="80"/></td>
+				</tr>
+				<tr class="tr_data">
+					<td>进入区域开始日期</td>
+					<td align="left"><label id="l_in_date"></label><input type="text" id="in_date" value="" onclick="new Calendar().show(this);" size="10" />&nbsp;<label id="l_in_time"></label><input type="text" id="in_time" value="" size="5"/>时</td>
+					<td>进入区域结束日期</td>
+					<td align="left"><label id="l_out_date"></label><input type="text" id="out_date" value="" onclick="new Calendar().show(this);" size="10" />&nbsp;<label id="l_out_time"></label><input type="text" id="out_time" value="" size="5"/>时</td>
+				</tr>
+				<tr class="tr_data">
+				    <td height="60px">申请理由</td><td align="left" colspan="3"><label id="l_reason"></label><textarea id="reason" rows="4" cols="70"></textarea></td>
+				</tr>
+				</table>
+				
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="checkInfo">
+				<tr  class="tr_data">
+				    <td colspan="4" align="left"><B>审批信息</B></td>
+				</tr>
+				<tr  class="tr_data" height="25px">
+				    <td  width="25%" >审批结果</td><td width="25%" align="left" colspan="3"><label id="check_result"></label></td>
+				</tr>
+				<tr  class="tr_data" id="tr_suo1">
+				    <td width="25%" height="60px">司法所意见</td><td width="25%" align="left" colspan="3"><label id="l_suo_check_desc"></label><textarea id="suo_check_desc" rows="4" cols="70"></textarea></td>
+				</tr>
+				<tr  class="tr_data" id="tr_suo2">
+					<td width="25%" >司法所负责人</td>
+					<td  width="25%" align="left"><label id="l_suo_check_user"></label><input type="hidden" id="suo_check_user" value="" disabled /></td>
+					<td width="25%" >审批日期</td>
+					<td align="left" width="25%" ><label id="l_suo_check_time"></label><input type="hidden" id="suo_check_time" value=""  size="15" disabled /></td>
+				</tr>
+				<tr  class="tr_data" id="tr_ting1">
+				    <td height="60px">县级司法行政机关意见</td><td align="left" colspan="3"><label id="l_ting_check_desc"></label><textarea id="ting_check_desc" rows="4" cols="70"></textarea></td>
+				</tr>
+				<tr  class="tr_data" id="tr_ting2">
+					<td>县级司法行政机关负责人</td>
+					<td align="left"><label id="l_ting_check_user"></label><input type="hidden" id="ting_check_user" value="" disabled /></td>
+					<td>审批日期</td>
+					<td align="left"><label id="l_ting_check_time"></label><input type="hidden" id="ting_check_time" value=""  size="15" disabled /></td>
+				</tr>
+				<tr id="tr_7" class="tr_data">
+				    <td height="60px" >备注</td><td align="left" colspan="3"><label id="l_remark"></label><textarea id="remark" rows="4" cols="70"></textarea></td>
+				</tr>
+			</table>
+		<p align="center" id="optBtnArea">
+		   <table><tr>
+					<td><span id="saveBaseBtn1" class="buttonTwo"><a href="javascript:saveSpecialInfo()">确定</a></span></td>
+					<td><span id="saveBaseBtn2" class="buttonTwo"><a href="javascript:saveSpecialInfo(1)">通过</a></span></td>
+					<td><span id="saveBaseBtn3" class="buttonFour"><a href="javascript:saveSpecialInfo(2)">不通过</a></span></td>
+					<td><span id="cancelBaseBtn" class="buttonTwo"><a href="javascript:doCancel()">取消</a></span></td>
+					<td><span class="buttonTwo"><a href="javascript:openPrintPreview()" target="_blank">打印</a></span></td>
+		   </tr></table>
+		</p>
+</div>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.helpyouworkeasy.persistence.ApprovalRecordMapper">
+  <insert id="insertApprovalRecord" parameterType="ApprovalRecord">
+    INSERT INTO tbl_approval_record (approval_stage,approver,approval_opinion,id,apply_id,approval_time,approval_status,approval_type,is_deleted)
+    VALUES (#{approval_stage}, #{approver}, #{approval_opinion}, #{id}, #{apply_id}, #{approval_time},#{approval_status},#{approval_type},#{is_deleted})
+  </insert>
+
+  <update id="updateApprovalRecord" parameterType="ApprovalRecord">
+    update tbl_approval_record set 
+    approval_stage=#{approval_stage},approver=#{approver},approval_opinion=#{approval_opinion},apply_id=#{apply_id},approval_time=#{approval_time},approval_status=#{approval_status},approval_type=#{approval_type}
+    where id=#{id}
+  </update>
+
+  <select id="getApprovalRecordListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_approval_record where is_deleted=0
+    <if test="o.approval_stage != '' and o.approval_stage != null" >
+      and approval_stage=#{o.approval_stage}
+    </if>
+    <if test="o.approver != '' and o.approver != null" >
+      and approver=#{o.approver}
+    </if>
+    <if test="o.approval_opinion != '' and o.approval_opinion != null" >
+      and approval_opinion=#{o.approval_opinion}
+    </if>
+    <if test="o.id != -1" >
+      and id=#{o.id}
+    </if>
+    <if test="o.apply_id != -1" >
+      and apply_id=#{o.apply_id}
+    </if>
+    <if test="o.approval_time != -1" >
+      and approval_time=#{o.approval_time}
+    </if>
+    <if test="o.approval_type != '' and o.approval_type != null">
+      and approval_type=#{o.approval_type}
+    </if>
+    <if test="time1 != -1" >
+      and >=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=
+    </if>
+  </select>
+
+  <select id="getApprovalRecordPageList" parameterType="map" resultType="ApprovalRecord">
+    select 
+    approval_stage,approver,approval_opinion,id,apply_id,approval_time,approval_status,approval_type
+    from tbl_approval_record where is_deleted=0 
+    <if test="o.approval_stage != '' and o.approval_stage != null" >
+      and approval_stage=#{o.approval_stage}
+    </if>
+    <if test="o.approver != '' and o.approver != null" >
+      and approver=#{o.approver}
+    </if>
+    <if test="o.approval_opinion != '' and o.approval_opinion != null" >
+      and approval_opinion=#{o.approval_opinion}
+    </if>
+    <if test="o.id != -1" >
+      and id=#{o.id}
+    </if>
+    <if test="o.apply_id != -1" >
+      and apply_id=#{o.apply_id}
+    </if>
+    <if test="o.approval_time != -1" >
+      and approval_time=#{o.approval_time}
+    </if>
+    <if test="o.approval_type != '' and o.approval_type != null">
+      and approval_type=#{o.approval_type}
+    </if>
+    <if test="time1 != -1" >
+      and >=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+  
+  <select id="getApprovalRecordListByApplyId" parameterType="long" resultType="ApprovalRecord">
+    select *
+    from tbl_approval_record
+    where apply_id=#{value}
+    order by id
+  </select>
+  
+  <update id="deleteApproval" parameterType="long">
+     update tbl_approval_record set is_deleted=1 where apply_id=#{value}
+  </update>
+
+</mapper>

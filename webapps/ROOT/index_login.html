@@ -1,0 +1,152 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>中国家居装饰智能管理系统</title>
+	<link type="text/css" href="pages/pro08/css/common.css" rel="stylesheet" />
+	<link type="text/css" href="pages/pro08/css/main.css" rel="stylesheet" />
+	
+<link href="css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<script type="text/javascript" src="js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" language="javascript" src="js/jquery.cookie.js"></script>
+<script type="text/javascript" src="js/SimpleMap.js"></script>
+<script type="text/javascript" src="js/helpyouworkeasy-core.js"></script>
+<script type="text/javascript" src="js/md5.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.16.custom.min.js"></script>
+<link type="text/css" href="pages/pro09/css/login.css" rel="stylesheet" />
+<meta name="viewport" content="initial-scale=1, user-scalable=no">
+<style>
+body,div,table,p{margin:0;padding:0;}
+</style>
+<script type="text/javascript">
+    
+</script>
+</head>
+<body style="background:url(img/bar.png);background-repeat:repeat-x;">
+ <div>
+	<div style="background-color:#fafbfd;height:112px;">
+	   <table>
+	      <tr>
+		    <td>
+			   <div style="background:url(img/logo_1.png) no-repeat;height:100px;width:160px;padding:10px 10px 0 0;"></div>
+			</td>
+			<td>&nbsp;</td>
+			<td>
+			   <span style="font-size:30px;">中国家居装饰智能管理系统</span>
+			</td>
+		  </tr>
+	   </table>
+	   
+	</div>
+	<div style="background:url(img/line.png) no-repeat;height:8px;">
+	</div>
+	<div id="loginMain" style="width:100%;height:490px;">
+	    <table style="width:100%;">
+		   <tr>
+		      <td width="50%">
+			    <div style="background:url(pages/pro09/image/main_show.png) no-repeat;margin-top:40px;height:430px;">
+				</div>
+			  </td>
+			  <td width="50%">
+			    <div style="margin-left:40px;margin-top:40px;height:430px;background:url(img/login_page.png) no-repeat;">
+					      <table style="margin-left:85px;background-color:transparent;width:400px;align:center;">
+						    <tr><td height="50px"></td></tr>
+  							<tr height="60px">
+							    <td align="center"><input type="text" id="userCode" value="" style="height:40px;width:300px;font-size:22px;" placeholder="账号"/></td>
+							</tr>
+							<tr><td height="10px"></td></tr>
+							<tr height="60px">
+							    <td align="center"><input type="password" id="userPass" value="" style="height:40px;width:300px;font-size:22px;" placeholder="密码"/></td>
+							</tr>
+							<tr><td height="5px"></td></tr>
+							<tr >
+								<td align="center">
+									<input type="checkBox" name="idRemember" value="1" style="width:15px;height:15px" checked><font color="white">记住账号</font></input>
+									<input type="checkBox" name="pwRemember" value="1" style="margin-left:30px;width:15px;height:15px"><font color="white">记住密码</font></input>
+								</td>
+						    </tr>
+							<tr><td height="10px"></td></tr>
+							<tr height="30px">
+							   <td align="center">
+							      <input type="button" id="submit" onclick="doLogin()" style="width:300px;height:35px;font-size:20px;" value="登录"/>
+							   </td>
+							</tr>
+							<tr><td height="20px" id="loginResult" style="padding-top:10px;text-align:center"></td></tr>
+						  </table>
+					</div>
+			  </td>
+		   </tr>
+		</table>
+	</div>
+	<div style="background:url(img/bar1.png);background-repeat:repeat-x;position:relative;height:20px;width:100%;padding:5px 0px 5px 0px;margin-left:auto;margin-right:auto;text-align:center;font-size:12px;color:white;">Copyright &copy; 北京大易尚阳管理咨询有限公司&nbsp;&nbsp;&nbsp;&nbsp;<a target="_blank" href="http://www.helpyouworkeasy.com"  style="color:white;">技术支持</a></div>
+ </div>
+
+	
+<script type="text/javascript" charset="utf-8">
+	$('input').keydown(function(event){
+		if (event.keyCode == 13){
+		  doLogin();
+		};
+	});
+
+	$('.log-on').click(function(){
+		doLogin();
+		return false;
+	});
+	
+jQuery(document).ready(function() {
+    g_systemVersion="v1.0.0";
+    initGlobalData(false);
+	$("#loginMain").css("height", ($(window).height()-150)+"px");
+	$("#userCode").focus();
+	if($.cookie("id")!=null){
+		$("#userCode").val($.cookie('id'));
+		 $("[name = idRemember]:checkbox").attr("checked", true);
+		if($.cookie("pw")!=null){
+		 $("[name = pwRemember]:checkbox").attr("checked", true);
+			$("#userPass").val($.cookie("pw"));
+			//doLogin();
+		}
+	}
+ });
+ 
+function doLogin(){
+   	   var userCode = $("#userCode").val();
+   	   var pass = $("#userPass").val();
+	   doCheck();
+   	   if ( userCode == '' || pass == '' ) {
+   	 	 showInfoWin("请输入登录账号和密码");
+   	 	 return ;
+   	   }
+	   var aoData=[];
+       aoData.push( { "name": "user.userCode", "value": userCode } );
+       aoData.push( { "name": "user.password", "value": hex_md5(pass) } );
+	   sendAjaxRequest("/actions/System.action?signon",aoData,loginCallback);
+ }
+ 
+ function loginCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	       document.location.href="index_main.jsp";
+	    }else{
+		  $('#loginResult').html("<font color='red'>登录失败:"+obj.msg+"</font>");
+	    }
+	   }catch(e){
+		  $('#loginResult').html("<font color='red'>登录异常:"+e.message+"</font>");
+	   }
+ }
+function doCheck(){ 
+	var str=document.getElementsByName("pwRemember"); 
+		if(str[0].checked == true) {
+			$.cookie("id",$("#userCode").val());
+			$.cookie("pw",$("#userPass").val());
+		} else if(document.getElementsByName("idRemember")[0].checked == true){
+			$.cookie("id",$("#userCode").val());
+		}
+}
+</script>
+
+
+<script type="text/javascript" >writeCommonDiv();</script>
+</body>
+</html>

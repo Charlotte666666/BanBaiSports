@@ -1,0 +1,208 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css"
+			href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+
+<script type="text/javascript" charset="utf-8">
+	var queryCtlMark=0;//查询条件显示收缩标志变量
+	
+	$(document).ready(function() {
+		var day=0;
+		var today=new Date();
+		var t2=today.getTime();
+		var t1=t2-7*24*60*60000;
+		$("#time1").val( top.getTimeStr(t1,true));
+		$("#time2").val( top.getTimeStr(t2,true));
+	    ProStatusQuery();
+	 });
+	function ProStatusQuery(weekNum){
+		var msg="";
+	if($("#time1").val()==""){
+	 msg += "开始时间不能为空！<br>";
+	}
+	if($("#time2").val()==""){
+	 msg +="结束时间不能为空！<br>";
+	}
+	if ( msg != '' ) {
+	    top.showInfoWinWarn(msg);
+       return ;
+	}
+    var aoData=[];
+    aoData.push( { "name": "time1", "value": $("#time1").val() } );
+	aoData.push( { "name": "time2", "value": $("#time2").val() } );
+	var xurl="/actions/ProjectOrder.action?getProStatusInfoTJ";
+	top.sendAjaxRequest(xurl,aoData,queryProStatusCallback);
+ }	
+	function queryProStatusCallback(obj){
+	 try{
+		  signList=obj.aaData;
+		  var ht="";
+		  var tMonney=0;
+		  var row=1;
+		  var a=0;
+		  var b=0;
+		  var c=0;
+		  var d=0;
+		  var e=0;
+		  var f=0;
+		  var g=0;
+		  var h=0;
+		  var i_index=0;
+		  var j=0;
+		  var k=0;
+		  //var m=0;
+		  var n=0;
+		  var total=0;
+		  for (var i=0;i<signList.length;i++) {
+			 a+=signList[i].a;
+			 b+=signList[i].b;
+			 c+=signList[i].c;
+			 d+=signList[i].d;
+			 e+=signList[i].e;
+			 f+=signList[i].f;
+			 g+=signList[i].g;
+			 h+=signList[i].h;
+			 i_index+=signList[i].i;
+			 j+=signList[i].j;
+			 k+=signList[i].k;
+			 //m+=signList[i].m;
+			 n+=signList[i].n;
+			 total+=signList[i].total;
+			  ht+='<tr ';
+			  ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+			  ht+='>';
+			  ht+='<td width="9%" height="32px" align="center" style="word-break:break-all;">'+top.getUserNameByCode(signList[i].engineer_manager,true)+'</td>';
+			  ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+signList[i].total+'</td>';
+			  ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+signList[i].a+'</td>';
+			  ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+signList[i].b+'</td>';
+			  ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+signList[i].c+'</td>';
+			  ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+signList[i].d+'</td>';
+			  ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+signList[i].e+'</td>';
+			  ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+signList[i].f+'</td>';
+			  ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+signList[i].g+'</td>';
+			  ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+signList[i].h+'</td>';
+			  ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+signList[i].i+'</td>';
+			  ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+signList[i].j+'</td>';
+			  ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+signList[i].k+'</td>';
+			  ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+signList[i].n+'</td>';
+			 ht+='</tr>';
+			  if ( row == 1 ) {
+				 row=0;
+			  } else {
+				 row=1;
+			  }
+	  }
+	   ht+='<tr ';
+	   ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+	   ht+='><td width="9%" height="32px" align="center" style="word-break:break-all;">合计</td>'
+	   ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+total+'</td>';
+	   ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+a+'</td>';
+	   ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+b+'</td>';
+       ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+c+'</td>';
+	   ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+d+'</td>';
+	   ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+e+'</td>';
+	   ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+f+'</td>';
+	   ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+g+'</td>';
+	   ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+h+'</td>';
+	   ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+i_index+'</td>';
+	   ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+j+'</td>';
+	   ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+k+'</td>';
+       ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+n+'</td>';
+	   ht+='</tr>';	 
+	  $("#tab0List").html( ht );
+	}catch(e){}
+ }
+ //查询条件的展开与收缩
+ function dwOup(){
+	if(queryCtlMark==0){//展开
+		$("#queryCtlIcon").attr("src","../../img/icons/arrow-up.gif"); 
+		$("#queryTab").slideToggle();
+		queryCtlMark=1;
+	}else{//收缩
+		$("#queryCtlIcon").attr("src","../../img/icons/arrow-down.gif"); 
+		$("#queryTab").slideToggle();
+		queryCtlMark=0;
+	}
+ }
+		</script>
+	</head>
+	<body>
+	<div style='border: 1px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="150px">
+							&nbsp;工程报表查询&nbsp;
+						</td>
+						<td align="right">
+							<div class="buttonDivTwo">
+								<a href="javascript:ProStatusQuery()">查询</a>
+							</div>
+						</td>
+						<td align="right">
+							<span><image id="queryCtlIcon" src="../../img/icons/arrow-down.gif" alt="展开" onclick="javascript:dwOup();"/></span>
+						</td>
+						<td width="2px">
+							&nbsp;
+						</td>
+					</tr>
+				</table>
+				<table width="100%" align="center" cellpadding="1px" id="queryTab" style="display:none"
+					cellspacing="1px" border="0">
+					<tr class="tr_data">
+						<td align="right">
+							开始日期
+						</td>
+						<td align="left" id="custId">
+							<input type="text" id="time1"
+							onclick="new Calendar().show(this);" readonly="true"/>
+						</td>
+						<td align="right">
+							结束日期
+						</td>
+						<td align="left">
+							<input type="text" id="time2"
+							onclick="new Calendar().show(this);" readonly="true"/>
+						</td>
+					</tr>
+				</table>
+			</div>
+		<table cellpadding="0" width="99%" cellspacing="2px" border="1">
+				 <tr bgcolor="#CEDAE8">	
+				  <td rowspan="2" width="9%" height="32px" align="center">姓名</td>				 
+				  <td colspan="9" width="63%" height="32px" align="center">正常施工项目</td>
+				  <td rowspan="2" width="7%" height="32px" align="center">延期</td>
+				  <td rowspan="2" width="7%" height="32px" align="center">停工</td>
+				  <td rowspan="2" width="7%" height="32px" align="center">竣工待结算</td>
+				  <td rowspan="2" width="7%" height="32px" align="center">签单未开工</td>
+				 </tr>
+				 <tr bgcolor="#CEDAE8">	
+				 <td height="32px" width="7%">总数</td>
+				 <td width="7%">交底阶段</td>
+				 <td width="7%">水电阶段</td>
+				 <td width="7%">水木阶段</td>
+				 <td width="7%">瓦工阶段</td>
+				 <td width="7%">中期结算</td>
+				 <td width="7%">油漆阶段</td>
+				 <td width="7%">安装阶段</td>
+				 <td width="7%">竣工阶段</td>
+				 </tr>
+				</table>
+				  <div id="dataDiv" style="margin: 1px;padding:0;width:99%;background-color:#ffffff;overflow: auto;">
+				   <table id="tab0List" width="100%" cellpadding="0" cellspacing="2px" border="1" style="border-color:blue"></table>
+				  </div>
+	</body>
+</html>

@@ -1,0 +1,295 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+		    var optType="";
+			var objs=[];
+		    var queryDeptId='';
+			
+			$(document).ready(function() {
+			   optType=top.getUrlParam(document.URL,"optType");			   
+			   $( "#tdcriminal_type" ).html( top.getCodeSelectHtml("CRIMINAL_TYPE","criminal_type",true,null,null,"全部") );
+			   $( "#tdcorrect_type" ).html( top.getCodeSelectHtml("CORRECT_TYPE","correct_type",true,null,null,"全部") );
+			     $( "#tdcorrect_status" ).html( top.getCodeSelectHtml("CORRECT_STATUS","correct_status",true,null,null,"全部") );
+			   //权限判断
+			   var user=top.getCurrentUser();
+			    if ( user ) {
+				  queryDeptId=user.deptId;  
+				  $("#undertake_unit_name").val( top.getDeptPath(user.deptId) );
+				  $("#undertake_unit_name").bind("click",selectDept);	
+				if(!top.g_isPermit("08_info_addUser")){
+				   $("#createBtn").hide();
+				}
+			   }
+			   var iaoColumns= [
+								   { "sTitle": "编号", "mDataProp": "prison_code", "sWidth": "10%","sClass": "left", 
+									  "fnRender": function ( oObj ) {
+											   return '<a href=\'javascript:void(0)\' onclick="updateInfo(\''+oObj.aData.prison_code+'\',\''+oObj.aData.status+'\')" >'+oObj.aData.prison_code+"</a>";
+									  },
+									  "bUseRendered": false},
+								   { "sTitle": "姓名", "mDataProp": "prison_name", "sWidth": "8%", 
+								    "fnRender": function ( oObj ) {
+									if( oObj.aData.b_1 =='0'&&!top.g_isPermit("08_info_queryTeenager")){			
+									       return '***';
+									}
+									else{
+									       return oObj.aData.prison_name;
+									}
+									  },
+									  "bUseRendered": false  }, 
+								   { "sTitle": "身份证号", "mDataProp": "id_card", "sWidth": "15%", "bUseRendered": false  }, 
+								   { "sTitle": "矫正级别", "mDataProp": "correct_type", "sWidth": "8%", 
+									  "fnRender": function ( oObj ) {
+											return top.getCodeName( "CORRECT_TYPE", oObj.aData.correct_type );
+									   },
+										"bUseRendered": false },
+								   { "sTitle": "矫正状态", "mDataProp": "status", "sWidth": "8%", 
+									  "fnRender": function ( oObj ) {
+											return top.getCodeName( "CORRECT_STATUS", oObj.aData.status );
+									   },
+									  "bUseRendered": false },
+								   { "sTitle": "服刑开始日期","mDataProp": "start_date","sWidth": "10%", "sClass": "center",
+									  "fnRender": function ( oObj ) {
+										   return top.getTimeStr( oObj.aData.start_date, true );
+									  },
+									  "bUseRendered": false 
+								   },
+								   { "sTitle": "服刑结束日期","mDataProp": "end_date","sWidth": "10%", "sClass": "center",
+									  "fnRender": function ( oObj ) {
+										   return top.getTimeStr( oObj.aData.end_date, true );
+									  },
+									  "bUseRendered": false 
+								   },
+								    { "sTitle": "操作","mDataProp": "prison_code","sWidth": "31%", "sClass": "center","bSortable":false,
+									  "fnRender": function ( oObj ) {
+									       var ht="";
+										   if ( oObj.aData.status == '0' ) {
+										     //ht='<a href=\'javascript:void(0)\' onclick="changeUserLevel(\''+oObj.aData.prison_code+'\',\''+oObj.aData.correct_type+'\',\''+oObj.aData.prison_name+'\')">调整级别</a>';
+											 ht='<a href=\'javascript:void(0)\' onclick="addHolidayInfo(\''+oObj.aData.prison_code+'\',\''+oObj.aData.prison_name+'\')">外出请假管理</a>';
+											 ht+='&nbsp;&nbsp;<a href=\'javascript:void(0)\' onclick="updateAddress(\''+oObj.aData.prison_code+'\')">居住地变更</a>';
+											 
+											 //ht+='&nbsp;<a href=\'javascript:void(0)\' onclick="addWarnInfo(\''+oObj.aData.prison_code+'\')">警告</a>';
+											 //ht+='&nbsp;<a href=\'javascript:void(0)\' onclick="addChufa(\''+oObj.aData.prison_code+'\')">治安处罚</a>';
+											 //ht+='</p><p><a href=\'javascript:void(0)\' onclick="shoujian(\''+oObj.aData.prison_code+'\')">收监执行</a>';
+											if ( oObj.aData.x_19 == '1' ){
+											 ht+='&nbsp;&nbsp;<a href=\'javascript:void(0)\' onclick="intoSpecialArea(\''+oObj.aData.prison_code+'\')">进入特定区域</a>';										 
+											 }
+											 ht+='&nbsp;&nbsp;&nbsp;<a href=\'javascript:void(0)\' onclick="changeUserDead(\''+oObj.aData.prison_code+'\',\''+oObj.aData.dead_desc+'\',\''+oObj.aData.prison_name+'\')">标记死亡</a>';
+											 ht+='&nbsp;&nbsp;&nbsp;<a href=\'javascript:void(0)\' onclick="changeUserEnd(\''+oObj.aData.prison_code+'\',\''+oObj.aData.end_desc+'\',\''+oObj.aData.prison_name+'\')">期满解除</a></p>';
+											 //ht+='&nbsp;&nbsp;&nbsp;<a href=\'javascript:void(0)\' onclick="addbodyChenckInfo(\''+oObj.aData.prison_code+'\')">身体鉴定委托</a>&nbsp;&nbsp;&nbsp;<a href=\'javascript:void(0)\' onclick="addOutsideExecuteInfo(\''+oObj.aData.prison_code+'\')">暂予监外执行</a>';
+										   }
+									       return ht;
+										},
+									  "bUseRendered": false 
+								   }
+                                ];
+				//if( oObj.aData.status!=0)
+				//("#createBtn a").attr('disabled',true);
+			   var surl=top.getUrlBase()+"/actions/Prison.action?getPrisonInfoList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"aaSorting": [[ 0, "asc" ]],
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				    "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     var temp="";
+						 var msg="";
+					     aoData.push( { "name": "time1", "value": $("#q_time1").val() } );
+						 aoData.push( { "name": "time2", "value": $("#q_time2").val() } );
+						 aoData.push( { "name": "time3", "value": $("#q_time3").val() } );
+						 aoData.push( { "name": "time4", "value": $("#q_time4").val() } );
+						 aoData.push( { "name": "prison.prison_name", "value": $("#prison_name").val() } );
+						 aoData.push( { "name": "prison.criminal_type", "value": $("#criminal_type").val() } );
+						 aoData.push( { "name": "prison.correct_type", "value": $("#correct_type").val() } );
+						 aoData.push( { "name": "prison.status ","value": $("#correct_status").val() } );
+						 aoData.push( { "name": "prison.trace_cell_id", "value": $("#trace_cell_id").val() } );
+						 aoData.push( { "name": "prison.wrist_code", "value": $("#wrist_code").val() } );
+						 aoData.push( { "name": "prison.dept_id", "value":queryDeptId} );
+						 
+			        },
+						"sDom": "frtlip",
+						"sPaginationType": "full_numbers",
+						"aoColumns": iaoColumns
+				} );
+			} );
+			function doQuery(){
+			 if(queryDeptId==""){
+			     top.showInfoWinWarn("请选择所属司法局！！");
+				return;
+				 }
+				oTable.fnDraw();
+			}
+			
+			function getObj(infoId){
+			   for ( var i=0;i<objs.length;i++ ) {
+			     if ( objs[i].id == infoId ) return objs[i];
+			   }
+			   return null;
+			}
+			
+			function addWarnInfo(code){
+			
+			}
+			
+			function addChufa(code){
+			
+			}
+			
+			function shoujian(code){
+			
+			}
+			
+			function selectDept(){
+	           var xurl="pages/organization/selectTreeNode.html?type=dept&rightLimit=1";
+	           top.openSelectDialog("选择部门",xurl,300,450,selectDeptCallback);
+		   }
+		   
+		   function selectDeptCallback(){
+			   try{
+	             var obj = top.getTempValue();
+	             if ( obj.nodeId == -1 ) return ;
+	             if ( obj.nodeId == -2 ) {
+	                 queryDeptId = "";
+					  qDeptName=""
+	             } else {
+	            	 queryDeptId = obj.nodeId;
+                     qDeptName = obj.nodeName;
+	             }
+	            // $("#undertake_unit_id").val( qDeptId );
+	             $("#undertake_unit_name").val(qDeptName );
+	           }catch(e){
+	           }
+		   }
+			
+			function addUser(){
+				var xurl="pages/pro08/CorrectionUserInfo.html?optType=insert";
+				//top.openDialog("添加人员",xurl,true,1100,620,saveCallBack);
+				top.toSysTab('服刑人员详细信息',xurl,'21');
+			}
+			
+			function updateInfo(infoId,status){
+				var xurl="pages/pro08/CorrectionUserInfo.html?optType=update&infoId="+infoId+"&status="+status;
+				//top.openDialog( "服刑人员信息",xurl,true,1100,620,saveCallBack);
+				top.toSysTab('服刑人员详细信息',xurl,'21');
+			}
+			function changeUserLevel(prison_code,currentLevel,prison_name){
+			   var xurl="pages/pro08/changeUserLevel.html?optType=insert&infoId="+prison_code+"&currentType="+currentLevel+"&prison_name="+prison_name;
+			   top.openDialog( "服刑人员级别调整",xurl,true,600,320,saveCallBack);
+			}
+			function changeUserDead(prison_code,dead_desc,prison_name){
+			   var xurl="pages/pro08/changeUserDead.html?optType=insert&infoId="+prison_code+"&dead_desc="+dead_desc+"&prison_name="+prison_name;
+			   top.openDialog( "标记服刑人员死亡",xurl,true,600,320,saveCallBack);
+			}
+			function changeUserEnd(prison_code,end_desc,prison_name){
+			   var xurl="pages/pro08/changeUserEnd.html?optType=insert&infoId="+prison_code+"&end_desc="+end_desc+"&prison_name="+prison_name;
+			   top.openDialog( "服刑人员期满解除调整",xurl,true,600,320,saveCallBack);
+			}
+			function intoSpecialArea(prison_code){
+				var xurl="pages/pro08/applySpecialInfo.html?optType=insert&infoId="+prison_code;
+				top.openDialog( "进入特区申请表",xurl,true,800,620,saveCallBack);
+			}
+			
+			function updateAddress(prison_code){
+				var xurl="pages/pro08/applyAddressInfo.html?optType=insert&infoId="+prison_code;
+				top.openDialog( "居住地变更申请表",xurl,true,800,620,saveCallBack);
+			}
+			
+			function addbodyChenckInfo(prison_code){
+				var xurl="pages/pro08/applyBodyInfo.html?optType=insert&infoId="+prison_code;
+				top.openDialog( "身体鉴定委托书",xurl,true,800,620,saveCallBack);
+			}
+			function addOutsideExecuteInfo(prison_code){
+				var xurl="pages/pro08/applyOutsideInfo.html?optType=insert&infoId="+prison_code;
+				top.openDialog( "继续暂予监外执行建议书",xurl,true,800,620,saveCallBack);
+			}
+			function addHolidayInfo(prison_code,prison_name){
+				var xurl="pages/pro08/applyHoliday.html?optType=insert&infoId="+prison_code+"&prisonName="+prison_name;
+				top.openDialog( "服刑人员请假外出申请书",xurl,true,800,620,saveCallBack);
+			}
+			function saveCallBack(){
+				doQuery();
+			}
+		</script>
+		
+	</head>
+	<body>
+		<div width="100%">
+		    <div style='border: 1px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="180px">&nbsp;社区服刑人员信息查询&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+			      <td align="right" width="10%">姓名:</td><td align="left" width="15%"><input type="text" id="prison_name" value="" style="width:120px" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+				  <td align="right" width="10%">司法局:</td><td align="left" width="25%"><input type="text" id="undertake_unit_name" value="" readonly style="width:280px" /></td>
+				  <td align="right" width="10%">犯罪类型:</td><td align="left" width="15%" id="tdcriminal_type"></td>			  		  
+			     </tr>
+				 <tr class="tr_data">
+				  <td align="right">服刑开始日期:</td><td align="left">
+				   <input type="text" id="q_time1" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" />~<input type="text" id="q_time2" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" />
+				  </td>
+				  <td align="right">服刑结束日期:</td><td align="left">
+				   <input type="text" id="q_time3" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" />~<input type="text" id="q_time4" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" />
+				  </td>
+				  <td align="right" >矫正级别:</td><td align="left" id="tdcorrect_type"></td>	
+				  </tr>
+				  <tr class="tr_data">
+			      <td align="right" >手机IMEI码:</td><td align="left" width="15%"><input type="text" id="trace_cell_id" value="" style="width:120px" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+				  <td align="right" >腕带编号:</td><td align="left"  width="25%"><input type="text" id="wrist_code" value="" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+				  <td align="right" >矫正状态:</td><td align="left"  width="15%" id="tdcorrect_status"></td>
+			     </tr>
+			 </table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				    <td>&nbsp;查询结果列表&nbsp;</td>
+					<td><div id="createBtn" class="buttonDivTwo"><a href="javascript:addUser()">添加</a></div></td>
+			       </tr></table></td>
+			  </tr>
+			</table>
+	        <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

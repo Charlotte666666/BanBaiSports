@@ -1,0 +1,163 @@
+<html>
+<head>
+    <meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>推荐注册斑马医生</title>
+	<link rel="stylesheet" href="../css/themes/default/jquery.mobile-1.4.5.min.css">
+	<script src="../js/jquery-1.10.2.min.js"></script>
+	<script src="../js/jquery.mobile-1.4.5.min.js"></script>
+
+  <script type="text/javascript">
+   var uid=1;
+   var g_UrlBase="";
+   var lt=60;
+   var gTimemer;
+   var cell_phone="";
+   var userAgent=window.navigator.userAgent.toLowerCase();
+   
+   $(document).ready(function() {
+       uid=getUrlParam(document.URL,"uid");
+   } );
+   
+   function sendMsg(){
+     if ( $("#txt1").val() == '' ) {
+	  $("#optResultSpan").html("请填写手机号码");
+	  return ;
+	 }
+     var aoData=[];
+     aoData.push( { "name": "telephone", "value": $("#txt1").val() } );
+	 $("#optResultSpan").html("");
+	 cell_phone=$("#txt1").val();
+	 doSendAjaxRequest("/actions/Member.action?applymessage",aoData,optSendMsgCallback);
+   }
+   
+   function optSendMsgCallback(obj){
+	   try{
+	    if ( obj.code == 1 ){
+		  $("#optResultSpan").html("");
+		  lt = 60;
+	      gTimemer = setTimeout(countDown, 1000);
+	    } else {
+		  $("#optResultSpan").html("提交失败");
+		}
+	   }catch(e){
+		  $("#optResultSpan").html("提交失败");
+	   }
+   }
+
+   function doSubmit(){
+	 if ( $("#txt1").val() == '' ) {
+	   $("#optResultSpan").html("请填写手机号码");
+	   return ;
+	 }
+	 if ( $("#txt2").val() == '' ) {
+	   $("#optResultSpan").html("请填写验证码");
+	   return ;
+	 }
+     var aoData=[];
+     aoData.push( { "name": "recommendRecd.recommend_id", "value": uid } );
+     aoData.push( { "name": "recommendRecd.cell_phone", "value": cell_phone } );
+	 aoData.push( { "name": "authcode", "value": $("#txt2").val() } );
+	 $("#optResultSpan").html("");
+	 doSendAjaxRequest("/actions/Doctor.action?insertRecommendRecd",aoData,optCallback);
+   }
+   
+   function countDown(){
+      lt = lt -1 ;
+	  if ( lt == 0 ) {
+	     try{
+              clearTimeout( gTimemer );
+         }catch(e){}
+	     $("#authTd").html( '<a href="javascript:sendMsg()" >获取验证码</a>' );
+	  } else {
+	     gTimemer = setTimeout(countDown, 1000);
+         $("#authTd").html( lt );
+	  }
+   }
+
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+		  $("#optResultSpan").html("提交成功");
+		  $("#submitBtn").hide();
+		  window.location.href='downApp.html';
+	    } else {
+		  $("#optResultSpan").html(obj.msg);
+		}
+	   }catch(e){
+		  $("#optResultSpan").html("提交失败");
+	   }
+   }
+   
+  function doSendAjaxRequest(xurl,param,fnCallback){
+	    if ( xurl.indexOf('http://') == -1 ) xurl = g_UrlBase+xurl;
+		$.ajax( {
+			"url":  xurl,
+			"data": param,
+			"timeout" : 10000,
+			"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+			"success": function (json) {
+				try{ fnCallback( json );}catch(e){}
+			},
+			"dataType": "json",
+			"cache": false,
+			"type": "POST",
+			"error": function (xhr, error, thrown) {
+			}
+		} );
+ }
+ 
+ function getUrlParam(xurl,name){
+	    var para="";
+	    if(xurl.lastIndexOf("?")>0){
+	        para=xurl.substring(xurl.lastIndexOf("?")+1,xurl.length);
+			var arr=para.split("&");
+			para="";
+			for(var i=0;i<arr.length;i++){
+			   if(arr[i].split("=")[0]==name) return arr[i].split("=")[1];
+			}
+			return "";
+	   }else{
+	        return "";
+	   }
+	}
+  </script>
+  
+  <style type="text/css">
+    .ptd{
+	  padding:2px;
+	  font-size:20px;
+	  font-color:#3e454d;
+	  text-align:left;
+	}
+	input{
+		BACKGROUND-COLOR: transparent;
+		BORDER-BOTTOM: #ffffff 1px solid;
+		BORDER-LEFT: #ffffff 1px solid;
+		BORDER-RIGHT: #ffffff 1px solid;
+		BORDER-TOP: #ffffff 1px solid;
+		COLOR: #ffffff;
+		border-color: #ffffff #ffffff #ffffff #ffffff; font-size: 10pt
+    }
+  </style>
+</head>
+<body>
+<br/><br/>
+ <center>
+ <table width="90%" border="0" cellpadding="0" cellspacing="0" style="background-color:white">
+  <tr>
+    <td class="ptd" width="100%" colspan="2"><input type="text" id="txt1" value="" placeholder="手机号码"  /></td>
+  </tr>
+  <tr>
+    <td width="60%"><input type="text" id="txt2" value="" placeholder="验证码"/></td>
+	<td width="40%" align="center" style="color:blue" id="authTd"><a href="javascript:sendMsg()" >获取验证码</a></td>
+  </tr>
+  <tr id="submitBtn" >
+    <td colspan="2"><input type="button" onclick="doSubmit()" value="提交"/></td>
+  </tr>
+ </table>
+ 
+  <p id="optResultSpan" ></p>
+ </center>
+</body>
+</html>

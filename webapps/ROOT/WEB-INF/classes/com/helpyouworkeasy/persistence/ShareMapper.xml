@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.helpyouworkeasy.persistence.ShareMapper">
+
+  <insert id="insertShareInfo" parameterType="ShareInfo">
+    INSERT INTO tbl_share_info (content,imgs,author_name,city,id,author_id,publish_time,favour_count,comment_count,map_lat,map_lon,author_img_url)
+    VALUES (#{content}, #{imgs}, #{author_name}, #{city}, #{id}, #{author_id}, #{publish_time}, #{favour_count}, #{comment_count}, #{map_lat}, #{map_lon},#{author_img_url})
+  </insert>
+  
+  <update id="addShareCommentCount" parameterType="map">
+    update tbl_share_info set comment_count = comment_count+1 where id=#{id}
+  </update>
+  
+  <update id="addShareLikeCount" parameterType="map">
+    update tbl_share_info set favour_count = favour_count+1 where id=#{id}
+  </update>
+
+  <delete id="deleteShareInfo" parameterType="map">
+    delete from tbl_share_info where id=#{id}
+  </delete>
+
+  <select id="getShareInfoListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_share_info where 1=1 
+    <if test="o.city != '' and o.city != null" >
+      and city=#{o.city}
+    </if>
+    <if test="o.author_id != -1" >
+      and author_id=#{o.author_id}
+    </if>
+    <if test="time1 != -1" >
+      and publish_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=publish_time
+    </if>
+  </select>
+
+  <select id="getShareInfoPageList" parameterType="map" resultType="ShareInfo">
+    select 
+    content,imgs,author_name,city,id,author_id,publish_time,favour_count,comment_count,map_lat,map_lon,author_img_url
+    from tbl_share_info where 1=1 
+    <if test="o.city != '' and o.city != null" >
+      and city=#{o.city}
+    </if>
+    <if test="o.author_id != -1" >
+      and author_id=#{o.author_id}
+    </if>
+    <if test="time1 != -1" >
+      and publish_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=publish_time
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+  
+  <select id="getShareInfoById" parameterType="map" resultType="ShareInfo">
+    select 
+    content,imgs,author_name,city,id,author_id,publish_time,favour_count,comment_count,map_lat,map_lon,author_img_url
+    from tbl_share_info where id=#{id}
+  </select>
+  
+ 
+  <select id="getShareLikeCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_share_like where share_id=#{share_id} and member_id=#{member_id}
+  </select>
+  
+  <insert id="insertShareLike" parameterType="ShareLike">
+    INSERT INTO tbl_share_like (member_name,id,share_id,member_id)
+    VALUES (#{member_name}, #{id}, #{share_id}, #{member_id})
+  </insert>
+
+  <select id="getShareLikeList" parameterType="map" resultType="ShareLike">
+    select 
+    member_name,id,share_id,member_id
+    from tbl_share_like where share_id=#{share_id}
+  </select>
+
+  <insert id="insertShareComment" parameterType="ShareComment">
+    INSERT INTO tbl_share_comment (comment_name,comment_content,reply_name,id,share_id,comment_id,comment_time,reply_id,comment_img_url)
+    VALUES (#{comment_name}, #{comment_content}, #{reply_name}, #{id}, #{share_id}, #{comment_id}, #{comment_time}, #{reply_id}, #{comment_img_url})
+  </insert>
+
+  <select id="getShareCommentList" parameterType="map" resultType="ShareComment">
+    select 
+    comment_name,comment_content,reply_name,id,share_id,comment_id,comment_time,reply_id,comment_img_url
+    from tbl_share_comment where share_id=#{share_id} order by comment_time
+  </select>
+  
+
+</mapper>

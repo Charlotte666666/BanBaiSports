@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.helpyouworkeasy.persistence.LevelTransferMapper">
+  <insert id="insertLevelTransfer" parameterType="LevelTransfer">
+    INSERT INTO tbl_level_transfer (employee_code,employee_name,dept,current_job_title,apply_job_level,status,current_job_level,id,entry_time,apply_time)
+    VALUES (#{employee_code}, #{employee_name}, #{dept}, #{current_job_title}, #{apply_job_level}, #{status}, #{current_job_level}, #{id}, #{entry_time}, #{apply_time})
+  </insert>
+
+  <update id="updateLevelTransfer" parameterType="LevelTransfer">
+    update tbl_level_transfer set 
+    employee_code=#{employee_code},employee_name=#{employee_name},dept=#{dept},current_job_title=#{current_job_title},apply_job_level=#{apply_job_level},status=#{status},current_job_level=#{current_job_level},id=#{id},entry_time=#{entry_time},apply_time=#{apply_time}
+    where id=#{id}
+  </update>
+
+  <select id="getLevelTransferListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_level_transfer where 1=1 
+    <if test="o.employee_name != '' and o.employee_name != null" >
+      and employee_name=#{o.employee_name}
+    </if>
+    <if test="o.status != '' and o.status != null" >
+      and status=#{o.status}
+    </if>
+    <if test="time1 != -1" >
+      and apply_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=apply_time
+    </if>
+  </select>
+
+  <select id="getLevelTransferPageList" parameterType="map" resultType="LevelTransfer">
+    select 
+    employee_code,employee_name,dept,current_job_title,apply_job_level,status,current_job_level,id,entry_time,apply_time
+    from tbl_level_transfer where 1=1 
+    <if test="o.employee_name != '' and o.employee_name != null" >
+      and employee_name=#{o.employee_name}
+    </if>
+    <if test="o.status != '' and o.status != null" >
+      and status=#{o.status}
+    </if>
+    <if test="time1 != -1" >
+      and apply_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=apply_time
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+
+  <select id="getLEvelTransferInfoByUserCode" parameterType="LevelTransfer" resultType="LevelTransfer">
+    select *
+    from tbl_level_transfer
+    where 1=1
+      <if test="employee_code != '' and employee_code != null">
+       and  employee_code=#{employee_code}
+      </if>
+      <if test="id != 0">
+       and id=#{id}
+      </if>
+  </select>
+  
+  <update id="updateApplyStatus" parameterType="map">
+     update tbl_level_transfer set status=#{status} where id=#{apply_id}
+  </update>
+  
+   <select id="getLevelTransferById" parameterType="long" resultType="LevelTransfer">
+    select *
+    from tbl_level_transfer
+    where id=#{id}
+  </select>
+
+</mapper>

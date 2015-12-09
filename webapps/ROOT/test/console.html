@@ -1,0 +1,93 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>监视系统</title>
+<link href="../css/comm.css" rel="stylesheet" type="text/css" />
+<link href="../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<script type="text/javascript" src="../js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="../js/SimpleMap.js"></script>
+<script type="text/javascript" src="../js/helpyouworkeasy-core.js"></script>
+<script type="text/javascript" src="../js/jquery-ui-1.8.16.custom.min.js"></script>
+
+<script type="text/javascript">
+jQuery(document).ready(function() {
+    $("#menuTree").height( $(window).height() - 10 );
+});
+</script>
+
+<style type="text/css">
+ul, li {
+	padding: 5px;
+	margin: 0px;
+	list-style-type: none;
+	border-top-style: none;
+	border-right-style: none;
+	border-bottom-style: none;
+	border-left-style: none;
+}
+#box {
+    margin-top: 45px;
+	margin-left: 12px;
+}
+</style>
+
+</head>
+<body>
+
+<table style="width:100%;height:100%;padding:0;spacing:0;">
+  <tr>
+   <td id="menuTree" style="width:200px;height:100%;border:1px;border-style: dotted;border-color: #A0CFEC;" valign="top">
+		<div class="dtree" id="deptTree" style="padding:3px;">
+		  <ul><b>RDB服务器</b>
+		    <li>数据库服务器(10.20.20.23)</li>
+			<li>应用服务器(10.20.20.24)</li>
+		  </ul>
+		</div>
+   </td>
+   <td id="consoleRecords" style="width:200px;height:100%;border:1px;border-style: dotted;border-color: #A0CFEC;" valign="top">
+		<div class="dtree" id="deptTree" style="padding:3px;">
+		  
+		</div>
+   </td>
+   <td id="sysTabs" style="width:70%;height:100%;border:1px;border-style: dotted dotted dotted none;border-color: #A0CFEC;" valign="top">
+      bbb
+   </td>
+  </tr>	
+</table>
+
+
+
+
+<!-- 对话框DIV -->
+<div id="g_dialog" title="" style="display:none;padding: 0 0 0 0;margin: 0 0 0 0;z-index:10000;overflow:auto">
+    <iframe id="g_dialog_iframe" src="about:blank" width="100%" height="98%" frameborder="0"></iframe>
+</div>
+
+<div id="g_selectDialog" title="" style="display:none;padding: 0 0 0 0;margin: 0 0 0 0;overflow:hidden">
+    <iframe id="g_selectDialog_iframe" src="about:blank" width="100%" height="98%" frameborder="0"></iframe>
+</div>
+
+<div id="g_selectDialog2" title="" style="display:none;padding: 0 0 0 0;margin: 0 0 0 0;overflow:hidden">
+    <iframe id="g_selectDialog_iframe2" src="about:blank" width="100%" height="98%" frameborder="0"></iframe>
+</div>
+
+<div id="dialog-confirm" title="操作确认" style="display:none;z-index:10000">
+    <p><span class="ui-icon ui-icon-alert" style="float:left; margin:5px 7px 10px 0;"></span><span id="confirm_msg" style="float:left; margin:5px 7px 10px 0;"></span></p>
+</div>
+
+<div id="dialog-info" title="操作提示信息" style="display:none;z-index:10000">
+    <p><span class="ui-icon ui-icon-info" style="float:left; margin:5px 7px 20px 0;"></span><span id="info_msg" style="float:left; margin:5px 7px 20px 0;"></span></p>
+</div>
+
+<div id="dialog-loading" title="" style="display:none;z-index:10000">
+    <p><span class="ui-icon ui-icon-info" style="float:left; margin:5px 7px 20px 0;"></span><span style="float:left; margin:5px 7px 20px 0;">操作中,请稍候...</span></p>
+</div>
+
+<div id="dialog-input" title="输入信息" style="display:none;z-index:10000">
+    <p><span class="ui-icon ui-icon-info" style="float:left; margin:0 7px 20px 0;"></span><span id="input_msg"></span>
+    <br><input type="text" id="dialog_input_value" value="" size="20" /></p>
+</div>
+
+</body>
+</html>

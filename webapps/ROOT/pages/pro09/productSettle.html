@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet"
+			type="text/css"/>
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css"
+			media="print, projection, screen"/>
+		<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" charset="utf-8">
+		    var ids="";
+			$(document).ready(function() {
+			} );
+			function getPurchseList(){
+				var aoData=[];
+				//aoData.put();
+				xurl="/actions/ProductOrder.action?getOrderDetailList";
+				top.sendAjaxRequest(xurl,aoData,getPurchseListCallback);
+				//$("#tdProduct_class").html(top.getCodeSelectHtml("CUST_TYPE","cust_type",true,'0'));
+			}
+			function getPurchseListCallback(obj){
+				//ids=obj.aaData[0].ids;
+				//var order_ids=ids.split(",");
+				var list=obj.aaData;
+				var ht="";
+				ht+='<tr class="tr_data" height="32px">';
+				ht+='<td>产品类别</td>';
+				ht+='<td>产品品牌</td>';
+				ht+='<td>产品名称</td>';
+				ht+='<td>产品规格</td>';
+				ht+='<td>产品型号</td>';
+				ht+='<td>产品单位</td>'
+				ht+='<td>产品数量</td>';
+				ht+='<td>采购价</td>';
+				ht+='<td>产品金额</td>';
+				ht+='</tr>';
+				if(list){
+					for(var i=0;i<obj.aaData.length;i++){
+						ht+='<tr class="tr_data" height="32px">';
+						ht+='<td><input type="hidden" value="'+list[i].order_id+'" id="order_ids_'+list[i].product_id+'"/><input type="checkBox" name="products" value="'+list[i].product_id+'"><span id="product_class_'+list[i].product_id+'">'+list[i].product_class+'</span></td>';
+						ht+='<td><input type="hidden" id="product_brand_'+list[i].product_id+'" value="'+list[i].product_brand+'"/>'+top.getSupplierNameById(list[i].product_brand)+'</td>';
+						ht+='<td id=product_name_'+list[i].product_id+'>'+list[i].product_name+'</td>';
+						ht+='<td id=product_size_'+list[i].product_id+'>'+list[i].product_size+'</td>';
+						ht+='<td id=product_model_'+list[i].product_id+'>'+list[i].product_model+'</td>';
+						ht+='<td><input type="hidden" id="unit_'+list[i].product_id+'" value="'+list[i].unit+'"/>'+top.getCodeName("UNIT",list[i].unit)+'</td>';
+						ht+='<td id=product_count_'+list[i].product_id+'>'+list[i].product_count+'</td>';
+						ht+='<td id=price_'+list[i].product_id+'>'+list[i].price+'</td>';
+						ht+='<td id=money_'+list[i].product_id+'>'+list[i].money+'</td>';
+						ht+='</tr>';
+						//alert($("#product_brand_"+list[i].product_id).html());
+					}
+				}else{
+				 ht+='<tr class="tr_data" height="32px" colspan="8">没有需要下单的产品！</tr>';
+				}
+				$("#purOrderList").html(ht);
+			}
+			function doPurchase(){
+			  if($('input[name="products"]:checked').length>0){
+			   top.showConfirm("确定为选择的"+$('input[name="products"]:checked').length+"项产品类别下采购单吗？", confirmPurchase);
+			  }else{
+			   top.showInfoWinWarn("请勾选需要下采购单的产品！");
+			  }
+			}
+			function confirmPurchase(){
+				var product_id="";
+				$('input[name="products"]:checked').each(function(){    
+					product_id=$(this).val(); 
+					addPurchaseOrder(product_id);
+				});
+			}
+			function addPurchaseOrder(product_id){
+			    var aoData=[];
+				   //aoData.push( { "name": "purInfo.product_id", "value":product_id} );
+				   aoData.push( { "name": "purInfo.product_brand", "value":$("#product_brand_"+product_id).val()} );
+				   aoData.push( { "name": "purInfo.product_class", "value":$("#product_class_"+product_id).html()} );
+				   aoData.push( { "name": "purInfo.product_name", "value":$("#product_name_"+product_id).html()} );
+				   aoData.push( { "name": "purInfo.product_size", "value":$("#product_size_"+product_id).html()} );
+				   aoData.push( { "name": "purInfo.product_model", "value":$("#product_model_"+product_id).html()} );
+				   aoData.push( { "name": "purInfo.product_count", "value":$("#product_count_"+product_id).html()} );
+				   aoData.push( { "name": "purInfo.money", "value":$("#money_"+product_id).html()} );
+				   aoData.push( { "name": "purInfo.product_status", "value":"01"} ); 			   
+				   aoData.push( { "name": "purInfo.unit", "value":$("#unit_"+product_id).val()} ); 			   
+				   aoData.push( { "name": "ids", "value":$("#order_ids_"+product_id).val()} );
+				   top.sendAjaxRequest("/actions/ProductOrder.action?insertPurchaseOrder",aoData,optCallback);
+			}
+		   // 新建、删除或修改操作回调函数
+       function optCallback(obj){
+           try{
+            if ( obj.status == true ){
+              top.showInfoWinOK("操作成功");
+			  getPurchseList();
+			 // purOrderList();
+			 // top.closeDialog();
+            }else{
+              top.showInfoWinError("操作失败");
+            }
+           }catch(e){
+              top.showInfoWinError("处理异常:"+e.message);
+           }
+       }
+	      function docheck(){
+		  if( $("[name = selectAll]:checkbox").attr("checked")){// 全选
+				$("[name = products]:checkbox").attr("checked", true);
+			}else{ 
+                $("[name = products]:checkbox").attr("checked",false );
+			}
+		}
+		</script>
+	</head>
+	<body>
+	</body>
+</html>

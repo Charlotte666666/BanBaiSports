@@ -1,0 +1,36 @@
+<beans
+        xmlns="http://www.springframework.org/schema/beans"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+        
+        <bean id="LoadSystemCacheTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+                <description>加载系统缓存定时任务,系统启动后5秒执行一次,之后每天执行一次</description>
+                <property name="jobDetail">
+                        <bean class="org.springframework.scheduling.quartz.JobDetailBean">
+                                <property name="jobClass" value="com.helpyouworkeasy.job.LoadSystemCacheQuartzJob"/>
+                        </bean>
+                </property>
+                <property name="startDelay" value="3000"></property>
+                <property name="repeatInterval" value="86400000"></property>
+        </bean>
+        
+        <bean id="LoadProjectCacheTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+                <description>加载项目缓存定时任务,系统启动后5秒执行一次,之后每天执行一次</description>
+                <property name="jobDetail">
+                        <bean class="org.springframework.scheduling.quartz.JobDetailBean">
+                                <property name="jobClass" value="com.helpyouworkeasy.job.LoadProCacheQuartzJob"/>
+                        </bean>
+                </property>
+                <property name="startDelay" value="7000"></property>
+                <property name="repeatInterval" value="86400000"></property>
+        </bean>
+     
+        <bean id="SchedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+                <property name="triggers">
+                        <list>
+                           <ref bean="LoadSystemCacheTrigger"/>
+                           <ref bean="LoadProjectCacheTrigger"/>
+                        </list>
+                </property>
+        </bean>
+</beans>

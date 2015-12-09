@@ -1,0 +1,124 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>addIntegrationRule.html</title>
+	
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="../../js/checkForm.js"></script>
+	<script type="text/javascript">
+	    var optType="";
+		var info_id=0;
+	    $(document).ready(function(){
+		  optType=top.getUrlParam(document.URL,"optType");
+		
+		  $("#tdsource_award_points").html(top.getCodeSelectHtml("SOURCE_AWARD_POINTS","source_award_points",false));
+		  if(optType=="update"){
+		    info_id=top.getUrlParam(document.URL,"id");
+		    var aoData=[];
+			aoData.push( { "name":"info.id","value":info_id } );
+			top.sendAjaxRequest("/actions/IntegrationItem.action?getIntegrationItemById",aoData,getIntegrationInfoCallback);
+		  }
+		
+		});
+		
+		function getIntegrationInfoCallback(obj){
+		  if(obj.status==true){
+	        var o=obj.body;
+			$("#source_award_points").val(o.source_award_points);
+			$("#integration_item").val(o.integration_item);
+			$("#upper_limit").val(o.upper_limit);
+			$("#score").val(o.score);
+			$("input[type=radio]").each(function(){
+			  	if(o.reward_points==$(this).val()){
+				  $(this).attr("checked",true);
+				}
+			});
+		  }
+		}
+	
+	    function cancle(){
+		  top.closeDialog();
+		}
+		
+		function doBeforeClose(){
+		}
+		
+		function checkDoSubmit(){
+		  var message="";
+		  message+=checkString($("#integration_item").val(),true,1024,"积分项目内容");
+		  var re = /^\d+(?=\.{0,1}\d+$|$)/ ;
+		  if($("#score").val()!="" && !re.test($("#score").val())){
+		    message+="分数应为数字类型<br/>";
+		  }
+		  if($("#upper_limit").val()!="" && !re.test($("#upper_limit").val())){
+		    message+="最大上限应为数字类型<br/>";
+		  }
+		  return message;
+		}
+		
+		function doSubmit(){
+		   var checkMsg=checkDoSubmit();
+		   if(checkMsg!=""){
+		     top.showInfoWinWarn(checkMsg);return;
+		   }
+		   var aoData=[];
+		   aoData.push( { "name":"info.integration_item","value":$("#integration_item").val() } );
+		   aoData.push( { "name":"info.source_award_points","value":$("#source_award_points").val() } );
+		   aoData.push( { "name":"info.upper_limit","value":$("#upper_limit").val() } );
+		   aoData.push( { "name":"info.score","value":$("#score").val() } );
+		   aoData.push( { "name":"info.reward_points","value":top.getRadioValue( document.getElementsByName("reward_points") ) } );
+		   var xurl="/actions/IntegrationItem.action?insertIntegrationItem";
+		   if(info_id!=0){
+		     aoData.push( { "name":"info.id","value": info_id} );
+			 xurl="/actions/IntegrationItem.action?updateIntegrationItem";
+		   }
+		   top.sendAjaxRequest(xurl,aoData,doSubmitCallback);
+		}
+		
+		function doSubmitCallback(obj){
+		  if(obj.status==true){
+		    top.showInfoWinOK("操作成功！");
+			cancle();
+		  }else{
+		    top.showInfoWinError("操作失败--》"+obj.msg);
+		  }
+		}
+	</script>
+  </head>
+  
+  <body>
+    <div class="main">
+		<div>
+		    <table  width="100%" border="1" cellpadding="3" cellspacing="1" style="background-color: #b9d8f3;">
+			   <tr class="tr_data" height="35px">
+			      <td align="right" width="40%" style="font-weight:bold;">奖扣分来源:</td>
+				  <td align="left" width="60%" id="tdsource_award_points">
+				  </td>
+			   </tr>
+			   <tr class="tr_data" height="35px">
+			      <td align="right" width="40%"  style="font-weight:bold;">积分项目内容:</td>
+				  <td align="left" width="60%" ><textarea type="text" id="integration_item" colspan="6" rowspan="4" style="width:100%;height:120px;"></textarea></td>
+			   </tr>
+			   <tr class="tr_data">
+			      <td align="right" style="font-weight:bold;" width="40%">奖/扣分:</td>
+				  <td align="left" width="60%"><input name="reward_points" value="1" type="radio" checked/>奖<input name="reward_points" value="0" type="radio"/>扣</td>
+			   </tr>
+			   <tr class="tr_data">
+			      <td align="right" style="font-weight:bold;" width="40%">分数:</td>
+				  <td align="left" width="60%"><input id="score"  type="text" size="20"/>分</td>
+			   </tr>
+			   <tr class="tr_data" height="35px"> 
+			      <td align="right" style="font-weight:bold;">最大上限:</td>
+			      <td align="left"  width="60%"><input id="upper_limit" type="text" size="20"/>分</td>
+			   </tr>
+			   <tr class="tr_data">
+			      <td align="right" colspan="2" ><div class="buttonDivTwo" style="float:left;margin-left:40%;"><a href="javascript:void(0)" onclick="doSubmit()">提交</a></div><div class="buttonDivTwo" style="float:left;"><a href="javascript:void(0)" onclick="cancle()">取消</a></div></td>
+			   </tr>
+			</table>
+		</div>
+	</div>
+  </body>
+</html>

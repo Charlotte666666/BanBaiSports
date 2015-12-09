@@ -1,0 +1,70 @@
+section,header,nav{
+	display:block;
+}
+* {
+	padding:0;
+	margin:0;
+}
+header {
+	border-bottom: 1px solid #c8c8c8;
+}
+
+header div {
+	display: inline-block;
+}
+#headline {
+	top:-3px;
+}
+#downloadforfree .fonts {
+	line-height: 40px;
+	top: 0;
+	right: 0;
+}
+/************page2.html***********/
+#morecontent {
+	border-top: 1px solid #c8c8c8;
+}/*
+#morecontent .fonts {
+	float: left;
+	line-height: 50px;
+	left: 50%;
+}
+#morecontent div {
+	display: inline-block;
+}
+#morecontent div p {
+	left: -50%;
+}
+#userstates div {
+	display: inline-block;
+}*/
+#morecontent .fonts {
+	top:-40px;
+}
+/*************************/
+#userstates .userhead {
+	top: 0px;
+}
+#userstates .userhead img {
+	border-radius: 50%;
+}
+#userstates .username h4,h5 {
+	display: inline-block;
+}
+#userstates .nice img {
+	border-radius: 50%;
+}
+/*************************/
+#live div {
+	display: inline-block;
+}
+/************page5.html*************/
+.ranking table {
+	border-bottom: 1px solid #c8c8c8;
+	border-left: 1px solid #c8c8c8;
+	border-right: 1px solid #c8c8c8;
+}
+.ranking table tbody tr td:first {
+	border-right: 1px solid #c8c8c8;
+}
+

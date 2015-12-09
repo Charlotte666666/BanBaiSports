@@ -1,0 +1,316 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css"
+			href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var objs=[];
+			var obj={};
+			var require_id='';
+			var money_remain=0;
+			var bank_id='';
+			var record_id='';
+			var optType='';
+			var cust_code='';
+			var cust_name="";
+			var remind_id="";
+			var cust_manager="";
+			var require_manager="";
+			var contract_type="";
+			var contract_id="";
+			var item_id="";
+			
+			$(document).ready(function() {
+				$("#tdmoney_name").html(top.getCodeSelectHtml("PAY_MONEY_NAME","money_name_list",true,'','moneyNameChange()'));
+				//$("#tdMoney_user").html(top.getUserListByRole("financial_person","money_user",false));//财务人员可修改
+				optType=top.getUrlParam(document.URL,"optType");
+				if(optType=="query"){
+					record_id=top.getUrlParam(document.URL,"record_id");
+					getMoneyRecordObj();
+					$("#view_table").show();
+				}else if(optType=="insert"){
+				   $("#table_addPay").show();
+					require_id=top.getUrlParam(document.URL,"require_id");
+					cust_code=top.getUrlParam(document.URL,"cust_code");
+				}else if(optType=="pay"){
+					require_id=top.getUrlParam(document.URL,"require_id");
+					record_id=top.getUrlParam(document.URL,"record_id");
+					cust_name=decodeURI(top.getUrlParam(document.URL,"cust_name"));
+					require_manager=top.getUrlParam(document.URL,"require_manager");
+					cust_manager=top.getUrlParam(document.URL,"cust_manager");
+					getMoneyRecordObj();
+				    $("#table_pay").show(); 
+					$("#tdPrint").show();
+				}
+			} );
+			function getMoneyRecordObj(){
+				var aoData=[];
+				aoData.push({"name":"moneyRcd.record_id","value":record_id});
+				top.sendAjaxRequest("/actions/Payment.action?getMoneyRcdById",aoData,getMoneyRecordObjCallBack);
+			}
+			function getMoneyRecordObjCallBack(obj){
+				if(obj.status==true){
+					moneyRecord=obj.body;
+					contract_id=moneyRecord.contract_id;
+					contract_type=moneyRecord.contract_type;
+					item_id=moneyRecord.item_id;
+					$("#money_name").val(moneyRecord.money_name);
+					if(optType=="query"){
+						$("#view_money_name").html(top.getCodeName("PAY_MONEY_NAME",moneyRecord.money_name));
+						$("#view_money_total").html(moneyRecord.money_total);
+						//$("#view_money_user").html(top.getUserNameByCode(moneyRecord.money_user));
+					}else{
+						$("#money_name_text").html(top.getCodeName("MONEYNAME",moneyRecord.money_name));
+						$("#tdtotal_money").html(moneyRecord.money_total);
+						$("#demo").val(moneyRecord.demo)
+						bank_id=moneyRecord.id;
+						money_remain=moneyRecord.total_money-moneyRecord.money_spent;//账户余额
+						remind_id=moneyRecord.remind_id;
+						cust_code=moneyRecord.cust_code;
+						if(money_remain!=0){
+							if(money_remain>moneyRecord.money_total){
+								$("#money_remain").val(moneyRecord.money_total);
+							}else{
+								$("#money_remain").val(money_remain);
+								$("#money_paper").val(moneyRecord.money_total-money_remain);
+							}
+						}else{
+								$("#money_paper").val(moneyRecord.money_total);
+						}
+						cumput();
+					}
+				}
+			}
+			function payMoney(){
+				if(optType=="pay"){//财务确定收款操作
+					top.showConfirm("您确定进行收款确认操作吗？", doPayMoney);
+				}else{//添加收款项操作
+					 addMoneyRecord();
+				}
+			}
+			function addMoneyRecord(){
+				var money_total=0;
+				var msg='';
+				var aoData=[];
+				if($("#money_name_list").val()==""){
+				  msg+="请选择收款类型！<br/>";
+				}
+				if($("#money_name_list").val()!='7'){
+				    if( $("#money_total").val().substring(0,1)=="-"){
+					   msg += "[收款金额]应为0~99999999数字类型<br/>";
+					   $("#money_total").val('0');
+					}
+					if ( $("#money_total").val() != '' && (!IsFloat( $("#money_total").val()) || $("#money_total").val()>99999999)){	
+						msg += "[收款金额]应为0~99999999数字类型<br/>";
+						$("#money_total").val('0');
+					}
+					msg+=checkString($("#demo").val(),false,512,"备注");
+					if ( msg != '' ) {
+					   top.showInfoWinWarn(msg);
+					   return ;
+					}
+					money_total=$("#money_total").val();
+				}else{
+					money_total=$("#money_total").html();
+					aoData.push({"name":"custBank.cust_code","value":cust_code});//用于更新余额宝金额
+				}
+					
+					aoData.push({"name":"moneyRcd.money_name","value":$("#money_name_list").val()});
+					aoData.push({"name":"moneyRcd.demo","value":$("#demo").val()});
+					aoData.push({"name":"moneyRcd.cust_code","value":cust_code});
+					aoData.push({"name":"moneyRcd.money_total","value":money_total});
+					aoData.push({"name":"moneyRcd.require_id","value":require_id});
+					aoData.push({"name":"moneyRcd.opt_type","value":'01'});
+					
+					if($("#money_name_list").val()=='0'||$("#money_name_list").val()=='1'){
+						aoData.push({"name":"moneyRcd.contract_type","value":'0'});
+					}
+					top.sendAjaxRequest("/actions/Payment.action?insertMoneyRcd",aoData,payMoneyCallBack);
+			}
+			function checkBeforDoPay(){	
+				var msg="";
+				if($("#money_paper").val().substring(0,1)=="-"){
+				   msg += "[现金支付]应为0~99999999数字类型<br/>";
+				   $("#money_paper").val('0');
+				}
+				if ( $("#money_paper").val() != '' && (!IsFloat( $("#money_paper").val() )  || $("#money_paper").val()>99999999 )){		
+					msg += "[现金支付]应为0~99999999数字类型<br>";
+					$("#money_paper").val('0');
+				}
+				if($("#money_remain").val().substring(0,1)=="-"){
+				   msg += "[余额支付]应为0~99999999数字类型<br/>";
+				   $("#money_remain").val('0');
+				}
+				if ( $("#money_remain").val() != '' && (!IsFloat( $("#money_remain").val() )  ||  $("#money_remain").val()>99999999 )) {
+					msg += "[余额支付]应为0~99999999数字类型<br>";
+					$("#money_remain").val('0');
+				}
+				if($("#money_other").val().substring(0,1)=="-"){
+				   msg += "[其他支付]应为0~99999999数字类型<br/>";
+				   $("#money_other").val('0');
+				}
+				if ( $("#money_other").val() != '' && (!IsFloat( $("#money_other").val() ) || $("#money_other").val()>99999999 )) {
+					msg += "[其他支付]应为0~99999999数字类型<br>";
+					$("#money_other").val('0');
+				}
+				if ( $("#fact_money").html()-$("#tdtotal_money").html()>1) {
+					msg += "应付金额与实付金额不相符！<br>";
+				}
+				
+				return msg;
+			}
+			function doPayMoney(){
+				var checkMsg = checkBeforDoPay();
+				if ( checkMsg != '' ) {
+				   top.showInfoWinWarn(checkMsg);
+				   return ;
+				}
+					var aoData=[];
+					aoData.push({"name":"moneyRcd.money_name","value":$("#money_name").val()});
+					aoData.push({"name":"moneyRcd.demo","value":$("#demo").val()});
+					aoData.push({"name":"moneyRcd.cust_code","value":cust_code});
+					aoData.push({"name":"moneyRcd.money_paper","value":$("#money_paper").val()});
+					aoData.push({"name":"moneyRcd.money_remain","value":$("#money_remain").val()});
+					aoData.push({"name":"moneyRcd.money_other","value":$("#money_other").val()});
+					aoData.push({"name":"custBank.id","value":bank_id});//更新账户花费金额
+					aoData.push({"name":"moneyRcd.record_id","value":record_id});
+					aoData.push({"name":"moneyRcd.remind_id","value":remind_id});
+					aoData.push({"name":"moneyRcd.contract_type","value":contract_type});
+					aoData.push({"name":"moneyRcd.contract_id","value":contract_id});
+					
+					aoData.push({"name":"moneyRcd.item_id","value":item_id});
+					//  客户经理 设计师  remind_id content(姓名 交款金额 类型)
+					aoData.push({"name":"custRequire.require_manager","value":require_manager});
+					aoData.push({"name":"cust_manager","value":cust_manager});
+					aoData.push({"name":"moneyRcd.require_id","value":require_id});
+					aoData.push({"name":"strVar","value":"客户"+cust_name+"已交"+$("#money_name_text").html()+"提醒！"});
+					top.sendAjaxRequest("/actions/Payment.action?updateMoneyRcd",aoData,payMoneyCallBack);
+			}
+			function payMoneyCallBack(obj){
+				  try{
+					if ( obj.status == true ){
+						isSaveOK = true;
+						top.showInfoWinOK("操作成功");
+						if(optType=="insert"){
+						  parent.closeDialog();
+						}
+						$("#optBt").hide();//收款确认操作后，隐藏确认操作
+						//显示收款单
+					}else{
+						isSaveOK = false;
+						top.showInfoWinError("操作失败 "+obj.msg);
+					}
+				   }catch(e){
+					  top.showInfoWinError("处理异常:"+e.message);
+				   }
+			}
+			
+			function cumput(){
+				if(money_remain<$("#money_remain").val()){
+					top.showInfoWinWarn("对不起您的余额不足，您的账户余额为："+money_remain+" 元，请充值！");
+				}
+				var total=parseFloat($("#money_paper").val())+parseFloat($("#money_remain").val())+parseFloat($("#money_other").val());
+				$("#fact_money").html(total);
+			}
+			function doBeforeClose(){
+			  
+		    }
+			//账户信息
+			function getBankInfo(){
+			   var aoData=[];
+			   aoData.push({"name":"custBank.cust_code","value":cust_code});
+			   top.sendAjaxRequest("/actions/Payment.action?getCustBankByCustCode",aoData,getBankInfoCallBack);
+			}
+			function getBankInfoCallBack(obj){
+				if(obj.status){
+					var myBank=obj.body;
+					money_remain=myBank.total_money-myBank.money_spent;
+				    //cust_code=custBank.cust_code;
+					$("#tdmoney_total").html(money_remain);
+				}
+			}
+			function moneyNameChange(){
+				if($("#money_name").val()=='7'){
+					getBankInfo();
+				}
+			}
+			//打印收款单
+			function printReceipt(){
+				var xurl="pages/pro09/receiptInfo.html?id="+record_id;
+				top.openSelectDialog("打印",xurl,700,300,null);
+			}
+			function closePage(){
+				 parent.closeDialog();
+			}
+			
+		</script>
+	</head>
+	<body style='margin:10px;'>
+		<div width="100%" style='margin:0px auto;border: 0px solid #89A1B9;'>
+			<br>
+			<input type="hidden" id="money_name"/>
+			<table id="table_pay" border="1" cellpadding="3" cellspacing="1" width="99%" align="center" style="display:none;background-color: #b9d8f3;margin:1px">
+			<tr class="tr_data" height="28px" >
+				<td rowspan="2" width="70px">交款类型</td>
+				<td rowspan="2" id="optTypeText">本次应缴(单位：元)</td>
+				<td colspan="4">收款方式</td></tr>
+			<tr  class="tr_data" height="28px">
+			<td>现金支付(单位：元)</td><td>余额支付(单位：元)</td><td>其他支付(单位：元)</td><td>本次实缴小计</td></tr>
+			<tr class="tr_data" height="28px">
+				<td id="money_name_text"></td>
+				<td id="tdtotal_money"></td>
+				<td><input type="text" style="width:55px" onchange="cumput()" value="0" id="money_paper"></input></td>
+				<td><input type="text" style="width:55px" onchange="cumput()" value="0" id="money_remain"></input></td>
+				<td><input type="text" style="width:55px" onchange="cumput()" value="0" id="money_other"></input></td>
+				<td id="fact_money"></td>
+				
+			</tr>
+			</table>
+			
+			<table border="1" cellpadding="3" cellspacing="1" width="99%" align="center" style="background-color: #b9d8f3;margin:1px">
+				<tr class="tr_data" id="table_addPay" style="display:none">
+					<td class="table_property_title">收款类型</td><td align="left" id="tdmoney_name"></td>
+					<td class="table_property_title">收款金额</td><td align="left" id="tdmoney_total"><input type="text" style="width:50px" id="money_total"></input>元</td>
+					<!--<td>财务收款人</td><td id="tdMoney_user"></td>!-->
+				</tr>
+				<tr class="tr_data">
+				  <td width="70px" class="table_property_title">备注</td>
+				  <td colspan="5" align="left">
+						<textarea id="demo" style="width:95%;height:90px"></textarea>
+				  </td>
+				</tr>
+				<tr class="tr_data"  height="28px">
+				    <td colspan="4">
+					<table width="80%">
+						<tr>
+							<td align="center" >
+								 <div id="optBt" class="buttonDivTwo"><a href="javascript:payMoney()" >提交</a></div>
+							 </td>
+							 <td align="center" id="tdPrint" style="display:none">
+								 <div class="buttonDivTwo"><a href="javascript:printReceipt()">打印</a></div>
+							 </td> 
+							 <td align="center" id="tdPrint">
+								 <div class="buttonDivTwo"><a href="javascript:closePage()">关闭</a></div>
+							 </td>
+						 </tr>
+					 </table>
+				</tr>
+			</table>
+		</div>
+	</body>
+</html>

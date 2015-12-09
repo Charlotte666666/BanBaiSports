@@ -1,0 +1,104 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var infoId=0;
+   
+   $(document).ready(function() {
+     initData();
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+     };
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   
+   function doSubmit(){
+	 var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+	 var aoData=[];
+		  aoData.push( { "name": "location.code", "value": top.g_GetNumValue($("#code").val(),-1) } );
+		  aoData.push( { "name": "location.addr", "value": $("#addr").val() } );
+		  aoData.push( { "name": "location.memo", "value": $("#memo").val() } );
+		  var xurl="/actions/ProMonitor.action?insertLocationInfo";
+		  if ( optType=='update' ) {
+		    xurl="/actions/ProMonitor.action?updateLocationInfo";
+		  }
+		  top.sendAjaxRequest(xurl,aoData,optCallback);
+   }
+   
+   function checkForm(){
+     var msg = "";
+	 msg += checkString($("#addr").val(),true,128,"详细地址");
+     return msg;
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功！");
+		 top.closeDialog();
+	    }else{
+	     isSaveOK = false;
+	     top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		 top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+   function initData(){
+	   try{
+		   optType=top.getUrlParam(document.URL,"optType");
+		   if ( optType=='update' ) {
+		     var o = top.getTempValue();
+			 $("#code").val( o.code );
+			 $("#addr").val( o.addr );
+			 $("#memo").val( o.memo );
+		   }
+	   }catch(e){
+		   top.showInfoWinError(e.message);
+	   }
+   }
+  </script> 
+</head>
+<body>
+<br>
+<table width="100%" border="0" padding="0" spacing="0">
+ <tr>
+    <td align="right" width="15%">采集器编号:</td>
+    <td align="left" width="85%"><input type="text" id="code" value="系统自动生成" disabled="true" ></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">详细地址:</td>
+    <td align="left"><textarea id="addr" cols="45" rows="3" ></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">备注:</td>
+    <td align="left"><textarea id="memo" cols="45" rows="4" ></textarea></td>
+ </tr>
+</table>
+<p align="center">
+   <table><tr>
+		    <td><div class="buttonDivSix"><a href="javascript:doSubmit()">提交</a></div></td>
+		    <td><div class="buttonDivSix"><a href="javascript:doCancel()">取消</a></div></td>
+   </tr></table>
+</p>
+</body>
+</html>

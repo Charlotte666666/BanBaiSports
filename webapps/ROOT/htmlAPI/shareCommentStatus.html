@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+    <meta charset="utf-8">
+    <head>
+        <title>羽球达人</title>
+        <meta content="yes" name="apple-mobile-web-app-capable">
+        <meta name="format-detection" content="telephone=no"/>
+        <meta name="viewport" content="width=device-width,height=device-height,inital-scale=1.0,maximum-scale=1.0,user-scalable=no;">
+
+        <link rel="stylesheet" media="screen" href="css/base.css" />
+        <link rel="stylesheet" media="screen" href="css/color.css" />
+        <link rel="stylesheet" media="screen" href="css/layout.css" />
+        <link rel="stylesheet" media="screen" href="css/typography.css" />
+
+        <link rel="stylesheet" href="../css/themes/default/jquery.mobile-1.4.5.min.css">
+        <script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/jquery.mobile-1.4.5.min.js"></script>
+
+        <!--<link href="css/bootstrap.min.css" rel="stylesheet" />-->
+
+        <script type="text/javascript">
+            var shareInfo_id=1446296977807;
+            var g_UrlBase="";
+            var resultList=[];
+
+            $(document).ready(function() {
+               //shareInfo_id=getUrlParam(document.URL,"shareInfo.id");
+               try{
+                 var ind=document.URL.indexOf("htmlAPI");
+                 if ( ind != -1 ) {
+                   g_UrlBase=document.URL.substring(0,ind);
+                 }
+               }catch(e){}
+
+               getResult();
+            } );
+
+            function getResult(){
+               var aoData=[];
+               aoData.push( { "name": "shareInfo.id", "value": shareInfo_id } );
+               doSendAjaxRequest("/actions/Share.action?getShareDetailInfo",aoData,getCompetitionRankListCallback);
+            }
+
+            function getCompetitionRankListCallback(obj){
+                try{
+                    resultList=obj.data;
+                    var ht='';
+                    // set headimg
+                    ht = '<img src="http://banbaisport.oss-cn-beijing.aliyuncs.com/'+resultList.author_img_url+'" width="40px" height="40px" />';
+                    $("#userstates .userhead").html( ht );
+
+                    // set username
+                    ht = resultList.author_name;
+                    $("#userstates .usercontent .username .name").text( ht );
+
+                    //set publish time
+                    ht = timeGap(resultList.publish_time);
+                    $("#userstates .usercontent .username .statetime").text( ht );
+
+                    // set content
+                    ht = resultList.content;
+                    $("#userstates .usercontent .wordcontent").html( ht );
+
+                    //set img
+                    ht = '';
+                    if(resultList.imgs.length != 0){
+                        if(resultList.imgs.length == 4){
+                            ht  = '<table><tr>';
+                            ht += '<td>';
+                            ht +=   '<img src="http://banbaisport.oss-cn-beijing.aliyuncs.com/'+resultList.imgs[0]+'" width="80px" height="80px" />';
+                            ht +=   '<img src="http://banbaisport.oss-cn-beijing.aliyuncs.com/'+resultList.imgs[1]+'" width="80px" height="80px" />';
+                            ht += '</td>';
+                            ht += '<td></td>'
+                            ht += '<td>';
+                            ht +=   '<img src="http://banbaisport.oss-cn-beijing.aliyuncs.com/'+resultList.imgs[2]+'" width="80px" height="80px" />';
+                            ht +=   '<img src="http://banbaisport.oss-cn-beijing.aliyuncs.com/'+resultList.imgs[3]+'" width="80px" height="80px" />';
+                            ht += '</td>';
+                            ht += '<td></td>';
+                            ht += '<td width="80px"></td>';
+                            ht += '</tr></table>';
+                        } else {
+                            var col_ht_1 = '<td width="80px">';
+                            var col_ht_2 = '<td width="80px">';
+                            var col_ht_3 = '<td width="80px">';
+                            for(var i = 0; i < resultList.imgs.length; i++){
+                                switch(i%3){
+                                    case 0:
+                                        col_ht_1 += '<img src="http://banbaisport.oss-cn-beijing.aliyuncs.com/'+resultList.imgs[i]+'" width="80px" height="80px" />'
+                                        break;
+                                    case 1:
+                                        col_ht_2 += '<img src="http://banbaisport.oss-cn-beijing.aliyuncs.com/'+resultList.imgs[i]+'" width="80px" height="80px" />'
+                                        break;
+                                    case 2:
+                                        col_ht_3 += '<img src="http://banbaisport.oss-cn-beijing.aliyuncs.com/'+resultList.imgs[i]+'" width="80px" height="80px" />'
+                                        break;
+                                }
+                            }
+                            col_ht_1 += '</td>';
+                            col_ht_2 += '</td>';
+                            col_ht_3 += '</td>';
+
+                            ht  = '<table>';
+                            ht +=  '<tr>';
+                            ht += col_ht_1 +'<td></td>'+ col_ht_2 +'<td></td>'+ col_ht_3;
+                            ht += '</tr>';
+                            ht += '</table>';
+                        }
+                        $("#userstates .userimges").html( ht );
+                    }
+
+                    //set loaction
+                    ht = resultList.city;
+                    $("#userstates .location").html( ht );
+
+                    // set favour
+
+                } catch(e){}
+            }
+
+            function doSendAjaxRequest(xurl,param,fnCallback){
+                if ( xurl.indexOf('http://') == -1 ) xurl = g_UrlBase+xurl;
+                $.ajax( {
+                    "url":  xurl,
+                    "data": param,
+                    "timeout" : 10000,
+                    "contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+                    "success": function (json) {
+                        try{ fnCallback( json );}catch(e){}
+                    },
+                    "dataType": "json",
+                    "cache": false,
+                    "type": "POST",
+                    "error": function (xhr, error, thrown) {
+                    }
+                } );
+            }
+
+            function getUrlParam(xurl,name){
+                var para="";
+                if(xurl.lastIndexOf("?")>0){
+                    para=xurl.substring(xurl.lastIndexOf("?")+1,xurl.length);
+                    var arr=para.split("&");
+                    para="";
+                    for(var i=0;i<arr.length;i++){
+                       if(arr[i].split("=")[0]==name) return arr[i].split("=")[1];
+                    }
+                    return "";
+               }else{
+                    return "";
+               }
+            }
+
+            function timeGap(t){
+
+                var now = new Date();
+                var nowYear = now.getFullYear();
+                var nowMonth = now.getMonth();
+                var nowDate = now.getDate();
+                var nowHours = now.getHours();
+                var nowMinutes = now.getMinutes();
+
+                var d = new Date();
+                d.setTime( t );
+                var dYear = d.getFullYear();
+                var dMonth = d.getMonth();
+                var dDate = d.getDate();
+                var dHours = d.getHours();
+                var dMinutes = d.getMinutes();
+
+                var str = dYear+"-"+getTwoNumberStr(dMonth+1)+"-"+getTwoNumberStr(dDate);
+
+                if( nowYear == dYear ){
+
+                    if( nowMonth == dMonth ){
+                        if(nowDate == dDate){
+                            if( nowHours == dHours ){
+                                if( nowMinutes == dMinutes )
+                                    return "刚刚";
+                                else
+                                    return (nowMinutes - dMinutes + "分钟前");
+                            } else {
+                                return (nowHours - dHours + "小时前");
+                            }
+                        } else {
+                            if((nowDate - dDate) == 1){
+                                return "昨天";
+                            }
+                        }
+                    }
+                }
+                return str;
+            }
+
+            /*** 转换时间字符串格式 (YYYY-MM-DD hh:mm:ss)*/
+            function getTimeStr(t,isDateStr){
+                if ( !isDateStr ) isDateStr = false;
+                if ( !t ) return "";
+                if ( t > -2 && t < 10 ) return "";
+                try{
+                    var d=new Date(2013,1,1);
+                    d.setTime( t );
+                    var str = d.getFullYear()+"-"+getTwoNumberStr(d.getMonth()+1)+"-"+getTwoNumberStr(d.getDate());
+                    if ( !isDateStr ) str +=" "+getTwoNumberStr(d.getHours())+":"+getTwoNumberStr(d.getMinutes())
+                           +":"+getTwoNumberStr(d.getSeconds());
+                    return str;
+                }catch(e){
+                    return "";
+                }
+            }
+            /** 对于个位数的数字，在前面补零  */
+            function getTwoNumberStr(n){
+                return ( n < 10 ) ? ("0"+n):n; 
+            }
+        </script> 
+    </head>
+    <body>
+        <header class="staticbanner p15" height="70px">
+            <table width="100%" class="pr15">
+                <tr>
+                    <td width="50px" rowspan=2><img src="img/logo.png" width="40px" height="40px" /></td>
+                    <td id="headline" class="f1d2">羽球达人</td>
+                    <td id="buttonimg" width="100px" class="tc" rowspan=2><a href="http://www.banbaisport.com/down.html" style="color:#fff">免费下载</a></td>
+                </tr>
+                <tr>
+                    <td class="f0d9 slogan">为祖国健康工作五十年！</td>
+                </tr>
+            </table>
+        </header>
+
+        <div id="userstates" class="mt100 ml15 mr15 mb15 pr">
+            <div>
+                <div class="userhead pa"><!--
+                    <img src="img/VS_background_02.png" width="40px" height="40px" />-->
+                </div>
+                <div class="usercontent ml50">
+                    <div class="username pr">
+                        <span class="name f1d2"><!--小明--></span>
+                        <span class="statetime fr"><!--刚刚--></span>
+                    </div>
+                    <div class="wordcontent mt10 mb10 mr10"><!--
+                        <p>羽毛球是一项室内，室外兼顾的运动。依据参与的人数，可分为单打与双打。羽毛球运动对选手的体格要求并不高，但比较讲究耐力。</p>-->
+                    </div>
+                </div>
+            </div>
+
+            <div class="userimges ml50 mr50">
+
+                <table>
+                    <tr>
+                        <td class="mr5" width="80px">
+                            <img src="img/VS_background_02.png" width="80px" height="80px" />
+                            <img src="img/VS_background_02.png" width="80px" height="80px" />
+                        </td>
+                        <td></td>
+                        <td>
+                            <img src="img/VS_background_02.png" width="80px" height="80px" />
+                            <img src="img/VS_background_02.png" width="80px" height="80px" />
+                        </td>
+                        <td></td>
+                        <td width="80px"></td>
+                    </tr>
+                </table>
+
+<!--
+                <table>
+                    <tr>
+                        <td class="mr5">
+                            <img src="img/VS_background_02.png" width="80px" height="80px" />
+                            <img src="img/VS_background_02.png" width="80px" height="80px" />
+                            <img src="img/VS_background_02.png" width="80px" height="80px" />
+                        </td>
+                        <td></td>
+                        <td>
+                            <img src="img/VS_background_02.png" width="80px" height="80px" />
+                            <img src="img/VS_background_02.png" width="80px" height="80px" />
+                            <img src="img/VS_background_02.png" width="80px" height="80px" />
+                        </td>
+                        <td></td>
+                        <td>
+                            <img src="img/VS_background_02.png" width="80px" height="80px" />
+                            <img src="img/VS_background_02.png" width="80px" height="80px" />
+                            <img src="img/VS_background_02.png" width="80px" height="80px" />
+                        </td>
+                    </tr>
+                </table>-->
+            </div>
+            <div class="location mt10 ml50 mr50 tl"><!--
+                <p>北京市</p>-->
+            </div>
+            <div class="nice mt10 ml50 mr50 tl">
+                <img src="img/VS_background_02.png" width="35px" height="35px" />
+                <img src="img/VS_background_02.png" width="35px" height="35px" />
+                <img src="img/VS_background_02.png" width="35px" height="35px" />
+                <img src="img/VS_background_02.png" width="35px" height="35px" />
+                <img src="img/VS_background_02.png" width="35px" height="35px" />
+                <img src="img/more.png" width="35px" height="35px" />
+            </div>
+            <div class="useroperation mt10 ml50 mr50 pr">
+                <table>
+                    <thead>
+                        <tr height="35px" class="tc">
+                            <td width="80px" class="awesome"><img src="img/doawesome.png" width="20px" height="20px" style="vertical-align: middle" />&nbsp;赞</td>
+                            <td width="100px" class="saysomething"><img src="img/say.png" width="20px" height="20px" style="vertical-align: middle"/>&nbsp;评论</td>
+                            <td></td>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div id="morecontent" class="pr p20 tc">
+            <div class="tc">
+                <img src="img/pic-1.png" width="100%" height="50px"/ >
+            </div>
+            <div class="fonts f1d2 pr tc" width="100%" height="50px"><a href="http://www.banbaisport.com/down.html" style="color:#fff">上羽球达人,查看更多精彩内容</a></div>
+        </div>
+    </body>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/bootstrap.min.js"></script>
+</html>

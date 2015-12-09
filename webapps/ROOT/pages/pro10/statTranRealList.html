@@ -1,0 +1,707 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title></title>
+<link href="../../css/comm.css" rel="stylesheet" type="text/css" />
+<link href="../../css/commBg.css" rel="stylesheet" type="text/css" />
+<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="../../js/SimpleMap.js"></script>
+<script type="text/javascript" src="../../js/helpyouworkeasy-core.js"></script>
+<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+<script src="../../js/ui/jquery.ui.widget.js"></script>
+<script src="../../js/ui/jquery.ui.mouse.js"></script>
+<script src="../../js/ui/jquery.ui.selectable.js"></script>
+<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+<script type="text/javascript">
+var currentTime=0;
+var pros=[];
+var dataStr="";
+var typeInfo=null;
+var proStaArr=[];
+var sType="NWST";
+var area="NAT";
+var typeHour=0;
+var changeTimeType="hour";
+
+function ProStaObj(){
+   this.proCode="";
+   this.jishiLv=0;
+   this.yuxianLv=999999;
+   this.quebaoLv=0;
+}
+
+function addJishi(code,lv){
+   for ( var i=0;i<proStaArr.length;i++ ) {
+     if ( proStaArr[i].proCode == code ) {
+	   proStaArr[i].jishiLv=lv;
+	   return ;
+	 }
+   }
+   var o=new ProStaObj();
+   o.proCode=code;
+   o.jishiLv=lv;
+   proStaArr[ proStaArr.length ]=o;
+}
+
+function addYuxian(code,lv){
+   for ( var i=0;i<proStaArr.length;i++ ) {
+     if ( proStaArr[i].proCode == code ) {
+	   proStaArr[i].yuxianLv=lv;
+	   return ;
+	 }
+   }
+   var o=new ProStaObj();
+   o.proCode=code;
+   o.yuxianLv=lv;
+   proStaArr[ proStaArr.length ]=o;
+}
+
+function selectType(code){
+   $("#spanType"+sType).css("background-color","#E1F2EC");
+   sType=code;
+   typeInfo=top.getTypeByCode( sType );
+   area=typeInfo.AREA;
+   $("#spanType"+code).css("background-color","yellow");
+   drawHourSpan();
+   var today=new Date();
+   if ( sType == 'AWSD' || sType == 'AWSS' || sType == 'CAWN_AR' ) {
+     today.setTime( today.getTime() - 24*60*60000 );
+   }
+   
+    var y = today.getFullYear();
+    var m = today.getMonth() + 1;
+    var d = today.getDate();
+	var h = today.getHours();
+	today.setMinutes(0);
+    today.setSeconds(0);
+	today.setMilliseconds(0);
+	$("#q_date").val( y+"-"+top.getTwoNumberStr(m)+"-"+top.getTwoNumberStr(d) );
+   
+   doQuery();
+}
+
+jQuery(document).ready(function() {
+    sType=top.getUrlParam(document.URL,"sType");
+	if ( !sType ) sType="NWST";
+
+    $("#selectable").html( top.getTypeHtml(sType) );
+	pros=top.getnationalList();
+	typeInfo=top.getTypeByCode( sType );
+	area=typeInfo.AREA;
+	
+	$( "#selectable" ).selectable();
+	
+    var today=new Date();
+    var y = today.getFullYear();
+    var m = today.getMonth() + 1;
+    var d = today.getDate();
+	var h = today.getHours();
+	if ( today.getMinutes() < 40 ) {
+	    h=h-1;
+	}
+	
+	today.setMinutes(0);
+    today.setSeconds(0);
+	today.setMilliseconds(0);
+	
+	$("#q_date").val( y+"-"+top.getTwoNumberStr(m)+"-"+top.getTwoNumberStr(d) );
+	
+	var wh=$(window).height();
+	$("#dataDiv").height( "1500px" );
+	currentTime=today.getTime();
+	$("#nextHourBtn").hide();
+	drawHourSpan();
+	
+	var ww=$(window).width()-100;
+	if ( ww <= 0 ) ww = 1100;
+    $("#chartFrame").width( ww );
+	
+	doQuery();
+ });
+ 
+ function drawHourSpan(){
+    if ( typeInfo.HOURS == 'ALL' ) {
+	    var today=new Date();
+		var y = today.getFullYear();
+		var m = today.getMonth() + 1;
+		var d = today.getDate();
+		var h = today.getHours();
+		if ( today.getMinutes() < 40 ) {
+			h=h-1;
+		}
+	  $("#span_hour").html( top.get24HourSelectHtml("q_hour",false,h,"doQuery()") );
+	  $("#ct1").show();
+	  $("#ct2").show();
+	  $("#ct3").show();
+	  $("#span_hour").show();
+	  $("#customHours").hide();
+	  $("#currentTimeTxt").html("当前小时");
+	  changeTimeType="hour";
+	} else {
+	    changeTimeType="date";
+        $("#ct1").show();
+	    $("#ct2").show();
+	    $("#ct3").show();
+	    $("#currentTimeTxt").html("当前日期");
+	  $("#span_hour").hide();
+	  $("#customHours").show();
+	  $("#customHours").html( getTypeHours() );
+	}
+ }
+ 
+ function getTypeHours(){
+    var ht="";
+	var color="yellow";
+	try{
+	  var hs=typeInfo.HOURS.split(",");
+	  var hl=typeInfo.HOUR_NAMES.split(",");
+	  for ( var i=0;i<hs.length;i++ ) {
+	    color="#E1F2EC";
+	    if ( i == 0 ) {
+		  typeHour=hs[i];
+		  color="yellow";
+		}
+	    ht+='<span id="spanTypeHour'+hs[i]+'" style="height:30px;background-color:'+color+';cursor:pointer" ';
+		ht+=' onclick="selectHour(\''+hs[i]+'\')" ';
+        ht+=' ><font size="4">';
+		ht+=hl[i]+'</font></span>&nbsp;&nbsp;&nbsp;&nbsp;';
+	  }
+	}catch(e){}
+	return ht;
+ }
+ 
+  function getAllHours(){
+    var ht="<table><tr>";
+	var color="yellow";
+	typeHour=0;
+	ht+='<td><span id="spanTypeHour0" style="height:30px;background-color:yellow;cursor:pointer" onclick="selectHour(\'0\')" ><font size="4">0</font></span></td>';
+	ht+='<td><span id="spanTypeHour1" style="height:30px;background-color:#E1F2EC;cursor:pointer" onclick="selectHour(\'1\')" ><font size="4">1</font></span></td>';
+	ht+='<td><span id="spanTypeHour2" style="height:30px;background-color:#E1F2EC;cursor:pointer" onclick="selectHour(\'2\')" ><font size="4">2</font></span></td>';
+	ht+='<td><span id="spanTypeHour3" style="height:30px;background-color:#E1F2EC;cursor:pointer" onclick="selectHour(\'3\')" ><font size="4">3</font></span></td>';
+	ht+='<td><span id="spanTypeHour4" style="height:30px;background-color:#E1F2EC;cursor:pointer" onclick="selectHour(\'4\')" ><font size="4">4</font></span></td>';
+	ht+='<td><span id="spanTypeHour5" style="height:30px;background-color:#E1F2EC;cursor:pointer" onclick="selectHour(\'5\')" ><font size="4">5</font></span></td>';
+	ht+='<td><span id="spanTypeHour6" style="height:30px;background-color:#E1F2EC;cursor:pointer" onclick="selectHour(\'6\')" ><font size="4">6</font></span></td>';
+	ht+='<td><span id="spanTypeHour7" style="height:30px;background-color:#E1F2EC;cursor:pointer" onclick="selectHour(\'7\')" ><font size="4">7</font></span></td>';
+	ht+='</tr><tr>';
+	ht+='<td><span id="spanTypeHour8" style="height:30px;background-color:#E1F2EC;cursor:pointer" onclick="selectHour(\'8\')" ><font size="4">8</font></span></td>';
+	ht+='<td><span id="spanTypeHour9" style="height:30px;background-color:#E1F2EC;cursor:pointer" onclick="selectHour(\'9\')" ><font size="4">9</font></span></td>';
+	ht+='<td><span id="spanTypeHour10" style="height:30px;background-color:#E1F2EC;cursor:pointer" onclick="selectHour(\'10\')" ><font size="4">10</font></span></td>';
+	ht+='<td><span id="spanTypeHour11" style="height:30px;background-color:#E1F2EC;cursor:pointer" onclick="selectHour(\'11\')" ><font size="4">11</font></span></td>';
+	ht+='<td><span id="spanTypeHour12" style="height:30px;background-color:#E1F2EC;cursor:pointer" onclick="selectHour(\'12\')" ><font size="4">12</font></span></td>';
+	ht+='<td><span id="spanTypeHour13" style="height:30px;background-color:#E1F2EC;cursor:pointer" onclick="selectHour(\'13\')" ><font size="4">13</font></span></td>';
+	ht+='<td><span id="spanTypeHour14" style="height:30px;background-color:#E1F2EC;cursor:pointer" onclick="selectHour(\'14\')" ><font size="4">14</font></span></td>';
+	ht+='<td><span id="spanTypeHour15" style="height:30px;background-color:#E1F2EC;cursor:pointer" onclick="selectHour(\'15\')" ><font size="4">15</font></span></td>';
+	ht+='</tr><tr>';
+	ht+='<td><span id="spanTypeHour16" style="height:30px;background-color:#E1F2EC;cursor:pointer" onclick="selectHour(\'16\')" ><font size="4">16</font></span></td>'
+	ht+='<td><span id="spanTypeHour17" style="height:30px;background-color:#E1F2EC;cursor:pointer" onclick="selectHour(\'17\')" ><font size="4">17</font></span></td>';
+	ht+='<td><span id="spanTypeHour18" style="height:30px;background-color:#E1F2EC;cursor:pointer" onclick="selectHour(\'18\')" ><font size="4">18</font></span></td>';
+	ht+='<td><span id="spanTypeHour19" style="height:30px;background-color:#E1F2EC;cursor:pointer" onclick="selectHour(\'19\')" ><font size="4">19</font></span></td>';
+	ht+='<td><span id="spanTypeHour20" style="height:30px;background-color:#E1F2EC;cursor:pointer" onclick="selectHour(\'20\')" ><font size="4">20</font></span></td>';
+	ht+='<td><span id="spanTypeHour21" style="height:30px;background-color:#E1F2EC;cursor:pointer" onclick="selectHour(\'21\')" ><font size="4">21</font></span></td>';
+	ht+='<td><span id="spanTypeHour22" style="height:30px;background-color:#E1F2EC;cursor:pointer" onclick="selectHour(\'22\')" ><font size="4">22</font></span></td>';
+	ht+='<td><span id="spanTypeHour23" style="height:30px;background-color:#E1F2EC;cursor:pointer" onclick="selectHour(\'23\')" ><font size="4">23</font></span></td>';
+	ht+='</tr></table>';
+	return ht;
+ }
+ 
+ function selectHour(h){
+   $("#spanTypeHour"+typeHour).css("background-color","#E1F2EC");
+   typeHour=h;
+   $("#spanTypeHour"+typeHour).css("background-color","yellow");
+   doQuery();
+ }
+ 
+function toHour(ah){
+  if ( changeTimeType == 'date' ) {
+    toDate(ah);
+    return ;
+  }
+
+  var str=$("#q_date").val();
+  var d=new Date();
+  d.setFullYear( Number(str.substring(0,4)) );
+  d.setMonth( Number(str.substring(5,7)) - 1 );
+  d.setDate( Number(str.substring(8,10)) );
+  d.setHours( Number( $("#q_hour").val() ) );
+  d.setMinutes(0);
+  d.setSeconds(0);
+  d.setMilliseconds(0);
+  d.setTime( d.getTime() + Number(ah)*60*60000 );
+  
+  var y = d.getFullYear();
+  var m = d.getMonth() + 1;
+  var day = d.getDate();
+  var h = d.getHours();
+  $("#q_date").val( y+"-"+top.getTwoNumberStr(m)+"-"+top.getTwoNumberStr(day) );
+  $("#q_hour").val( h );
+  doQuery();
+  
+  if ( currentTime <= d.getTime() ) {
+    $("#nextHourBtn").hide();
+  } else {
+    $("#nextHourBtn").show();
+  }
+}
+
+function toDate(ad){
+  var str=$("#q_date").val();
+  var d=new Date();
+  d.setFullYear( Number(str.substring(0,4)) );
+  d.setMonth( Number(str.substring(5,7)) - 1 );
+  d.setDate( Number(str.substring(8,10)) );
+  d.setMinutes(0);
+  d.setSeconds(0);
+  d.setMilliseconds(0);
+  d.setTime( d.getTime() + Number(ad)*24*60*60000 );
+  
+  var y = d.getFullYear();
+  var m = d.getMonth() + 1;
+  var day = d.getDate();
+  $("#q_date").val( y+"-"+top.getTwoNumberStr(m)+"-"+top.getTwoNumberStr(day) );
+  doQuery();
+}
+
+function currentHour(){
+  var today=new Date();
+  var y = today.getFullYear();
+  var m = today.getMonth() + 1;
+  var d = today.getDate();
+  var h = today.getHours();
+  $("#q_date").val( y+"-"+top.getTwoNumberStr(m)+"-"+top.getTwoNumberStr(d) );
+  $("#q_hour").val( top.getTwoNumberStr( h ) );
+  doQuery();
+  $("#nextHourBtn").hide();
+}
+
+function doQuery(){
+    if ( $("#q_date").val() == '' ) {
+	  return ;
+	}
+	if ( typeInfo.HOURS == 'ALL' ) {
+	  typeHour=Number( $("#q_hour").val() );
+	}
+	proStaArr=[];
+    try{
+	  var dateStr=$("#q_date").val();
+	  var d=new Date(2013,1,1);
+		  d.setFullYear( Number(dateStr.substring(0,4)) );
+		  d.setMonth( Number(dateStr.substring(5,7)) - 1 );
+		  d.setDate( Number(dateStr.substring(8,10)) );
+		  d.setHours( Number(typeHour) );
+		  d.setMinutes(0);
+		  d.setSeconds(0);
+		  d.setMilliseconds(0);
+
+	   if ( currentTime <= d.getTime() ) {
+		$("#nextHourBtn").hide();
+	   } else {
+		$("#nextHourBtn").show();
+	   }
+		  
+	  d.setTime( d.getTime() - 8*60*60000 );
+
+	  var year= d.getFullYear();
+	  var month= d.getMonth() + 1;
+	  var day= d.getDate();
+	  hour= d.getHours();
+	  
+	  var aoData=[];
+	  
+	  aoData.push( { "name": "detail.v04001", "value": year } );
+	  aoData.push( { "name": "detail.v04002", "value": month } );
+	  aoData.push( { "name": "detail.v04003", "value": day } );
+	  aoData.push( { "name": "detail.v04004", "value": hour } );
+	  aoData.push( { "name": "area", "value": area } );
+	  aoData.push( { "name": "detail.type", "value": sType } );
+	  top.sendAjaxRequest("/actions/CmaTable.action?getStatTranRealList",aoData,callbackGetTableList);
+	}catch(e){}
+ }
+ 
+ function doChart(){
+		try{
+		    sortProStaArr();
+			dataStr='<chart title="到报率统计" types="bar,bar,bar" yTitle="单位(%)" yTitle2="" ';
+			var max=100;
+			var min=100;
+			var step=10;
+			var max2=100;
+			var min2=100;
+			var i=0;
+			var vals="";
+			var vals2="";
+			var vals3="";
+			var axis="";
+			var pname="";
+
+			var n=0;
+			if ( proStaArr.length > 0 ) {
+				for ( i=0;i<proStaArr.length;i++ ) {
+				   if ( proStaArr[i].proCode == '0' ) continue;
+				   if ( min > proStaArr[i].jishiLv ) min=proStaArr[i].jishiLv;
+				   if ( min2 > proStaArr[i].yuxianLv ) min2=proStaArr[i].yuxianLv;
+				   //if ( max < proStaArr[i].jishiLv ) max=proStaArr[i].jishiLv;
+				   //if ( max2 < proStaArr[i].yuxianLv && proStaArr[i].yuxianLv != 999999) max2=proStaArr[i].yuxianLv;
+				   //if ( max2 < proStaArr[i].quebaoLv && proStaArr[i].quebaoLv != 999999) max2=proStaArr[i].quebaoLv;
+				   if ( n > 0 ) {
+					vals+=",";
+					vals2+=",";
+					vals3+=",";
+					axis+=",";
+				   }
+				   n++;
+				   vals+=proStaArr[i].jishiLv;
+				   vals2+=proStaArr[i].yuxianLv;
+				   vals3+=proStaArr[i].quebaoLv;
+				   pname=top.getNationalName(proStaArr[i].proCode);
+				   axis+=parent.toSimpleProName(pname);
+				}
+			} else {
+			    vals="999999,999999,999999";
+			    vals2="999999,999999,999999";
+			    vals3="999999,999999,999999";
+			    axis="无,数,据";
+			}
+
+			//max = getMMax(max);
+			min = getMMin(min);
+			step = getMStep( max - min );
+			
+			//max2 = getMMax(max2);
+			//min2 = getMMin(min2);
+			var l1="及时率";
+			var l2="逾限率";
+			var l3="缺报率";
+			if ( sType == 'AWSD' || sType == 'AWSS' ) {
+			   l1="当日23时";
+			   l2="次日23时";
+			   l3="缺报";
+			}
+
+			dataStr+='xAxis="'+axis+'" colors="green,yellow,red"  isDisplayOption="2" ';
+			dataStr+='yMax="'+max+','+max+','+max+'" yMin="'+min+','+min+','+min+'" yStep="'+step+'">';
+			dataStr+='<data label="'+l1+'" values="'+vals+'" />';
+			dataStr+='<data label="'+l2+'" values="'+vals2+'" />';
+			dataStr+='<data label="'+l3+'" values="'+vals3+'" />';
+			dataStr+='</chart>';
+
+			drawChart();
+		}catch(e){
+		}
+ }
+ 
+ function sortProStaArr(){
+     for ( var i=0;i<proStaArr.length;i++ ) {
+		  proStaArr[i].jishiLv=to2fix(Number(proStaArr[i].jishiLv));
+		  if ( Number(proStaArr[i].yuxianLv) == 999999 ) {
+		    proStaArr[i].yuxianLv=0;
+			proStaArr[i].quebaoLv=to2fix(100-Number(proStaArr[i].jishiLv));
+		  } else {
+		    proStaArr[i].quebaoLv=to2fix(100-Number(proStaArr[i].yuxianLv));
+		  }
+		  proStaArr[i].yuxianLv=to2fix(Number(proStaArr[i].yuxianLv)-Number(proStaArr[i].jishiLv));
+		  if ( proStaArr[i].yuxianLv < 0 ) proStaArr[i].yuxianLv=999999;
+     }
+
+     var temp=null;
+     for ( var i=0;i<proStaArr.length-1;i++ ) {
+	    for ( var j=i+1;j<proStaArr.length;j++ ) {
+		  try{
+			  if ( proStaArr[i].jishiLv < proStaArr[j].jishiLv || proStaArr[i].jishiLv == 999999) {
+				 temp=proStaArr[i];
+				 proStaArr[i] = proStaArr[j];
+				 proStaArr[j] = temp;
+			  }
+		  }catch(e){
+		  }
+		}
+     }
+ }
+
+ function drawChart(){
+   	   if ( dataStr == '' ) return ;
+   	   try{
+	     var mid="chartFrame";
+         var chartFrame = document.getElementById( mid );
+         if ( chartFrame.contentWindow.isLoaded() ) {
+           chartFrame.contentWindow.doDrawChart( dataStr );
+		   dataStr="";
+         }
+       }catch(e){
+       }
+   }
+   
+ function getChartStr(){
+    return dataStr;
+ }
+ 
+ function callbackGetTableList(obj){
+    var color="#000000";
+	var rv=0;
+	var jishiTime=0;
+	var yuxianTime=0;
+	var typeObj=top.getTypeByCode( sType );
+    try{
+	  $("#tableMemo").hide();
+	  if ( obj.body.data.length > 0 ) {
+	      var ht="";
+		  ht+='<tr bgcolor="#CEDAE8">';
+	      ht+='<td width="150px" height="32px" align="center">省（区、市）</td>';
+	      ht+='<td width="150px" height="32px" align="center">应收站点数（个）</td>';
+		  for ( var j=0;j<obj.body.staTimes.length;j++ ) {
+		      if ( sType == 'AWSD' || sType == 'AWSS' ) {
+				if ( obj.body.staTimes[j].staTime == 1 ) {
+				  ht+='<td width="100px" height="32px" align="center">当日23时</td>';
+				} else {
+				  ht+='<td width="100px" height="32px" align="center">次日23时</td>';
+				}
+		      } else {
+			    ht+='<td width="100px" height="32px" align="center">'+obj.body.staTimes[j].staTime+'分钟</td>';
+			  }
+			  if ( obj.body.staTimes[j].staTime>jishiTime && obj.body.staTimes[j].staTime <= typeObj.jishi ) {
+			    jishiTime=obj.body.staTimes[j].staTime;
+			  }
+			  if ( obj.body.staTimes[j].staTime>yuxianTime && obj.body.staTimes[j].staTime <= typeObj.yuxian ) {
+			    yuxianTime=obj.body.staTimes[j].staTime;
+			  }
+		  }
+		  ht+='</tr>';
+		  
+		  if ( sType == 'AWSD' || sType == 'AWSS' ) {
+		    $("#tableMemo").html("注1、到报率=格式正确的站数/应到站数<br/>注2、次日23时仍未到的记为缺报");
+			$("#tableMemo").show();
+          } else if ( sType == 'SEVP_RFFC' || sType == 'RADI_URP' ) {
+		    $("#tableMemo").html("注: “-mm分钟”表示当前时次倒推mm分钟");
+			$("#tableMemo").show();
+          } else {
+		    $("#tableMemo").html("");
+		  }
+
+	    var row=1;
+		var proCode="";
+	    for (var i=0;i<pros.length;i++) {
+			  ht+='<tr ';
+			  ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+			  ht+='>';
+			  ht+='<td width="130px" height="32px" bgcolor="#CEDAE8" style="border-width: 0px 0px 1px 0;padding:0 0 0 20px;border-style: none none dotted none;border-color: #89A1B9" align="left">'+pros[i].province_name+'</td>';
+			  
+			  proCode=pros[i].province_code;
+			  if (  proCode == 2100 && ( sType == 'AWSD' || sType == 'AWSS' ) ) {
+			     proCode=1600;
+			  }
+			  
+			  ht+='<td width="150px" height="32px" align="center"><b><span id="'+proCode+'_sta_num"></span></b></td>';
+			  for ( var j=0;j<obj.body.staTimes.length;j++ ) {
+				  ht+='<td width="100px" height="32px" align="center"><b><span id="'+proCode+'_trans_val_'+obj.body.staTimes[j].staTime+'"></span></b></td>';
+			  }
+			  ht+='</tr>';
+		      if ( row == 1 ) {
+			    row=0;
+		      } else {
+		        row=1;
+		      }
+	    }
+		// 总数
+		ht+='<tr ';
+		ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+		ht+='>';
+		ht+='<td width="130px" height="32px" bgcolor="#CEDAE8" style="border-width: 0px 0px 1px 0;padding:0 0 0 20px;border-style: none none dotted none;border-color: #89A1B9" align="left">全国</td>';
+		ht+='<td width="150px" height="32px" align="center"><b><span id="0_sta_num"></span></b></td>';
+		for ( var j=0;j<obj.body.staTimes.length;j++ ) {
+			  ht+='<td width="100px" height="32px" align="center"><b><span id="0_trans_val_'+obj.body.staTimes[j].staTime+'"></span></b></td>';
+		}
+		ht+='</tr>';
+		
+	    $("#dataList").html( ht );
+		
+ 	    for ( var i=0;i<obj.body.data.length;i++ ) {
+		  rv=Number(obj.body.data[i].val);
+		  $("#"+obj.body.data[i].province_code+"_sta_num").html( obj.body.data[i].sta_num );
+		  $("#"+obj.body.data[i].province_code+"_trans_val_"+obj.body.data[i].sta_time).html( to1fix( rv ) +"%</font>");
+		  if ( obj.body.data[i].sta_num == 0 ) {
+		    rv=999999;
+		  }
+		  if ( obj.body.data[i].sta_time == jishiTime ) {
+		    addJishi(obj.body.data[i].province_code,rv);
+		  }
+		  
+		  if ( obj.body.data[i].sta_time == yuxianTime ) {
+		    addYuxian(obj.body.data[i].province_code,rv);
+		  }
+		}
+		
+		$("#chartDiv").show();
+	  } else {
+	    $("#dataList").html( "" );
+	  }
+	  doChart();
+	}catch(e){
+	}
+ }
+ 
+ function to1fix(num){
+	return Math.round(num*10)/10;
+ }
+ 
+ function to2fix(num){
+	return Math.round(num*100)/100;
+ }
+ 
+ function onDateSelectChanged(o){
+    try{
+	   doQuery();
+	}catch(e){}
+ }
+ 
+    function getMStep(d){
+      if ( d > 50 ) return 10;
+	  if ( d > 10 ) return 5;
+	  if ( d > 1 ) return 1;
+	  if ( d > 0.1 ) return 0.1;
+	  if ( d > 0.01 ) return 0.01;
+	  if ( d > 0.005 ) return 0.005;
+	  return 0.0005;
+   }
+   
+   function getMMin(m){
+      if ( m == 0 ) return 0;
+      for ( var i=1;i<15;i++ ) {
+	     if ( m > (100 - i*5) ) {
+		    m = (100 - i*5);
+			break;
+		 }
+	  }
+	  if ( m < 20 ) {
+	     for ( var i=1;i<16;i++ ) {
+			 if ( m > (20 - i) ) {
+				m = 20 - i;
+				break;
+			 }
+		 }
+	  }
+	  if ( m < 5 ) {
+	     for ( var i=1;i<10;i++ ) {
+			 if ( m > (5 - i*0.5) ) {
+				m = 5 - i*0.5;
+				break;
+			 }
+		 }
+	  }
+	  if ( m < 1 ) {
+	     for ( var i=1;i<10;i++ ) {
+			 if ( m > (1 - i*0.1) ) {
+				m = 1 - i*0.1;
+				break;
+			 }
+		 }
+	  }
+	  if ( m < 0.1 ) {
+	     for ( var i=1;i<10;i++ ) {
+			 if ( m > (0.1 - i*0.01) ) {
+				m = 0.1 - i*0.01;
+				break;
+			 }
+		 }
+	  }
+	  if ( m < 0 ) m = 0;
+	  return m;
+   }
+   
+   function getMMax(m){
+      if ( m == 0 ) return 1;
+      for ( var i=1;i<15;i++ ) {
+	     if ( m > (100 - i*5) ) {
+		    m = (100 - i*5) + 5;
+			break;
+		 }
+	  }
+	  if ( m < 20 ) {
+	     for ( var i=1;i<16;i++ ) {
+			 if ( m > (20 - i) ) {
+				m = 20 - i + 1;
+				break;
+			 }
+		 }
+	  }
+	  if ( m < 5 ) {
+	     for ( var i=1;i<10;i++ ) {
+			 if ( m > (5 - i*0.5) ) {
+				m = 5 - i*0.5 + 0.5;
+				break;
+			 }
+		 }
+	  }
+	  if ( m < 1 ) {
+	     for ( var i=1;i<10;i++ ) {
+			 if ( m > (1 - i*0.1) ) {
+				m = 1 - i*0.1 + 0.1;
+				break;
+			 }
+		 }
+	  }
+	  if ( m < 0.1 ) {
+	     for ( var i=1;i<10;i++ ) {
+			 if ( m > (0.1 - i*0.01) ) {
+				m = 0.1 - i*0.01 + 0.01;
+				break;
+			 }
+		 }
+	  }
+	  return m;
+   }
+ 
+   function doChartClick(txt){
+     var proCode=top.getNationalCodeByName(txt);
+	 var xurl="pages/pro10/statTranRealProvinceDetail.html?sType="+sType+"&area="+area+"&proCode="+proCode;
+     top.openDialog(txt+"到报率历史情况",xurl,true,700,480,null);
+   }
+ 
+</script>
+
+<style>
+	#selectable .ui-selecting { background: #FECA40; }
+	#selectable .ui-selected { background: #F39814; color: white; }
+	#selectable { list-style-type: none; margin: 0; padding: 0; }
+	#selectable li { margin: 3px; padding: 2px; float: left; width: 170px; height: 20px; font-size: 13px; text-align: center; }
+	.tdVal{}
+</style>
+
+</head>
+
+<body style="width:99%">
+<center>
+<table cellpadding="0px" width="100%" cellspacing="0px" border="0">
+ <tr bgcolor="#E1F2EC">
+   <td id="typeTd" width="100%" align="left" colspan="5" style="padding:10px">
+     <ol id="selectable">
+    </ol>
+   </td>
+ </tr>
+ <tr bgcolor="#E1F2EC">
+  <td width="30%" height="30px" align="center">
+   时间(北京时)：<input type="text" id="q_date" value="" onchange="doQuery()" onclick="new Calendar().show(this);" style="width:80px" size="15" /><span id="span_hour"></span>&nbsp;
+  </td>
+  <td id="customHours">&nbsp;</td>
+  <td id="ct1" width="10%" align="center"><a href="javascript:toHour(-1)"><img src="../../img/go-lt-on.gif"></img></a></td>
+  <td id="ct2" width="15%" align="center"><div class="buttonDivSix"><a href="javascript:currentHour()" id="currentTimeTxt">当前小时</a></div></td>
+  <td id="ct3" width="10%" align="center"><a id="nextHourBtn" href="javascript:toHour(1)"><img src="../../img/go-rt-on.gif"></img></a></td> 
+ </tr>
+</table>
+<div id="noDataDiv" style="display:none"><br/><br/><font size="6">&nbsp;</font></div>
+<div id="chartDiv" style="margin: 1px;padding:0;width:100%;height:310px;background-color:#ffffff;overflow: auto;">
+  <iframe id="chartFrame" src="../chart.html" height="300px" frameborder="0"></iframe>
+</div>
+
+
+  <div id="dataDiv" style="margin: 1px;padding:0;width:1000px;background-color:#ffffff;overflow: auto;">
+   <table id="dataList" width="1000px" cellpadding="0" cellspacing="2px" border="1" style="border-color:blue"></table>
+   <br/>
+   <p align="left" id="tableMemo" ></p>
+  </div>
+
+
+</center>
+</body>
+</html>

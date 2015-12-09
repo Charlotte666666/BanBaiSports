@@ -1,0 +1,191 @@
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet"
+			type="text/css">
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css"
+			media="print, projection, screen">
+		<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+		<script type="text/javascript">
+		var isSaveOK=false;
+		var optType="";
+		var g_allUsers=[];
+		var info_id=0;
+	   $(document).ready(function() {
+		 initData();
+	   });
+	   
+		function doQuery(){
+			oTable.fnDraw();
+		}
+		
+		// 保存基本信息
+		function doSubmit(){
+		var aoData=[];
+			
+			if ( info_id == 0 ) {
+				aoData.push( { "name": "designer.user_code", "value": $("#user_code").val() } );
+				aoData.push( { "name": "designer.designer_level", "value": $("#designer_level").val() } );
+				aoData.push( { "name": "designer.memo", "value": $("#memo").val() } );
+				aoData.push( { "name": "designer.status", "value": $("#status").val() } );
+				aoData.push( { "name": "designer.group_id", "value": $("#group_id").val() } );
+				aoData.push( { "name": "designer.certificate_num", "value": $("#certificate_num").val() } );
+				xurl="/actions/DesignPlan.action?insertDesignerInfo";
+			}else{
+				aoData.push( { "name": "designer.user_code", "value": info_id} );
+				aoData.push( { "name": "designer.designer_level", "value": $("#designer_level").val() } );
+				aoData.push( { "name": "designer.memo", "value": $("#memo").val() } );
+				aoData.push( { "name": "designer.status", "value": $("#status").val() } );
+				aoData.push( { "name": "designer.group_id", "value": $("#group_id").val() } );
+				aoData.push( { "name": "designer.certificate_num", "value": $("#certificate_num").val() } );
+				xurl="/actions/DesignPlan.action?updateDesignerInfo";
+			}
+		   
+			top.sendAjaxRequest(xurl,aoData,optCallback);
+	   }
+
+	   // 关闭当前页面前，页面框架自动调用的函数
+	   function doBeforeClose(){
+		 var obj={
+				  "isSaveOK":isSaveOK
+				};
+		 top.setTempValue(obj);
+	   }
+
+		function optCallback(obj){
+		   try{
+			if ( obj.status == true ){
+				isSaveOK = true;
+				top.showInfoWinOK("操作成功");
+				top.closeDialog();
+			}else{
+				isSaveOK = false;
+				top.showInfoWinError("操作失败 "+obj.msg);
+			}
+		   }catch(e){
+			  top.showInfoWinError("处理异常:"+e.message);
+		   }
+	   }
+	   
+		function initData(){
+			optType=top.getUrlParam(document.URL,"optType");
+			if ( optType=='update' ){
+				info_id=top.getUrlParam(document.URL,"id");
+				var aoData=[];
+				aoData.push( { "name": "designer.user_code", "value": info_id } );
+				top.sendAjaxRequest("/actions/DesignPlan.action?getDesignerInfo",aoData,infoCallback);
+			} else {
+				 $("#span_designer_level" ).html( top.getCodeSelectHtml("DESIGNER_LEVEL","designer_level",false,'0') );
+				 $("#span_user_code").html(top.getAllUserSelect("user_code"));
+				 $("#span_status" ).html( top.getCodeSelectHtml("STATUS","status",false,'0') );
+				 $("#span_group" ).html( top.getAllWorkGroupSelect("group_id","") );
+				
+			}
+		
+		}
+		function infoCallback(obj){
+		   try{
+			if ( obj.status == true ){
+			  var o=obj.body;
+				$("#span_user_code").html(top.getUserNameByCode(o.user_code));
+				$("#span_designer_level" ).html( top.getCodeSelectHtml("DESIGNER_LEVEL","designer_level",true,o.designer_level) );
+				$("#memo").val(o.memo);
+				$("#span_status").html(top.getCodeSelectHtml("STATUS","status",true,o.status));
+				 $("#span_group" ).html( top.getAllWorkGroupSelect("group_id",o.group_id) );
+				 $("#certificate_num").val(o.certificate_num);
+			}else{
+			  top.showInfoWinError("操作失败");
+			}
+		   }catch(e){
+			  top.showInfoWinError("处理异常:"+e.message);
+		   }
+		}
+		
+
+		function initCheckedValue(boxes,values) {
+			if ( !values ) return ;
+			if ( values == null || values == '' ) return ;
+			for (var i = 0; i < boxes.length; i++) {
+				if ( values.indexOf(boxes[i].value+",") != -1 || values.indexOf(","+boxes[i].value) != -1 ) {
+					boxes[i].checked = true;
+				}
+			}
+		}
+	</script>
+	<style>
+		body,td {
+			font-size: 13px;
+		}
+
+		.roomTd {
+			border: 1px;
+			border-style: dotted none none none;
+			border-color: blue;
+			color: #000000;
+			padding-left: 5px;
+		}
+
+		#KinSlideshow {
+			overflow: hidden;
+			width: 500px;
+			height: 450px;
+		}
+
+		.inputBottomLine {
+			border-top: hide;
+			border-left: hide;
+			border-center: hide;
+		}
+	</style>
+	</head>
+	<body>
+	<br/>
+
+					<table cellpadding="1" cellspacing="1" width="95%" 
+					align="center" style="background-color: #b9d8f3;margin:0px auto">
+						<tr class="tr_data">
+							<td align="right" width="30%"><B>账号：</B></td>
+							<td align="left" width="70%"><span id="span_user_code" style="width:130px;"></span></td>
+						</tr>
+						<tr class="tr_data">
+							<td align="right"><B>等级：</B></td>
+							<td align="left"><span id="span_designer_level" style="width:130px;"></span></td>
+						</tr>
+						<tr class="tr_data">
+							<td align="right"><B>状态：</B></td>
+							<td align="left"><span id="span_status" style="width:130px;"></span></td>
+						</tr>
+						<tr class="tr_data">
+							<td align="right"><B>工作组：</B></td>
+							<td align="left"><span id="span_group" style="width:130px;"></span></td>
+						</tr>
+						<tr class="tr_data">
+							<td align="right"><B>证书编号：</B></td>
+							<td align="left"><input type="text" id="certificate_num" style="width:150px;"/></td>
+						</tr>
+						<tr class="tr_data">
+							<td align="right"><B>备注：</B></td>
+							<td align="left"><textarea id="memo" cols="45" rows="5"></textarea></td>
+						</tr>
+					</table>
+				    <center>
+					<div id="saveBtn" class="buttonDivTwo">
+						<a href="javascript:void(0)" onclick="doSubmit()">保存</a>
+					</div>
+					</center>
+	</body>
+</html>

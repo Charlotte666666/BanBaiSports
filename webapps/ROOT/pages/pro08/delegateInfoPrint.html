@@ -1,0 +1,96 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<script src="../../js/jquery-1.7.2.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+	<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+	<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+	<script type="text/javascript" language="JavaScript1.2" src="../../js/helpyouworkeasy-core.js"></script>
+	<script type="text/javascript">
+		var delegateInfo={};
+		$(document).ready(function() {	
+			try{
+				delegateInfo=opener.getDelegateValue();
+				$("#delegate_unit_name").html("&nbsp;"+delegateInfo.delegate_unit_name +"&nbsp;");
+				$("#defendant_id").html("&nbsp;"+delegateInfo.defendant_id +"&nbsp;" );
+				$("#defendant_sex").html("&nbsp;"+opener.getCodeName("SEX",delegateInfo.defendant_sex ) +"&nbsp;");
+				$("#defendant_name").html("&nbsp;"+delegateInfo.defendant_name  +"&nbsp;");
+				$("#criminal_type").html("&nbsp;"+opener.getCodeName( "CRIMINAL_TYPE",delegateInfo.criminal_type) +"&nbsp;");
+				$("#addr").html( "&nbsp;"+delegateInfo.addr +"&nbsp;");
+				$("#domicile_place").html("&nbsp;"+delegateInfo.domicile_place +"&nbsp;");
+				$("#expect_reply_date").html("&nbsp;"+getDate(opener.getTimeStr(delegateInfo.expect_reply_date)) +"&nbsp;");
+				$("#create_time").html("&nbsp;"+getDate(opener.getTimeStr(delegateInfo.create_time)) +"&nbsp;");
+	  }catch(e){}
+	   } );
+	   
+	   function getDate(str){
+				var a=str.substr(0,4)+"年";
+				var b="&nbsp;"+str.substr(5,2)+"月";
+				var c="&nbsp;"+str.substr(8,2)+"日&nbsp;";
+				str="&nbsp;"+a+b+c;
+				return str;
+		}
+		function doPrint(){
+			$("#printBtn").hide();
+			window.print();
+		}
+	</script>
+	
+	<style type="text/css"> 
+	  table,table td,table th{border:1px solid #ff0000;border-collapse:collapse;}
+	</style>
+</head>
+ <body style="background-color:#7B7B7B">
+  <div style="width:620px;margin-left:auto;margin-right:auto;background-color:white;;padding-left:90px;padding-right:90px;padding-top:90px;padding-bottom:20px">
+	 <p style="text-align:center;line-height:33px">
+		<strong><span style="font-size:24px;font-family:宋体">黑河市社区矫正适用前调查评估委托函</span></strong><strong><span style="font-size:19px;font-family:楷体_GB2312">（存根联）</span></strong>
+	</p>
+	<p style="text-align:right;line-height:33px">
+		<strong><span style="font-size:20px;font-family:楷体_GB2312">（<span style="text-decoration:underline;">&nbsp;&nbsp;&nbsp; </span>矫调委）〔&nbsp;&nbsp;&nbsp; 〕&nbsp;&nbsp; 号</span></strong>
+	</p>
+	<br>
+	<p style="line-height:33px">
+		<span style="text-decoration:underline;"><span id="delegate_unit_name" style="font-size:21px;font-family:仿宋_GB2312">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span><strong><span style="font-size:21px;font-family:仿宋_GB2312">县（市、区、风景区）司法局：</span></strong>
+	</p>
+	<p style="text-indent:43px;line-height:33px">
+		<span style="font-size:21px;font-family:仿宋_GB2312">被告人（罪犯、犯罪嫌疑人）<span id="defendant_name" style="text-decoration:underline;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>，性别<span id="defendant_sex" style="text-decoration:underline;">&nbsp; </span>，身份证号码<span id="defendant_id" style="text-decoration:underline;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>，户籍所在地<span id="domicile_place" style="text-decoration:underline;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>，现居住在</span><span id="addr" style="font-size:21px;font-family:仿宋_GB2312">你辖区<span style="text-decoration:underline;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>乡镇（街道）<span style="text-decoration:underline;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>村（社区）<span style="text-decoration:underline;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>屯（组），</span><span style="font-size:21px;font-family:仿宋_GB2312">因<span id="criminal_type" style="text-decoration:underline;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>被依法逮捕（在监所服刑）。经初步审理（审查），</span><span style="font-size:21px;font-family:仿宋_GB2312">我法院（检察院、公安局、监狱、看守所）</span><span style="font-size:21px;font-family:仿宋_GB2312">拟对其判处（裁定、决定、建议）管制（缓刑、假释、暂予监外执行）。</span>
+	</p>
+	<p style="text-indent:43px;line-height:33px">
+		<span style="font-size:21px;font-family:仿宋_GB2312">根据《刑法》、《刑事诉讼法》和《社区矫正实施办法》以及《黑河市贯彻落实&lt;社区矫正实施办法&gt;的工作实施细则（暂行）》规定，</span><span style="font-size:21px;font-family:仿宋_GB2312">为确保适用刑罚的准确性，</span><span style="font-size:21px;font-family:仿宋_GB2312">现委托你局对其是否实行社区矫正进行适用前调查评估，望形成书面的《调查评估意见书》，于<span id="expect_reply_date" style="text-decoration:underline;"><span id="y"></span> 年<span id="m"></span> 月<span id="d"></span> 日</span>前送达我处。</span>
+	</p>
+	<p style="text-indent:43px;line-height:33px">
+		<span style="font-size:21px;font-family:仿宋_GB2312">通讯地址：<span style="text-decoration:underline;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span>
+	</p>
+	<p style="text-indent:43px;line-height:33px">
+		<span style="font-size:21px;font-family:仿宋_GB2312">联 系 人：<span style="text-decoration:underline;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span>
+	</p>
+	<p style="text-indent:43px;line-height:33px">
+		<span style="font-size:21px;font-family:仿宋_GB2312">联系电话：<span style="text-decoration:underline;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span>
+	</p>
+	<p style="text-indent:43px;line-height:33px">
+		<span style="font-size:21px;font-family:仿宋_GB2312">随函附法律文书和有关材料<span style="text-decoration:underline;">&nbsp; </span>份：</span>
+	</p>
+	<p style="line-height:33px">
+		<span style="font-size:21px;font-family:仿宋_GB2312">&nbsp;&nbsp;&nbsp; 1</span><span style="font-size:21px;font-family:仿宋_GB2312">、</span>
+	</p>
+	<p style="line-height:33px">
+		<span style="font-size:21px;font-family:仿宋_GB2312">&nbsp;&nbsp;&nbsp; 2</span><span style="font-size:21px;font-family:仿宋_GB2312">、</span>
+	</p>
+	<p style="line-height:33px">
+		<span style="font-size:21px;font-family:仿宋_GB2312">&nbsp;&nbsp;&nbsp; 3</span><span style="font-size:21px;font-family:仿宋_GB2312">、</span>
+	</p>
+	<p style="text-indent:341px;line-height:33px">
+		<span style="font-size:21px;font-family:仿宋_GB2312">委托单位：（公章）</span>
+	</p>
+	<p style="line-height:33px;padding-left:320px">
+		<span id="create_time" style="font-size:21px;font-family:仿宋_GB2312">年&nbsp;&nbsp;&nbsp; 月&nbsp;&nbsp;&nbsp; 日</span>
+	</p>
+
+
+	<div width="100%" id="printBtn" style="margin_top:10px;font-size:20px;position:absolute;left:30pxx;top:50px"><center><a style="text-decoration: none"href="javascript:doPrint()"><span>[ 打印 ]</span></a></center></div>
+
+</div>
+</body>
+</html>

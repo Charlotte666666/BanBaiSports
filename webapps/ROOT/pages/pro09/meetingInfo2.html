@@ -1,0 +1,678 @@
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet"
+			type="text/css"/>
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css"
+			media="print, projection, screen"/>
+		<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+	
+<script type="text/javascript">
+	var isSaveOK=false;
+	var optType="";
+	var info_id=0;
+	var Meetingresulid=1;
+	var Meetingresultrnum=1;
+	var assisttrid=1;
+	var assisttrnum=0;
+	var meetingid=0;
+	var meetingresult="";
+	var assist="";
+	var trid="";
+	var result_id=0;
+	var assist_id=0;
+	var resultStr="";
+	var assistId=0;
+	var completeStatus=0;
+
+   $(document).ready(function() {
+	
+     initData();
+   });
+	function deleteMeetingResult(){
+		var aoData=[];
+		var xurl="/actions/Interview.action?deleteMeetingResult";
+		aoData.push( { "name": "meetingresult.meeting_id", "value": meetingid } );
+		top.sendAjaxRequest(xurl,aoData,doSubmit);
+	}
+	//添加会议结果
+	function doSubmit(){
+		if(meetingid==0){
+			 top.showInfoWinError("请先添加会议内容!");
+			 return;
+		}
+		
+		var result_ids="";
+		var meeting_ids="";
+		var complete_dates="";
+		
+		var department="";
+		var superintendent="";
+		var work_content="";
+		var complete_condition="";
+		var manager="";
+		var complete_status="";
+		
+		for(var i=1;i<=7;i++){
+			for(var j=1;j<=5;j++){
+				var aoData=[];
+				if($("#department"+i+"_work_content"+j+"").val()==null||$("#department"+i+"_work_content"+j+"").val()==""){
+					continue;
+				}else{
+					if( $("#department"+i+"").val()==null|| $("#department"+i+"").val()==""){
+						top.showInfoWinError("请选择部门!");
+						return;
+					}
+					result_ids+=result_id+"ISPLITI";
+					meeting_ids+=meetingid+"ISPLITI";
+					complete_dates+=top.toTimestamp($("#department"+i+"_complete_date"+j+"").val())+"ISPLITI";
+					
+					manager+=$("#department"+i+"_manager"+j+"").val()+"ISPLITI";
+					department+=$("#deptId"+i+"").val()+"ISPLITI";
+					superintendent+=$("#department"+i+"_superintendent").val()+"ISPLITI";
+					work_content+=$("#department"+i+"_work_content"+j+"").val()+"ISPLITI";
+					complete_condition+=$("#department"+i+"_complete_condition"+j+"").val()+"ISPLITI";
+					complete_status+="0ISPLITI";
+				}
+			}
+		}
+		
+		aoData.push( { "name": "meetingresult.result_ids", "value": result_ids } );
+		aoData.push( { "name": "meetingresult.meeting_ids", "value": meeting_ids } );
+		aoData.push( { "name": "meetingresult.department", "value": department } );
+		aoData.push( { "name": "meetingresult.superintendent", "value": superintendent } );
+		aoData.push( { "name": "meetingresult.work_content", "value": work_content } );
+		aoData.push( { "name": "meetingresult.complete_condition", "value": complete_condition } );
+		aoData.push( { "name": "meetingresult.manager", "value": manager } );
+		aoData.push( { "name": "meetingresult.complete_dates", "value": complete_dates } );
+		aoData.push( { "name": "meetingresult.complete_status", "value": complete_status } );
+		top.showLoadingInfo(true);
+		var xurl="/actions/Interview.action?batchSaveMeetingResult";
+		top.sendAjaxRequest(xurl,aoData,batchSaveMeetingResultCallback);
+		
+	}
+	
+	function batchSaveMeetingResultCallback(obj){
+		try{
+        if ( obj.status == true ){
+            var aoData1=[];
+			aoData1.push( { "name": "assist.assist_id", "value": assistId } );
+			aoData1.push( { "name": "assist.week_start_date", "value": top.toTimestamp($("#week_start_date").val()) } );
+			aoData1.push( { "name": "assist.week_end_date", "value": top.toTimestamp($("#week_end_date").val()) } );
+			aoData1.push( { "name": "assist.meeting_id", "value": meetingid } );
+			aoData1.push( { "name": "assist.assist_content", "value": $("#assist_content").val() } );
+			aoData1.push( { "name": "assist.top_manager", "value": $("#top_manager").val() } );
+			var xurl="/actions/Interview.action?saveAssistInfo";
+			top.sendAjaxRequest(xurl,aoData1,saveMeetingResultoptCallback);
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	
+	//调用回调函数---添加会议结果
+	function saveMeetingResultoptCallback(obj){
+		try{
+		top.showLoadingInfo(false);
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+
+	// 保存会议基本信息
+    function AddMeetingInfo(){
+		
+		var aoData=[];
+
+		aoData.push({"name":"meeting.meeting_id","value":info_id});
+		aoData.push( { "name": "meeting.meeting_type", "value": $("#meeting_type").val() } );
+		aoData.push( { "name": "meeting.meeting_name", "value": $("#meeting_name").val() } );
+		aoData.push( { "name": "meeting.meeting_hoster", "value": $("#meeting_hoster").val() } );
+		aoData.push( { "name": "meeting.meeting_recorder", "value": $("#meeting_recorder").val() } );
+		aoData.push( { "name": "meeting.attendee", "value": $("#attendee").val() } );
+		aoData.push( { "name": "meeting.sit_in_person", "value": $("#sit_in_person").val() } );
+		aoData.push( { "name": "meeting.absent_person", "value": $("#absent_person").val() } );
+		aoData.push( { "name": "meeting.absent_reason", "value": $("#absent_reason").val() } );
+		aoData.push( { "name": "meeting.late_person", "value": $("#late_person").val() } );
+		aoData.push( { "name": "meeting.late_reason", "value": $("#late_reason").val() } );
+		aoData.push( { "name": "meeting.meeting_proceeding", "value": $("#meeting_proceeding").val() } );
+		aoData.push( { "name": "meeting.meeting_date", "value": top.toTimestamp($("#meeting_date").val()) } );
+
+		var xurl="/actions/Interview.action?updateMeetingInfo";
+		if ( info_id == 0 ) {
+			xurl="/actions/Interview.action?insertMeetingInfo";
+	 }
+     top.sendAjaxRequest(xurl,aoData,AddMeetingoptCallback);
+   }
+	//调用回调函数---添加会议记录
+    function AddMeetingoptCallback(obj){
+       try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+			if ( info_id == 0 ) {
+			  info_id=obj.msg;
+			}
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+ 	function infoCallback(obj){
+	   try{
+        if ( obj.status == true ){
+		  var o=obj.body;
+			//订单信息
+			if(o)
+			{	
+				meetingid=o.meeting_id;
+			    $("#meeting_name").val(o.meeting_name);
+				$("#meeting_hoster").val(o.meeting_hoster);
+				$("#meeting_recorder").val(o.meeting_recorder);
+				$("#attendee").val(o.attendee);
+				$("#sit_in_person").val(o.sit_in_person);
+				$("#absent_person").val(o.absent_person);
+				$("#absent_reason").val(o.absent_reason);
+				$("#late_person").val(o.late_person);
+				$("#late_reason").val(o.late_reason);
+				$("#meeting_proceeding").val(o.meeting_proceeding);
+				$("#meeting_date").val( top.getTimeStr( o.meeting_date, true ) );
+				$("#tdmeeting_type" ).html( top.getCodeSelectHtml("MEETING_TYPE","meeting_type",false,o.meeting_type) );
+				if(o.assistInfo){
+					
+					assistId=o.assistInfo.assist_id;
+					$("#assist_content").val(o.assistInfo.assist_content);
+					$("#top_manager").val(o.assistInfo.top_manager);
+					$("#week_start_date").val( top.getTimeStr( o.assistInfo.week_start_date, true ) );
+					$("#week_end_date").val( top.getTimeStr( o.assistInfo.week_end_date, true ) );
+				}
+				if(o.resultList){
+				       var currentShowDeptId=0;
+					   var currentI=1;
+					   var currentJ=0;
+					   for(var i=0;i<o.resultList.length;i++){
+					        if ( currentShowDeptId == 0 ) {
+							  currentShowDeptId = o.resultList[i].department;
+							  $("#department1").val(top.getDeptPath( o.resultList[i].department));
+							  $("#deptId1").val(o.resultList[i].department);
+							  $("#department1_superintendent").val(o.resultList[i].superintendent);
+							}
+							if(o.resultList[i].department == currentShowDeptId && currentJ < 5){
+							  currentJ++;
+							} else {
+							  currentShowDeptId = o.resultList[i].department;
+							  currentI++;
+							  currentJ=1;
+							  $("#department"+currentI).val(top.getDeptPath( o.resultList[i].department));
+							  $("#deptId"+currentI).val(o.resultList[i].department);
+							  $("#department"+currentI+"_superintendent").val(o.resultList[i].superintendent);
+							}
+							$("#department"+currentI+"_work_content"+currentJ).val(o.resultList[i].work_content);
+							$("#department"+currentI+"_complete_condition"+currentJ).val(o.resultList[i].complete_condition);
+							$("#department"+currentI+"_manager"+currentJ).val(o.resultList[i].manager);
+							$("#department"+currentI+"_complete_date"+currentJ).val( top.getTimeStr( o.resultList[i].complete_date, true ) );
+						}
+				}	
+			}
+		}else{
+          top.showInfoWinError("操作失败");
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	// 关闭当前页面前，页面框架自动调用的函数
+	function doBeforeClose(){
+     var obj={
+              "isSaveOK":isSaveOK
+            };
+     top.setTempValue(obj);
+   }
+	//初始化
+	function initData(){
+		optType=top.getUrlParam(document.URL,"optType");
+	    if ( optType=='update' ){
+			info_id=top.getUrlParam(document.URL,"id");
+			var aoData=[];
+			aoData.push( { "name": "meeting.meeting_id", "value": info_id } );
+			top.sendAjaxRequest("/actions/Interview.action?getMeetingInfo",aoData,infoCallback);
+		}
+		$("#tdmeeting_type" ).html( top.getCodeSelectHtml("MEETING_TYPE","meeting_type",false) );
+		for(var j=1;j<=7;j++)
+		{
+			for(var i=1;i<=5;i++){
+				$("#department"+j+"_span_manager"+i+"").html(top.getAllUserSelect("department"+j+"_manager"+i+""));
+			}
+			$("#department"+j+"_span_superintendent").html(top.getAllUserSelect("department"+j+"_superintendent"));
+		}
+
+
+			
+
+		
+		 
+    }
+	//选择部门
+    function selectDept(mid){
+		trid=mid;
+       var xurl="pages/organization/selectTreeNode.html?type=dept";
+       top.openSelectDialog("选择部门",xurl,300,450,selectDeptCallback);
+   }
+    function selectDeptCallback(){
+       try{
+         var obj = top.getTempValue();
+         if ( obj.nodeId == -1 ) return ;
+         if ( obj.nodeId == -2 ) {
+             qDeptId = "";
+             qDeptName = "";
+         } else {
+             qDeptId = obj.nodeId;
+             qDeptName = obj.nodeName;
+         }
+         document.getElementById("deptId"+trid+"").value = qDeptId;
+		
+         document.getElementById("department"+trid+"").value = qDeptName;
+       }catch(e){
+       }
+   }
+   
+      function doCancel(){
+	   top.closeDialog();
+   }
+  
+	</script>
+	<style>
+		#meetingresult input{
+			width:99%;
+			height:99%;
+		}
+		#meetingresult textarea{
+			width:99%;
+			height:99%;
+		}
+		#meetingresult select{
+			width:99%;
+			height:99%;
+		}
+	</style>
+	</head>
+	<body>
+		<B>会议基本信息</B>
+		<table border="1" cellpadding="3" cellspacing="1" width="98%" align="center" style="background-color: #b9d8f3;">
+			<tr class="tr_data" height="35px">
+				<td width="15%">会议类型</td>
+				<td width="35%" align="left" colspan="3" id="tdmeeting_type"></td>
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td width="15%">会议名称</td>
+				<td width="35%" align="left"><input type="text" id="meeting_name"/></td>
+				<td width="15%" >时间</td>
+				<td width="35%" align="left"><input type="text" id="meeting_date" onclick="new Calendar().show(this);" readonly="true"/></td>
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td>主持人</td>
+				<td align="left"><input type="text" id="meeting_hoster"/></td>
+				<td>记录人</td>
+				<td align="left"><input type="text" id="meeting_recorder"/></td>
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td>参加人员</td>
+				<td align="left" colspan="3"><textarea id="attendee" rows="2" cols="85"></textarea></td>
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td>列席人员</td>
+				<td align="left" colspan="3"><textarea id="sit_in_person" rows="2" cols="85"></textarea></td>
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td>缺席原因</td>
+				<td align="left" colspan="3"><textarea id="absent_person" rows="2" cols="85"></textarea></td>
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td>缺席原因</td>
+				<td align="left" colspan="3"><textarea id="absent_reason" rows="2" cols="85"></textarea></td>
+			</tr>
+				<tr class="tr_data" height="35px">
+				<td>迟到人员</td>
+				<td align="left" colspan="3"><textarea id="late_person" rows="2" cols="85"></textarea></td>
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td>迟到原因</td>
+				<td align="left" colspan="3"><textarea id="late_reason" rows="2" cols="85"></textarea></td>
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td>会议进程</td>
+				<td align="left" colspan="3"><textarea id="meeting_proceeding" rows="3" cols="85"></textarea></td>
+			</tr>
+		</table>
+		<table width="100%" style="margin: 10px;">
+			<tr>
+				<td width="50%" align="center">
+					<div id="saveMeetingInfoBtn" class="buttonDivTwo">
+						<a href="javascript:void(0)" onclick="AddMeetingInfo()">保存</a>
+					</div>
+				</td>
+
+			</tr>
+		</table>
+		<br/>
+		<br/>
+		<B>本周(<input type="text" onclick="new Calendar().show(this);" readonly="true" id="week_start_date"/>--<input type="text" onclick="new Calendar().show(this);" readonly="true" id="week_end_date"/>)</B>
+		<table border="1" cellpadding="3" cellspacing="1" width="98%" align="center" id="meetingresult" style="background-color: #b9d8f3;" >		
+			<tr class="tr_data" height="35px">
+				<td width="10%">承办部门</td>
+				<td width="20%">承办事项</td>
+				<td width="30%">具体内容及要求</td>
+				<td width="10%">监督人</td>
+				<td width="15%">完成时间</td>
+				<td width="15%">负责人</td>
+			</tr>
+			<tr class="tr_data" >
+				<td rowspan="5" ><input type="text" id="department1" onclick="selectDept(1)"/><input type="hidden" id="deptId1" value="" /></td>
+				<td ><textarea id="department1_work_content1"></textarea></td>
+				<td ><textarea id="department1_complete_condition1"></textarea></td>
+				<td ><span id="department1_span_manager1"></span></td>
+				<td ><input type="text" id="department1_complete_date1" onclick="new Calendar().show(this);" readonly="true"/></td>
+				<td rowspan="5"><span id="department1_span_superintendent"></span></td>
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department1_work_content2"></textarea></td>
+				<td><textarea id="department1_complete_condition2"></textarea></td>
+				<td ><span id="department1_span_manager2"></span></td>
+				<td><input type="text" id="department1_complete_date2" onclick="new Calendar().show(this);" readonly="true"/></td>
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department1_work_content3"></textarea></td>
+				<td><textarea id="department1_complete_condition3"></textarea></td>
+				<td ><span id="department1_span_manager3"></span></td>
+				<td><input type="text" id="department1_complete_date3" onclick="new Calendar().show(this);" readonly="true"/></td>
+				
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department1_work_content4"></textarea></td>
+				<td><textarea id="department1_complete_condition4"></textarea></td>
+				<td ><span id="department1_span_manager4"></span></td>
+				<td><input type="text" id="department1_complete_date4" onclick="new Calendar().show(this);" readonly="true"/></td>
+				
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department1_work_content5"></textarea></td>
+				<td><textarea id="department1_complete_condition5"></textarea></td>
+				<td ><span id="department1_span_manager5"></span></td>
+				<td><input type="text" id="department1_complete_date5" onclick="new Calendar().show(this);" readonly="true"/></td>
+				
+			</tr>
+			<tr class="tr_data">
+				<td rowspan="5" ><input type="text" id="department2" onclick="selectDept(2)"/><input type="hidden" id="deptId2" value="" /></td>
+				<td ><textarea id="department2_work_content1"></textarea></td>
+				<td ><textarea id="department2_complete_condition1"></textarea></td>
+				<td ><span id="department2_span_manager1"></span></td>
+				<td ><input type="text" id="department2_complete_date1" onclick="new Calendar().show(this);" readonly="true"/></td>
+				<td rowspan="5"><span id="department2_span_superintendent"></span></td>
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department2_work_content2"></textarea></td>
+				<td><textarea id="department2_complete_condition2"></textarea></td>
+				<td ><span id="department2_span_manager2"></span></td>
+				<td><input type="text" id="department2_complete_date2" onclick="new Calendar().show(this);" readonly="true"/></td>
+				
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department2_work_content3"></textarea></td>
+				<td><textarea id="department2_complete_condition3"></textarea></td>
+				<td ><span id="department2_span_manager3"></span></td>
+				<td><input type="text" id="department2_complete_date3" onclick="new Calendar().show(this);" readonly="true"/></td>
+				
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department2_work_content4"></textarea></td>
+				<td><textarea id="department2_complete_condition4"></textarea></td>
+				<td ><span id="department2_span_manager4"></span></td>
+				<td><input type="text" id="department2_complete_date4" onclick="new Calendar().show(this);" readonly="true"/></td>
+				
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department2_work_content5"></textarea></td>
+				<td><textarea id="department2_complete_condition5"></textarea></td>
+				<td ><span id="department2_span_manager5"></span></td>
+				<td><input type="text" id="department2_complete_date5" onclick="new Calendar().show(this);" readonly="true"/></td>
+				
+			</tr>
+			<tr class="tr_data">
+				<td rowspan="5" ><input type="text" id="department3" onclick="selectDept(3)"/><input type="hidden" id="deptId3" value="" /></td>
+				<td ><textarea id="department3_work_content1"></textarea></td>
+				<td ><textarea id="department3_complete_condition1"></textarea></td>
+				<td ><span id="department3_span_manager1"></span></td>
+				<td ><input type="text" id="department3_complete_date1" onclick="new Calendar().show(this);" readonly="true"/></td>
+				<td rowspan="5"><span id="department3_span_superintendent"></span></td>
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department3_work_content2"></textarea></td>
+				<td><textarea id="department3_complete_condition2"></textarea></td>
+				<td ><span id="department3_span_manager2"></span></td>
+				<td><input type="text" id="department3_complete_date2" onclick="new Calendar().show(this);" readonly="true"/></td>
+				
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department3_work_content3"></textarea></td>
+				<td><textarea id="department3_complete_condition3"></textarea></td>
+				<td ><span id="department3_span_manager3"></span></td>
+				<td><input type="text" id="department3_complete_date3" onclick="new Calendar().show(this);" readonly="true"/></td>
+				
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department3_work_content4"></textarea></td>
+				<td><textarea id="department3_complete_condition4"></textarea></td>
+				<td ><span id="department3_span_manager4"></span></td>
+				<td><input type="text" id="department3_complete_date4" onclick="new Calendar().show(this);" readonly="true"/></td>
+				
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department3_work_content5"></textarea></td>
+				<td><textarea id="department3_complete_condition5"></textarea></td>
+				<td ><span id="department3_span_manager5"></span></td>
+				<td><input type="text" id="department3_complete_date5" onclick="new Calendar().show(this);" readonly="true"/></td>
+				
+		</tr>
+			<tr class="tr_data">
+				<td rowspan="5" ><input type="text" id="department4" onclick="selectDept(4)"/><input type="hidden" id="deptId4" value="" /></td>
+				<td ><textarea id="department4_work_content1"></textarea></td>
+				<td ><textarea id="department4_complete_condition1"></textarea></td>
+				<td ><span id="department4_span_manager1"></span></td>
+				<td ><input type="text" id="department4_complete_date1" onclick="new Calendar().show(this);" readonly="true"/></td>
+				<td rowspan="5"><span id="department4_span_superintendent"></span></td>
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department4_work_content2"></textarea></td>
+				<td><textarea id="department4_complete_condition2"></textarea></td>
+				<td ><span id="department4_span_manager2"></span></td>
+				<td><input type="text" id="department4_complete_date2" onclick="new Calendar().show(this);" readonly="true"/></td>
+				
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department4_work_content3"></textarea></td>
+				<td><textarea id="department4_complete_condition3"></textarea></td>
+				<td ><span id="department4_span_manager3"></span></td>
+				<td><input type="text" id="department4_complete_date3" onclick="new Calendar().show(this);" readonly="true"/></td>
+				
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department4_work_content4"></textarea></td>
+				<td><textarea id="department4_complete_condition4"></textarea></td>
+					<td ><span id="department4_span_manager4"></span></td>
+				<td><input type="text" id="department4_complete_date4" onclick="new Calendar().show(this);" readonly="true"/></td>
+			
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department4_work_content5"></textarea></td>
+				<td><textarea id="department4_complete_condition5"></textarea></td>
+				<td ><span id="department4_span_manager5"></span></td>
+				<td><input type="text" id="department4_complete_date5" onclick="new Calendar().show(this);" readonly="true"/></td>
+				
+			</tr>
+			<tr class="tr_data">
+				<td rowspan="5" ><input type="text" id="department5" onclick="selectDept(5)"/><input type="hidden" id="deptId5" value="" /></td>
+				<td ><textarea id="department5_work_content1"></textarea></td>
+				<td ><textarea id="department5_complete_condition1"></textarea></td>
+				<td ><span id="department5_span_manager1"></span></td>
+				<td ><input type="text" id="department5_complete_date1" onclick="new Calendar().show(this);" readonly="true"/></td>
+				<td rowspan="5"><span id="department5_span_superintendent"></span></td>
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department5_work_content2"></textarea></td>
+				<td><textarea id="department5_complete_condition2"></textarea></td>
+				<td ><span id="department5_span_manager2"></span></td>
+				<td><input type="text" id="department5_complete_date2" onclick="new Calendar().show(this);" readonly="true"/></td>
+				
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department5_work_content3"></textarea></td>
+				<td><textarea id="department5_complete_condition3"></textarea></td>
+				<td ><span id="department5_span_manager3"></span></td>
+				<td><input type="text" id="department5_complete_date3" onclick="new Calendar().show(this);" readonly="true"/></td>
+				
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department5_work_content4"></textarea></td>
+				<td><textarea id="department5_complete_condition4"></textarea></td>
+					<td ><span id="department5_span_manager4"></span></td>
+				<td><input type="text" id="department5_complete_date4" onclick="new Calendar().show(this);" readonly="true"/></td>
+			
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department5_work_content5"></textarea></td>
+				<td><textarea id="department5_complete_condition5"></textarea></td>
+				<td ><span id="department5_span_manager5"></span></td>
+				<td><input type="text" id="department5_complete_date5" onclick="new Calendar().show(this);" readonly="true"/></td>
+				
+			</tr>
+			<tr class="tr_data">
+				<td rowspan="5" ><input type="text" id="department6" onclick="selectDept(6)"/><input type="hidden" id="deptId6" value="" /></td>
+				<td ><textarea id="department6_work_content1"></textarea></td>
+				<td ><textarea id="department6_complete_condition1"></textarea></td>
+				<td ><span id="department6_span_manager1"></span></td>
+				<td ><input type="text" id="department6_complete_date1" onclick="new Calendar().show(this);" readonly="true"/></td>
+				<td rowspan="5"><span id="department6_span_superintendent"></span></td>
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department6_work_content2"></textarea></td>
+				<td><textarea id="department6_complete_condition2"></textarea></td>
+				<td ><span id="department6_span_manager2"></span></td>
+				<td><input type="text" id="department6_complete_date2" onclick="new Calendar().show(this);" readonly="true"/></td>
+				
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department6_work_content3"></textarea></td>
+				<td><textarea id="department6_omplete_condition3"></textarea></td>
+					<td ><span id="department6_span_manager3"></span></td>
+				<td><input type="text" id="department6_complete_date3" onclick="new Calendar().show(this);" readonly="true"/></td>
+			
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department6_work_content4"></textarea></td>
+				<td><textarea id="department6_complete_condition4"></textarea></td>
+				<td ><span id="department6_span_manager4"></span></td>
+				<td><input type="text" id="department6_complete_date4" onclick="new Calendar().show(this);" readonly="true"/></td>
+				
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department6_work_content5"></textarea></td>
+				<td><textarea id="department6_complete_condition5"></textarea></td>
+					<td ><span id="department6_span_manager5"></span></td>
+				<td><input type="text" id="department6_complete_date5" onclick="new Calendar().show(this);" readonly="true"/></td>
+			
+			</tr>
+			<tr class="tr_data">
+				<td rowspan="5" ><input type="text" id="department7" onclick="selectDept(7)"/><input type="hidden" id="deptId7" value="" /></td>
+				<td ><textarea id="department7_work_content1"></textarea></td>
+				<td ><textarea id="department7_complete_condition1"></textarea></td>
+				<td ><span id="department7_span_manager1"></span></td>
+				<td ><input type="text" id="department7_complete_date1" onclick="new Calendar().show(this);" readonly="true"/></td>
+				<td rowspan="5"><span id="department7_span_superintendent"></span></td>
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department7_work_content2"></textarea></td>
+				<td><textarea id="department7_complete_condition2"></textarea></td>
+					<td ><span id="department7_span_manager2"></span></td>
+				<td><input type="text" id="department7_complete_date2" onclick="new Calendar().show(this);" readonly="true"/></td>
+			
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department7_work_content3"></textarea></td>
+				<td><textarea id="department7_complete_condition3"></textarea></td>
+				<td ><span id="department7_span_manager3"></span></td>
+				<td><input type="text" id="department7_complete_date3" onclick="new Calendar().show(this);" readonly="true"/></td>
+				
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department7_work_content4"></textarea></td>
+				<td><textarea id="department7_complete_condition4"></textarea></td>
+				<td ><span id="department7_span_manager4"></span></td>
+				<td><input type="text" id="department7_complete_date4" onclick="new Calendar().show(this);" readonly="true"/></td>
+				
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td><textarea id="department7_work_content5"></textarea></td>
+				<td><textarea id="department7_complete_condition5"></textarea></td>
+				<td ><span id="department7_span_manager5"></span></td>
+				<td><input type="text" id="department7_complete_date5" onclick="new Calendar().show(this);" readonly="true"/></td>
+				
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td >会议决议及部门协办事项汇总</td>
+				<td colspan="5" align="left"><textarea id="assist_content" cols="100" rows="7"></textarea></td>
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td >总经理承办事项</td>
+				<td colspan="5" align="left"><textarea id="top_manager" cols="100" rows="7"></textarea></td>
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td >备注</td>
+				<td colspan="5" align="left">
+					1、各部门工作总结与计划会前上交;<br/>
+					2、上周工作承办事项必须闭环;<br/>
+					3、未完成事项须移交本周完成并注明时间;<br/>
+					4、本周工作计划须明确工作重点;<br/>
+					5、会议决议应交人力另附书面的通知下发;<br/>
+					6、会议纪要须总经理审核通过并下发各部门;<br/>
+				</td>
+			</tr>
+		</table>
+		<p align="center">
+		   <table><tr>
+					<td><span id="okBtn" class="buttonTwo"><a href="javascript:deleteMeetingResult()">提交</a></span></td>
+					<td><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+		   </tr></table>
+		</p>
+		<div id="dialog" title="" style="display: none; padding: 0 0 0 0; margin: 0 0 0 0; z-index: 10000">
+			<iframe id="self_iframe" src="about:blank" width="100%" height="96%"
+				frameborder="0"></iframe>
+		</div>
+	</body>
+</html>

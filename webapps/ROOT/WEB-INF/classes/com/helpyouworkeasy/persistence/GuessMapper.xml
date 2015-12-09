@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.helpyouworkeasy.persistence.GuessMapper">
+
+  <insert id="insertGuess" parameterType="Guess">
+    INSERT INTO tbl_guess_result (guess_id,guess_value,status,member_name,schedule_id,id,member_id,cell_phone)
+    VALUES (#{guess_id}, #{guess_value}, #{status}, #{member_name}, #{schedule_id}, #{id}, #{member_id}, #{cell_phone})
+  </insert>
+
+  <update id="updateGuess" parameterType="Guess">
+    update tbl_guess_result set 
+     guess_value=#{guess_value}
+    where id=#{id}
+  </update>
+  
+  <update id="updateGuessStatus" parameterType="Guess">
+    update tbl_guess_result set 
+     status=#{status}
+    where member_id=#{member_id} and guess_id=#{guess_id}
+  </update>
+
+  <select id="getGuessListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_guess_result where 1=1 
+    <if test="o.guess_id != -1" >
+      and guess_id=#{o.guess_id}
+    </if>
+    <if test="o.guess_value != '' and o.guess_value != null" >
+      and guess_value=#{o.guess_value}
+    </if>
+    <if test="o.status != '' and o.status != null" >
+      and status=#{o.status}
+    </if>
+    <if test="o.schedule_id != -1" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+    <if test="o.member_id != -1" >
+      and member_id=#{o.member_id}
+    </if>
+  </select>
+
+  <select id="getGuessPageList" parameterType="map" resultType="Guess">
+    select 
+    guess_id,guess_value,status,member_name,schedule_id,id,member_id,cell_phone
+    from tbl_guess_result where 1=1 
+    <if test="o.guess_id != -1" >
+      and guess_id=#{o.guess_id}
+    </if>
+    <if test="o.guess_value != '' and o.guess_value != null" >
+      and guess_value=#{o.guess_value}
+    </if>
+    <if test="o.status != '' and o.status != null" >
+      and status=#{o.status}
+    </if>
+    <if test="o.schedule_id != -1" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+    <if test="o.member_id != -1" >
+      and member_id=#{o.member_id}
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+  
+  <select id="getGuessByMemberAndSchedule" parameterType="map" resultType="Guess">
+    select 
+    guess_id,guess_value,status,member_name,schedule_id,id,member_id,cell_phone
+    from tbl_guess_result where schedule_id=#{schedule_id} and member_id=#{member_id}
+  </select>
+  
+  <select id="getGuessByGuessValue" parameterType="map" resultType="Guess">
+    select 
+    guess_id,guess_value,status,member_name,schedule_id,id,member_id,cell_phone
+    from tbl_guess_result where guess_id=#{guess_id} and guess_value=#{guess_value} and status!='G'
+  </select>
+  
+  <select id="getGuessByGuessStatus" parameterType="map" resultType="Guess">
+    select 
+    guess_id,guess_value,status,member_name,schedule_id,id,member_id,cell_phone
+    from tbl_guess_result where guess_id=#{guess_id} and status=#{status}
+  </select>
+  
+  <select id="getGuessByMemberAndGuessId" parameterType="map" resultType="Guess">
+    select 
+    guess_id,guess_value,status,member_name,schedule_id,id,member_id,cell_phone
+    from tbl_guess_result where guess_id=#{guess_id} and member_id=#{member_id} 
+  </select>
+  
+  <select id="getGuessBySchedule" parameterType="map" resultType="Guess">
+    select 
+      guess_id,guess_value,member_id 
+    from tbl_guess_result where schedule_id=#{schedule_id} 
+  </select>
+  
+  <update id="deleteGuessInfo" parameterType="GuessInfo">
+    update tbl_guess_info set 
+     is_deleted=1
+    where id=#{id}
+  </update>
+
+  <insert id="insertGuessInfo" parameterType="GuessInfo">
+    INSERT INTO tbl_guess_info (guess_title,guess_type,choices,id,end_time,schedule_id,is_deleted,answer,choices_name)
+    VALUES (#{guess_title}, #{guess_type}, #{choices}, #{id}, #{end_time}, #{schedule_id}, 0, #{answer}, #{choices_name})
+  </insert>
+
+  <update id="updateGuessInfo" parameterType="GuessInfo">
+    update tbl_guess_info set 
+    guess_title=#{guess_title},guess_type=#{guess_type},choices=#{choices},end_time=#{end_time},answer=#{answer},choices_name=#{choices_name}
+    where id=#{id}
+  </update>
+
+  <select id="getGuessInfoListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_guess_info where is_deleted=0 
+    <if test="o.guess_title != '' and o.guess_title != null" >
+      and guess_title like '%${o.guess_title}%'
+    </if>
+    <if test="o.guess_type != '' and o.guess_type != null" >
+      and guess_type=#{o.guess_type}
+    </if>
+    <if test="o.schedule_id != -1" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+  </select>
+
+  <select id="getGuessInfoPageList" parameterType="map" resultType="GuessInfo">
+    select 
+    guess_title,guess_type,choices,id,end_time,schedule_id,answer,choices_name
+    from tbl_guess_info where is_deleted=0 
+    <if test="o.guess_title != '' and o.guess_title != null" >
+      and guess_title like '%${o.guess_title}%'
+    </if>
+    <if test="o.guess_type != '' and o.guess_type != null" >
+      and guess_type=#{o.guess_type}
+    </if>
+    <if test="o.schedule_id != -1" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+  
+  <select id="getGuessInfoListBySchedule" parameterType="map" resultType="GuessInfo">
+    select 
+      guess_title,guess_type,choices,id,end_time,schedule_id,answer,choices_name
+    from tbl_guess_info where is_deleted=0 and schedule_id=#{schedule_id}
+  </select>
+
+  <select id="getGuessInfoById" parameterType="map" resultType="GuessInfo">
+    select 
+    guess_title,guess_type,choices,id,end_time,schedule_id,answer,choices_name
+    from tbl_guess_info where id=#{id}
+  </select>
+
+
+</mapper>

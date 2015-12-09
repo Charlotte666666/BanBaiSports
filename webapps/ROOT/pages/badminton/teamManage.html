@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery.dataTables.min.js"></script>
+
+<script type="text/javascript">
+var oTable = null;
+var scheduleList=[];
+var currentScheduleId=0;
+var currentTeamId=0;
+
+$(document).ready( function() {
+    // 加载赛程信息
+	top.sendAjaxRequest("/actions/CompetitionSchedule.action?getCompetitionScheduleList",[],getCompetitionScheduleListCallback);
+});
+
+ function getCompetitionScheduleListCallback(obj){
+     try{
+		  scheduleList=obj.aaData;
+		  $("#tdschedule").html( top.getScheduleSelectHtml(scheduleList,'schedule_id') );
+		  if ( scheduleList.length > 0 ) {
+		    currentScheduleId=scheduleList[0].id;
+		  }
+	 }catch(e){
+	 }
+	 loadList();
+ }
+
+ function loadList(){
+    var iaoColumns= [
+               { "sTitle": "球队名称", "mDataProp": "team_name", "sWidth": "10%", 
+			       "fnRender": function ( oObj ) {
+                     return '<input type="text" style="width:100%" id="team_name_'+oObj.aData.id+'" value="'+oObj.aData.team_name+'" />' ;
+                   },
+                   "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "简称", "mDataProp": "short_name", "sWidth": "10%", 
+			       "fnRender": function ( oObj ) {
+                     return '<input type="text" style="width:100%" id="short_name_'+oObj.aData.id+'" value="'+oObj.aData.short_name+'" />' ;
+                   },
+                   "bUseRendered": false , "bSortable":false},
+               { "sTitle": "领队", "mDataProp": "leader_name", "sWidth": "15%","sClass": "center",
+                   "fnRender": function ( oObj ) {
+				     return '<input type="hidden" id="leader_id_'+oObj.aData.id+'" value="'+oObj.aData.leader_id+'" /><input type="text" readonly="true" style="width:60%" id="leader_name_'+oObj.aData.id+'" value="'+oObj.aData.leader_name+'" />&nbsp;&nbsp;<input type="button" onclick="selectMember(\''+oObj.aData.id+'\')" value="选择" ></input>' ;
+                   },
+                   "bUseRendered": false , "bSortable":false
+               },
+			   { "sTitle": "领队性别", "mDataProp": "leader_sex", "sWidth": "10%",
+                   "fnRender": function ( oObj ) {
+				      return top.getCodeSelectHtml("SEX","leader_sex_"+oObj.aData.id,true,oObj.aData.leader_sex);
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+               { "sTitle": "联系电话", "mDataProp": "phone", "sWidth": "15%",
+                   "fnRender": function ( oObj ) {
+				      return '<input type="text" style="width:100%" id="phone_'+oObj.aData.id+'" value="'+oObj.aData.phone+'" />' ;
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "备注", "mDataProp": "memo", "sWidth": "10%",
+                   "fnRender": function ( oObj ) {
+                      return '<input type="text" style="width:100%" id="memo_'+oObj.aData.id+'" value="'+oObj.aData.memo+'" />' ;
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "操作", "mDataProp": "id", "sWidth": "10%","bSortable":false,
+                    "fnRender": function ( oObj ) {
+                       return '<span align="center" style="cursor:pointer;" onclick="saveInfo(\''+oObj.aData.id+'\')"><img src="../../img/save.bmp" />&nbsp;保存</span>&nbsp;<span align="center" style="cursor:pointer;" onclick="uploadImg(\''+oObj.aData.id+'\')"><img src="../../img/icons/arrow-up.gif" />&nbsp;图片</span>';
+                    },
+                    "bUseRendered": false
+               }
+        ];
+ 	
+		oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": top.getUrlBase()+"/actions/Team.action?getTeamList",
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     aoData.push( { "name": "info.leader_id", "value": -1} );
+						 aoData.push( { "name": "optType", "value": "addRow" } );
+						 aoData.push( { "name": "info.schedule_id", "value": top.g_GetNumValue( $("#schedule_id").val(), -1 ) } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumns
+	   } );
+ }
+ 
+
+ function saveInfo(code){
+    var aoData=[];
+	aoData.push( { "name": "info.schedule_id", "value": top.g_GetNumValue( $("#schedule_id").val(), -1 ) } );
+	aoData.push( { "name": "info.id", "value": code } );
+	aoData.push( { "name": "info.team_name", "value": $("#team_name_"+code).val() } );
+    aoData.push( { "name": "info.memo", "value": $("#memo_"+code).val() } );
+    aoData.push( { "name": "info.leader_id", "value": $("#leader_id_"+code).val() } );
+	aoData.push( { "name": "info.leader_name", "value": $("#leader_name_"+code).val() } );
+	aoData.push( { "name": "info.leader_sex", "value": $("#leader_sex_"+code).val() } );
+	aoData.push( { "name": "info.short_name", "value": $("#short_name_"+code).val() } );
+	aoData.push( { "name": "info.phone", "value": $("#phone_"+code).val() } );
+	var xurl="/actions/Team.action?updateTeam";
+	if ( code == 0 ) {
+	  xurl="/actions/Team.action?insertTeam";
+	}
+    top.sendAjaxRequest(xurl,aoData,optCallback);
+ }
+ 
+ function uploadImg(tid){
+    currentTeamId=tid;
+    top.openSelectDialog("上传图片","pages/uploadOSSFile.html?key=TEAM_"+tid,300,200,saveUploadImgURL);
+ }
+ 
+ function saveUploadImgURL(){
+   try{
+    var o=top.getTempValue();
+    if ( o != null && o.isSaveOK ) {
+		var aoData=[];
+		aoData.push( { "name": "info.img_url", "value": "TEAM_"+currentTeamId } );
+		aoData.push( { "name": "info.id", "value": currentTeamId } );
+		var xurl="/actions/Team.action?updateTeamImg";
+		top.sendAjaxRequest(xurl,aoData,optCallback);
+	}
+   }catch(e){}
+ }
+ 
+ function doQuery(){
+	oTable.fnDraw();
+ }
+ 
+ function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      top.showInfoWinOK("操作成功");
+		  doQuery();
+	    }else{
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+ }
+ 
+function selectMember(jid){
+    currentSelectId=jid;
+    var xurl="pages/badminton/selectMember.html";
+	top.openSelectDialog("选择会员账户",xurl,600,500,doAddMember);
+}
+
+function doAddMember(){
+	var so = top.getTempValue();
+	if ( so.userIds == '' ) return ;
+	$("#leader_id_"+currentSelectId).val( so.userIds );
+	$("#leader_name_"+currentSelectId).val( so.userNames );
+	$("#leader_sex_"+currentSelectId).val( so.sexs );
+}
+
+</script>
+</head>
+<body>
+            <div style='border: 1px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="180px">&nbsp;球队信息查询&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+				  <td align="right" width="30%">赛程:</td><td align="left" width="70%" id="tdschedule"></td>
+			     </tr>
+			 </table>
+			</div>
+<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+</body>
+</html> 

@@ -1,0 +1,332 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		
+<style type="text/css">
+body {
+  overflow-x: hidden; overflow-y: auto;
+}
+</style>
+ 
+<script type="text/javascript" charset="utf-8">
+ var oTable=null;
+ var q_c_code="";
+ var q_v04001="";
+ var q_v04002="";
+ var q_v04003="";
+ var q_v04004="";
+ var vTitle = "";
+ var time="";
+ var g_station = "";
+ var g_time = "";
+ var g_f1 = "";
+ var g_v_VALUE = "";
+ var g_stationName = "";
+ var nationCode="";
+ var stationIds="";
+ var lat1="";
+ var lat2="";
+ var lon1="";
+ var lon2="";
+ var v1=-999999;
+ var v2=999999;
+ var sources="";
+ var timeh="";
+  
+ $(document).ready(function() {
+               top.showLoadingInfo(true);
+			   vTitle = decodeURI(top.getUrlParam(document.URL,"vTitle"));
+			   vTitle=vTitle.replace("IPERCENTI", "%");
+			   q_c_code = top.getUrlParam(document.URL,"q_c_code");
+			   q_v04001 = top.getUrlParam(document.URL,"q_v04001");
+			   q_v04002 = top.getUrlParam(document.URL,"q_v04002");
+			   q_v04003 = top.getUrlParam(document.URL,"q_v04003");
+			   q_v04004 = top.getUrlParam(document.URL,"q_v04004");
+			   nationCode = top.getUrlParam(document.URL,"nationCode");
+			   stationIds = top.getUrlParam(document.URL,"stationIds");
+			   sources = top.getUrlParam(document.URL,"sources");
+			   lat1 = top.getUrlParam(document.URL,"lat1");
+			   lat2 = top.getUrlParam(document.URL,"lat2");
+			   lon1 = top.getUrlParam(document.URL,"lon1");
+			   lon2 = top.getUrlParam(document.URL,"lon2");
+			   v1 = top.getUrlParam(document.URL,"v1");
+			   v2 = top.getUrlParam(document.URL,"v2");
+			   timeh = decodeURI(top.getUrlParam(document.URL,"timeh"));
+			   var tempName = "";
+			   var timeStrs=timeh;
+			   var timeTitle="观测时间";
+			   if ( q_c_code == 'p24' || q_c_code == 's08' ) {
+			      timeStrs=decodeURI(top.getUrlParam(document.URL,"pdTitle"));
+				  timeTitle="统计时间";
+			   }
+
+			   time = top.getUrlParam(document.URL,"time");
+			   var iaoColumns = [
+                               { "sTitle": "省份", "mDataProp": "NA","sWidth": "7%","bSortable":true,
+                            	  "fnRender": function ( oObj ) {
+                                       return top.getCodeName( "PROVINCE", oObj.aData.NA );
+                                  },
+                                  "bUseRendered": false
+                               },
+                               { "sTitle": "台站名", "mDataProp": "V0", "sWidth": "17%","bSortable":true,
+                            	   "fnRender": function ( oObj ) {
+                            	        return oObj.aData.NAME+"("+top.getCode2ASII(oObj.aData.V0)+")";
+                            	   },
+                                   "bUseRendered": false
+                               },
+                               { "sTitle": timeTitle, "mDataProp": "V0", "sWidth": "14%","sClass": "center","bSortable":true,
+                                  "fnRender": function ( oObj ) {
+                                       return timeStrs;
+                                  },
+                                  "bUseRendered": false
+                               },
+                               { "sTitle": vTitle, "mDataProp": "VA", "sWidth": "10%","sClass": "center","bSortable":true },
+                               { "sTitle": "最新质控", "mDataProp": "F1", "sWidth": "12%","sClass": "center","bSortable":true,
+                                  "fnRender": function ( oObj ) {
+                                       return top.getCodeName( "CMA_QC_STATUS", oObj.aData.F1 );
+                                  },
+                                  "bUseRendered": false
+                               },
+							   { "sTitle": "反馈收到时间", "mDataProp": "crt", "sWidth": "14%","sClass": "center","bSortable":true,
+                                  "fnRender": function ( oObj ) {
+                                       return toBeijingTimeSelf(oObj.aData.crt);
+                                  },
+                                  "bUseRendered": false
+                               },
+                               { "sTitle": "反馈情况", "mDataProp": "CS", "sWidth": "10%","sClass": "center","bSortable":true,
+                                  "fnRender": function ( oObj ) {
+								       if ( oObj.aData.F1 == '1' || oObj.aData.F1 == '2' ) {
+									     if ( oObj.aData.CS == '0' || oObj.aData.CS == '1' ) {
+                                  	       return "未反馈";
+										 } else if ( oObj.aData.CS == '2' ) {
+										   return top.getCodeName( "CMA_CONFIRM_RESULT",oObj.aData.rf1+"-"+oObj.aData.F2,"未反馈");
+										 } else return "未反馈";
+									   } else if ( oObj.aData.CS == '2' ) {
+										   return top.getCodeName( "CMA_CONFIRM_RESULT",oObj.aData.rf1+"-"+oObj.aData.F2,"未反馈");;
+									   }
+									   return "无";
+                                  },
+                                  "bUseRendered": false
+                               },
+							   { "sTitle": "问题原因", "mDataProp": "RS", "sWidth": "10%","sClass": "center","bSortable":true,
+                                  "fnRender": function ( oObj ) {
+								       var str="";
+									   try{
+									     if ( oObj.aData.RS != '' ) str="<a title='备注:"+oObj.aData.M+"'>"+top.getCodeName( "CMA_REASON",oObj.aData.RS)+"</a>";
+									   }catch(e){}
+									   return str;
+                                  },
+                                  "bUseRendered": false
+                               },
+                               { "sTitle": "操作", "mDataProp": "F1", "sWidth": "15%", "sClass": "center","bSortable":false,
+                            	  "fnRender": function ( oObj ) {
+                            	  	   //if ( oObj.aData.table == 'H' || oObj.aData.table == 'D' ) {
+										 if ( q_c_code == 'p24' || q_c_code == 's08' ) { 
+										   tempName = "明细";
+										 } else {
+										   tempName = "质疑";
+										 }
+                                         return '<a href="javascript:void(0)" onclick="isRight(\''+oObj.aData.V0+'\',\''+timeh+'\',\''+oObj.aData.F1+'\',\''+oObj.aData.VA+'\',\''+oObj.aData.NAME+'\')" >'+tempName+'</a>';
+                                      // } else return "";
+                                  },
+                                  "bUseRendered": false
+                               }
+               ];
+			   
+			   
+			   if ( q_c_code == 'p24' || q_c_code == 's08' ) {
+			      iaoColumns = [
+                               { "sTitle": "省份", "mDataProp": "NA","sWidth": "7%","bSortable":true,
+                            	  "fnRender": function ( oObj ) {
+                                       return top.getCodeName( "PROVINCE", oObj.aData.NA );
+                                  },
+                                  "bUseRendered": false
+                               },
+                               { "sTitle": "台站名", "mDataProp": "V0", "sWidth": "25%","bSortable":true,
+                            	   "fnRender": function ( oObj ) {
+                            	        return oObj.aData.NAME+"("+top.getCode2ASII(oObj.aData.V0)+")";
+                            	   },
+                                   "bUseRendered": false
+                               },
+                               { "sTitle": timeTitle, "mDataProp": "V0", "sWidth": "14%","sClass": "center","bSortable":true,
+                                  "fnRender": function ( oObj ) {
+                                       return timeStrs;
+                                  },
+                                  "bUseRendered": false
+                               },
+                               { "sTitle": vTitle, "mDataProp": "VA", "sWidth": "10%","sClass": "center","bSortable":true },
+                               { "sTitle": "最新质控", "mDataProp": "F1", "sWidth": "12%","sClass": "center","bSortable":true,
+                                  "fnRender": function ( oObj ) {
+								       if ( oObj.aData.F1 == '7' || oObj.aData.F1 == '9' ) return "未质控";
+                                       return top.getCodeName( "CMA_QC_STATUS", oObj.aData.F1 );
+                                  },
+                                  "bUseRendered": false
+                               },
+                               { "sTitle": "操作", "mDataProp": "F1", "sWidth": "10%", "sClass": "center","bSortable":false,
+                            	  "fnRender": function ( oObj ) {
+                                      return '<a href="javascript:void(0)" onclick="isRight(\''+oObj.aData.V0+'\',\''+timeh+'\',\''+oObj.aData.F1+'\',\''+oObj.aData.VA+'\',\''+oObj.aData.NAME+'\')" >明细</a>';
+                                  },
+                                  "bUseRendered": false
+                               }
+                   ];
+			   }
+ 
+           	oTable = $('#dataTable').dataTable( {
+                   "bProcessing": true,
+                   "bServerSide": false,
+                   "bJQueryUI": true,
+                   "bFilter": false,
+                   "bDestroy": true,
+                   "bSort": true,
+                   "bLengthChange": true,
+                   "aaData": top.getHDataTempValue(),
+                   "iDisplayLength":20,
+                   "oLanguage": {
+                       "sUrl": top.getUrlBase()+"/lang_zh.txt"
+                   },
+				   "fnInitComplete": function(oSettings, json) {
+					  top.showLoadingInfo(false);
+				   },
+                   "sDom": "frtlip",
+                   "sPaginationType": "full_numbers",
+                   "aoColumns": iaoColumns
+            } );
+ } );
+ 
+ function headButtonFun1(){
+     var aoData=[];
+     aoData.push( { "name": "q_c_code", "value": q_c_code } );
+     aoData.push( { "name": "v04001", "value": q_v04001 } );
+     aoData.push( { "name": "v04002", "value": q_v04002 } );
+     aoData.push( { "name": "v04003", "value": q_v04003 } );
+     aoData.push( { "name": "v04004", "value": q_v04004 } ); 
+	 aoData.push( { "name": "nationCode", "value": nationCode } ); 
+	 aoData.push( { "name": "stationIds", "value": stationIds } ); 
+	 aoData.push( { "name": "sources", "value": sources } ); 
+	 aoData.push( { "name": "lat1", "value": lat1 } ); 
+	 aoData.push( { "name": "lat2", "value": lat2 } ); 
+	 aoData.push( { "name": "lon1", "value": lon1 } ); 
+	 aoData.push( { "name": "lon2", "value": lon2 } ); 
+	 aoData.push( { "name": "v1", "value": v1 } ); 
+	 aoData.push( { "name": "v2", "value": v2 } ); 
+	 top.showLoadingInfo(true);
+     top.sendAjaxRequest("/actions/ProCma.action?exportData",aoData,callBackExportData);
+ }
+ 
+ function toBeijingTimeSelf(str){
+        if ( str == null ) return "";
+		if ( str == '' || str == '-' ) return "";
+		if ( str.length < 13 ) return "";
+	    try{
+	      var d=new Date();
+		  d.setFullYear( Number(str.substring(0,4)) );
+		  d.setMonth( Number(str.substring(4,6)) - 1 );
+		  d.setDate( Number(str.substring(6,8)) );
+		  d.setHours( Number(str.substring(8,10)) );
+		  d.setTime( d.getTime() + 8*60*60000 );
+		  var restr = d.getFullYear()+"-"+top.getTwoNumberStr(d.getMonth()+1)+"-"+top.getTwoNumberStr(d.getDate()) +" "+top.getTwoNumberStr(d.getHours());
+		  restr+=":"+str.substring(10,12)+":"+str.substring(12,14);
+		  if ( restr.indexOf("N") != -1 ) return "";
+		  return restr;
+		}catch(e){
+		  return "";
+		}
+ }
+ 
+ function callBackExportData(obj){
+     top.showLoadingInfo(false);
+	 try{
+	    if ( obj.status == true ){
+		   var downUrl=top.getUrlBase()+"/download?filePath="+obj.msg+"&fileName=导出数据_"+q_v04001+"-"+q_v04002+"-"+q_v04003+"_"+q_v04004+".xls";
+		   document.location.href=downUrl;
+	    }else{
+		   top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	 }catch(e){
+	    top.showInfoWinError("处理异常:"+e.message);
+	 }
+ }
+			
+ function doQuery(){
+   oTable.fnDraw();
+ }
+			
+ function isRight(station,time,f1,v_VALUE,stationName){
+			    g_station = station;
+				g_time = time;
+				g_f1 = f1;
+				g_v_VALUE = v_VALUE;
+				g_stationName = stationName;
+				if ( q_c_code == 'p24' || q_c_code == 's08' ) {
+				   var xurl=top.getUrlBase()+"/pages/pro01/dataList24.html?stationIds="+g_station+"&time="+g_time;
+                   openDialog("24小时明细列表("+g_stationName+")降水量:"+v_VALUE+"mm",xurl,true,800,450,null);
+				} else {
+			       top.showConfirm("您确定要进行质疑操作吗？", doIsRight);
+				}
+ }
+			
+ function doIsRight(){
+		  var aoData=[];
+		  aoData.push( { "name": "rawsr.v01000", "value": g_station } );
+		  aoData.push( { "name": "rawsr.c_CODE", "value": q_c_code} );
+		  aoData.push( { "name": "rawsr.v_VALUE", "value": g_v_VALUE } );
+		  aoData.push( { "name": "rawsr.v04001", "value": g_time.substring(0,4) } );
+		  aoData.push( { "name": "rawsr.v04002", "value": g_time.substring(5,7) } );
+		  aoData.push( { "name": "rawsr.v04003", "value": g_time.substring(8,10) } );
+		  aoData.push( { "name": "rawsr.v04004", "value": g_time.substring(11,13) } );
+		  aoData.push( { "name": "rawsr.v04005", "value": g_time.substring(14,16) } );
+		  aoData.push( { "name": "rawsr.v04006", "value": g_time.substring(17,19) } );
+	      top.sendAjaxRequest("/actions/ProCma.action?doubt",aoData,optCallback);
+ }
+			
+ function openDialog(t,xurl,isModal,w,h,callback){
+				if ( isModal == undefined ) isModal=true;
+				if ( !h ) h=200;
+				if ( !w ) w=400;
+				$( "#dialog" ).append('<iframe id="pdList_iframe" src="about:blank" width="100%" height="'+(h-35)+'px" frameborder="0"></iframe>');
+				$( "#dialog" ).dialog({
+					title: t,
+					height: h,
+					width: w,
+					modal: isModal,
+					resizable: false,
+		            beforeClose: function(event, ui) {
+		             try{
+		                document.getElementById("pdList_iframe").contentWindow.doBeforeClose();
+		            	if ( callback ) callback.apply();
+		             }catch(e){
+		             }
+					 $("#pdList_iframe").remove();
+		             return true;
+		            }
+				});
+				document.getElementById("pdList_iframe").src = xurl;
+ }
+			
+ function optCallback(obj){
+	     try{
+		    if ( obj.status == true ){
+		     top.showInfoWinOK("质疑操作成功");
+		    }else{
+		      top.showInfoWinError("操作失败 "+obj.msg);
+		    }
+		   }catch(e){
+			  top.showInfoWinError("处理异常:"+e.message);
+		   }
+ }
+</script>
+</head>
+<body>
+ <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+  <!-- 对话框DIV -->
+ <div id="dialog" title="" style="display:none;padding: 0 0 0 0;margin: 0 0 0 0;z-index:10000">
+ </div>
+</body>
+</html>

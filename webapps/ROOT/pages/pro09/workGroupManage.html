@@ -1,0 +1,145 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+ 
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+		    var aSelected = [];
+		    var tempStr="";
+		    var optType="";
+		    var qTypeId="";
+		    var qTypeName="";
+			var dialogLevel="1";
+			$(document).ready(function() { 
+			   var iaoColumns= [
+                               { "sTitle": "项目名称", "mDataProp": "group_id", "sWidth": "25%",
+                                      "fnRender": function ( oObj ) {
+                                         return '<input type=\'checkbox\' name=\'checkId\' value=\''+oObj.aData.group_id+'\' />&nbsp;<a href=\'javascript:void(0)\' onclick="updateWorkGroup(\''+oObj.aData.group_id+'\')" >'+oObj.aData.group_name+'</a>';
+                                      },
+                                      "bUseRendered": false
+                               },
+							   { "sTitle": "产品设计师","mDataProp": "product_designer_id","sWidth": "10%", "sClass": "center",
+								    "fnRender": function ( oObj ) {
+                                           return top.getUserNameByCode( oObj.aData.product_designer_id );
+                                      },
+							        "bUseRendered": false },
+							    ];
+			   
+			  var surl=top.getUrlBase()+"/actions/DailyManage.action?getWorkGroupList";
+
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					},
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			});
+
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			//添加施工项目
+			function addWorkGroup(){
+				var xurl="pages/pro09/workGroupInfo.html";
+				top.openDialog("添加工作组信息",xurl,true,600,550,saveWorkGroupCallBack);
+			}
+			function updateWorkGroup(group_id){
+				var xurl="pages/pro09/workGroupInfo.html?opt=update&id="+group_id;
+				top.openDialog("更新工作组信息",xurl,true,600,550,saveWorkGroupCallBack);
+			}
+			//选中要删除的施工项目
+			function deleteWorkGroup(){
+				var ids=top.getAllCheckedValue( document.getElementsByName('checkId') );
+				if (ids.length > 0) {
+					top.showConfirm("您确定要删除选中工作组信息吗？", doDeleteWorkGroup);
+				}else{
+					top.showInfoWinWarn("请选择要删除的工作组信息");
+				}
+			}
+			//执行删除施工项目的方法
+		function doDeleteWorkGroup(){
+				var ids=top.getAllCheckedValue( document.getElementsByName('checkId') )+",";
+				if ( ids == ',' ) {
+				  top.showInfoWinWarn("请选择要删除的工作组信息");
+				  return ;	
+				}
+				var aoData=[];
+				aoData.push( { "name": "ids", "value": ids} );
+				top.sendAjaxRequest("/actions/DailyManage.action?deleteWorkGroupById",aoData,optCallback);
+			}
+			// 新建、删除或修改操作回调函数
+    function optCallback(obj){
+       try{
+			if ( obj.status == true ){
+				top.showInfoWinOK("操作成功");
+				doQuery();
+			}else{
+				top.showInfoWinError("操作失败 "+obj.msg);
+			}
+		   }catch(e){
+			  top.showInfoWinError("处理异常:"+e.message);
+		   }
+	   }
+	   	function saveWorkGroupCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				  
+				}
+			}
+	</script>
+	</head>
+	<body>
+		<input type="hidden" id="type_id" value="-1" />
+		<div width="100%;">
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				    <td>&nbsp;<input type="checkbox" id="selAll" onclick="top.checkAll(this.checked,document.getElementsByName('checkId'))"/>全选</td>
+				    <td><div id="createBtn" class="buttonDivTwo"><a href="javascript:addWorkGroup()">新增</a></div></td>
+					<td><div id="delBtn" class="buttonDivTwo"><a href="javascript:deleteWorkGroup()">删除</a></div></td>
+			       </tr></table></td>
+			  </tr>
+			</table>
+	        <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,601 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery.ui.all.css" />
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css" media="print, projection, screen"/>
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script  type="text/javascript" src="../../js/ui.tabs.js"></script>
+		<script type="text/javascript" charset="utf-8">
+		   var startTemplateId='';
+		   var flow_id='';
+		   var checkStr='';
+		   var checkTitle='';
+		   var checkLen='';
+		   var task_id='';
+		   var taskInfo=null;
+		   var template_id="";
+		   var fieldlist=null;
+		   var dataList =null;
+		   var nextButtons = null;
+		   var task_name="";
+		   var index = 0;
+		   var is_finish=true;
+		   var fileId=0;
+		   var fileTableListId="";
+		   var dataId=0;
+		   var instance_id=0;
+		   var currentArrangement_mode=1;
+		   var templateList=null;
+		   var isEnter=false;//用来判断是否换行
+		   var tdNum=1;//用来判断是否在同一行
+		   var totalCols=0;//总列数
+		   var currentCol=0;//当前列
+		   var isStart=false;
+		   var handleContent="";
+		   var flowAllNodeList=[];
+		   
+			$(document).ready(function() {
+				instance_id = top.getUrlParam(document.URL,"instance_id");
+				$("#instance_tabs ul").tabs();
+				getFlowInstanceInfo(instance_id);
+				//处理轨迹
+				var iaoColumns= [
+			        { "sTitle": "操作时间", "mDataProp": "opt_time", "sWidth": "15%", "sClass": "center","bSortable":false,
+						"fnRender": function ( oObj ) {
+                            return top.getTimeStr(oObj.aData.opt_time);
+                         },
+						"bUseRendered": false},
+			        { "sTitle": "事项名称", "mDataProp": "task_name", "sWidth": "25%", "sClass": "center","bUseRendered": false,"bSortable":false},
+				    { "sTitle": "下一个任务", "mDataProp": "next_node_text", "sWidth": "25%","sClass": "center", "bUseRendered": false,"bSortable":false},
+					{ "sTitle": "操作人", "mDataProp": "user_name", "sWidth": "20%", "sClass": "center","bUseRendered": false,
+					    "fnRender": function ( oObj ) {
+                            return "["+oObj.aData.user_code+"]"+oObj.aData.user_name;
+                         },
+						"bSortable":false},
+					{ "sTitle": "是否超时", "mDataProp": "is_timeout", "sWidth": "15%", "sClass": "center","bSortable":false,
+						"fnRender": function ( oObj ) {
+                            return top.getCodeName("ISALARM",oObj.aData.is_timeout);
+                         },
+						"bUseRendered": false
+					}
+               ];
+			   var surl=top.getUrlBase()+"/actions/WorkOrder.action?getWOFlowTaskPathList";
+			   var oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"aaSorting": [[ 2, "desc" ]],
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData.push( {"name":"woTaskPath.instance_id","value":instance_id} );
+					aoData.push( {"name":"woTaskPath.flow_id", "value":-1} );
+			    },
+			    "sDom": "frt",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+				
+			  } );
+		      	function show(){
+				     var opt=$("input:radio[@name=selectShow]:checked").attr("opt");
+					 $(".character").hide();
+					 if(opt=="allContents"){
+					   $("#fieldTable").show();
+					   //$("#attachment").show();
+					   //$("#comment").show();
+					 }
+					 $("#"+opt).show();
+				}
+			   //查询任务流程信息
+			  function getFlowInstanceInfo(id){
+			    var aoData=[];
+				aoData.push( { "name": "woInstance.instance_id", "value":instance_id} );
+				top.sendAjaxRequest("/actions/WorkOrder.action?getFlowInstanceInfoById",aoData,getFlowInstanceInfoCallBack);
+			  }
+			  function getFlowInstanceInfoCallBack(obj){
+			    if(obj.status){
+				   var o = obj.body;
+				   dataList = o.dataList;
+				   taskInfo = o.taskInfo;
+				   fieldlist = o.fieldList;
+				   templateList=o.templateList;
+				   flowAllNodeList=o.flowAllNodeList;
+				   
+				   showInterposeNodeList();
+				   
+				   var ht="";
+				   var taskNames="";
+				   var btn="";
+				   //初始化已完成表单
+				  btn+="<input type='radio' name='selectShow' id='all' opt='allContents' checked='checked' onclick='show()'/><label for='all'>全部</label>";
+				   for( index = 0;index<dataList.length;index++){
+				     var field_ids  = dataList[index].field_ids.split(",");
+					 
+					 for(var i=0;i<templateList.length;i++){
+					    if(dataList[index].template_id==templateList[i].template_id){
+						    totalCols=templateList[i].arrangement_mode*2;
+							break;
+						}
+						flow_id=dataList[index].flow_id;
+					 } 
+					 if(index>0){
+					   currentCol=0;
+					   isEnter=false;
+		               tdNum=1;
+					   ht+="</table>";
+					 }
+					 if ( dataList[index].task_name != 'startNode' ) {
+					   handleContent+="<div id='index_"+index+"' col='"+totalCols+"' opt='"+dataList[index].task_name+"'><table width='100%'>";
+					   isStart=false;
+					   if(taskNames.indexOf(dataList[index].task_name)==-1){
+					      taskNames+=dataList[index].task_name+",";
+					   }
+					   ht+="<table width='100%'><tr class='tr_data   index_"+index+"' >";
+					   ht+='<td align="left" height="20px" colspan="'+totalCols+'" style="background-color: #b9d8f3;" >&nbsp;<b>'+dataList[index].task_name+'</b></td></tr></table>';
+					 }else{
+					   isStart=true;
+					   btn+="<input type='radio' id='base' name='selectShow' onclick='show()' opt='fieldTable'/><label for='base'>基本信息</label>";
+					   ht+="<table width='100%'><tr class='tr_data  index_"+index+"'>";
+					   ht+="<td align='left' height='20px' colspan='"+totalCols+"' style='background-color: #b9d8f3;' >&nbsp;<b>基本信息</b></td></tr></table>";
+					 }
+					 ht+="<table width='100%'>";
+					 for(var i = 0;i<field_ids.length;i++){
+				         var field = null;
+				         for(var j = 0;j<fieldlist.length;j++){
+				           if(field_ids[i]==fieldlist[j].field_id){
+				              field = fieldlist[j];
+							  for(var z=0;z<templateList.length;z++){
+									if(fieldlist[j].template_id==templateList[z].template_id){
+										currentArrangement_mode=templateList[z].arrangement_mode;
+										totalCols=currentArrangement_mode*2;
+										break;
+									}
+							  }
+					          break;
+				           }
+				         }
+						 if(field!=null&&field.field_type!="11"){
+					       ht+=getFieldHtmlShow(field,index);
+						 }
+				     }
+					 if(currentArrangement_mode>1 && (tdNum-1)%currentArrangement_mode!=0){
+				         for(var i=1;i<=(totalCols-currentCol%totalCols);i++){
+				            ht+="<td>&nbsp;</td>";
+							if(!isStart){
+							   handleContent+="<td>&nbsp;</td>";
+							}
+				         }
+				         ht+="</tr>";
+						 if(!isStart){
+							handleContent+="</tr>";
+						 }
+				     }
+					 handleContent+="</table></div>";
+				   }
+				  $("#fieldTable").html(ht);
+				  for(var i=0;i<dataList.length;i++){
+				     if(dataList[i].task_name!="startNode"){
+					    $(".index_"+i).remove();
+					 }
+				  }
+				  $("#handleContents").html(handleContent);
+				 
+				  //初始化已完成表单数据
+				  for(var i = 0;i<dataList.length;i++ ){
+				    var field_ids  = dataList[i].field_ids.split(",");
+				    initFieldData(field_ids,i);
+				  }
+				  
+				  var all="";
+				  var tags="";
+				  var li_num=taskNames.split(",");
+                  var li_content=new Array();
+				  handleContent="";
+				  for(var i=0;i<li_num.length-1;i++){
+				      //var j=1;
+					  btn+="<input type='radio' id='radio"+i+"' name='selectShow' opt='tab-"+i+"' onclick='show()'/><label for='radio"+i+"'>"+li_num[i]+"</label>";
+				      tags+="<li><a href='#tab-"+i+"'><span>"+li_num[i]+"</span></a></li>";  
+					  li_content[i]="<div id='tab-"+i+"' class='character'>";
+					  $("#handleContents div").each(function(){
+					       if(i==0){
+						       all+="<table width='100%'><tr class='tr_data'><td  height='20px' align='left' colspan='"+$(this).attr("col")+"' style='padding:0px;border-collapse:collapse;background-color: #b9d8f3;'>&nbsp;<b>"+$(this).attr("opt")+"</b></td></tr><table>";
+						       all+=$(this).html();
+						   }
+						   if(li_num[i]==$(this).attr("opt")){
+							     li_content[i]+="<table width='100%'><tr class='tr_data'><td heigh='20px' align='left' colspan='"+$(this).attr("col")+"' style='padding:0px;border-collapse:collapse;background-color: #b9d8f3;'> &nbsp;<b>"+li_num[i]+"</b></td></tr></table>";
+								 li_content[i]+=$(this).html();
+								 //j++;
+						   }
+					  });
+					  li_content[i]+="</div>";
+					  handleContent+=li_content[i];
+				  }
+				 // btn+="<input type='radio' id='accessory' name='selectShow' onclick='show()' opt='attachment' /><label for='accessory'>附件</label><input type='radio' id='review' name='selectShow' onclick='show()'  opt='comment'/><label for='review'>评论</label>";
+				  $("#checkBtn").html(btn);
+				  $("#handleContents").html(handleContent+"<div id='allContents' class='character'></div>");//<div id='attachment' class='character'><table width='100%'><tr class='tr_data'><td style='background-color: #b9d8f3;' colspan='4' align='left' height='20px'>&nbsp;<b>附件</b></td></tr><tr class='tr_data'><td colspan='4' align='center'>暂无附件数据</td></tr></table></div><div id='comment' class='character'><table width='100%'><tr class='tr_data'><td colspan='4' style='background-color: #b9d8f3;' height='20px' align='left'>&nbsp;<b>评论</b></td></tr><tr class='tr_data'><td colspan='4' align='center'>暂无评论数据</td></tr></table></div>");
+				  
+				  if(all==""){
+				    all="<table width='100%'><tr class='tr_data'><td align='center'>暂无处理信息</td></tr></table>"
+				  }
+				  $("#allContents").html(all);
+				  $("#checkBtn").buttonset();
+				  show();
+				  //$("#handleTabs").html("<ul>"+tags+"<li><a href='#allContents'><span>全部</span></a></li><li><a href='#attachment'><span>附件</span></a></li><li><a href='#comment'><span>评论</span></a></li></ul>");
+				  //$("#handleTabs").tabs();
+				}
+			  }
+			
+		    function initFieldData(field_ids,index){
+			   for(var i = 0;i<field_ids.length;i++){
+			      var field = null;
+				  for(var j = 0;j<fieldlist.length;j++){
+				   if(field_ids[i]==fieldlist[j].field_id){
+				    field = fieldlist[j];
+					break;
+				   }
+				  }
+				  if(field!=null){
+				    showFieldValue(field,dataList[index],index);
+				  }
+			   }
+			  }
+			  
+			  //页面显示字段的值
+			function showFieldValue(field,data,index){
+				if(field.field_type=="5"){ //日期
+					$("#"+field.map_col+index).html(top.getTimeStr(data[field.map_col],true));
+		        } else if(field.field_type=="6"){ //时间
+					$("#"+field.map_col+index).html(top.getTimeStr(data[field.map_col]));
+				} 
+				else if(field.field_type=="10"){
+				  if(data[field.map_col]!=""&&data[field.map_col]!=null){
+				    var files = data[field.map_col].split(",");
+					var ht="";
+					ht+='<table  class="display" cellpadding="0" width="100%" cellspacing="0" border="0" >';
+					for(var i=0;i<files.length;i++){
+					 ht+='<tr class="tr_data"><td align="left">';
+			         ht+='<a href="'+top.getUrlBase()+'/download?filePath='+files[i]+'+"&fileName="'+fixFilename(files[i])+'">'+fixFilename(files[i])+'</a></td>';
+			         ht+='</tr>';
+					}
+					ht+="</table>";
+					 $("#"+field.map_col+index).html(ht);
+				  } 
+				} else if(field.field_type=="9"){
+				  var val_str ="";
+				  val_str = data[field.map_col].replace("IELSEI"," 其他：");
+				  $("#"+field.map_col+index).html(val_str);
+				}else if(field.field_type=="12"){
+				  var ht="<iframe src='"+field.field_options+"' width='"+(field.width-40)+"' height='"+field.height+"' frameborder='0'></iframe>";
+				  $("#"+field.map_col+index).html(ht);s
+				}else { // 其他类型
+				    $("#"+field.map_col+index).html(data[field.map_col]);
+				}
+			}
+			
+			  //返回字段填写模式
+			function getFieldHtml(field,index){
+			    var ht="";
+				if(field!=null){
+				   ht+="<tr class='tr_data'>";
+				var options=[];
+					if(field.is_require=="1"){
+						ht+="<td width='100px' align='right'>"+field.field_title+"<span style='color:red'>(*)</span>:</td>";
+					}else{
+						ht+="<td width='100px' align='right'>"+field.field_title+":</td>";
+					}//文本框
+					if(field.field_type=="0"){
+					 ht+='<td align="left"><input id="'+field.map_col+index+'" type="text"/></td></tr>';
+					}//下拉框
+					if(field.field_type=="1"){
+						ht+='<td align="left"><select id="'+field.map_col+index+'">';
+						options=field.field_options.split(";");
+						ht+='<option></option>';
+						for(var i=0;i<options.length;i++){
+							ht+='<option>'+options[i]+'</option>';
+						}
+						ht+='</select></td></tr>';
+					}//单选按钮
+					if(field.field_type=="2"){
+						options=field.field_options.split(";");
+						ht+='<td align="left">';
+						for(var i=0;i<options.length;i++){
+						 if ( options[i] == null || options[i] == '' ) continue;
+							ht+='<input type="radio" name="'+field.map_col+index+'" value="'+options[i]+'">'+options[i]+'</option>';
+						}
+						ht+="</td></tr>";
+					}//复选框
+					if(field.field_type=="3"){
+						options=field.field_options.split(";");
+						ht+='<td align="left">';
+						for(var i=0;i<options.length;i++){
+						    if ( options[i] == null || options[i] == '' ) continue;
+							ht+='<input type="checkbox"  name="'+field.map_col+index+'" value="'+options[i]+'">'+options[i]+'</option>';
+						}
+						ht+="</td></tr>";
+					}//大文本框
+					if(field.field_type=="4"){
+					 ht+='<td align="left"><textarea id="'+field.map_col+index+'" cols="65" rows="5"></textarea></td></tr>';
+					}//日期 yy-mm-dd
+					if(field.field_type=="5"){
+					 ht+='<td align="left"><input type="text" onclick="new Calendar().show(this);" id="'+field.map_col+index+'"/></td></tr>';
+					}//时间
+					if(field.field_type=="6"){
+						var hour='<select id="'+field.map_col+index+'_hour">';
+						for(var i=0;i<24;i++){
+							if(i<10){
+								hour+='<option value="0'+i+'">0'+i+'</option>'
+							}else{
+								hour+='<option value="'+i+'">'+i+'</option>'
+							}
+						}
+						hour+='</select>';
+						var minute='<select id="'+field.map_col+index+'_minute">';
+						for(var i=0;i<60;){
+							if(i<10){
+								minute+='<option value="0'+i+'">0'+i+'</option>'
+							}else{
+								minute+='<option value="'+i+'">'+i+'</option>'
+							}
+							i+=5;
+						}
+						minute+="</select>";
+					   ht+='<td align="left"><input type="text" onclick="new Calendar().show(this);" id="'+field.map_col+index+'"/>'+hour+'时'+minute+'分</td></tr>';
+					}
+					//复选框+其他
+					if(field.field_type=="9"){
+						options=field.field_options.split(";");
+						ht+='<td align="left">';
+						for(var i=0;i<options.length;i++){
+							ht+='<input type="checkbox"  name="'+field.map_col+index+'" value="'+options[i]+'">'+options[i]+'</option>';
+						}
+						ht+="其他<input type='text' id='"+field.map_col+index+"_other'/></td></tr>";
+					}
+					//上传附件
+					if(field.field_type=="10"){
+					 ht+='<td align="left">';
+					  ht+='<table id="table_'+field.map_col+index+'" class="display" cellpadding="0" width="100%" cellspacing="0" border="0" ></table>';
+					 ht+='<div id="uploadFileButton" class="buttonDivTwo"><a href="javascript:uploadFile(\''+field.map_col+'\')">上传</a></div></td>';
+					 ht+='<input type="hidden" id="'+field.map_col+index+'">';
+					}
+					}
+					return ht;
+			}
+ 
+			// 返回字段显示模式
+			function getFieldHtmlShow(field,index){
+			    var ht="";
+				if(field!=null){
+				    if(field.occupied_frames==1){//判断字段是否占用一行
+						if((tdNum-1)%currentArrangement_mode!=0){
+						   var col=totalCols-currentCol%totalCols;
+						   if(col==0){
+							  ht+="</tr>";
+						   }else{
+							  for(var i=1;i<=col;i++){
+								ht+="<td>&nbsp;</td>";
+								currentCol++;
+							  }
+							  ht+="</tr>";
+						   }
+						   isEnter=false;
+						}
+				   }
+                   if(!isEnter){
+				       ht+="<tr class='tr_data  index_"+index+"'>";
+					   isEnter=true;
+				    }
+				    var options=[];
+					ht+="<td width='100px' align='right'>"+field.field_title+":</td>";currentCol++;
+					ht+='<td align="left" colspan="';
+					if(field.occupied_frames==1){
+						   ht+=""+(totalCols-currentCol%totalCols);
+						   currentCol+=(totalCols-currentCol%totalCols);
+					}else{
+					       ht+="1";
+						   currentCol++;
+					}
+					ht+='"><span id="'+field.map_col+index+'"></span></td>';
+					if(currentArrangement_mode>1){
+						if(tdNum%currentArrangement_mode==0 || field.occupied_frames==1){
+							ht+="</tr>";
+							isEnter=false;
+							tdNum=0;
+						}
+					}else{
+						  isEnter=false;
+						  ht+="</tr>";
+					}
+					tdNum++;
+			    }
+				if(!isStart){
+				   handleContent+=ht;
+				}
+				return ht;
+			}
+			
+			function fixFilename(fp){
+			 if ( !fp ) return "";
+			 var n=fp.lastIndexOf("_");
+			 if ( n != -1 ) {
+			   return fp.substring(n+1);
+			 }
+			 return fp;
+			}
+			function optCallback(obj){
+				   top.showLoadingInfo(false);
+				   try{
+					if ( obj.status == true ){
+					  top.showInfoWinOK("操作成功");
+					  top.closeDialog();
+					 }else{
+					 if(obj.msg!=''){
+					 top.showInfoWinOK("操作失败:"+msg);
+					 }else{
+					  top.showInfoWinOK("操作失败");
+					  }
+					}
+				   }catch(e){
+					  top.showInfoWinError("处理异常:"+e.message);
+				   }
+			   }
+			   
+			function doBeforeClose(){
+			}
+			
+ // 人工干预
+  function showInterposeNodeList(){
+	   try{
+		var ht="<select id='interposeNode' style='width:130px'>";
+		for(var i=0;i<flowAllNodeList.length;i++){
+		  if ( flowAllNodeList[i].nodeId == taskInfo.node_id || flowAllNodeList[i].nodeId == 'startNode' ) continue;
+		  ht+="<option value='"+flowAllNodeList[i].nodeId+"'";
+		  ht+=">"+flowAllNodeList[i].nodeName+"</option>";
+		}
+		ht+="</select>";
+		$("#toNodeSelectSpan").html( ht );
+	   }catch(e){
+	   }
+ 	}
+	
+	function interposeTask(){
+	   $("#toNodeSelectTd").show();
+	   $("#tdInterposeTaskBtn").hide();
+	}
+	
+	function doInterposeTask(){
+	  // 执行人工干预
+	  if ( $("#interposeNode").val() == '' ) {
+	    top.showInfoWinError("请选择一个流程节点");
+	    return ;
+	  }
+	  var aoData=[];
+	  aoData.push( { "name": "nextNodeId", "value": $("#interposeNode").val() } );
+	  aoData.push( { "name": "woTask.task_id", "value":taskInfo.task_id} );
+	  aoData.push( { "name": "woTask.flow_id", "value": flow_id } );
+	  aoData.push( { "name": "woTask.instance_id", "value":instance_id} );
+	  var xurl="/actions/WorkOrder.action?interposeTask";
+      top.sendAjaxRequest(xurl,aoData,optInterposeTaskCallback);
+	}
+	
+	function optInterposeTaskCallback(obj){
+		try{
+			if ( obj.status == true ){
+			  top.showInfoWinOK("操作成功");
+			  top.closeDialog();
+		    }else{
+			  if(obj.msg!=''){
+				 top.showInfoWinError("操作失败:"+msg);
+			  }else{
+				 top.showInfoWinError("操作失败");
+			  }
+		   }
+		}catch(e){
+			  top.showInfoWinError("处理异常:"+e.message);
+		}
+    }
+	
+	function cancelInterposeTask(){
+	   $("#toNodeSelectTd").hide();
+	   $("#tdInterposeTaskBtn").show();
+	}
+		</script>
+	</head>
+	<body>
+	    <div style="position: absolute;top:10px;left:430px">
+		  <table><tr>
+		   <td id="toNodeSelectTd" style="display:none">
+		    转到流程节点：<span id="toNodeSelectSpan"></span>
+			<input type="button" value="提交" onclick="doInterposeTask()"/>
+			&nbsp;<input type="button" value="取消" onclick="cancelInterposeTask()"/>
+		   </td>
+		   <td id="tdInterposeTaskBtn"><div class="buttonDivFour"><a href="javascript:interposeTask()">人工干预</a></div></td>
+		  </tr></table>
+        </div>
+	
+	    <br/>
+		<div id="instance_tabs" height="500px">
+		   <ul>
+		      <li>
+			     <a  href="#formMessage"><span>处理信息</span></a>
+			  </li>
+			  <li>
+			     <a  href="#taskPath"><span>处理轨迹</span></a>
+			  </li>
+			  <li>
+			     <a  href="#attachment"><span>附件</span></a>
+			  </li>
+			  <li>
+			     <a  href="#comment"><span>评论</span></a>
+			  </li>
+		   </ul>
+		</div>
+	    <div id="formMessage">
+		    <div id="checkBtn"></div>
+		    <table width="100%" id="fieldTable" class="character"></table>
+		    <div  id="handleTabs" style="margin-top:4px;display:none;">
+		    </div>
+			<div id="handleContents">
+		
+		    </div>
+		</div>
+		<div id="taskPath" >
+		   <table  cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+		<div id='attachment'>
+			<table width='100%'>
+			     <tr class='tr_data'>
+				   <td style='background-color: #b9d8f3;' colspan='4' align='left' height='20px'>&nbsp;<b>附件</b></td>
+				 </tr>
+				 <tr class='tr_data'>
+				   <td colspan='4' align='center'>暂无附件数据</td>
+				 </tr>
+			</table>
+	    </div>
+		<div id='comment'>
+			<table width='100%'>
+				<tr class='tr_data'>
+				    <td colspan='4' style='background-color: #b9d8f3;' height='20px' align='left'>&nbsp;<b>评论</b></td>
+				</tr>
+				<tr class='tr_data'><td colspan='4' align='center'>暂无评论数据</td></tr>
+		    </table>
+		</div>
+		<p align="center" style="display:none">
+		   <table  id="buttonTable" width="90%" align="center">
+		   </table>
+		</p>
+		<div id="dialog" title="" style="display: none; padding: 0 0 0 0; margin: 0 0 0 0; z-index: 10000">
+			<iframe id="self_iframe" src="about:blank" width="100%" height="96%"
+				frameborder="0"></iframe>
+		</div>
+	</body>
+</html>

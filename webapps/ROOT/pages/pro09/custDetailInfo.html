@@ -1,0 +1,2708 @@
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/fileuploader.css">
+		<link rel="stylesheet" type="text/css" href="../../css/drag-drop-folder-tree.css" />
+		<link rel="stylesheet" type="text/css" href="../../css/context-menu.css"></link>
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css"/>
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css"
+			media="print, projection, screen">
+		
+		<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-latest.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" src="../../js/fileuploader.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" src="../../js/SimpleMap.js"></script>
+		
+		<script type="text/javascript" language="JavaScript1.2"
+			src="js/custBaseInfo.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="js/custProjectInfo.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="js/custProductInfo.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="js/custOtherInfo.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/myDtree.js" ></script>
+		<script type="text/javascript" language="javascript" src="../../js/context-menu.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/drag-drop-folder-tree.js" ></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+		<script src="../../js/area.js" type="text/javascript" charset="gb2312"></script>
+		
+		<style type="text/css">
+		 #opr a{display:block;color:blue;}
+		</style>
+		<script type="text/javascript">
+			var callBackTabs=null;
+			var custBaseTabs=null;
+		   var callbackTable=null;
+		   var fileListTable=null;
+		   var view_fileListTable=null;
+		   var isSaveOK=false;
+		   var optType="";
+		   var cust_base_info_id='';//客户基本信息Id
+		   var sati_id=0;
+		   var interInt=0;
+		   var ischecked=false;
+		   var status="0";
+		   var consultInfo_id=0;
+		   var designer="";
+		   var designplanid="";
+		   var interId=0;
+		   var measurehouseid=0;
+		   var uploader = null;
+		   var uploadFileNames=[];
+		   var currentFileName="";
+		   var file_path="";
+		   var file_name="";
+		   var cbNext_id=0;
+		   var callbackNum=1;
+		   var custAnalysisNum=1;
+		   var quoteId=0;
+		   var contractId=0;
+		   //var cust_status='';
+		   var is_send = false;
+		   var callBackOrAnalysis='analysisInfo';//callInfo
+		   var curCallBackIndex=1;
+		   var cur_tab_id=1;
+   //其他按钮控制文本框输入
+			var d=null;
+			var other_focus=false;
+			var otherRequireStyle=false;
+			var otherFunctionRequire=false;
+			var other_cust_lost_reason=false;
+			var shoukuan_total=0;
+			var sms_id="";
+			var file_id="";
+			var moneyListTable=null;
+			//工程变量
+			var project_oTable=null;
+			var cust_project_info_id='';
+			var modelhouse="";
+			var modelhouseid=0;
+			var productId=0;
+			var product="";
+			var objs="";
+			var orderDetailId=0;
+			var orderdetailList=[];
+			var selectedProduct=[];
+			var Customizetrid=1;
+			var Customizetrnum=0;
+			var controltrid=1;
+			var controltrnum=0;
+			var changetrid=1;
+			var changetrnum=0;
+			var customize="";
+			var old_product="";
+			var customizeid="";
+			var cyclecontrol="";
+			var controlid="";
+			var changeinfo="";
+			var ch_product={};
+			var detailid=0;
+			var minTime=10000000000;
+			var maxTime=0;
+			var constructId=0;
+			//添加
+			var creIndex=0;
+			var require_id="";
+			
+			//Product产品订单变量
+			var custCBTb=null;
+			var product_oTable=null;
+			var product_info_id='';
+			var modelhouse="";
+			var modelhouseid=0;
+			var cust_code="";
+			var productId=0;
+			var product="";
+			var objs="";
+			var orderDetailId=0;
+			var orderdetailList=[];
+			var selectedProduct=[];
+			var Customizetrid=1;
+			var Customizetrnum=0;
+			var controltrid=1;
+			var controltrnum=0;
+			var changetrid=1;
+			var changetrnum=0;
+			var customize="";
+			var old_product="";
+			var customizeid="";
+			var cyclecontrol="";
+			var controlid="";
+			var changeinfo="";
+			var ch_product={};
+			var detailid=0;
+			var minTime=10000000000;
+			var maxTime=0;
+			var constructId=0;
+			var ids="";//采购单信息获取的订单详情号
+			var designerCode="";
+			var productList=[];
+			var typeList=[];
+			var orderInfo={};
+			var orderdetail=[];
+			var tempAmout=0;
+			var productIndex=0;
+			var curProductIndex=0;
+			var total_money=0;
+	//产品订单页面或者产品变更页面
+			var pageMode="";
+			var change_type="";
+			var money_index=0;
+			var moneyRecordTable=null;//待收款记录表
+			var moneyHistoryRecordTable=null;//收款记录历史
+			var isProjectContractShowed=false;
+	//common
+	var page_name='base';//base product project
+	var belong_type='';
+	var docListTable=null;
+	var filePathList='';
+	var isBaseOpen=false;
+	var isProjectOpen=false;
+	var isProductOpen=false;
+	var isOtherOpen=false;//判断当前标签是否打开过，如打开过无需发送请求 直接显示即可
+	var callBackNumber=new Array();
+	callBackNumber[0]='首';
+	callBackNumber[1]='二';
+	callBackNumber[2]='三';
+	callBackNumber[3]='四';
+	callBackNumber[4]='五';
+	callBackNumber[5]='六';
+	callBackNumber[6]='七';
+	callBackNumber[7]='八';
+	callBackNumber[8]='九';
+	callBackNumber[9]='十';
+	var designFj_file_id="";
+	var designFj_belong_id="";
+	var projectAgrFj_id="";
+	//var isRefresh=false;
+	//设计方案id
+	var design_id=0;
+	var design_status="";
+	var isDocOpen=false;
+	var remind_id='';//工作提醒id 用于审批类通知更新工作提醒处理状态
+	var cust_status="0";//客户状态 初始为新建
+
+	var project_manager="";
+	var engineer_manager="";
+    var project_contract_type="";//工程施工承包方式
+	var tz_apply_type="";//施工图纸提供方式
+	var paymentRecord_id="";//付款记录id
+    var violation_id="";//违款记录id
+	var isMoneyOpen=false;
+	var initPage='0-0';//基本页面
+	var curModelIndex=-1;
+	var curMoneyRcd='';
+	var measureHouseDate=0;
+	var today=null;
+	var old_require_manager='';
+	var old_cust_manager='';
+	var pay_type="";//合同申请付款时的付款类别：首期款(first)、二期款(second)、三期款(third)、尾款(final)
+	var pay_money_name="";//付款模块中废弃付款记录时使用
+	var contract_type="";//付款模块中废弃付款记录时使用
+	var pay_contract_id="";//付款模块中废弃付款记录时使用
+	var reload_type='';//记录页面入口，用于重加载页面
+	var pre_cust_code='';
+	var contract_check=false;
+	//var pageInit=true;//标识页面是否初始化显示 用于初始定位页面
+	var tab_id=-1;
+	var district="";//工程合同保存时使用(生成工程订单时)
+	var tabTitle="";//标签
+	var contract_check_status="0";
+	var oldSearchTxt="";
+	var is_running=0;
+	
+	
+	$(document).ready(function() {
+		today=new Date();
+	  	$(".checkNum").keypress(function(event) {  
+	        var keyCode = event.which;  
+            if (keyCode == 46 || (keyCode >= 48 && keyCode <=57) || keyCode == 8)//8是删除键  
+                return true;  
+            else  
+                return false;  
+        }).focus(function() {  
+            this.style.imeMode='disabled';  
+        }); 
+		optType=top.getUrlParam(document.URL,"optType");
+		remind_id=top.getUrlParam(document.URL,"remind_id");
+		//page_name=top.getUrlParam(document.URL,"page_name");
+		designer=top.getUrlParam(document.URL,"designer");
+		initPage=top.getUrlParam(document.URL,"initPage");//默认显示页面
+		tabTitle=top.getUrlParam(document.URL,"tabTitle");//默认显示页面中显示的标签
+		
+		$("#tdproject_manager").html(top.getUserListByRole('programme_manager','programme_manager',false));//工程部经理
+		
+		$("#register_date").val(top.getTimeStr(today.getTime(),true));
+		$("#tdcust_manager").html(top.getUserListByRole('custManager','cust_manager',true));
+		$( "#tdcust_sex" ).html( top.getCodeSelectHtml("SEX","cust_sex",false) );
+		$( "#tdcust_type" ).html( top.getCodeSelectHtml("CUST_TYPE","cust_type",true ) ); 
+		$("#cust_type").val('B');
+		$( "#tdfrom_type" ).html( top.getCodeSelectHtml("CUST_FROM_TYPE","from_type",true));
+		$( "#span_cust_job" ).html( top.getCodeSelectHtml("CUST_JOB","cust_job",true,'','onchangeCustJob()' ) );
+		onchangeCustJob();
+		$("#span_room_type").html( top.getCodeSelectHtml("ROOM_TYPE","room_type",true,'','onchangeRoomType()'));
+		fromTypeChange();
+		//$("#span_district").html( top.getCodeSelectHtml("DISTRICT","district",true) );
+		$("#tdintention_evaluate").html( top.getCodeSelectHtml("INTENTION_EVALUATE","intention_evaluate",true) );
+		$("#span_cust_status").html(top.getCodeName("CUST_STATUS",cust_status)); 
+		$("#tdcust_city").html(top.getCodeSelectHtml("CITY","cust_city",true)); 
+		$("#span_interpose_type").html(top.getCodeSelectHtml("INTERPOSE_TYPE","interpose_type",false));
+		$("#view_edit_span_interpose_type").html(top.getCodeSelectHtml("INTERPOSE_TYPE","view_edit_interpose_type",false));
+		$("#tdresult_status").html( top.getCodeSelectHtml("RESULT_STATUS","result_status",false));
+		$("#result_status").val("3");
+		$("#tdis_supervisor").html( top.getCodeSelectHtml("ISYESORNO","is_supervisor",true) );
+		$("#tdis_outsourcing").html( top.getCodeSelectHtml("ISYESORNO","is_outsourcing",true) );
+		$("#tdcheck_result").html( top.getCodeSelectHtml("CHECK_RESULT","check_result",true) );
+		$("#tdpaper_is_complete").html( top.getCodeSelectHtml("ISYESORNO","paper_is_complete",true) );
+		$("#tdcallback_type").html( top.getCodeSelectHtml("CALLBACK_TYPE","callback_type",true) );
+		$("#tdcust_intention").html( top.getCodeSelectHtml("INTENTION_EVALUATE","cust_intention",true) );
+		$("#tdappraise_designer").html( top.getCodeSelectHtml("APPRAISE_DESIGNER","appraise_designer",true) );
+		$("#tdcust_sati").html( top.getCodeSelectHtml("APPRAISE_DESIGNER","cust_sati",true) );
+		$("#tdunsati_reason").html( top.getCodeSelectHtml("CUST_UNSATI_REASON","unsati_reason",true) );
+		$("#span_designer_code").html( top.getAllDesignerSelect("designer_code") );
+		$("#view_edit_sapn_designer_code").html(top.getAllDesignerSelect("view_edit_designer_code") );
+        $("#span_general1").html(top.getCodeSelectHtml("IMPRESSION","general1",true));
+        $("#span_general2").html(top.getCodeSelectHtml("APPRAISE_DESIGNER","general2",true));
+		$("#td_design_dept").html(top.getDesignDeptListSelectHtml("belong_design_dept",'') );
+		$("#tr_interpose_type").hide();
+		$("#tr_interpose_memo").hide();
+		$("#tr_view_interpose_type").hide();
+		$("#tr_view_interpose_memo").hide();
+		//添加新用户操作
+		var cust_code=top.getUrlParam(document.URL,"cust_code");//客户编号 派单中用户id
+		if(optType=='insert'||optType=='interpose_insert'){
+			reload_type='insert';
+			if(optType=='interpose_insert'){
+				queryIntrPoseInfo(cust_code);
+				if(designer){//客户登记的时候，派单时间默认显示当前时间
+					$("#span_designer_code").html( top.getAllDesignerSelect("designer_code",designer) );
+					$("#edit_span_designer_code").html(top.getUserNameByCode(designer));
+					$("#view_designer_code").html( top.getAllDesignerSelect("designer_code",designer) );
+					$("#send_date").val(top.getTimeStr(today.getTime(),true));
+					$("#view_send_date").html(top.getTimeStr(today.getTime(),true));
+				}else{//如果拥有派单权限
+					$("#send_date").hide();
+				}
+			}else if(optType=='insert'){
+				//显示
+				$("#span_designer_code").show(); 
+				$("#edit_span_designer_code").show(); 
+				$("#span_designer_code").html( top.getAllDesignerSelect("designer_code") );
+				$("#edit_span_designer_code").html(top.getUserNameByCode(designer));
+				$("#view_designer_code").html( top.getAllDesignerSelect("designer_code") );
+				$("#send_date").val(top.getTimeStr(today.getTime(),true));
+				$("#view_send_date").html(top.getTimeStr(today.getTime(),true));
+				optType='interpose_insert';
+			}
+			
+			showCustBaseInfo();
+			curModelIndex=0;
+			$("#cust_li_projectContract").hide();
+			baseDoEdit();
+			$("#cust_baseinfo_tabs").hide();
+			$("#view_callback_plan_info").hide();
+			$("#baseReturnBt").hide();
+			var nowUser=top.getCurrentUser();
+			$("#cust_manager").val(nowUser.userCode);
+			$("#view_tdcust_manager").html(nowUser.userName);
+			$("#view_cust_manager").html(nowUser.userName);
+			$("#edit_tdcust_manager").html(nowUser.userName);
+			$("#menu_bts").hide(); 
+
+			if(cust_code!=null&&cust_code!=""){
+				$("#view_cust_code").html(cust_code);
+				$("#lb_cust_code").html(cust_code);
+				$("#cust_code").val(cust_code);
+			}else{
+				$("#lb_cust_code").hide();
+				$("#cust_code").show();
+				var year=today.getFullYear();
+				var mouth=today.getMonth()+1;
+				var day=today.getMonth();
+				var day=today.getDate();
+				if(mouth<10){
+					pre_cust_code=year+'0'+mouth;
+				}else{
+					pre_cust_code=year+''+mouth+'';
+				}
+				if(day<10){
+					pre_cust_code=pre_cust_code+'0'+day;
+				}else{
+					pre_cust_code=pre_cust_code+''+day+'';
+				}
+				$("#pre_cust_code").html(pre_cust_code);	
+				$("#pre_cust_code").show();
+			}
+			$("#top_cust_table").hide();
+			$("#displayContent").css("height",($(window).height()-15)+"px");
+			getKnowWay();
+		}else{
+			cust_base_info_id=decodeURI(top.getUrlParam(document.URL,"cust_code"));
+			$("#displayContent").css("height",($(window).height()-100)+"px");
+			//初始化数据
+			baseInit();
+			//底端菜单按钮显示(由客户权限控制)
+			butRightInit();
+			
+		}
+		checkInfoSave();
+		//设计方案备注信息提示
+		$("#bz").each(function(){
+			$(this).tooltip({
+			hide: {
+			effect: "explode",
+			delay: 250
+			}
+			});
+	   });
+      getBankInfo();
+	  $("#cust_job").attr("style","width:120px");
+   });
+   
+   	   //工程订单 工程期限计算
+	    function countDistance(start,end,dis){
+	       if ( $("#"+start).val() == '' ) { $("#"+dis).val("0"); $("#td"+dis).html("0"); return ;}
+		   if ( $("#"+end).val() == '' ) { $("#"+dis).val("0"); $("#td"+dis).html("0");return ;}
+		   var startNum=top.toTimestamp( $("#"+start).val() );
+		   var endNum=top.toTimestamp( $("#"+end).val() );
+		   var d=endNum-startNum;
+		   $("#"+dis).val( d/(24*60*60000) + 1 );
+		   $("#td"+dis).html( d/(24*60*60000) + 1 );
+	   }
+
+	
+	 //客户基本信息页面
+    function showCustBaseInfo(){
+		var isShowed=document.getElementById("cust_base_tabs-0").style.display;
+		$("#cust_base_tabs-0").toggle();
+		if(isShowed=='none'){
+			$("#bt_baseInfo").addClass("clicked");
+			if(tab_id!=-1){
+				$("#cust_baseinfo_tabs ul li:eq("+tab_id+") a").trigger("click");
+				tab_id=-1;
+			}else{
+				$("#cust_baseinfo_tabs ul li:eq(0) a").trigger("click");
+			}
+			if(top.g_isPermit('cust_edit')||top.g_isPermit('09_alter_designer')||top.g_isPermit('09_alter_cust_manager')){
+				$("#baseEditBt").show();
+			}
+		}else{
+			$("#bt_baseInfo").removeClass("clicked");
+			$("#baseReturnBt").hide();
+			$("#baseSaveBt").hide(); 
+			$("#baseEditBt").hide();
+		}
+		if(optType=='interpose_update'){
+			baseDoEdit();
+		}else{
+			baseDoCancel();
+		}
+   }//初始化基本信息
+	//初始化基本信息
+	function baseInit(){
+		if(!isBaseOpen){
+			isBaseOpen=true;
+			getKnowWay();
+		}
+	}
+	//回访信息管理页面
+	function initCustCallbackInfo(){
+		var isShowed=document.getElementById("div_callback_manage").style.display;
+		$("#div_callback_manage").toggle();
+		if(isShowed=='none'){
+				$("#bt_callBack").addClass("clicked");
+				$("#custManageWorkTab li:eq(0) a").trigger("click");
+				//changBaseBtclick('1',"analysisInfo");
+				if(top.g_isPermit('09_edit_callback_manager')){
+					//changBaseBtclick(1,"analysisInfo");
+				}else{
+					$("#cbEditBt").hide();
+					$("#cbReturnBt").hide();
+					$("#cbSaveBt").hide();
+				}
+			}else{
+				$("#bt_callBack").removeClass("clicked");
+			}
+	}
+	//工程订单管理页面
+	function initCustProjectInfo(){
+		if(!isProjectOpen){
+			 isProjectOpen=true;
+			 if(tab_id!=-1){
+				$("#iframe_project").attr("src","orderInfo.html?optType=update&require_id="+require_id+"&cust_code="+cust_base_info_id+"&initTab="+tab_id);
+				//$("#cust_baseinfo_tabs ul li:eq("+pageStr[1]+") a").trigger("click");
+				tab_id=-1;
+			}else{
+			  $("#iframe_project").attr("src","orderInfo.html?optType=update&require_id="+require_id+"&cust_code="+cust_base_info_id);
+			 }
+		    $("#iframe_project").height($("#displayContent").height()-45);
+		 }
+			var isShowed=document.getElementById("div_project_order").style.display;
+			$("#div_project_order").toggle();
+			
+			if(isShowed=='none'){
+				$("#bt_project").addClass("clicked");
+			}else{
+				$("#bt_project").removeClass("clicked");
+			}
+	}
+	//产品订单管理页面
+	function initCustProductInfo(){
+		if(!isProductOpen){
+			isProductOpen=true;
+			if(tab_id!=-1){
+				$("#iframe_product").attr("src","proOrderInfo.html?optType=update&cust_code="+$("#cust_code").val()+"&require_id="+require_id+"&initTab="+tab_id);
+				tab_id=-1;
+			}else{
+				$("#iframe_product").attr("src","proOrderInfo.html?optType=update&cust_code="+$("#cust_code").val()+"&require_id="+require_id);
+			}
+			$("#iframe_product").height($("#displayContent").height()-45);
+		}	
+			var isShowed=document.getElementById("div_product_order").style.display;
+			$("#div_product_order").toggle();
+			
+			if(isShowed=='none'){
+				$("#bt_product").addClass("clicked");
+			}else{
+				$("#bt_product").removeClass("clicked");
+			}
+	}//设计管理
+	function initCustDesignInfo(){ 
+		if(!isOtherOpen){
+			isOtherOpen=true;
+			if(tab_id!=-1){
+			    if(tabTitle){
+				  tab_id=tabTitle;
+				}
+				$("#iframe_design").attr("src","designManage.html?optType=update&cust_code="+cust_base_info_id+"&initTab="+tab_id);
+				tab_id=-1;
+			}else{
+				$("#iframe_design").attr("src","designManage.html?optType=update&cust_code="+cust_base_info_id);
+			}
+			$("#iframe_design").height($("#displayContent").height()-45);
+		}
+			var isShowed=document.getElementById("div_design_manage").style.display;
+			$("#div_design_manage").toggle();
+			
+			if(isShowed=='none'){
+				$("#bt_design").addClass("clicked");
+			}else{
+				$("#bt_design").removeClass("clicked");
+			}
+		if(top.g_isPermit('09_edit_designer_manager')){
+			$("#otherEditBt").show();
+		}else{
+			$("#otherEditBt").hide();
+		}
+		
+		//查看权限控制
+		//产品报价
+		if(!top.g_isPermit('09_product_manage_menu_01')){
+			$("#other_li_productQuote").hide();
+		}//工程报价
+		if(!top.g_isPermit('09_project_manage_menu_02')){
+			$("#other_li_projectQuote").hide();
+			$("#other_li_projectContract").hide();
+		}
+	}
+	//文档管理
+	function initDocInfo(){
+		if(!isDocOpen){
+			isDocOpen=true;
+			selectAllUploadDoc();
+		}
+		var isShowed=document.getElementById("div_doc_manager").style.display;
+			$("#div_doc_manager").toggle();
+			
+			if(isShowed=='none'){
+				$("#bt_fileManage").addClass("clicked");
+			}else{
+				$("#bt_fileManage").removeClass("clicked");
+			}
+	}
+	//付款管理
+	function initCustMoneyInfo(){
+		//if(!isMoneyOpen){
+		//	isMoneyOpen=true;
+			getMoneyRecordList();
+		//}
+		if(top.g_isPermit('09_money_charge')){
+		 $("#charge_bt").show();
+		}
+		var isShowed=document.getElementById("div_money_manager").style.display;
+			$("#div_money_manager").toggle();
+			if(isShowed=='none'){				
+				$("#bt_moneyManage").addClass("clicked");
+			}else{
+				$("#bt_moneyManage").removeClass("clicked");
+			}
+	}
+	function initProjectContractInfo(){
+	   var isShowed=document.getElementById("div_project_contract").style.display;
+			$("#div_project_contract").toggle();
+			if(isShowed=='none'){				
+				$("#bt_proContract").addClass("clicked");
+			}else{
+				$("#bt_proContract").removeClass("clicked");
+			}
+	}
+	
+	//控制显示某页面模块中某标签
+	function doInitPage(){
+		var pageStr=new Array();
+		var tabName="base";
+		var pageIndex=0;
+		//判断url参数initPage 非空时分割，否则按照角色或权限显示页面
+		if(initPage==null||initPage==''){
+			//根据权限显示页面
+				if(top.g_isPermit('09_query_callback_manager')){
+					initPage="1-0";
+				}else{
+					initPage="0-0";
+				}
+				//根据角色显示页面
+				var role=top.getUserRole();
+				if(role!=''){
+				//总经理 店面经理 工程部经理 产品部经理  设计部经理 默认显示客户基本信息  
+					if((!(role.indexOf('top_manager')<0))||(!(role.indexOf('store_manager')<0))||(!(role.indexOf('programme_manager')<0))||(!(role.indexOf('product_manager')<0))||(!(role.indexOf('designer_manager')<0))){
+						initPage="0-0";	
+					}else if(!(role.indexOf('custManager')<0)){
+						initPage="1-0";	
+					}else if(!(role.indexOf('designer')<0)){
+						initPage="2-0";	
+					}else if(!(role.indexOf('programme_manager')<0)){//工程监理
+						initPage="3-0";
+					}
+				}
+		}
+		pageStr=initPage.split("-");
+		/*if(pageStr.length!=2) {
+			showCustBaseInfo();//默认显示客户信息页面
+			return;	
+		}*/
+		//根据页面传initPage值显示页面（优先于权限或角色）
+		if(pageStr!=null&&pageStr.length==2){
+			tab_id=pageStr[1];
+		}
+		toggleModelPage(pageStr[0]);
+		if(top.g_isPermit("cust_edit")){//客户基本信息编辑权限
+		  $("#baseEditBt").show();
+		}else{
+		  $("#baseEditBt").hide();
+		}
+		
+}
+	//模块查看权限 （通过控制菜单button显示控制）
+	function butRightInit(){
+			//工程订单管理  且客户状态大于
+			if(!top.g_isPermit('09_project_manage_menu_01')){
+				$("#bt_project").hide();
+			}
+			//设计管理
+			if(!top.g_isPermit('09_query_designer_manager')){
+				$("#bt_design").hide();
+			}else{
+				$("#bt_design").show();
+			}
+			//查看回访信息
+			if(!top.g_isPermit('09_query_callback_manager')){
+				$("#bt_callBack").hide();
+			}else{
+				$("#bt_callBack").show();
+			}
+			//工程合同
+			if(!top.g_isPermit("09_query_project_contract")){
+			    $("#bt_proContract").hide();
+			}else{
+			    $("#bt_proContract").show();
+			}
+		    if(top.g_isPermit('project_contract_opr')){
+	            $("#contractEditBt").show();
+	        }else{
+	            $("#contractEditBt").hide();
+	        }
+	}
+	function toggleMenuBt(){
+		//4 表示设计方案通过 可以显示产品订单、工程订单、收款管理模块
+		if(isNaN(cust_status)){
+			return;//如果不是数字
+		}
+		if(cust_status>0){//显示所有按钮
+			$("#bt_product").removeClass("disabledBt"); 
+			$("#bt_project").removeClass("disabledBt");
+		}else{//隐藏产品、工程、付款按钮
+			$("#bt_product").addClass("disabledBt"); 
+			$("#bt_project").addClass("disabledBt");
+		}
+	}
+	function toggleModelPage(index){
+		if(index==null&&index==''){
+			index=0;
+		}
+		if(curModelIndex==index){
+			return;
+		}
+		//判断将要打开的页面与客户当前状态 产品、工程、交款在客户状态为设计方案之后才可以打开
+		//if(index=='3'||index=='4'||index=='6'){
+		/**if(index=='3'||index=='4'){
+			if(isNaN(cust_status)||cust_status<4){//客户处于设计方案通过之前不可操作
+				return;
+			}
+		} */
+		if(curModelIndex!=-1){
+			if(curModelIndex==0){
+				showCustBaseInfo();
+			}else if(curModelIndex==1){
+				initCustCallbackInfo();
+			}else if(curModelIndex==2){
+				initCustDesignInfo();
+			}else if(curModelIndex==3){
+				initCustProjectInfo();
+			}else if(curModelIndex==4){
+				initCustProductInfo();
+			}else if(curModelIndex==5){
+				initDocInfo();
+			}else if(curModelIndex==6){
+				initCustMoneyInfo();
+			}else if(curModelIndex==7){
+			    initProjectContractInfo();
+			}
+		}
+		curModelIndex=index;
+		if(curModelIndex==0){
+			showCustBaseInfo();
+		}else if(curModelIndex==1&&top.g_isPermit('09_query_callback_manager')){
+			initCustCallbackInfo();
+		}else if(curModelIndex==2&&top.g_isPermit('09_query_designer_manager')){
+			initCustDesignInfo();
+		}else if(curModelIndex==3){
+			initCustProjectInfo();
+		}else if(curModelIndex==4){
+			initCustProductInfo();
+		}else if(curModelIndex==5){
+			initDocInfo();
+		}else if(curModelIndex==6){
+			initCustMoneyInfo();
+		}else if(curModelIndex==7){
+		    initProjectContractInfo();
+		}else{
+			showCustBaseInfo();
+			curModelIndex=0;
+		}
+	}
+	
+	function checkInfoSave(){
+		if(cust_base_info_id!=""){
+		  var aoData=[];
+		  aoData.push({"name":"custInfo.code","value":cust_base_info_id});
+		  top.sendAjaxRequest("/actions/CustInfo.action?checkBaseInfoSituation",aoData,checkInfoSaveCallBack);
+		}
+    }
+	function checkInfoSaveCallBack(obj){
+	    if(obj.status){
+		  var o = obj.body;
+		  if(o.custInfoObj=="true"){
+		    $("#mark_base").attr("src","image/icon_success.png");
+		  }
+		  if(o.designer=="true"){
+		    $("#mark_distribute_designer").attr("src","image/icon_success.png");
+		  }
+		  if(o.measureHouse=="true"){
+		   $("#mark_measure_house").attr("src","image/icon_success.png");
+		 }
+		 if(o.contract=="true"){
+		 $("#mark_design_contract").attr("src","image/icon_success.png");
+		 }
+		 if(o.designList=="true"){
+		  $("#mark_design_file").attr("src","image/icon_success.png");
+		 }else{
+		  $("#mark_design_file").attr("src","image/icon_failed.png");
+		 }
+		 if(o.proquoteInfo=="true"){
+		  $("#mark_project_quote").attr("src","image/icon_success.png");
+		 }
+		 if(o.project_contract=="true"){
+		  $("#mark_project_contract").attr("src","image/icon_success.png");
+		 }
+		 if(o.projectOrder=="true"){
+		   $("#mark_project_order").attr("src","image/icon_success.png");
+		   cust_project_info_id=o.projectOrderId;
+		 }
+		 if(o.is_guarantee=="true"){
+		   $("#mark_project_guarantee").attr("src","image/icon_success.png");
+		 }else{
+		   $("#mark_project_guarantee").attr("src","image/icon_failed.png");
+		 }
+		 if(o.productQuote=="true"){
+		   $("#mark_product_quote").attr("src","image/icon_success.png");
+		 }
+		 if(o.productOrder=="true"){
+		  $("#mark_product_order").attr("src","image/icon_success.png");
+		 }
+	}
+	}
+	
+	
+function searchSuggest(e){
+  if(is_running==1) return ;
+  try{
+   if(e.keyCode==40){
+     document.getElementById('selectSearchTemplate').focus();  
+     document.getElementById('selectSearchTemplate').selectedIndex=0;
+    return false;
+   }
+  }catch(ee){
+  }
+  
+  var sText=document.getElementById("txtSearch").value;
+  if(sText==''){
+   document.getElementById('search_suggest').innerHTML = '';
+   return ;
+  } 
+  oldSearchTxt=sText;
+  var ss = document.getElementById('search_suggest')
+  ss.innerHTML = '';
+  is_running=1;
+  
+  var codes=top.getCodeListByType("DISTRICT");
+  var arr=[];
+  for ( var i=0;i<codes.length;i++ ) {
+    if ( codes[i].name.indexOf( sText ) != -1 ) {
+	  arr[arr.length]=codes[i];
+	}
+  }
+  areaSearch(arr);
+}
+
+ function areaSearch(pion){
+     is_running=0;
+        if(pion==null || pion.length==0) return ;
+
+         var ss = document.getElementById('search_suggest');
+         var node;
+         var name="";
+         ss.innerHTML = '';
+         var suggest='';
+         for(var property in pion){
+          name=pion[property].name;
+          suggest += '<option value="'+pion[property].code+'|'+pion[property].name+'">';
+          suggest += name;
+          suggest += '</option>';
+         }
+ 
+  if(suggest!=''){
+   ss.innerHTML='<select id="selectSearchTemplate" size="10" name="selectSearchTemplate" onkeydown="keydown(event,1)" onkeypress="keypress(event,1)" onclick="getSelectedTemplate()"  >'+ suggest+'</select>';
+   ss.style.display="";
+  }
+}
+
+function getSelectedTemplate(){
+   var s=document.getElementById('selectSearchTemplate');
+   document.getElementById('search_suggest').style.display="none";
+   $("#district").val( s.value );
+   $("#txtSearch").val( s.options[s.selectedIndex].innerText );
+}
+
+ function keypress(e,t){
+        if(e.keyCode==13){
+            getSelectedTemplate();
+        }else return false;
+ }
+ 
+ function keydown(e,t){
+     if(e.keyCode==8){
+       if(t==1){
+        document.getElementById("txtSearchType").focus();
+       }else {
+        document.getElementById("txtSearchType").focus();
+       }
+     }
+     return false;
+ }
+	
+	</script>	
+ <style>
+		body,td {
+			font-size: 13px;
+		}
+
+		.roomTd {
+			border: 1px;
+			border-style: dotted none none none;
+			border-color: blue;
+			color: #000000;
+			padding-left: 5px;
+		}
+
+		#KinSlideshow {
+			overflow: hidden;
+			width: 500px;
+			height: 450px;
+		}
+
+		.inputBottomLine {
+			border-top: hide;
+			border-left: hide;
+			border-center: hide;
+		}
+		#hall_count,#room_count,#bath_count,#measure_cust_sex,#measure_room_count,#measure_bath_count,#measure_hall_count,#many_members{
+			width: 50px;
+		}
+
+		#function_require,#design_key{
+			width: 65%;
+		}
+
+		#project_addr,#measure_project_addr,#fault_condition,#heater_suggest,#gas_suggest,#partition_position,#members_desc,#switch_position {
+			width: 70%;
+		}
+
+		#struct_area,#usable_area,#planinvest_money,#major_material,#measure_district,#measure_struct_area,#measure_usable_area,#measure_planinvest_money,#measure_major_material  {
+			width: 60px;
+}
+	 .versionStyle{background-color:#6CA6CD;margin-bottom:10px; text-align: center;color:#FFFFFF; width:100px;height:30px;}
+	 .versionStyle2{background-color:#FF7F00;margin-bottom:10px; text-align: center;color:#FFFFFF; width:100px;height:30px;}
+	 .ui-icon {float:left}
+	 .W_btn_round, .W_btn_round_ico, .W_btn_round2 {
+		display: inline-block;
+		border-width: 1px;
+		border-style: solid;
+		overflow: hidden;
+		vertical-align: middle;
+		cursor: pointer;
+		border-radius: 11px;
+		border-color: #d9d9d9;
+		background-color: #f2f2f2;
+		padding:3px 4px 3px 4px;
+		margin-bottom:2px;
+	}
+	a{text-decoration:none}
+	#mark_td td{ margin-left:30px;
+	
+	}
+	.clicked{
+		color: #e17009;
+	}
+	
+	#designAgreementList td input{
+	   width:100px;
+	   display:none;
+	}
+	#anti_design_date td input{
+	   width:100px;
+	   display:none;
+	}
+	#anti_design_date td span{
+	   display:block;
+	}
+	.disabledBt{
+		color:#666666;
+	}
+	.tr_alarm_data{
+		text-align: center; 
+		COLOR: #0A0A0A; BACKGROUND-COLOR: #FFEE99; font-size: 13px;
+		padding: 3px;
+	}
+	.versionStyle a{background-color:#6CA6CD;margin-bottom:10px; text-align: center;color:#FFFFFF; width:100px;height:30px;}
+	.versionStyle2 a{background-color:#FF7F00;margin-bottom:10px; text-align: center;color:#FFFFFF; width:100px;height:30px;}
+</style>
+	</head>
+	<body style="margin:0px;padding:0px">
+	<table width="99%" height='98%'>
+	<tr>
+	<td valign="top">
+		<table id='top_cust_table' border="1" cellpadding="3" cellspacing="1" width="99%" align="center" style="background-color: #b9d8f3;margin:1px">
+			<tr class="tr_data" height="25px">
+				<td class="table_property_title">客户编号</td><td align="left" id="top_cust_code"></td>
+				<td class="table_property_title">客户姓名</td><td align="left" id="top_cust_name"></td>
+				<td class="table_property_title">户型</td>
+				<td align="left">
+					<label id="top_measure_room_count"></label>
+					室
+					<label id="top_measure_hall_count"></label>
+					厅
+					<label id="top_measure_bath_count"></label>
+					卫
+				</td>
+				<td class="table_property_title">客户状态</td><td align="left" id="top_cust_status"></td>
+			</tr>
+			<tr class="tr_data" height="25px">
+				<td class="table_property_title">客户类型</td><td align="left" id="top_cust_type"></td>
+				<td class="table_property_title">工程地址</td><td align="left" colspan="5" id="top_district"></td>
+			</tr>
+		</table>
+		<div id="displayContent"  style="overflow:auto">
+		<div id="div_custInfo_manage">
+		<div id="cust_base_tabs-0" style="padding:0px;display:none" width="95%">
+			<h3 style="padding:5px;margin-bottom:5px;margin-top:5px" class="ui-accordion-header ui-helper-reset ui-state-active ui-corner-top">
+					<span class="ui-icon ui-icon-triangle-1-s"></span>客户基本信息
+						<img src="image/edit.gif" title="编辑" onclick="baseDoEdit()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:-1px;right:0px;display:none;" id="baseEditBt"/>
+						<img src="image/return.png" title="取消" onclick="baseDoCancel()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:-8px;right:0px;display:none;" id="baseReturnBt"/>
+						<img src="image/save.png" title="保存" onclick="baseDoSubmit()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:-1px;right:5px;display:none;" id="baseSaveBt"/>
+			</h3>	
+			<div id="cust_baseinfo_tabs" height="500px">
+					<ul>
+						<li id="cust_li_baseinfo">
+							<a onclick="changBtBind('custBase')" href="#div_cust_base_info" ><span>客户基本信息</span>
+							</a>
+						</li>
+						<li id="cust_li_analysis">
+							<a onclick="changBtBind('custAnalysis')" href="#div_cust_analysis" ><span>客情分析</span>
+							</a>
+						</li>
+						
+						<li id="cust_li_callbackInfo">
+							<a onclick="changBtBind('callbackInfo')" href="#div_callback_info" ><span>客户沟通</span>
+							</a>
+						</li>
+						<!--<li  id="cust_li_projectContract">
+							<a onclick="changBtBind('contract')" href="#project_contract_info" ><span>工程合同</span>
+							</a>
+						</li>
+						<li  id="cust_li_projectContract">
+							<a onclick="changBtBind('callbackPlan')" href="#callback_plan_info" ><span>回访计划</span>
+							</a>
+						</li>!-->
+					</ul>
+		   </div>
+				<div id="div_cust_base_info">
+				   <div id="div_edit_cust_base" style="margin:0px 10px 10px 10px;display:none">
+				  
+				  <div id="divDisCustInfo" style="display:none;">
+						<B style="margin-top:8px;">废单申请表</B>
+						<table  id="tbDisCustInfo" border="1" cellpadding="3" cellspacing="1" width="99%"
+							align="center" style="background-color: #b9d8f3;margin_bottom:5px">
+							<tr class="tr_alarm_data" height="25px">
+								<td width="15%" class="table_property_title">
+									废单类型
+									<input type="hidden" id="disCust_id"></input>
+									<input type="hidden" id="disCust_remind_id"></input>
+									<input type="hidden" id="disCust_examine_status_hd"></input>
+									<input type="hidden" id="disCust_opt_person_hd"></input>
+								</td>
+								<td align="left" width="35%"  id="disable_type">
+								</td>
+								<td width="15%" class="table_property_title">
+										审核状态
+								</td>
+								<td align="left"align="left" id="disCust_examine_status">
+								</td>
+							</tr>
+							<tr class="tr_alarm_data"  style="backgroud-color:#FF9933" rowspan="2" height="25px">
+									<td width="15%" class="table_property_title">
+										废单原因
+									</td>
+									<td align="left"colspan="3" align="left" id="disable_reason">
+									</td>
+							</tr>
+						    <tr class="tr_alarm_data"  style="backgroud-color:#FF9933" height="25px">
+									<td width="15%" class="table_property_title">
+										申请人
+									</td>
+									<td align="left" align="left" id="disCust_opt_person">
+									</td>
+									<td width="15%" class="table_property_title">
+										申请时间
+									</td>
+									<td align="left" align="left" id="disCust_opt_time">
+									</td>
+							   </tr>
+							   <tr id="tr_custdisable_examine_info" style="display:none" class="tr_alarm_data" height="25px">
+									<td class="table_property_title">
+										审核人
+									</td>
+									<td align="left" align="left" id="disCust_examine_person">
+									</td>
+									<td class="table_property_title">
+										审核时间
+									</td>
+									<td align="left" align="left"  id="disCust_examine_time">
+									</td>
+							   </tr>
+							   <tr class="tr_alarm_data" rowspan="2" id="tr_custdisable_examine_suggest" style="display:none;backgroud-color:#FF9933" height="25px">
+									<td width="15%" class="table_property_title">
+										审核意见
+									</td>
+									<td align="left"colspan="3" align="left" id="td_disCust_examine_suggest">
+										<textarea  rows="2" style="width:99%" id="disCust_examine_suggest"></textarea>
+									</td>
+								</tr>
+							    <tr id="tr_custdisable_examine_bt" style="display:none;" class="tr_alarm_data" height="25px">
+									<td align="right" colspan="2">
+										<div class="buttonDivTwo">
+											<a href="javascript:examineDisableCust('1')">通过</a>
+										</div>
+									</td>
+									<td align="left" colspan="2">
+										<div class="buttonDivTwo">
+											<a href="javascript:examineDisableCust('2')">拒绝</a>
+										</div>
+									</td>
+							   </tr>
+						</table>
+				   <br/>
+				   </div>
+	
+					<table id="tb_edit_cust_base" border="1" cellpadding="3" cellspacing="1" width="99%"
+						align="center" style="background-color: #b9d8f3;">
+						<tr class="tr_data" height="25px">
+							<td width="15%"  class="table_property_title">
+								客户编号<span style="color:red;">(*)</span>
+							</td>
+							<td width="35%" align="left">
+								<label id="pre_cust_code" style="display:none"></label>
+								<input type="text" id="cust_code" style="display:none;width:75px">
+								<label id="lb_cust_code"></label>
+							</td>
+							<td width="15%" class="table_property_title" >
+								客户经理<span style="color:red;">(*)</span>
+							</td>
+							<td align="left" >
+							<span id="tdcust_manager" style="display:none"></span>
+							<span id="edit_tdcust_manager"></span>
+							</td>
+						</tr>
+						<tr class="tr_data" height="25px">
+							<td width="15%" class="table_property_title">
+								客户姓名<span style="color:red;">(*)</span>
+							</td>
+							<td align="left">
+								<input type="text" id="cust_name" style="width:120px;" />
+							</td>
+							<td width="15%" class="table_property_title">
+								登记日期<span style="color:red;">(*)</span>
+							</td>
+							<td width="35%" align="left">
+							<!--<input size="12"  type="text" id="register_date"
+									class="js__datepicker" />!-->
+								<input size="12"  type="text" id="register_date" onclick="top.selectDate(this)"  style="width:120px;" />
+							</td>
+						</tr>
+						<tr class="tr_data" height="25px">
+							<td class="table_property_title">
+								移动电话<span style="color:red;">(*)</span>
+							</td>
+							<td align="left">
+								<input type="text" id="cust_mobile"  style="width:120px;"/>
+							</td>
+							<td width="15%" class="table_property_title">
+								固定电话
+							</td>
+							<td align="left">
+								<input type="text" size="12" id="cust_phone"  style="width:120px;"/>
+							</td>
+						</tr>
+						<tr class="tr_data" height="25px">
+							<td width="15%" class="table_property_title">
+								客戶性別
+							</td>
+							<td align="left" id="tdcust_sex"></td>
+							<td width="15%" class="table_property_title">
+								客户类型
+							</td>
+							<td align="left" id="tdcust_type"></td>
+						</tr>
+						<tr class="tr_data" height="25px">
+							<td width="15%" class="table_property_title">
+								客户职业
+							</td>
+							<td align="left">
+								<span style="width:120px" id="span_cust_job"></span>
+								<input type="text" size="12" id="cust_job_else"  style="width:120px;" />
+							</td>
+						    <td width="15%" class="table_property_title">
+								客户来源<span style="color:red;">(*)</span>
+							</td>
+							<td align="left" colspan="3" >
+								<span id="tdfrom_type" onclick="fromTypeChange()"></span>
+								<span id="spanOtherFromType" style="display:none"><input size="12" id="other_from_type" type="text"  style="width:120px;"/></span>
+								<span id="spanMarketUser"><input type="text" size="15" id="market_user"/></span>
+							</td>
+						</tr>
+						<tr class="tr_data" height="25px">
+						    <td class="table_property_title" width="15%">
+							   所属设计部<span style="color:red;">(*)</span>
+							</td>
+							<td align="left" id="td_design_dept" colspan="5">
+							   
+							</td>
+						</tr>
+					</table>
+					<br/>
+					<B>装修需求：</B>
+					<br />
+					<table border="1" cellpadding="3" cellspacing="1" width="99%"
+						class="table_property_title" style="background-color: #b9d8f3;">
+						
+						<tr class="tr_data" height="25px">
+							<td width="15%" class="table_property_title" rowspan="2">
+								工程地址<span style="color:red;">(*)</span>
+							</td>
+							<td>省份</td>
+							<td>城市</td>
+							<td>区/县</td>
+							<td>小区</td>
+							<td>楼</td>
+							<td>单元</td>
+							<td>楼层</td>
+							<td>门牌号</td>
+							<td>其他</td>
+						</tr>
+						<tr class="tr_data">
+							<td>  <select id="s_province"></select></td>
+							<td>  <select id="s_city"></select></td>
+							<td>  <select id="s_county"></select></td>
+							<!--td><span id="span_district"></span></td-->
+	 <td>			
+      <div style="100%">
+	    <input type="hidden" id="district" value="" />
+      <input type="text" size="6" id="txtSearch"  name="txtSearch"  onkeyup="searchSuggest(event);" />
+      <br><div id="search_suggest"></div>
+      </div>
+	 </td>
+							<td><input type="text" id="addr_building"  style="width:30px"></input></td>
+							<td><input type="text" id="addr_unit"  style="width:30px"></input></td>
+							<td><input type="text" id="addr_floor"  style="width:30px"></input></td>
+							<td><input type="text" id="addr_door_num"  style="width:30px"></input></td>
+							<td><!--<span id="span_district"></span>&nbsp;&nbsp;!--><input type="text"  style="width:180px" id="project_addr"></td>
+						</tr>
+						<tr class="tr_data" height="25px">
+							<td width="15%" class="table_property_title">
+								交房类型
+							</td>
+							<td width="35%" align="left"  colspan="3">
+								<input type="radio" name="handhouse_type"
+									onclick="changeHandhouseType()" checked="true" value="0" />
+								现房<br/>
+								<input type="radio" onclick="changeHandhouseType()"
+									name="handhouse_type" value="1" />
+								期房
+								<span id="edit_span_completed_date" style="display:none">交房日期<span style="color:red;">(*)</span><input type="text" id="completed_date"
+									onclick="new Calendar().show(this);" readonly="true"/></span>
+							</td>
+							<td width="15%" class="table_property_title"  colspan="2">
+								客户状态
+							</td>
+							<td align="left"  colspan="4">
+								<span id="span_cust_status"></span>
+								<input type="hidden" id="date_update"/>
+								<input type="hidden" id="date_fail"/>
+							</td>
+						</tr>
+						<tr class="tr_data" height="25px">
+							<td width="15%" class="table_property_title">
+								建筑面积<!--<span style="color:red;">(*)</span>!-->
+							</td>
+							<td align="left" align="left"  colspan="3">
+								<input type="text" id="struct_area"  style="width:80px;"/>
+								M²
+							</td>
+							<td width="15%" class="table_property_title"  colspan="2">
+								套内面积
+							</td>
+							<td align="left" align="left"  colspan="4">
+								<input type="text" id="usable_area" style="width:100px;"/>
+								M²
+							</td>
+						</tr>
+						<tr class="tr_data" height="25px">
+							<td width="15%" class="table_property_title">
+								户&nbsp;&nbsp;&nbsp;&nbsp;型
+							</td>
+							<td align="left" colspan="3">
+								
+								<select id="room_count" style="width:80px;">
+									<option value="1">1</option>
+									<option value="2">2</option>
+									<option value="3">3</option>
+									<option value="4">4</option>
+									<option value="5">5</option>
+									<option value="6">6</option>
+									<option value="7">7</option>
+									<option value="8">8</option>
+									<option value="9">9</option>
+									<option value="0">0</option>
+								</select>
+								室
+								<select id="hall_count" style="width:80px;">
+									<option value="1">1</option>
+									<option value="2">2</option>
+									<option value="3">3</option>
+									<option value="4">4</option>
+									<option value="5">5</option>
+									<option value="6">6</option>
+									<option value="7">7</option>
+									<option value="8">8</option>
+									<option value="9">9</option>
+									<option value="0">0</option>
+								</select>
+								厅
+								<select id="bath_count" style="width:80px;">
+									<option value="1">1</option>
+									<option value="2">2</option>
+									<option value="3">3</option>
+									<option value="4">4</option>
+									<option value="5">5</option>
+									<option value="6">6</option>
+									<option value="7">7</option>
+									<option value="8">8</option>
+									<option value="9">9</option>
+									<option value="0">0</option>
+								</select>
+								卫
+							</td>
+							<td width="15%" class="table_property_title"  colspan="2">
+								预计装修时间
+							</td>
+							<td align="left"  colspan="4">
+								<input type="text" id="planfitment_date" onclick="new Calendar().show(this);" style="width:100px;" readonly="true"/>
+							</td>
+						</tr>
+						<tr class="tr_data" height="25px">
+							<td width="15%" class="table_property_title">
+								预投工程资金
+							</td>
+							<td align="left"  colspan="3">
+								<input type="text" id="planinvest_money" style="width:80px;"/>
+								万元
+							</td>
+							<td width="15%" class="table_property_title"  colspan="2">
+								预投主材资金
+							</td>
+							<td align="left"  colspan="4">
+								<input type="text" id="major_material" style="width:100px;"/>
+								万元
+							</td>
+						</tr>
+						<tr class="tr_data" height="25px">
+							<td width="15%" class="table_property_title">
+								居室类型
+							</td>
+							<td colspan="9" align="left">
+								<span id="span_room_type"></span>
+								<input type="text" id="room_type_else" style="display:none;"/>
+							</td>
+						</tr>
+						<tr class="tr_data" height="25px">
+							<td width="15%" class="table_property_title">
+								关注点
+							</td>
+							<td colspan="9" align="left">
+								<input type="checkbox" name="focus" value="品牌" />
+								品牌
+								<input type="checkbox" name="focus" value="设计" />
+								设计
+								<input type="checkbox" name="focus" value="施工质量" />
+								施工质量
+								<input type="checkbox" name="focus" value="主材代购" />
+								主材代购
+								<input type="checkbox" name="focus" value="配饰" />
+								配饰
+								<input type="checkbox" name="focus" value="价格" />
+								价格
+								<input type="checkbox" name="focus" value="服务" />
+								服务
+								<input type="checkbox" name="focus" value="管理" />
+								管理
+								<br />
+								<input type="checkbox" name="focus" value="保修" />
+								保修
+								<input type="checkbox" name="focus" value="环保" />
+								环保
+								<input type="checkbox" name="focus" onclick="doOtherFocus()" value="其他" />
+								其他
+								<span id="span_other_focus" style="display:none">
+									<input type="text" size="45" id="other_focus"/>
+								</span>
+							</td>
+						</tr>
+						<tr class="tr_data" height="25px">
+							<td width="15%" class="table_property_title">
+								风格需求
+							</td>
+							<td colspan="9" align="left">
+								<table width="90%">
+									<tr class="tr_data">
+										<td align="left">
+											<input type="checkbox" name="require_style" value="现代前卫•另类" />
+											现代前卫•另类
+										</td>
+										<td align="left">
+											<input type="checkbox" name="require_style" value="现代简约•时尚" />
+											现代简约•时尚
+										</td>
+										<td align="left">
+											<input type="checkbox" name="require_style" value="雅致风格•优雅" />
+											雅致风格•优雅
+										</td>
+										<td align="left">
+											<input type="checkbox" name="require_style" value="新中式•怀旧" />
+											新中式•怀旧
+											<br />
+										</td>
+									</tr>
+									<tr class="tr_data">
+										<td align="left">
+											<input type="checkbox" name="require_style" value="新古典•高雅" />
+											新古典•高雅
+										</td>
+										<td align="left">
+											<input type="checkbox" name="require_style" value="欧式古典•华贵" />
+											欧式古典•华贵
+										</td>
+										<td align="left">
+											<input type="checkbox" name="require_style" value="美式乡村•休闲" />
+											美式乡村•休闲
+										</td>
+										<td align="left">
+											<input type="checkbox" name="require_style" value="地中海•浪漫" />
+											地中海•浪漫
+										</td>
+									</tr>
+									<tr>
+										<td colspan="10" align="left">
+											<input type="checkbox" onclick="doOtherRequireStyle()" name="require_style" value="其他" />
+											其他
+											<span id="span_other_require_style" style="display:none">
+												<input type="text" size="50" id="other_require_style"/>
+											</span>
+											<br />
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+
+						<tr class="tr_data">
+							<td width="15%" class="table_property_title">
+								居室功能要求
+							</td>
+							<td align="left" colspan="9">
+								<table width="90%">
+									<tr class="tr_data">
+										<td align="left" width="25%">
+											<input type="checkbox" name="function_require" value="客厅" />
+											客厅
+										</td>
+										<td align="left">
+											<input type="checkbox" name="function_require" value="主卧" />
+											主卧
+										</td>
+										<td align="left">
+											<input type="checkbox" name="function_require" value="次卧" />
+											次卧
+										</td>
+										<td align="left">
+											<input type="checkbox" name="function_require" value="保姆房" />
+											保姆房
+											<br />
+										</td>
+									</tr>
+									<tr class="tr_data">
+										<td align="left">
+											<input type="checkbox" name="function_require" value="书房" />
+											书房
+										</td>
+										<td align="left">
+											<input type="checkbox" name="function_require" value="厨房" />
+											厨房
+										</td>
+										<td align="left">
+											<input type="checkbox" name="function_require" value="餐厅" />
+											餐厅
+										</td>
+										<td align="left">
+											<input type="checkbox" name="function_require" value="酒窖" />
+											酒窖
+										</td>
+									</tr>
+									<tr>
+										<td align="left">
+											<input type="checkbox" name="function_require" value="休闲区" />
+											休闲区
+										</td>
+										<td colspan="9" align="left">
+											<input type="checkbox" onclick="doOtherFunctionRequire()" name="function_require" value="其他" />
+											其他
+											<span id="span_function_require" style="display:none">
+												<input type="text" size="50" id="other_function_require"/>
+											</span>
+											<br />
+										</td>
+									</tr>
+								</table>
+								<!--<textarea style="width:100%" id="function_require"  rows="2" style="99%"></textarea>!-->
+							</td>
+						</tr>
+						<tr class="tr_data" height="35px">
+							<td class="table_property_title">
+								家居设计重点
+							</td>
+							<td align="left" colspan="9">
+								<textarea id="design_key" style="width:100%"  rows="2" style="99%"></textarea>
+							</td>
+						</tr>
+					</table>
+					<br />
+					<B>客户咨询信息:</B>
+					<br />
+					<table border="1" cellpadding="3" cellspacing="1" width="99%" align="center" style="background-color: #b9d8f3;" id="addConsultTable">
+						<tr class="tr_data" height="35px">
+							<td width="15%" class="table_property_title">
+							设计师
+							</td>
+							<td width="18%" align="left">
+							<span id="span_designer_code" style="display:none"></span>
+							<span id="edit_span_designer_code"></span>
+							</td>
+							<td width="15%" class="table_property_title">
+							派单时间
+							</td>
+							<td width="18%" align="left">
+								<input type="text" id="send_date" onclick="new Calendar().show(this);" style="width:100px;" readonly="true"/>
+							</td>
+							<td class="table_property_title" width="15%">
+								意向评估
+							</td>
+							<td align="left" id="tdintention_evaluate"></td>
+						</tr>
+
+						<tr class="tr_data" height="35px">
+							<td class="table_property_title" width="20%">
+								近期是否量房
+							</td>
+							<td align="left" width="20%">
+								<input type="radio" name="is_measure_house" value="是"
+									checked="true" />
+								是
+								<input type="radio" name="is_measure_house" value="否" />
+								否
+							</td>
+							<td width="15%" class="table_property_title">
+							是否参观样板间
+							</td>
+							<td align="left" colspan="3">
+								<input type="radio" name="is_visit_model_house" value="是"
+									checked="true" />
+								是
+								<input type="radio" name="is_visit_model_house" value="否" />
+								否</td>
+						</tr>
+						<tr class="tr_data"  id="tr_interpose_type" height="35px">
+							<td class="table_property_title" width="20%">
+								人工干预原因<input type="hidden" id="interpose_id"></input>
+							</td>
+							<td align="left" colspan="5"><span id="span_interpose_type"></span></td></tr>
+						<tr class="tr_data"  id="tr_interpose_memo" height="35px">
+							<td width="20%" class="table_property_title">
+							人工干预备注
+							</td>
+							<td align="left" colspan="5">
+								<textarea id="interpose_memo" rows="3" cols="80"></textarea>
+							</td>
+						</tr>
+						<tr class="tr_data">
+							<td class="table_property_title" width="20%">
+								客情描述
+							</td>
+							<td align="left" colspan="5" >
+								<textarea id="cust_description" style="width:100%" rows="3" cols="80"></textarea>
+							</td>
+						</tr>
+					</table>
+					<br/>
+						<br />
+					<B>顾客认识公司的途径:</B>
+					<br />
+					<table border="1" id="knowWayTable" cellpadding="3" cellspacing="1" width="99%"
+						align="center" style="background-color: #b9d8f3;">
+						<tr class="tr_data" height="25px">
+							<td align="left">
+								报纸
+							</td>
+							<td align="left">
+								电视台
+							</td>
+							<td align="left">
+								网站
+							</td>
+							<td align="left">
+								杂志
+							</td>
+							<td align="left">
+								其他
+							</td>
+						</tr>
+						<tr class="tr_data" height="25px">
+							<td align="left">
+								<input type="checkbox" name="path_way" value="燕赵晚报" />
+								燕赵晚报
+							</td>
+							<td align="left">
+								<input type="checkbox" name="path_way" value="电视台" />
+								电视台
+							</td>
+							<td align="left">
+								<input type="checkbox" name="path_way" value="公司网站" />
+								公司网站
+							</td>
+							<td align="left">
+								<input type="checkbox" name="path_way" value="DM直投" />
+								DM直投
+							</td>
+							<td align="left">
+								<input type="checkbox" name="path_way" value="朋友介绍" />
+								朋友介绍
+							</td>
+						</tr>
+						<tr class="tr_data" align="left" height="25px">
+							<td align="left">
+								<input type="checkbox" name="path_way" value="其他" />
+								其他
+							</td>
+							<td align="left">
+								<input type="checkbox" name="path_way" value="其他" />
+								其他
+							</td>
+							<td align="left">
+								<input type="checkbox" name="path_way" value="新浪网" />
+								新浪网
+							</td>
+							<td align="left">
+								<input type="checkbox" name="path_way" value="其他" />
+								其他
+							</td>
+							<td align="left">
+								<input type="checkbox" name="path_way" value="工长介绍" />
+								工长介绍
+							</td>
+						</tr>
+						<tr class="tr_data" align="left" height="25px">
+							<td align="left">
+								&nbsp;
+							</td>
+							<td align="left">
+								<input type="checkbox" name="path_way" value="搜狐网" />
+								搜狐网
+							</td>
+							<td align="left">
+								&nbsp;
+							</td>
+							<td align="left">
+								<input type="checkbox" name="path_way" value="家装市场" />
+								家装市场
+							</td>
+							<td align="left">
+								<input type="checkbox" name="path_way" value="其他" />
+								其他
+							</td>
+						</tr>
+					</table>
+					<br/><br/>
+					</div>
+					
+					<div id="div_view_cust_base" style="margin:0px 10px 10px 10px;">
+					<div id="view_divDisCustInfo" style="display:none;backgroud-color:#FF9933">
+						<B style="margin-top:8px;">废单申请表</B>
+						<table  border="1" cellpadding="3" cellspacing="1" width="99%"
+							align="center" style="background-color: #b9d8f3;margin_bottom:5px">
+							<tr class="tr_alarm_data" style="backgroud-color:#FF9933" height="25px">
+								<td width="15%" class="table_property_title">
+									废单类型
+								</td>
+								<td align="left" width="35%"  id="view_disable_type">
+								</td>
+								<td width="15%" class="table_property_title">
+										审核状态
+								</td>
+								<td align="left"align="left" id="view_disCust_examine_status">
+								</td>
+							</tr>
+							<tr class="tr_alarm_data"  style="backgroud-color:#FF9933" rowspan="2" height="25px">
+									<td width="15%" class="table_property_title">
+										废单原因
+									</td>
+									<td align="left"colspan="3" align="left" id="view_disable_reason">
+									</td>
+							</tr>
+						    <tr class="tr_alarm_data"  style="backgroud-color:#FF9933" height="25px">
+									<td width="15%" class="table_property_title">
+										申请人
+									</td>
+									<td align="left" align="left" id="view_disCust_opt_person">
+									</td>
+									<td width="15%" class="table_property_title">
+										申请时间
+									</td>
+									<td align="left" align="left" id="view_disCust_opt_time">
+									</td>
+							   </tr>
+							   <tr id="view_tr_custdisable_examine_info" style="display:none;" class="tr_alarm_data" height="25px">
+									<td class="table_property_title">
+										审核人
+									</td>
+									<td align="left" align="left" id="view_disCust_examine_person">
+									</td>
+									<td class="table_property_title">
+										审核时间
+									</td>
+									<td align="left" align="left"  id="view_disCust_examine_time">
+									</td>
+							   </tr>
+							    <tr class="tr_alarm_data" rowspan="2" id="view_tr_custdisable_examine_suggest" style="display:none" height="25px">
+									<td width="15%" class="table_property_title">
+										审核意见
+									</td>
+									<td align="left"colspan="3" align="left" id="view_td_disCust_examine_suggest">
+										<textarea  rows="2" style="width:99%" id="view_disCust_examine_suggest"></textarea>
+									</td>
+								</tr>
+							    <tr id="view_tr_custdisable_examine_bt" style="display:none;" class="tr_alarm_data" height="25px">
+									<td align="left" align="left">
+									</td>
+									<td>
+										<div style="margin-left:30px;" class="buttonDivTwo">
+											<a href="javascript:viewExamineDisableCust('1')">通过</a>
+										</div>
+									</td>
+									<td >
+										<div style="margin-left:30px;" class="buttonDivTwo">
+											<a href="javascript:viewExamineDisableCust('2')">拒绝</a>
+										</div>
+									</td>
+									<td align="left" align="left">
+									</td>
+							   </tr>
+						</table>
+				   <br/>
+				   </div>
+	
+					<table id="tb_view_cust_base" border="1" cellpadding="3" cellspacing="1" width="99%"
+						align="center" style="background-color: #b9d8f3;">
+						<tr class="tr_data" height="25px">
+							<td width="15%" class="table_property_title">
+								客户编号
+							</td>
+							<td align="left" width="35%" id="view_cust_code">
+							</td>
+							<td width="15%" class="table_property_title">
+								客户经理
+							</td>
+							<td align="left"><span id='view_cust_manager'></span><span style="display:none" id="view_tdcust_manager"></span></td>
+						</tr>
+						<tr class="tr_data" height="25px">
+							<td class="table_property_title">
+								客户姓名
+							</td>
+							<td align="left"id="view_cust_name">
+							</td>
+							<td class="table_property_title">
+								登记日期
+							</td>
+							<td  align="left" id="view_register_date">
+							</td>
+						</tr>
+						<tr class="tr_data" height="25px">
+							<td class="table_property_title">
+								移动电话
+							</td>
+							<td align="left" id="view_cust_mobile">
+							</td>
+							<td class="table_property_title">
+								固定电话
+							</td>
+							<td align="left" id="view_cust_phone">
+							</td>
+						</tr>
+						<tr class="tr_data" height="25px">
+							<td class="table_property_title">
+								客戶性別
+							</td>
+							<td align="left" id="view_cust_sex"></td>
+							<td class="table_property_title">
+								客户类型
+							</td>
+							<td align="left" id="view_cust_type"></td>
+						</tr>
+						<tr class="tr_data" height="25px">
+							<td class="table_property_title">
+								客户职业
+							</td>
+							<td align="left">
+								<span style="width:35px" id="view_cust_job"></span>
+							</td>
+						<td class="table_property_title">
+								客户来源
+							</td>
+							<td align="left" colspan="3" id="view_from_type">
+							</td>
+						</tr>
+						<tr class="tr_data" height="25px">
+						   <td class="table_property_title"> 
+						      所属设计部
+						   </td>
+						   <td align="left" colspan="5">
+						      <span id="span_design_dept"></span>
+						   </td>
+						</tr>
+					</table>
+					
+					<br/>
+					<B>装修需求：</B>
+					<br />
+					<table border="1" cellpadding="3" cellspacing="1" width="99%"
+						align="center" style="background-color: #b9d8f3;">
+						<tr class="tr_data" height="25px">
+							<td width="15%" class="table_property_title">
+								工程地址
+							</td>
+							<td align="left" colspan="3" id="view_district"></td>
+						</tr>
+						<tr class="tr_data" height="25px">
+							<td width="15%" class="table_property_title">
+								交房类型
+							</td>
+							<td width="35%" align="left">
+								<label id="view_handhouse_type"></label>
+							</td>
+							<td width="15%" class="table_property_title">
+								客户状态
+							</td>
+							<td align="left">
+								<span id="view_cust_status"></span>
+							</td>
+						</tr>
+						<tr class="tr_data" height="25px">
+							<td class="table_property_title">
+								建筑面积
+							</td>
+							<td align="left" align="left">
+								<label id="view_struct_area"></label>
+								M²
+							</td>
+							<td class="table_property_title">
+								套内面积
+							</td>
+							<td align="left" align="left">
+								<label id="view_usable_area"></label>
+								M²
+							</td>
+						</tr>
+						<tr class="tr_data" height="25px">
+							<td class="table_property_title">
+								户&nbsp;&nbsp;&nbsp;&nbsp;型
+							</td>
+							<td align="left">
+								<label id="view_room_count"></label>
+								室
+								<label id="view_hall_count"></label>
+								厅
+								<label id="view_bath_count"></label>
+								卫
+							</td>
+							<td class="table_property_title" >
+								预计装修时间
+							</td>
+							<td align="left">
+								<label id="view_planfitment_date"></label>
+							</td>
+						</tr>
+						<tr class="tr_data" height="25px">
+							<td class="table_property_title">
+								预投工程资金
+							</td>
+							<td align="left">
+								<label id="view_planinvest_money"></label>
+								万元
+							</td>
+							<td  class="table_property_title">
+								预投主材资金
+							</td>
+							<td align="left">
+								<label id="view_major_material"></label>
+								万元
+							</td>
+						</tr>
+						<tr class="tr_data" height="25px">
+							<td class="table_property_title">
+								居室类型
+							</td>
+							<td colspan="3" align="left">
+								<span id="view_room_type"></span>
+								</td>
+						</tr>
+						<tr class="tr_data" height="25px">
+							<td class="table_property_title">
+								关注点
+							</td>
+							<td colspan="3" align="left">
+								<label id="view_focus"></label>
+							</td>
+						</tr>
+						<tr class="tr_data" height="25px">
+							<td class="table_property_title">
+								风格需求
+							</td>
+							<td colspan="3" align="left">
+								<label id="view_require_style"></label>
+							</td>
+						</tr>
+
+						<tr class="tr_data">
+							<td class="table_property_title">
+								居室功能要求
+							</td>
+							<td align="left" valign="top" id="view_function_require">
+							</td>
+							<td class="table_property_title">
+								家居设计重点
+							</td>
+							<td align="left" id="view_design_key"></td>
+						</tr>
+					</table>
+					<br />
+					<B>客户咨询信息:</B>
+					<br />
+					<table border="1" cellpadding="3" cellspacing="1" width="99%" align="center" style="background-color: #b9d8f3;" id="addConsultTable">
+						<tr class="tr_data" height="35px">
+							<td width="15%" class="table_property_title">
+							设计师
+							</td>
+							<td width="18%" align="left"><span id="view_designer_code"></span><span style="display:none" id="view_edit_sapn_designer_code"></span></td>
+							<td class="table_property_title" width="15%">
+								派单时间
+							</td>
+							<td width="18%"  align="left">
+							<label  id="view_send_date"></label>
+							<input id="view_send_date_inp" style="display:none"  onclick="new Calendar().show(this);" style="width:100px;" readonly="true"></input>
+							</td>
+							<td class="table_property_title" width="15%">
+								意向评估
+							</td>
+							<td align="left" id="view_intention_evaluate"></td>
+						</tr>
+
+						<tr class="tr_data" height="35px">
+							<td class="table_property_title" width="15%">
+								近期是否量房
+							</td>
+							<td align="left" id="view_is_measure_house"></td>
+							<td width="15%" class="table_property_title">
+							是否参观样板间
+							</td>
+							<td colspan="3" align="left" id="view_is_visit_model_house"></td>
+						</tr>
+						<tr class="tr_data"  id="view_edit_tr_interpose_type" style="display:none" height="35px">
+							<td class="table_property_title">
+								人工干预原因
+							</td>
+							<td align="left" colspan="5"><span id="view_edit_span_interpose_type"></span></td></tr>
+						<tr class="tr_data"  id="view_edit_tr_interpose_memo" style="display:none" height="35px">
+							<td class="table_property_title">
+							人工干预备注
+							</td>
+							<td align="left" colspan="5">
+								<textarea id="view_edit_interpose_memo" rows="3" style="width:99%"></textarea>
+							</td>
+						</tr>
+						<tr class="tr_data" style="display:none" id="tr_view_interpose_type" height="35px">
+							<td class="table_property_title">
+								人工干预原因
+							</td>
+							<td align="left" colspan="5" id="view_interpose_type"></td></tr>
+						<tr class="tr_data"  style="display:none" id="tr_view_interpose_memo" height="35px">
+							<td class="table_property_title">
+							人工干预备注
+							</td>
+							<td align="left" colspan="5" id="view_interpose_memo"></td>
+						</tr>
+						<tr class="tr_data">
+							<td class="table_property_title">
+								客情描述
+							</td>
+							<td align="left" colspan="5" id="view_cust_description"></td>
+						</tr>
+					</table>
+					<br/>
+						<br />
+					<B>顾客认识公司的途径:</B>
+					<br />
+					<table border="1" cellpadding="3" cellspacing="1" width="99%"
+						align="center" style="background-color: #b9d8f3;">
+						<tr class="tr_data" height="25px">
+							<td align="left" id="view_path_way">
+							</td>
+						</tr>
+					</table>
+				 </div>
+			    </div>
+				<div id="div_cust_analysis" style="display:none;">
+	               <input type="hidden" id="analysis_id"></input>
+		           <table border="0" cellpadding="3" cellspacing="1px" width="100%" align="center" style="background-color: #b9d8f3; border-collapse:collapse;" >
+		             <tr class="tr_data" >
+		               <td width="20%" align="center" style="border-left:1px solid  #b9d8f3;border-bottom:1px solid  #b9d8f3;border-top:1px solid  #b9d8f3;">客户需求与失效分析</td>
+		               <td align="left" width="80%" style="padding:0px;border-collapse:collapse;">
+		                  <table cellpadding="3px" cellspacing="1px" width="100%" align="center" style="background-color: #b9d8f3;"> 
+		                     <tr class="tr_data" height="35px" style="display:none;">
+		                       <td width="15%" align="left" colspan="3">
+								   <table width="100%" frame=void>
+									<tr>
+									  <td width="33%">
+										<input type="checkbox" name="is_consume_ability" value="有消费能力"/>有消费能力</br>
+									  </td>
+									  <td width="33%">
+										<input type="checkbox" name="is_consume_ability" value="有消费意愿"/>有消费意愿</br>
+									  </td>
+									  <td width="33%">
+										<input type="checkbox" name="is_consume_ability" value="客户是否缴纳设计费或订金"/>客户是否缴纳设计费或订金</br>
+									  </td>
+									</tr>
+								   </table>
+						       </td>
+						     </tr>
+						     <tr class="tr_data" height="35px" style="padding:1px">
+						       <td border="0" width="15%" align="left" style="padding:5px;border:0px" colspan="3">
+						          <label style="font-weight:bold;">客户关注点：</label>
+						          <table width="100%" frame=void   id="cust_focus_table">
+								    <tr><td width="33%"  colspan="3" id="span_cust_focus"></td></tr>
+						            <tr class="edit" style="display:none;">
+						                <td width="33%">
+										<input type="checkbox" name="cust_focus" value="对设计有特殊需求"/>对设计有特殊需求
+										</td>
+										<td width="33%">
+										<input type="checkbox" name="cust_focus" value="对施工质量有特殊需求"/>对施工质量有特殊需求
+										</td>
+										<td width="33%">
+										<input type="checkbox" name="cust_focus" value="对设计师有特殊要求"/>对设计师有特殊要求
+										</td>
+									</tr>
+									<tr class="edit" style="display:none;">
+										<td width="33%">
+										<input type="checkbox" name="cust_focus" value="对施工周期有较高要求"/>对施工周期有较高要求
+										</td>
+										<td colspan="2">
+										<input type="checkbox" name="cust_focus" value="对报价有特别在意"/>对报价有特别在意
+										</td>
+									</tr>
+									</table>
+							   </td>
+							 </tr>
+						     <tr class="tr_data" height="35px" style="padding:1px">
+						       <td border="0" width="15%" align="left"  colspan="3" style="padding:5px;border:0px">
+									<label style="font-weight:bold;">客户有可能丢失的原因是：</label>
+									<table width="100%" frame=void  id="cust_lose_reason_table">
+									    <tr><td id="cust_lose_reason" width="33%" colspan="3"></td></tr>
+										<tr class="edit" style="display:none;">
+											<td width="33%">
+											<input type="checkbox" name="cust_lost_reason" value="不认可设计费"/>不认可设计费
+											</td>
+											<td width="33%">
+											<input type="checkbox" name="cust_lost_reason"  value="设计方案不满意"/>设计方案不满意
+											</td>
+											<td width="33%">
+											<input type="checkbox" name="cust_lost_reason" value="设计师个人问题"/>设计师个人问题
+											</td>
+										</tr>
+										<tr class="edit" style="display:none;">
+											<td width="33%">
+											<input type="checkbox" name="cust_lost_reason" value="样板间不满意"/>样板间不满意
+											</td>
+											<td width="33%">
+											<input type="checkbox" name="cust_lost_reason" value="报价偏高"/>报价偏高
+											</td>
+											<td width="33%">
+											<input type="checkbox" name="cust_lost_reason" value="服务不满意"/>服务不满意
+											</td>
+										</tr>
+										<tr class="edit" style="display:none;">
+											<td width="33%">
+											<input type="checkbox" name="cust_lost_reason" value="工程周期"/>工程周期
+											</td>
+											<td colspan="2">
+											<input type="checkbox" name="cust_lost_reason" value="其他竞争对手"/>其他竞争对手
+											</td>
+										</tr>
+										<tr class="edit" style="display:none;">
+											<td width="33%" colspan="3">
+											<input type="checkbox" name="cust_lost_reason" onclick="doOtherCustLostReason()" value="其他"/>其他<span id="span_other_cust_lost_reason" style="display:none"></span><input type="text" id="other_cust_lost_reason"/>
+											</td>
+										</tr>
+									</table>
+						         </td>
+						    </tr>
+							<tr class="tr_data" height="35px">
+								<td border="0" width="15%" align="left"  colspan="3">
+								<label style="font-weight:bold;">客户选择我们公司的可能性在：</label>
+								<span id="cust_choose_property"></span>
+								<div  class="edit" style="display:none;">
+									<input type="checkbox" name="choose_reason" value="设计"/>设计 <input type="checkbox" name="choose_reason"  value="服务"/>服务<input type="checkbox" name="choose_reason"  value="施工样板质量"/>施工样板质量
+									<input type="checkbox" name="choose_reason"  value="品牌口碑"/>品牌口碑  <input type="checkbox" name="choose_reason"  value="报价"/>报价 <input type="checkbox" name="choose_reason"  value="其它"/>其它
+								</div>
+								</td>
+							</tr>
+							<tr class="tr_data" height="35px">
+								<td width="15%" align="left"  colspan="3">
+								<label style="font-weight:bold;">客户对我们公司整体印象是：</label><span id="span_general1"></span><span id="tdgeneral1"></span>
+								</td>
+							</tr>
+							<tr class="tr_data" height="35px">
+								<td width="15%" align="left"  colspan="3">
+								<label style="font-weight:bold;">客户对设计师的整体印象是：</label><span id="span_general2"></span><span id="tdgeneral2"></span>
+								</td>
+							</tr>
+						</table>
+					  </td>
+				    </tr>
+					<tr class="tr_data" >
+						<td width="15%" align="center" width="3%" style="border-left:1px solid  #b9d8f3;border-bottom:1px solid  #b9d8f3;">设计思路和平面布置</td>
+						<td align="left" width="45%" style="padding:0px;border-collapse:collapse;border-right:1px solid #b9d8f3" >
+							<table border="0" id="design_general_table" width="100%" align="center" style="background-color: #b9d8f3;border-collapse:collapse;">
+								<tr class="tr_data" height="35px"><td align="left" width="15%" colspan="3" id="design_general" style="border-left:1px solid #b9d8f3;border-bottom:1px solid #b9d8f3;"></td></tr>
+								<tr class="tr_data edit" height="35px" style="display:none;">
+									<td width="15%" align="left" style="border-left:1px solid #b9d8f3;border-bottom:1px solid #b9d8f3;">
+									<input type="checkbox" name="general3" value="是否确定整体装修风格"/>是否确定整体装修风格
+									</td>
+									<td width="15%" align="left" style="border-left:1px solid #b9d8f3;border-bottom:1px solid #b9d8f3;">
+									<input type="checkbox" name="general3" value="空间结构划分是否与客户确定"/>空间结构划分是否与客户确定
+									</td>
+									<td width="15%" align="left" style="border-left:1px solid #b9d8f3;border-bottom:1px solid #b9d8f3;">
+									<input type="checkbox" name="general3" value="客户是否有意愿缴纳设计费"/>客户是否有意愿缴纳设计费
+									</td>
+								</tr>
+								<tr class="tr_data edit" height="35px" style="display:none;">
+									<td width="15%" align="left" style="border-left:1px solid #b9d8f3;border-bottom:1px solid #b9d8f3;">
+									 <input type="checkbox" name="general3" value="通道设置保证有效使用面积"/>通道设置保证有效使用面积
+									</td>
+									<td width="15%" align="left" style="border-left:1px solid #b9d8f3;border-bottom:1px solid #b9d8f3;">
+									<input type="checkbox" name="general3" value="通风问题解决是否合理"/>通风问题解决是否合理
+									</td>
+									<td width="15%" align="left" style="border-left:1px solid #b9d8f3;border-bottom:1px solid #b9d8f3;">
+									<input type="checkbox" name="general3" value="采光问题解决是否合理"/>采光问题解决是否合理
+									</td>
+								</tr>
+								<tr class="tr_data edit" height="35px" style="display:none;">
+									<td width="15%" align="left" style="border-left:1px solid #b9d8f3;">
+									<input type="checkbox" name="general3" value="家具选择与风格是否协调"/>家具选择与风格是否协调
+									</td>
+									<td width="15%" align="left" style="border-left:1px solid #b9d8f3;">
+									<input type="checkbox" name="general3" value="装修结构与风格是否协调"/>装修结构与风格是否协调
+									</td>
+									<td width="15%" align="left" style="border-left:1px solid #b9d8f3;">
+									 <input type="checkbox" name="general3" value="色彩搭配与风格是否协调"/>色彩搭配与风格是否协调
+									</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+					<tr class="tr_data" >
+						<td width="15%" align="center" width="3%" style="border-left:1px solid  #b9d8f3;border-bottom:1px solid  #b9d8f3;">材料使用和性价比</td>
+						<td border="0" align="left" width="45%" style="padding:0px;border-collapse:collapse;">
+							<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="material_general_table">
+								<tr class="tr_data" height="35px"><td id="material_general" colspan="3" align="left"></td></tr>
+								<tr class="tr_data edit" height="35px" style="display:none;">
+									<td width="15%" align="left" >
+									<input type="checkbox" name="general4" value="装修项目设置是否合理"/>装修项目设置是否合理
+									</td>
+									<td width="15%" align="left" >
+									<input type="checkbox" name="general4" value="材料档次选用是否合理"/>材料档次选用是否合理
+									</td>
+									<td width="15%" align="left" >
+									<input type="checkbox" name="general4" value="工艺标准与材料档次匹配否"/>工艺标准与材料档次匹配否
+									</td>
+								</tr>
+								<tr class="tr_data edit" height="35px" class="edit" style="display:none;">
+									<td width="15%" align="left" >
+									<input type="checkbox" name="general4" value="家具选用与装修档次匹配否"/>家具选用与装修档次匹配否
+									</td>
+									<td width="15%" align="left" >
+									<input type="checkbox" name="general4" value="适当采用特殊工艺提高档次"/>适当采用特殊工艺提高档次
+									</td>
+									<td width="15%" align="left" >
+									<input type="checkbox" name="general4" value="选择确定家用电器档次"/>选择确定家用电器档次
+									</td>
+								</tr>
+								<tr class="tr_data edit" height="35px" style="display:none;">
+									<td width="15%" align="left" >
+									<input type="checkbox" name="general4" value="选择确定洁具档次"/>选择确定洁具档次
+									</td>
+									<td width="15%" align="left" >
+									<input type="checkbox" name="general4" value="后期软装饰和配饰确定"/>后期软装饰和配饰确定
+									</td>
+									<td width="15%" align="left" >
+									<input type="checkbox" name="general4" value="必要时是否附效果图"/>必要时是否附效果图
+									</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+					<tr class="tr_data" >
+						<td width="15%" align="center" width="3%" style="border-left:1px solid  #b9d8f3;border-right:1px solid #b9d8f3;border-bottom:1px solid  #b9d8f3;">下一步措施及方案</td>
+						<td align="center" border="0" width="45%" style="border-right:1px solid  #b9d8f3;">
+							<table style="padding:5px"  border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+								<tr class="tr_data" height="35px">
+									<td width="15%" align="left"  colspan="4"><label style="font-weight:bold;">设计师下一步服务措施：</label><textarea id="des_next_measure" cols="90" rows="2"></textarea><span id="span_des_next_measure"></span></td>
+								</tr>
+								<tr class="tr_data" height="35px">
+									<td width="15%" align="left"  colspan="4"><label style="font-weight:bold;">客户经理下一步措施：</label><textarea id="cusm_next_measure" cols="90" rows="2"></textarea><span id="span_cusm_next_measure"></span></td>
+								</tr>
+								<tr class="tr_data" height="35px">
+									<td width="15%" align="left"  colspan="4"><label style="font-weight:bold;">其它措施：</label><textarea id="other_measure" cols="90" rows="2"></textarea><span id="span_other_measure"></span></td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+				</table>
+				<br/>
+				<B>客户咨询差异性需求分析</B>
+				<br/>
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+					<tr class="tr_data" height="35px">
+						<td width="5%" align="center">序号</td>
+						<td width="30%" align="center">分析项目</td>
+						<td width="65%" align="center">分析内容</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">1</td>
+						<td align="right" style="padding-right:5px">年龄与性格:</td>
+						<td align="left"><textarea id="cy1" cols="80" rows="2"></textarea><span id="span_cy1"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">2</td>
+						<td align="right" style="padding-right:5px">职业:</td>
+						<td align="left"><textarea id="cy2" cols="80" rows="2"></textarea><span id="span_cy2"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">3</td>
+						<td align="right" style="padding-right:5px">同行人数及其之间关系:</td>
+						<td align="left"><textarea id="cy3" cols="80" rows="2"></textarea><span id="span_cy3"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">4</td>
+						<td align="right" style="padding-right:5px">现居住地址:</td>
+						<td align="left"><textarea id="cy4" cols="80" rows="2"></textarea><span id="span_cy4"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">5</td>
+						<td align="right"style="padding-right:5px">着装风格:</td>
+						<td align="left"><textarea id="cy5" cols="80" rows="2"></textarea><span id="span_cy5"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">6</td>
+						<td align="right" style="padding-right:5px">代步工具:</td>
+						<td align="left"><textarea id="cy6" cols="80" rows="2"></textarea><span id="span_cy6"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">7</td>
+						<td align="right" style="padding-right:5px">装修房屋的用途:</td>
+						<td align="left"><textarea id="cy7" cols="80" rows="2"></textarea><span id="span_cy7"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">8</td>
+						<td align="right" style="padding-right:5px">个性需求:</td>
+						<td align="left"><textarea id="cy8" cols="80" rows="2"></textarea><span id="span_cy8"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">9</td>
+						<td align="right" style="padding-right:5px">第几次置业:</td>
+						<td align="left"><textarea id="cy9" cols="80" rows="2"></textarea><span id="span_cy9"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">10</td>
+						<td align="right" style="padding-right:5px">第几次装修:</td>
+						<td align="left"><textarea id="cy10" cols="80" rows="2"></textarea><span id="span_cy10"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">11</td>
+						<td align="right" style="padding-right:5px">其他品牌的了解:</td>
+						<td align="left"><textarea id="cy11" cols="80" rows="2"></textarea><span id="span_cy11"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">12</td>
+						<td align="right" style="padding-right:5px">客户的期望值与体验后的落差:</td>
+						<td align="left" ><textarea id="cy12" cols="80" rows="2"></textarea><span id="span_cy12"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">13</td>
+						<td align="right" style="padding-right:5px">客户对设计师的评价:</td>
+						<td align="left"><textarea id="cy13" cols="80" rows="2"></textarea><span id="span_cy13"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">14</td>
+						<td align="right" style="padding-right:5px">决策人:</td>
+						<td align="left"><textarea id="cy14" cols="80" rows="2"></textarea><span id="span_cy14"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">15</td>
+						<td align="right" style="padding-right:5px">客户是否愿意一站式产品服务:</td>
+						<td align="left"><textarea id="cy15" cols="80" rows="2"></textarea><span id="span_cy15"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">16</td>
+						<td align="right" style="padding-right:5px">客户是否愿意选择同一品牌的产品:</td>
+						<td align="left"><textarea id="cy16" cols="80" rows="2"></textarea><span id="span_cy16"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">17</td>
+						<td align="right" style="padding-right:5px">客户愿意定制化装修还是套餐模式:</td>
+						<td align="left"><textarea id="cy17" cols="80" rows="2"></textarea><span id="span_cy17"></span></td>
+					</tr>
+				</table>
+				<br/>
+				<B>客户特殊需求记录表</B>
+				<br/>
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+					<tr class="tr_data" height="35px">
+						<td align="center" colspan="2">特殊要求详细内容</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center" width="15%">合同方面</td>
+						<td align="left"><textarea id="special1" style="width:720" rows="2"></textarea><span id="span_special1"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center" >设计方面</td>
+						<td align="left"><textarea id="special2" style="width:720" rows="2"></textarea><span id="span_special2"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center" >材料方面</td>
+						<td align="left"><textarea id="special3" style="width:720" rows="2"></textarea><span id="span_special3"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center" >工艺方面</td>
+						<td align="left"><textarea id="special4" style="width:720" rows="2"></textarea><span id="span_special4"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center" >服务方面</td>
+						<td align="left"><textarea id="special5" style="width:720" rows="2"></textarea><span id="span_special5"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center" >其它方面</td>
+						<td align="left"><textarea id="other" style="width:720" rows="2"></textarea><span id="span_other"></span></td>
+					</tr>
+				</table>
+			</div>
+				<div id="div_callback_info" style="display:none">
+					<table style="width:100%;height:100%;padding:5px;spacing:0;">
+						<tr class="tr_data" style="width:100%;height:100%;text-align:left">
+							<td style="width:15%;border:1px;border-style: dotted;border-color: #A0CFEC;" valign="top">
+								<table border="1" cellpadding="3" cellspacing="1" width="100%"  align="right" style="background-color: #b9d8f3;">
+									<tr class="tr_data" height="35px" id="custManageWorkTab" style="display:none">
+										<td class="versionStyle" style="cursor:pointer;" align="center" onclick="addCustCallback()">添加</td>
+									</tr>
+								</table>
+							</td>
+							<td id="base_tabs" style="width:85%;border:1px;border-style: dotted dotted dotted none;border-color: #A0CFEC;" valign="top">
+							
+							</td>
+						</tr>
+					</table>
+					<!--<div id="cust_base_tabs" style="height:27px;overflow:hidden">
+						<ul id='custManageWorkTab' style="display:inline-block">
+							
+						</ul>
+						
+					<div  height="500px">
+					</div>
+					</div>!-->
+				</div>
+				<!--<div id="callback_plan_info">
+					<div id="edit_callback_plan_info" style="margin:0px 10px 10px 10px;display:none">
+						<table border="1" cellpadding="3" cellspacing="1" width="99%"
+							align="center" style="background-color: #b9d8f3;">
+							<tr class="tr_data">
+								<td width="35%" class="table_property_title">回访起始时间：</td>
+								<td align="left">
+									<input type="text" style="width:120px" id="callback_service_begin_date" onclick="top.selectDate(this)"></input>
+									<span style="padding-left:30px">注：服务计划的起始时间</span>
+								</td>
+							</tr>
+							<tr class="tr_data">
+								<td width="35%" class="table_property_title">客户经理几天回访一次：</td>
+								<td align="left">
+									<input type="text" style="width:30px" value="0" id="callback_service_cust_manage_interval"></input>天 
+									<span style="padding-left:30px">说明：天数为0则不提醒</span>
+								</td>
+							</tr>
+							<tr class="tr_data">
+								<td width="35%" class="table_property_title">设计师几天回访一次：</td>
+								<td align="left">
+									<input type="text" style="width:30px"  value="0" id="callback_service_designer_interval"></input>天 
+									<span style="padding-left:30px">说明：签订工程合同后则不再提醒，如果天数为0则不提醒</span>
+								</td>
+							</tr>
+							<tr class="tr_data">
+								<td width="35%" class="table_property_title">工程部几天回访一次：</td>
+								<td align="left">
+									<input type="text" style="width:30px"  value="0" id="callback_service_project_dept_interval"></input>天 
+									<span style="padding-left:30px">说明：进行在建工地回访，如果天数为0则不回访</span>
+								</td>
+							</tr>
+						</table>
+					</div>
+					<div id="view_callback_plan_info" style="margin:0px 10px 10px 10px;">
+						<table border="1" cellpadding="3" cellspacing="1" width="99%"
+							align="center" style="background-color: #b9d8f3;">
+							<tr class="tr_data">
+								<td width="35%" class="table_property_title">回访起始时间：</td>
+								<td align="left">
+									<label id="view_callback_service_begin_date"></label>
+									<span style="padding-left:30px">注：服务计划的起始时间</span>
+								</td>
+							</tr>
+							<tr class="tr_data">
+								<td width="35%" class="table_property_title">客户经理几天回访一次：</td>
+								<td align="left">
+									<label style="width:30px;padding:5px" id="view_callback_service_cust_manage_interval">0</label>天 
+									<span style="padding-left:30px">说明：天数为0则不提醒</span>
+								</td>
+							</tr>
+							<tr class="tr_data">
+								<td width="35%" class="table_property_title">设计师几天回访一次：</td>
+								<td align="left">
+									<label  style="width:30px;padding:5px" id="view_callback_service_designer_interval">0</label>天 
+									<span style="padding-left:30px">说明：签订工程合同后则不再提醒，如果天数为0则不提醒</span>
+								</td>
+							</tr>
+							<tr class="tr_data">
+								<td width="35%" class="table_property_title">工程部几天回访一次：</td>
+								<td align="left">
+									<label  style="width:30px;padding:5px" id="view_callback_service_project_dept_interval">0</label>天 
+									<span style="padding-left:30px">说明：进行在建工地回访，如果天数为0则不回访</span>
+								</td>
+							</tr>
+						</table>
+					</div>
+				</div>-->
+			</div>
+		</div>
+		<div id="div_callback_manage" style="display:none">
+		<h3 style="padding:5px;margin-bottom:5px;margin-top:5px" class="ui-accordion-header ui-helper-reset ui-state-active ui-corner-top">
+			<span class="ui-icon ui-icon-triangle-1-s"></span>客户回访信息
+			<!--<img src="image/save.png" title="保存" onclick="saveMoreCallBack()" style="margin-right:10px;cursor:pointer;display:inline-block;position:relative;top:0px;right:5px;display:none;float:right" id="cbSaveBt"/> addCustAnalyze() !-->
+			<!--<img src="image/return.png" title="取消" onclick="doCancelCallBack()" style="margin-right:10px;cursor:pointer;display:inline-block;position:relative;top:-8px;right:0px;display:none;float:right" id="cbReturnBt"/> doCancelCustAnalyze() !-->
+            <!--<img src="image/edit.gif" title="编辑" onclick="showCallBack()" style="margin-right:10px;cursor:pointer;display:inline-block;position:relative;top:0px;right:0px;float:right" id="cbEditBt"/><!--showCustAnalyze()!-->
+		</h3>	
+		<div id="callback_plan">
+		    <span style="padding-left:8px;">回访起始时间<input type="text" size="8" id="callback_service_begin_date" onclick="top.selectDate(this)" />,
+		    客户经理
+			<select id="callback_service_cust_manage_interval" style="width:40px;">
+			   <option value="0">0</option>
+			   <option value="1">1</option>
+			   <option value="2">2</option>
+			   <option value="3">3</option>
+			   <option value="4">4</option>
+			   <option value="5">5</option>
+			   <option value="6">6</option>
+			   <option value="7">7</option>
+			   <option value="8">8</option>
+			   <option value="9">9</option>
+			   <option value="10">10</option>
+			</select>天回访一次
+			设计师
+			<select id="callback_service_designer_interval" style="width:40px;">
+			   <option value="0">0</option>
+			   <option value="1">1</option>
+			   <option value="2">2</option>
+			   <option value="3">3</option>
+			   <option value="4">4</option>
+			   <option value="5">5</option>
+			   <option value="6">6</option>
+			   <option value="7">7</option>
+			   <option value="8">8</option>
+			   <option value="9">9</option>
+			   <option value="10">10</option>
+			</select>天回访一次
+			工程部
+			<select id="callback_service_project_dept_interval" style="width:40px;">
+			   <option value="0">0</option>
+			   <option value="1">1</option>
+			   <option value="2">2</option>
+			   <option value="3">3</option>
+			   <option value="4">4</option>
+			   <option value="5">5</option>
+			   <option value="6">6</option>
+			   <option value="7">7</option>
+			   <option value="8">8</option>
+			   <option value="9">9</option>
+			   <option value="10">10</option>
+			</select>天回访一次。
+			   <a class="buttonDivTwo" style="color:#FFFFFF" href="javascript:void(0)" onclick="callbackPlanDoSubmit()">保存</a>
+			</span>
+			<br/>
+			<span style="padding-left:8px;color:red;">说明：时间为服务计划的起始时间,天数为0时不提醒</span>
+		</div>
+		<div height="500px">
+	        <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="custCallbackTb"></table>
+		</div>
+		</div>
+		<!--客户信息!-->
+		<div id="div_design_manage" style="display:none">
+		<h3 style="padding:5px;margin-bottom:5px;margin-top:5px"  class="ui-accordion-header ui-helper-reset ui-state-active ui-corner-top">
+			<span class="ui-icon ui-icon-triangle-1-s"></span>设计管理
+		</h3>
+		<iframe id="iframe_design" width="100%" frameborder="0"></iframe>
+		</div>
+		<!--工程订单信息!-->
+		<div id="div_project_order" style="display:none">
+		<h3 style="padding:5px;margin-bottom:5px;margin-top:5px" class="ui-accordion-header ui-helper-reset ui-state-active ui-corner-top">
+			<span class="ui-icon ui-icon-triangle-1-s"></span>工程订单管理
+			</h3>
+			<div id="projectDiv" >
+			<iframe id="iframe_project" width="100%" frameborder="0"></iframe>
+			</div>
+		</div>
+		<!--产品订单信息!-->
+		<div id="div_product_order" style="display:none">
+		<h3 style="padding:5px;margin-top:5px;margin-bottom:5px" class="ui-accordion-header ui-helper-reset ui-state-active ui-corner-top">
+			<span class="ui-icon ui-icon-triangle-1-s"></span>产品订单信息
+		</h3>
+			<div id="productDiv">
+				<iframe id="iframe_product" width="100%" frameborder="0"></iframe>
+			</div>
+	</div>
+		<!--文档管理!-->
+		<div id="div_doc_manager" style="display:none">
+		<h3 style="padding:5px;margin-top:5px;margin-bottom:5px" class="ui-accordion-header ui-helper-reset ui-state-active ui-corner-top">
+			<span class="ui-icon ui-icon-triangle-1-s"></span>文档管理
+		</h3>
+		<br>
+		<div  class="buttonDivFour">
+		<a href="javascript:uploadDoc()">上传文档</a>
+		</div>
+		<table id="docPathList" class="display" cellpadding="0" width="100%" cellspacing="0" border="0" ></table>
+        </div>  
+		<!--付款管理!-->
+		<div id="div_money_manager" style="display:none">
+			<h3 style="padding:5px;margin-top:5px;margin-bottom:5px" class="ui-accordion-header ui-helper-reset ui-state-active ui-corner-top">
+				<span class="ui-icon ui-icon-triangle-1-s"></span>收款管理
+			</h3>
+			<div>
+
+			<span style="display:block;margin-top:5px">等待交款信息:&nbsp;<input type="button" value="增加收款记录" onclick="addPayRcd()"></input></span>
+
+			<table id="tableMoneyInfo" border="1" cellpadding="3" cellspacing="1" width="99%" align="center" style="background-color: #b9d8f3;margin:1px"></table>
+			<br/>
+			已收款记录：<br/>
+			<hr/>
+			<span style="display:block;margin-top:5px" ><b>设计款</b>（单位：元）</span>
+			<table id="design_money_record_table"  border="1" cellpadding="3" cellspacing="1" width="99%" align="center" style="background-color: #b9d8f3;margin:1px"></table>
+			<span >合计：</span><span id="design_money_sum" style="padding:5px">0</span>元
+			</br></br>
+			<hr/>
+			<span style="display:block;margin-top:5px" ><b>工程款</b>（单位：元）</span> 
+			<table id="project_money_record_table"  border="1" cellpadding="3" cellspacing="1" width="99%" align="center" style="background-color: #b9d8f3;margin:1px"></table>
+			<span>合计：</span><span id="project_money_sum" style="padding:5px">0</span>元
+			<span style="padding-left:10px">合同款：</span><span id="project_money_total" style="padding:5px">0</span>元
+			<span style="padding-left:10px">交款比例：</span><span id="project_money_scale" style="padding:5px">0</span>%
+			</br></br>
+			<hr/>
+			<span style="display:block;margin-top:5px" ><b>产品款</b>（单位：元）</span>
+			<table id="product_money_record_table" border="1" cellpadding="3" cellspacing="1" width="99%" align="center" style="background-color: #b9d8f3;margin:1px"></table>
+			<span >合计：</span><span id="product_money_sum" style="padding:5px">0</span>元
+			</br></br>
+			<hr/>
+			<span style="display:block;margin-top:5px" ><b>余额退款记录</b>（单位：元）</span>
+			<table id="settle_money_record_table"  border="1" cellpadding="3" cellspacing="1" width="99%" align="center" style="background-color: #b9d8f3;margin:1px"></table>
+			<span>合计：</span><span id="settle_money_sum" style="padding:5px">0</span>元
+			</br></br>
+			
+			<table border="1" cellpadding="3" cellspacing="1" width="99%"
+						align="center" style="background-color: #b9d8f3;margin:1px">
+				<tr>
+					<td width="8%">
+						<span>客户账户</span>
+					</td>
+					<td>
+					<div id="saveProjectCompletedBtn" class="buttonDivTwo">
+						<a href="javascript:void(0)" onclick="showMoneyRecharge()">充值</a>
+					</div>
+					</td>
+				</tr>
+			</table>
+			<table border="1" cellpadding="3" cellspacing="1" width="99%"
+						align="center" style="background-color: #b9d8f3;margin:1px">
+				<tr class='tr_data'>
+					<td colspan="6">
+						<table id="moneyRecharge" style="display:none">
+							<tr>
+								<td align="right">金额(元)：</td>
+								<td align="left">
+										<input id="money_value" value='0' type="text" size="10" />
+										<input type="hidden" id="bank_id"></input>
+								</td>
+								<td>
+									<div  class="buttonDivTwo" id="charge_bt" style="display:none">
+									<a href="javascript:void(0)" onclick="saveMoneyRecharge()">充值</a>
+									</div>
+								</td>
+						   </tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<table border="1" cellpadding="3" cellspacing="1" width="99%"
+						align="center" style="background-color: #b9d8f3;margin:1px">
+			<tr class='tr_data' height="28px">
+					<td width="15%">账户充值总计(元)</td>
+					<td width="18%" id="bank_total_money">0</td>
+					<td width="15%">已用金额(元)</td>
+					<td width="18%" id="money_spent">0</td>
+					<td width="15%">余额(元)</td>
+					<td width="18%" id="money_remain">0</td>
+				</tr>
+			</table>
+			</div>
+		</div>
+		<!-- 工程合同!-->
+		<div id="div_project_contract" style="display:none;">
+		   <h3 style="padding:5px;margin-top:5px;margin-bottom:5px" class="ui-accordion-header ui-helper-reset ui-state-active ui-corner-top">
+				<span class="ui-icon ui-icon-triangle-1-s"></span>工程合同
+				<img src="image/edit.gif" title="编辑" onclick="editContractInfo()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:-1px;right:0px;display:none;" id="contractEditBt"/>
+				<img src="image/return.png" title="取消" onclick="cancleContract()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:-8px;right:0px;display:none;" id="contractReturnBt"/>
+				<img src="image/save.png" title="保存" onclick="saveContractInfo()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:-1px;right:5px;display:none;" id="contractSaveBt"/>
+		   </h3>
+		   <div id="project_contract_info">
+				<table id="project_contract_detail" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+					<tr class="tr_data" height="25px">
+					    <input type="hidden" id="contract_id"/>
+						<td width="12%" class="table_property_title">工程合同号</td>
+						<td align="left"><span id="spanproject_agreement_id" style="200px;"></span><input type="text" id="project_agreement_id" /></td>
+						<td width="12%" class="table_property_title">工程签订日期</td>                                                                    
+						<td align="left"><span id="spansign_date"></span><input type="text" id="sign_date" onclick="new Calendar().show(this);" readonly="true"/></td>
+						<td width="12%" class="table_property_title">存档编号</td>
+						<td align="left"><span id="spancdbh" style="width:100px;"></span><input type="text" id="cdbh" /></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+				      <td class="table_property_title">开工日期</td><td align="left" style="width:150px;"><span id="spanproject_begin_date"></span><input type="text" id="project_begin_date" onchange="countDistance('project_begin_date','project_end_date','project_dateline')"  onclick="new Calendar().show(this);" readonly="true"/></td>
+				      <td class="table_property_title">竣工日期</td><td align="left" style="width:150px;"><span id="spanproject_end_date"></span><input type="text" id="project_end_date" onchange="countDistance('project_begin_date','project_end_date','project_dateline')" onclick="new Calendar().show(this);" readonly="true"/></td>
+				      <td class="table_property_title">工程期限</td><td align="left" style="width:180px;"><span id="spanproject_dateline"></span><label id="tdproject_dateline"></label><input type="hidden" id="project_dateline"  /><span class="unitText">&nbsp;日</span></td>
+				   </tr>
+				   <tr class="tr_data" height="25px">
+				    <td class="table_property_title" style="border-bottom: 0;">本合同工程造价 </td>
+					<td align="left"><span id="spanproject_money"></span><input type="text" id="project_money" class="checkNum" style="width:80px;"/><span class="unitText">元</span></td>
+					<td class="table_property_title">首期款</td>
+					<td align="left"><span id="spanfirst_pay"></span><input id="first_pay" type="text" style="width:80px;" class="checkNum"/><span class="unitText">元</span>
+					<div class="buttonDivFour applyImg" style="display:inline-block" id="first_pay_img" style="cursor:pointer;" title="申请付款" onclick="javascript:applyContractPay('first');">
+							<a href="javascript:printBudget()">申请付款</a>
+					</div>
+					<!--<img src="image/check.gif" id="first_pay_img" style="cursor:pointer;" title="申请付款" onclick="javascript:applyContractPay('first');" class="applyImg"/>!--></td>
+					<td class="table_property_title">二期款</td>
+					<td align="left"><span id="spansecond_pay"></span><input id="second_pay" type="text" style="width:80px;" class="checkNum" /><span class="unitText">元</span>
+					<div class="buttonDivFour applyImg" style="display:inline-block" id="second_pay_img" style="cursor:pointer;" title="申请付款" onclick="javascript:applyContractPay('second');">
+							<a href="javascript:printBudget()">申请付款</a>
+					</div>
+					<!--<img src="image/check.gif" id="second_pay_img" style="cursor:pointer;" title="申请付款" onclick="javascript:applyContractPay('second');" class="applyImg"/>!--></td>
+				   </tr>
+				   <tr class="tr_data" height="25px">
+				     <td class="table_property_title">三期款</td>
+					 <td align="left"><span id="spanthird_pay"></span><input id="third_pay" type="text" style="width:80px;" class="checkNum"/><span class="unitText">元</span>
+					 <div class="buttonDivFour applyImg" style="display:inline-block" id="third_pay_img" style="cursor:pointer;" title="申请付款" onclick="javascript:applyContractPay('third');">
+							<a href="javascript:printBudget()">申请付款</a>
+					</div>
+					 <!--<img src="image/check.gif" id="third_pay_img" style="cursor:pointer;" title="申请付款" onclick="javascript:applyContractPay('third');" class="applyImg"/>!--></td>
+					 <td class="table_property_title">尾款</td>
+					 <td align="left"><span id="spanfinal_pay"></span><input id="final_pay" type="text" style="width:80px;" class="checkNum"/><span class="unitText">元</span>
+					<div class="buttonDivFour applyImg" style="display:inline-block" id="final_pay_img" style="cursor:pointer;" title="申请付款" onclick="javascript:applyContractPay('final');">
+							<a href="javascript:printBudget()">申请付款</a>
+					</div>
+					<!--<img src="image/check.gif" id="final_pay_img" style="cursor:pointer;" title="申请付款" onclick="javascript:applyContractPay('final');" class="applyImg"/>!--></td>
+					 <td>&nbsp;</td><td>&nbsp;</td>
+				   </tr>
+				   <tr class="tr_data">
+				     <td class="table_property_title">工程合同附件</td>
+				     <td colspan="5"><div id="uploadFile" class="buttonDivTwo">
+				     <a href="javascript:void(0)">上传</a>
+				     </div></td>
+				  </tr>
+				</table>
+			    <br/>
+				<table id="contract_check_table" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				   <tr class="tr_data"><td style="font-weight:bold;" colspan="4" align="left">审核</td></tr>
+				   <tr class="tr_data">
+				      <td class="table_property_title" width="25%">审核状态<input id="check_status" type="hidden"/></td><td id="tdcontract_check" align="left" width="25%">&nbsp;</td><td class="table_property_title" width="25%">审核意见</td><td align="left" width="25%"><span id="spancontract_check_memo"></span><textarea style="width:280px;" id="contract_check_memo"></textarea></td>
+				   </tr>
+				   <tr class="tr_data" id="check_user_time" style="display:none;">
+				      <td class="table_property_title" width="25%">审核人</td><td align="left" width="25%"><label id="contract_check_user"></label></td>
+				      <td class="table_property_title" width="25%">审核日期</td><td  align="left" width="25%"><label id="contract_check_time"></label></td>
+				   </tr>
+				   <tr class="tr_data" id="check_button">
+				   <td align="right" style="padding-right:10px" colspan="2">
+						<div class="buttonDivTwo">
+						<a href="javascript:examineContract(1)">通过</a>
+						</div>
+					</td>
+					<td align="left" style="padding-right:10px" colspan="2">
+						<div class="buttonDivTwo">
+						<a href="javascript:examineContract(2)">不通过</a>
+						</div>
+					</td>
+				   </tr>
+				</table>
+				<br/>
+				<B id="weiyueTitle">违约责任</B> 
+			    <table id="project_forfeit_List" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				</table>
+			  </div>
+		</div>
+	</div>
+	<table id="menu_bts" style="width:100%;margin:0px auto;border: 1px solid #c5dbec;
+		background: #dfeffc;font-weight: bold;color: #2e6e9e;">
+		<tr>
+			<td width="12%" id="bt_baseInfo" onclick="toggleModelPage(0)" style="cursor:pointer"><span class="ui-icon ui-icon-triangle-1-e"></span>基本信息</td>
+			<td  width="12%" id="bt_callBack" onclick="toggleModelPage(1)"  style="cursor:pointer"><span class="ui-icon ui-icon-triangle-1-e"></span>回访管理</td>
+			<td  width="12%" id="bt_design" onclick="toggleModelPage(2)"  style="cursor:pointer"><span class="ui-icon ui-icon-triangle-1-e"></span>设计管理</td>
+			<td  width="12%" id="bt_proContract" onclick="toggleModelPage(7)"  style="cursor:pointer"><span class="ui-icon ui-icon-triangle-1-e"></span>工程合同</td>
+			<td  width="12%" id="bt_project" onclick="toggleModelPage(3)"  style="cursor:pointer"><span class="ui-icon ui-icon-triangle-1-e"></span>工程订单管理</td>
+			<td  width="12%" id="bt_product" onclick="toggleModelPage(4)"  style="cursor:pointer"><span class="ui-icon ui-icon-triangle-1-e"></span>产品订单管理</td>
+			<td  width="12%" id="bt_fileManage" onclick="toggleModelPage(5)"  style="cursor:pointer"><span  class="ui-icon ui-icon-triangle-1-e"></span>文档管理</td>
+			<td  id="bt_moneyManage" onclick="toggleModelPage(6)"  style="cursor:pointer"><span class="ui-icon ui-icon-triangle-1-e"></span>收款管理</td>
+		</tr>
+	</table>
+	
+	</td>
+	<td width="130px" valign='top' height="95%">
+		<table width="100%" id="mart_td" style="background-color: #F4FAFF;">
+			<tr><td  width="30px" ><img  id="mark_base" style="width:20px;" src='image/icon_failed.png'/></td><td>基本信息</td></tr>
+			<tr><td  width="30px" ><img  id="mark_distribute_designer" style="width:20px;" src='image/icon_failed.png'/></td><td>派设计师</td></tr>
+			<tr><td  width="30px"><img  id="mark_measure_house" style="width:20px" src='image/icon_failed.png'/></td><td>量房</td></tr>
+			<tr><td  width="30px" ><img id="mark_design_contract" style="width:20px" src='image/icon_failed.png'/></td><td>设计协议</td></tr>
+			<tr><td  width="30px" ><img id="mark_design_file" style="width:20px" src='image/icon_failed.png'/></td><td>最终设计方案</td></tr>
+			<tr><td  width="30px" ><img id="mark_project_quote" style="width:20px" src='image/icon_failed.png'/></td><td>工程预算 </td></tr>
+			<tr><td  width="30px" ><img id="mark_project_contract" style="width:20px" src='image/icon_failed.png'/></td><td>工程合同 </td></tr>
+			<tr><td  width="30px" ><img id="mark_project_order" style="width:20px" src='image/icon_failed.png'/></td><td>工程订单 </td></tr>
+			<tr><td  width="30px" ><img id="mark_project_guarantee" style="width:20px" src='image/icon_failed.png'/></td><td>工程保修单 </td></tr>
+			<tr><td  width="30px" ><img id="mark_product_quote" style="width:20px" src='image/icon_failed.png'/></td><td>产品报价</td></tr>
+			<tr><td  width="30px" ><img  id="mark_product_order" style="width:20px" src='image/icon_failed.png'/></td><td>产品订单 </td></tr>
+		</table>
+		</br>
+		<div id="disableCustBT" class="buttonDivSix">
+			<a href="javascript:void(0)" onclick="disableCust()">客户废单申请</a>
+		</div>
+	</td>
+	</tr>
+	</table>
+	
+ <div id="dialog" title="" style="display:none;padding: 0 0 0 0;margin: 0 0 0 0;z-index:10000">
+    <iframe id="self_iframe" src="about:blank" width="100%" height="96%" frameborder="0"></iframe>
+ </div>
+ 
+ <script type="text/javascript">
+   _init_area();
+ </script>
+ 
+	</body>
+</html>

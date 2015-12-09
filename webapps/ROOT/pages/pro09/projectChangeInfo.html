@@ -1,0 +1,354 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var order_id='';
+			var cust_code='';
+			var change_money ='';
+			var money_change_type ='';
+			var info_id='';
+			var optType='';
+			var require_id='';
+			var remind_id='';
+			var opt_user='';
+			$(document).ready(function() {
+				$("#table_examine").hide();
+				optType=top.getUrlParam(document.URL,"optType");
+				cust_code=top.getUrlParam(document.URL,"cust_code");
+				require_id=top.getUrlParam(document.URL,"require_id");
+				$("#tdChangeType").html(top.getCodeSelectHtml("PROJECT_CHANGE_TYPE","change_type",false));
+				$("#tdunit").html(top.getCodeSelectHtml("UNIT","unit",false,"",null,"","80px"));
+				if(optType=='insert'){
+					var date=new Date();
+					info_id=date.getTime();
+					order_id=top.getUrlParam(document.URL,"order_id");
+				}else if(optType=='update'){//审核前有修改权限的人可以修改，审核通过后只可以查看,拥有审核权限的人(修改、审核、查看)
+					info_id=top.getUrlParam(document.URL,"pro_change_id");
+					getProjectChangeById();
+				}
+		})
+		function checkProjectChangeInfo(){
+			var msg="";
+			if( $("#amount").val()==""){msg += "[数量]不能为空！</br>";}
+			if( $("#amount").val().substring(0,1)=="-"){
+			   msg += "[数量]不能为负数！<br/>";
+			}
+			if( $("#amount").val()!="" && !IsFloat($("#amount").val())){
+			   msg += "[数量]应为数字类型</br>";
+			}
+			if( $("#price").val()==""){ msg += "[单价]不能为空！</br>"; }
+			if( $("#price").val().substring(0,1)=="-"){
+			   msg += "[单价]不能为负数！<br/>";
+			}
+			if($("#price").val()!="" && !IsFloat($("#price").val())){
+			   msg += "[单价]应为数字类型</br>";
+			}
+			if($("#change_money").val()==""){ msg += "[优惠后金额]不能为空！</br>"; }
+			if( $("#change_money").val().substring(0,1)=="-"){
+			   msg += "[优惠后金额]不能为负数！<br/>";
+			}
+			if ( $("#change_money").val() != ''&& !IsFloat( $("#change_money").val() )){
+			   msg += "[优惠后金额]应为数字类型</br>";
+			}
+		    msg += checkString($("#change_name").val(),true,64,"变更名称");
+			msg += checkString($("#change_reason").val(),true,512,"变更原因");
+			msg += checkString($("#before_content").val(),false,128,"变更前内容");
+			msg += checkString($("#after_content").val(),false,128,"变更后内容");
+			return msg;
+		}
+		function saveProjectChangeInfo(){
+			var checkMsg = checkProjectChangeInfo();
+			if ( checkMsg != '' ) {
+			   top.showInfoWinWarn(checkMsg);
+			   return ;
+			}
+			if(cust_code==''){
+			  top.showInfoWinWarn("操作失败！");
+			}
+			var aoData=[];
+			aoData.push( { "name": "cust_code", "value": cust_code } );
+			aoData.push( { "name": "proChange.change_name", "value": $("#change_name").val() } );
+			aoData.push( { "name": "proChange.change_reason", "value": $("#change_reason").val() } );
+			aoData.push( { "name": "proChange.change_type", "value": $("#change_type").val() } );
+			aoData.push( { "name": "proChange.order_id", "value": order_id } );
+			aoData.push( { "name": "proChange.change_money", "value": $("#change_money").val()} );
+			aoData.push( { "name": "proChange.before_content", "value": $("#before_content").val()} );
+			aoData.push( { "name": "proChange.after_content", "value": $("#after_content").val()} );
+		    aoData.push( { "name": "proChange.money_change_type", "value": top.getRadioValue( document.getElementsByName("money_change_type") )} );
+		    aoData.push( { "name": "proChange.file_name", "value": $("#filename").html() } );
+		    aoData.push( { "name": "proChange.file_path", "value": $("#file_path").val() } );
+			aoData.push( { "name": "proChange.pro_change_id", "value":info_id} );
+			aoData.push( { "name": "proChange.unit", "value":$("#unit").val()} );
+			aoData.push( { "name": "proChange.amount", "value":$("#amount").val()} );
+			aoData.push( { "name": "proChange.price", "value":$("#price").val()} );
+			aoData.push( { "name": "proChange.total", "value":$("#total").val()} );
+			aoData.push( { "name": "proChange.change_type", "value":$("#change_type").val()} );
+			if(optType!=null&&optType=='update'){
+				var xurl="/actions/ProjectOrder.action?updateProChange";
+			}else{
+				var xurl="/actions/ProjectOrder.action?insertProChange";
+			}
+			top.sendAjaxRequest(xurl,aoData,saveProjectChangeInfoCallBack);
+		}
+	
+		function saveProjectChangeInfoCallBack(obj){
+		 try{
+			if ( obj.status == true ){
+				isSaveOK = true;
+				top.showInfoWinOK("操作成功");
+				top.closeSelectDialog();
+			}else{
+				isSaveOK = false;
+				top.showInfoWinError("操作失败 "+obj.msg);
+			}
+		   }catch(e){
+			  top.showInfoWinError("处理异常:"+e.message);
+		   }
+	   }
+	   function doBeforeClose(){
+			var obj={
+				  "isSaveOK":isSaveOK
+				};
+			top.setTempValue(obj);
+	   }
+	   //上传项目变更扫描件
+	   function upload(){
+	       var xurl="../pages/uploadFile.html?belong_id0="+require_id+"&belong_id="+info_id+"&belong_type=10";
+		   top.openDialog("上传文件",xurl,true,600,230,saveFileCallBack);
+	   }
+	   //上传成功后回调函数
+	   function saveFileCallBack(){
+	      try{
+		    var obj = top.getTempValue();
+			if(obj.isSaveOK){
+			   $("#filename").html(obj.fileName);
+			   $("#file_path").val(obj.filePath);
+			}
+		  }catch(e){
+		  }
+	   }
+	   function getProjectChangeById(){
+			if(info_id==null||info_id==''){
+				return;
+			}
+			var aoData=[];
+			aoData.push( { "name": "proChange.pro_change_id", "value":info_id} );
+			var xurl="/actions/ProjectOrder.action?getProChangeById";
+			top.sendAjaxRequest(xurl,aoData,getProjectChangeByIdCallBack);
+	   }
+	   function getProjectChangeByIdCallBack(obj){
+		if(obj.status==true){
+			var o=obj.body;  
+			if(o){//拥有修改权限
+					order_id=o.order_id;
+					info_id=o.pro_change_id;
+					money_change_type=o.money_change_type;
+					change_money=o.change_money;
+					remind_id=o.remind_id;
+					opt_user=o.opt_user;
+				if(top.g_isPermit('09_alter_project_change')&&o.examine_status!="1"){
+					$("#change_name").val(o.change_name);
+					$("#change_reason").val(o.change_reason);
+					$("#change_type").val(o.change_type);
+					top.initRadioValue(document.getElementsByName("money_change_type"), o.money_change_type);
+					$("#change_money").val(o.change_money);
+					$("#unit").val(o.unit);
+					$("#amount").val(o.amount);
+					$("#price").val(o.price);
+					$("#spantotal").text(o.total);
+					$("#total").val(o.total);
+					$("#before_content").val(o.before_content);
+					$("#after_content").val(o.after_content);
+					if(o.file_name!=""){
+					  $("#filename").html('<a href="'+top.getUrlBase()+'/download?filePath='+o.file_path+'&fileName=\"'+o.file_name+'\"">'+o.file_name+'</a>');
+					}
+					$("#uploadFile").show();
+					$("#subBT").show();
+				}else{
+					$("#change_type").val(o.change_type);
+					$("#change_name").parent().html(o.change_name);
+					$("#change_reason").parent().html(o.change_reason);
+					$("#change_money").parent().html(o.change_money);
+					$("#unit").parent().html(top.getCodeName("UNIT",o.unit));
+					$("#amount").parent().html(o.amount);
+					$("#price").parent().html(o.price);
+					$("#spantotal").text(o.total);
+					$("#total").val(o.total);
+					$("#before_content").parent().html(o.before_content);
+					$("#after_content").parent().html(o.after_content);
+					$("#tdmoney_change_type").html(top.getCodeName("MONEY_CHANGE_TYPE",o.money_change_type));
+					if(o.file_name!=""){
+					  $("#filename").html('<a href="'+top.getUrlBase()+'/download?filePath='+o.file_path+'&fileName=\"'+o.file_name+'\"">'+o.file_name+'</a>');
+					}
+					$("#uploadFile").hide();
+					$("#subBT").hide();
+				}
+				//工程变更审核
+					//审核赋值
+					$("#examine_opinion").val(o.examine_opinion); 
+					$("#lb_examine_opinion").html(o.examine_opinion);
+					$("#td_examine_status").html(top.getCodeName('PRODUCT_STATUS',o.examine_status));
+					$("#examine_user").html(top.getUserNameByCode(o.examine_user));
+					$("#examine_time").html(top.getTimeStr(o.examine_time,true));
+					//显示
+					//1:新建状态
+					if(o.examine_status=="3"||o.examine_status==""){
+						$("#table_examine").hide();
+					}else if(o.examine_status=="0"){//待审核
+						//拥有审核权限
+						if(top.g_isPermit('09_examine_project_change')){
+							$("#table_examine").show();
+							$("#tr_submit").show();
+							$("#lb_examine_opinion").hide();
+							$("#examine_opinion").show();
+							$("#td_examine_status").show();
+							//隐藏审核人审核时间
+							$("#tr_examine_user").hide();
+							$("#tr_examine_time").hide();
+						}else{//隐藏审核界面
+							$("#table_examine").hide();
+						}
+					}else{//2：已审核
+						$("#tdChangeType").html(top.getCodeName("PROJECT_CHANGE_TYPE",o.change_type));
+						if((!top.g_isPermit('09_examine_project_change'))||o.examine_status=="1"||o.examine_status=="2"){//审核通过或无审核权限
+							$("#table_examine").show();
+							$("#tr_submit").hide();
+							$("#examine_opinion").hide();
+							$("#lb_examine_opinion").show();
+							$("#tr_examine_user").show();
+							$("#tr_examine_time").show();
+						}
+					}
+			}
+		}
+	}
+		
+		function examineProjectChange(examine_status){
+			var aoData=[];
+			aoData.push( { "name": "proChange.pro_change_id", "value":info_id} );
+		    aoData.push( { "name": "proChange.examine_opinion", "value": $("#examine_opinion").val()} );
+		    aoData.push( { "name": "proChange.examine_status", "value": examine_status} );
+			aoData.push( { "name": "proChange.order_id", "value": order_id } );
+			aoData.push( { "name": "cust_code", "value": cust_code } );
+			aoData.push( { "name": "proChange.change_money", "value": change_money } );
+			aoData.push( { "name": "proChange.money_change_type", "value": money_change_type } );
+			aoData.push( { "name": "proChange.remind_id", "value": remind_id } );
+			aoData.push( { "name": "proChange.opt_user", "value": opt_user } );
+			aoData.push( { "name": "proChange.change_type", "value": $("#change_type").val() } );
+			var xurl="/actions/ProjectOrder.action?examineProChange";
+			top.sendAjaxRequest(xurl,aoData,saveProjectChangeInfoCallBack);
+		}
+		
+		function getTotal(){
+		    var amount=$("#amount").val();
+			var price=$("#price").val();
+			if(amount==""){
+			  amount=0;
+			}
+			if(price==""){
+			  price=0;
+			}
+			$("#spantotal").text(amount*price);
+			$("#total").val(amount*price);
+			$("#change_money").val(amount*price);
+		}
+		
+		</script>
+	</head>
+	<body style="margin-top:10px">
+				<table border="1" cellpadding="3" cellspacing="1" width="96%" align="center" style="margin:0 auto;background-color: #b9d8f3;">
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title" width="40%">变更名称</td><td align="left"><input type="text" id="change_name" style="width:120px;"/></td>
+					</tr>
+					<tr class="tr_data"  height="35px">
+						<td class="table_property_title">变更类型</td><td align="left" id="tdChangeType"></td>
+					</tr>
+					<tr class="tr_data"  height="35px">
+						<td class="table_property_title">变更性质</td>
+						<td align="left" id="tdmoney_change_type">
+							<input type="radio" name="money_change_type" value="0" checked>增加款额</input>
+							<input type="radio" name="money_change_type" value="1">减少款额</input>
+						</td>
+					</tr>
+					<tr class="tr_data"  height="35px">
+						<td class="table_property_title">单位</td><td align="left" id="tdunit"></td>
+					</tr>
+					<tr class="tr_data"  height="35px">
+						<td class="table_property_title">数量</td><td align="left"><input type="text" id="amount" style="width:80px;" onkeyup="getTotal()"/></td>
+					</tr>
+					<tr class="tr_data"  height="35px">
+						<td class="table_property_title">单价</td><td align="left"><input type="text" id="price" style="width:80px;" onkeyup="getTotal()"/>元</td>
+					</tr>
+					<tr class="tr_data"  height="35px">
+						<td class="table_property_title">合计金额</td><td align="left"><span id="spantotal"></span><input type="hidden" id="total"/>&nbsp;元</td>
+					</tr>
+					<tr class="tr_data"  height="35px">
+						<td class="table_property_title">优惠后金额</td><td align="left"><input type="text" id="change_money" style="width:80px;"/>元</td>
+					</tr>
+					<tr class="tr_data"  height="35px">
+						<td class="table_property_title">变更前内容</td><td align="left"><textarea style="width:420px" type="text" id="before_content"></textarea></td>
+					</tr>
+					
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title">变更后内容</td><td align="left"><textarea style="width:420px" type="text" id="after_content"></textarea></td>
+					</tr>
+					<tr class="tr_data" rowspan="3"  height="35px">
+						<td class="table_property_title">变更原因</td><td align="left"><textarea style="width:420px" type="text" id="change_reason"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+					    <td class="table_property_title">附件</td><td align="left"><label  style="text-align:left" id="filename"></label><input id="file_path" type="hidden"><div class="buttonDivTwo" id="uploadFile"><a href="javascript:upload()">上传</a></div></td>
+					</tr>
+					<tr class="tr_data" id="subBT"  height="35px">
+						<td colspan="2" align="center">
+							<div class="buttonDivTwo">
+								<a href="javascript:saveProjectChangeInfo()">保存</a>
+							</div>
+						</td>
+					</tr>
+				</table>
+				<div id="table_examine" width="100%">
+					<table  border="1" cellpadding="3" cellspacing="1" width="96%" align="center" style="margin:0 auto;background-color: #b9d8f3;">
+					<tr  height = "35px" class="tr_data">
+					<td width="40%" class="table_property_title">审核状态</td>
+					<td id="td_examine_status" align="left"></td>
+					</tr>
+					<tr height = "35px"  class="tr_data">
+					<td class="table_property_title">审核意见</td>
+					<td align="left" ><label id="lb_examine_opinion"></label><textarea  style="width:99%" rows = "3" id="examine_opinion"></textarea></td>
+					</tr>
+					<tr  height = "35px" id = "tr_examine_user" class="tr_data">
+					<td class="table_property_title">审核人</td>
+					<td align="left"><span id="examine_user"></span></td>
+					</tr>
+					<tr id = "tr_examine_time" class="tr_data">
+					<td height= "35px" class="table_property_title">审核时间</td>
+					<td align="left"><span id="examine_time"></span></td>
+					</tr>
+					<tr  id = "tr_submit" class="tr_data" >
+					<td align="right" style="padding-right:10px">
+						<div class="buttonDivTwo">
+						<a href="javascript:examineProjectChange(1)">通过</a>
+						</div>
+					</td>
+					<td align="left" style="padding-left:10px">
+						<div class="buttonDivTwo">
+						<a href="javascript:examineProjectChange(2)">拒绝</a>
+						</div>
+					</td>
+					</tr>
+					</table>
+			</div>
+	</body>
+</html>

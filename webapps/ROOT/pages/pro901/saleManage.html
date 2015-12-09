@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			
+			$(document).ready(function() {
+			   var iaoColumns= [
+			                   { "sTitle": "患者姓名", "mDataProp": "cust_code", "sWidth": "10%", "bUseRendered": false },
+                               { "sTitle": "药店", "mDataProp": "shop_code", "sWidth": "20%", "bUseRendered": false },
+							   { "sTitle": "药品名称", "mDataProp": "drug_id", "sWidth": "20%", "bUseRendered": false },
+							   { "sTitle": "药品批号", "mDataProp": "drug_id", "sWidth": "15%", "bUseRendered": false },
+							   { "sTitle": "药品批次", "mDataProp": "drug_id", "sWidth": "15%", "bUseRendered": false },
+							   { "sTitle": "数量", "mDataProp": "amount", "sWidth": "10%", "bUseRendered": false },
+							   { "sTitle": "销售时间","mDataProp": "sale_time","sWidth": "15%", "sClass": "center",
+                            	  "fnRender": function ( oObj ) {
+                                       return top.getTimeStr( oObj.aData.sale_time, false );
+                                  },
+                                  "bUseRendered": false 
+                               }
+               ];
+
+			   var surl=top.getUrlBase()+"/actions/Pro06.action?getPro06SaleList";
+
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"aaSorting": [[ 6, "desc" ]],
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     aoData.push( { "name": "time1", "value": $("#q_time1").val() } );
+						 aoData.push( { "name": "time2", "value": $("#q_time2").val() } );
+						 aoData.push( { "name": "sale.cust_code", "value": $("#q_cust_code").val() } );
+						 aoData.push( { "name": "sale.shop_code", "value": $("#q_shop_code").val() } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+		    <div style='border: 2px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="110px">&nbsp;销售记录查询&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0" >
+			     <tr>
+				  <td align="right" >患者账号:</td><td align="left" ><input type="text" id="q_cust_code" value="" size="15" onkeydown="if(event.keyCode==13) doQuery();"/></td>
+				  <td align='right' >药店编码:</td><td align='left' ><input type="text" id="q_shop_code" value="" size="15" onkeydown="if(event.keyCode==13) doQuery();"/></td>
+				  <td align="right" >销售时间从:</td><td align="left" ><input type="text" id="q_time1" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" />
+				     到:<input type="text" id="q_time2" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" /></td>
+			     </tr>
+			 </table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				    <td>&nbsp;查询结果列表&nbsp;</td>
+			       </tr></table></td>
+			  </tr>
+			</table>
+	        <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

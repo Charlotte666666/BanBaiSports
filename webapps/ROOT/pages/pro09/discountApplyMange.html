@@ -1,0 +1,219 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css"
+			href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var queryCtlMark=0;//查询条件显示收缩标志变量
+			$(document).ready(function() {
+			$( "#tdcheck_status").html( top.getCodeSelectHtml("EXAMINE_STATUS","check_status",true));
+			 var iaoColumns= [
+							{ "sTitle": "申请人", "mDataProp": "apply_person", "sWidth": "10%","sClass": "center", "bUseRendered": false},
+			                { "sTitle": "申请时间", "mDataProp": "apply_time", "sWidth": "12%", "sClass": "center",
+								"fnRender": function ( oObj ) {
+                                          return top.getTimeStr(oObj.aData.apply_time,true);
+                                     },
+							"bUseRendered": false},
+							{ "sTitle": "申请内容", "mDataProp": "apply_content", "sWidth": "18%", "sClass": "center","bUseRendered": false},
+							{ "sTitle": "订单编号", "mDataProp": "order_id", "sWidth": "10%", "sClass": "center",
+								"fnRender": function ( oObj ) {
+								           //top.openOptPage(\'05\',\''+oObj.aData.order_id+'\')
+                                           return '<a href="javasctipt:void(0)" onclick="getCustCodeAndOpenDetailPage(\''+oObj.aData.order_id+'\')">'+oObj.aData.order_id+'</a>';
+								},
+							"bUseRendered": false},
+							{ "sTitle": "申请折扣", "mDataProp": "discount", "sWidth": "10%", "sClass": "center","bUseRendered": false},
+							{ "sTitle": "折扣前价格", "mDataProp": "pre_price", "sWidth": "10%", "sClass": "center","bUseRendered": false},
+							{ "sTitle": "折扣后价格", "mDataProp": "pre_price", "sWidth": "10%", "sClass": "center","bSortable": false,
+								"fnRender": function ( oObj ) {
+                                           return oObj.aData.discount*oObj.aData.pre_price/100;
+								},
+							"bUseRendered": false},
+							{ "sTitle": "申请状态", "mDataProp": "check_status", "sWidth": "10%", "sClass": "center",
+								 "fnRender": function ( oObj ) {
+                                           return top.getCodeName("EXAMINE_STATUS", oObj.aData.check_status);
+                                      },
+							"bUseRendered": false},
+							{ "sTitle": "查看明细", "mDataProp": "check_status", "sWidth": "10%","sClass": "center",
+								"fnRender": function ( oObj ) {
+										if( oObj.aData.check_status=='0'&&top.g_isPermit("09_daliy_discount_apply")){
+											 return '<a href=\'javascript:void(0)\' onclick="checkInfo(\''+oObj.aData.apply_id+'\')" >审批</a>';
+										}else{
+											 return '<a href=\'javascript:void(0)\' onclick="selectDetail(\''+oObj.aData.apply_id+'\')" >查看明细</a>';
+										}
+                                     },
+									"bUseRendered": false 
+							}
+               ];			
+			   var surl=top.getUrlBase()+"/actions/DailyManage.action?getDiscountApplyInfoList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData=getParamDate(aoData);
+			    },
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+			function checkInfo(id){
+				var xurl="pages/pro09/discountApplyInfo.html?optType=check&id="+id;
+				top.openDialog("申请折扣优惠审核",xurl,true,800,500,saveCallBack);
+			}
+			
+			function selectDetail(id){
+				var xurl="pages/pro09/discountApplyInfo.html?optType=select&id="+id;
+				top.openDialog("查看详情",xurl,true,800,500,saveCallBack);
+			}
+
+			function saveCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				}
+			}
+			
+			function optCallback(obj){
+			       try{
+			        if ( obj.status == true ){
+			          top.showInfoWin("操作成功");
+			          doQuery();
+			        }else{
+			          top.showInfoWin("操作失败 "+obj.msg);
+			        }
+			       }catch(e){
+			          top.showInfoWin("处理异常:"+e.message);
+			       }
+		  }
+
+		function getParamDate(aoData){
+			aoData.push( { "name": "discountApplyInfo.check_status", "value":$("#check_status").val() } );	
+			aoData.push( { "name": "discountApplyInfo.order_id", "value":$("#order_id").val() } );	
+			return aoData;
+		}
+		
+		//根据订单号获取客户编号
+		function getCustCodeAndOpenDetailPage(id){
+		    var aoData=[];
+			aoData.push({"name":"orderInfo.id","value":id});
+			top.sendAjaxRequest("/actions/ProductOrder.action?getProductOrderInfoById",aoData,getCustCodeAndOpenDetailPageCallback);
+		}
+		//获取客户编号后打开客户详细信息页面
+		function getCustCodeAndOpenDetailPageCallback(obj){
+		  if(obj.status==true){
+		    if(obj.body){
+			  top.openCustDetailPage(obj.body.cust_code,"4-0","update","客户详细信息");
+			}
+		  }else{
+		    top.showInfoWinError("操作失败!");
+		  }
+		}
+		//查询条件的展开与收缩
+		function dwOup(){
+				if(queryCtlMark==0){//展开
+					$("#queryCtlIcon").attr("src","../../img/icons/arrow-up.gif"); 
+					$("#queryTab").slideToggle();
+					queryCtlMark=1;
+				}else{//收缩
+					$("#queryCtlIcon").attr("src","../../img/icons/arrow-down.gif"); 
+					$("#queryTab").slideToggle();
+					queryCtlMark=0;
+				}
+		}
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+			<div style='border: 1px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="150px">
+							&nbsp;我的申请&nbsp;
+						</td>
+						<td align="right">
+							<div class="buttonDivTwo">
+								<a href="javascript:doQuery()">查询</a>
+							</div>
+						</td>
+						<td width="2px">
+							&nbsp;
+						</td>
+						<td width="2px">
+							<span><image id="queryCtlIcon" src="../../img/icons/arrow-down.gif" alt="展开" onclick="javascript:dwOup();"/></span>
+						</td>
+					</tr>
+				</table>
+				<table  id="queryTab"  style="display:none" width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0">
+					<tr class="tr_data">
+						<td width="50%" align="right">申请状态</td>
+						<td align="left" id="tdcheck_status" onkeydown="if(event.keyCode==13) doQuery();"></td>
+						<td width="50%" align="right">订单编号</td>
+						<td align="left" id="order_id" onkeydown="if(event.keyCode==13) doQuery();"></td>
+					</tr>
+				</table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0"
+				border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									&nbsp;查询结果列表&nbsp;
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<table cellpadding="0" width="100%" cellspacing="0" border="0"
+				class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

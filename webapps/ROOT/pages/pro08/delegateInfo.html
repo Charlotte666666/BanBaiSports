@@ -1,0 +1,1662 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css"/>
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css" media="print, projection, screen">
+		<link rel="stylesheet" type="text/css" href="../../css/fileuploader.css">
+<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" src="../../js/fileuploader.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var infoId="";
+   var dStatus=0;
+   var score=0;
+   var delegateInfo={};
+   var approvaInfo={};
+   var talkNotes={};
+   var penNotes={};
+   var assertSuggest={};
+   var assertScore={};
+   var interId=0;
+   var isChange = false;
+   var menu = 0;
+   $(document).ready(function() {
+     $( "#tabs ul" ).tabs();
+     initData();
+	 $("input").change(function(){
+       isChange = true;
+    });
+	$("textarea").change(function(){
+       isChange = true;	   
+    });
+	$("select").change(function(){
+       isChange = true;	   
+    });
+   } );
+   $(function(){
+		$("input[name='score']").change(function(){
+			var sumScore=0;
+			for(var i=1;i<=31;i++){
+				score=top.g_GetNumValue($("#score"+i).val());
+				sumScore=sumScore+Number(score);
+			}
+			$("input[name='total_score']").val(sumScore);
+		});
+	})
+
+   //保存评估审批信息
+   function saveApprovalInfo(){
+	 var aoData=[];
+	if ( infoId == '' ) {
+			top.showInfoWinWarn("请先添加基本信息");
+			 return;
+		}
+
+		aoData.push( { "name": "delegateInfo.status", "value": dStatus} );
+		aoData.push( { "name": "delegateInfo.delegate_code", "value": $("#delegate_code").val() } );
+		
+		aoData.push( { "name": "approvaInfo.delegate_code", "value": $("#delegate_code").val() } );
+		aoData.push( { "name": "approvaInfo.justice_bureau", "value": $("#justice_bureau").val() } );
+		aoData.push( { "name": "approvaInfo.judicial", "value": $("#judicial").val() } );
+		aoData.push( { "name": "approvaInfo.worker_opinion", "value": $("#worker_opinion").val() } );
+		aoData.push( { "name": "approvaInfo.manager_opinion", "value": $("#manager_opinion").val() } );
+		aoData.push( { "name": "approvaInfo.leader_opinion", "value": $("#leader_opinion").val() } );
+		aoData.push( { "name": "approvaInfo.memo", "value": $("#memo").val() } );
+		aoData.push( { "name": "approvaInfo.end_date", "value": top.toTimestamp($("#approva_end_date").val()) } );
+		aoData.push( { "name": "approvaInfo.start_date", "value": top.toTimestamp($("#approva_start_date").val()) } );
+		
+		var xurl="/actions/Delegate.action?saveApprovalInfo";
+		top.sendAjaxRequest(xurl,aoData,saveApprovaOptCallback);
+	}
+    //调用回调函数---保存评估审批信息
+   function saveApprovaOptCallback(obj){
+	try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功");
+		 isChange = false;
+	    }else{
+	    	isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+	//保存意见书信息
+	function savePositionPaper(){
+	   top.showConfirm("确定回复此委托函？",doSavePositionPaper);
+	}
+	
+   function doSavePositionPaper(){
+	 var aoData=[];
+	if ( infoId == '' ) {
+			top.showInfoWinWarn("请先添加基本信息!");
+			 return;
+		}
+		aoData.push( { "name": "positionPaper.delegate_code", "value": $("#delegate_code").val() } );
+		aoData.push( { "name": "positionPaper.accused_person", "value": $("#accused_person").val() } );
+		aoData.push( { "name": "positionPaper.seggestion", "value": $("#seggestion").val() } );
+		aoData.push( { "name": "positionPaper.detail_describe", "value": $("#detail_describe").val() } );
+		aoData.push( { "name": "positionPaper.end_date", "value": top.toTimestamp($("#position_end_date").val()) } );
+		aoData.push( { "name": "positionPaper.start_date", "value": top.toTimestamp($("#position_start_date").val()) } );
+		
+		var xurl="/actions/Delegate.action?savePositionPaper";
+		top.sendAjaxRequest(xurl,aoData,savePositionOptCallback);
+   }
+    //调用回调函数---保存意见书信息
+   function savePositionOptCallback(obj){
+	try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功");
+		 isChange = false;
+	    }else{
+	    	isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+   //保存评估分值信息
+   function saveEvaluateInfo(){
+	 var aoData=[];
+	if ( infoId == '' ) {
+			top.showInfoWinWarn("请先添加基本信息!");
+			 return;
+		}
+		aoData.push( { "name": "evaluateInfo.delegate_code", "value": $("#delegate_code").val() } );
+		aoData.push( { "name": "evaluateInfo.memo1", "value": $("#memo1").val() } );
+		aoData.push( { "name": "evaluateInfo.memo2", "value": $("#memo2").val() } );
+		aoData.push( { "name": "evaluateInfo.memo3", "value": $("#memo3").val() } );
+		aoData.push( { "name": "evaluateInfo.memo4", "value": $("#memo4").val() } );
+		aoData.push( { "name": "evaluateInfo.memo5", "value": $("#memo5").val() } );
+		aoData.push( { "name": "evaluateInfo.memo6", "value": $("#memo6").val() } );
+		aoData.push( { "name": "evaluateInfo.memo7", "value": $("#memo7").val() } );
+		aoData.push( { "name": "evaluateInfo.memo8", "value": $("#memo8").val() } );
+		aoData.push( { "name": "evaluateInfo.memo9", "value": $("#memo9").val() } );
+		aoData.push( { "name": "evaluateInfo.memo10", "value": $("#memo10").val() } );
+		aoData.push( { "name": "evaluateInfo.memo11", "value": $("#memo11").val() } );
+		aoData.push( { "name": "evaluateInfo.memo12", "value": $("#memo12").val() } );
+		aoData.push( { "name": "evaluateInfo.memo13", "value": $("#memo13").val() } );
+		aoData.push( { "name": "evaluateInfo.memo14", "value": $("#memo14").val() } );
+		aoData.push( { "name": "evaluateInfo.memo15", "value": $("#memo15").val() } );
+		aoData.push( { "name": "evaluateInfo.memo16", "value": $("#memo16").val() } );
+		aoData.push( { "name": "evaluateInfo.memo17", "value": $("#memo17").val() } );
+		aoData.push( { "name": "evaluateInfo.memo18", "value": $("#memo18").val() } );
+		aoData.push( { "name": "evaluateInfo.memo19", "value": $("#memo19").val() } );
+		aoData.push( { "name": "evaluateInfo.memo20", "value": $("#memo20").val() } );
+		aoData.push( { "name": "evaluateInfo.memo21", "value": $("#memo21").val() } );
+		aoData.push( { "name": "evaluateInfo.memo22", "value": $("#memo22").val() } );
+		aoData.push( { "name": "evaluateInfo.memo23", "value": $("#memo23").val() } );
+		aoData.push( { "name": "evaluateInfo.memo24", "value": $("#memo24").val() } );
+		aoData.push( { "name": "evaluateInfo.memo25", "value": $("#memo25").val() } );
+		aoData.push( { "name": "evaluateInfo.memo26", "value": $("#memo26").val() } );
+		aoData.push( { "name": "evaluateInfo.memo27", "value": $("#memo27").val() } );
+		aoData.push( { "name": "evaluateInfo.memo28", "value": $("#memo28").val() } );
+		aoData.push( { "name": "evaluateInfo.memo29", "value": $("#memo29").val() } );
+		aoData.push( { "name": "evaluateInfo.memo30", "value": $("#memo30").val() } );
+		aoData.push( { "name": "evaluateInfo.memo31", "value": $("#memo31").val() } );
+		aoData.push( { "name": "evaluateInfo.total_memo", "value": $("#total_memo").val() } );
+		aoData.push( { "name": "evaluateInfo.opinion1", "value": $("#opinion1").val() } );
+		aoData.push( { "name": "evaluateInfo.opinion2", "value": $("#opinion2").val() } );
+		aoData.push( { "name": "evaluateInfo.opinion3", "value": $("#opinion3").val() } );
+		aoData.push( { "name": "evaluateInfo.opinion4", "value": $("#opinion4").val() } );
+		aoData.push( { "name": "evaluateInfo.opinion5", "value": $("#opinion5").val() } );
+		aoData.push( { "name": "evaluateInfo.opinion6", "value": $("#opinion6").val() } );
+		aoData.push( { "name": "evaluateInfo.total_opinion", "value": $("#total_opinion").val() } );
+		aoData.push( { "name": "evaluateInfo.control_method", "value": $("#control_method").val() } );
+		aoData.push( { "name": "evaluateInfo.score1", "value": top.g_GetNumValue($("#score1").val()) } );
+		aoData.push( { "name": "evaluateInfo.score2", "value": top.g_GetNumValue($("#score2").val()) } );
+		aoData.push( { "name": "evaluateInfo.score3", "value": top.g_GetNumValue($("#score3").val()) } );
+		aoData.push( { "name": "evaluateInfo.score4", "value": top.g_GetNumValue($("#score4").val()) } );
+		aoData.push( { "name": "evaluateInfo.score5", "value": top.g_GetNumValue($("#score5").val()) } );
+		aoData.push( { "name": "evaluateInfo.score6", "value": top.g_GetNumValue($("#score6").val()) } );
+		aoData.push( { "name": "evaluateInfo.score7", "value": top.g_GetNumValue($("#score7").val()) } );
+		aoData.push( { "name": "evaluateInfo.score8", "value": top.g_GetNumValue($("#score8").val()) } );
+		aoData.push( { "name": "evaluateInfo.score9", "value": top.g_GetNumValue($("#score9").val()) } );
+		aoData.push( { "name": "evaluateInfo.score10", "value": top.g_GetNumValue($("#score10").val()) } );
+		aoData.push( { "name": "evaluateInfo.score11", "value": top.g_GetNumValue($("#score11").val()) } );
+		aoData.push( { "name": "evaluateInfo.score12", "value": top.g_GetNumValue($("#score12").val()) } );
+		aoData.push( { "name": "evaluateInfo.score13", "value": top.g_GetNumValue($("#score13").val()) } );
+		aoData.push( { "name": "evaluateInfo.score14", "value": top.g_GetNumValue($("#score14").val()) } );
+		aoData.push( { "name": "evaluateInfo.score15", "value": top.g_GetNumValue($("#score15").val()) } );
+		aoData.push( { "name": "evaluateInfo.score16", "value": top.g_GetNumValue($("#score16").val()) } );
+		aoData.push( { "name": "evaluateInfo.score17", "value": top.g_GetNumValue($("#score17").val()) } );
+		aoData.push( { "name": "evaluateInfo.score18", "value": top.g_GetNumValue($("#score18").val()) } );
+		aoData.push( { "name": "evaluateInfo.score19", "value": top.g_GetNumValue($("#score19").val()) } );
+		aoData.push( { "name": "evaluateInfo.score20", "value": top.g_GetNumValue($("#score20").val()) } );
+		aoData.push( { "name": "evaluateInfo.score21", "value": top.g_GetNumValue($("#score21").val()) } );
+		aoData.push( { "name": "evaluateInfo.score22", "value": top.g_GetNumValue($("#score22").val()) } );
+		aoData.push( { "name": "evaluateInfo.score23", "value": top.g_GetNumValue($("#score23").val()) } );
+		aoData.push( { "name": "evaluateInfo.score24", "value": top.g_GetNumValue($("#score24").val()) } );
+		aoData.push( { "name": "evaluateInfo.score25", "value": top.g_GetNumValue($("#score25").val()) } );
+		aoData.push( { "name": "evaluateInfo.score26", "value": top.g_GetNumValue($("#score26").val()) } );
+		aoData.push( { "name": "evaluateInfo.score27", "value": top.g_GetNumValue($("#score27").val()) } );
+		aoData.push( { "name": "evaluateInfo.score28", "value": top.g_GetNumValue($("#score28").val()) } );
+		aoData.push( { "name": "evaluateInfo.score29", "value": top.g_GetNumValue($("#score29").val()) } );
+		aoData.push( { "name": "evaluateInfo.score30", "value": top.g_GetNumValue($("#score30").val()) } );
+		aoData.push( { "name": "evaluateInfo.score31", "value": top.g_GetNumValue($("#score31").val()) } );
+		aoData.push( { "name": "evaluateInfo.total_score", "value": top.g_GetNumValue($("#total_score").val()) } );
+		
+		var xurl="/actions/Delegate.action?saveEvaluateInfo";
+		top.sendAjaxRequest(xurl,aoData,saveEvaluateOptCallback);
+   }
+   //调用回调函数---保存评估分值信息
+   function saveEvaluateOptCallback(obj){
+	try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功");
+		 isChange = false;
+	    }else{
+	    	isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+    //保存询问信息
+   function saveAskNotes(){
+    var aoData=[];
+	if ( infoId == '' ) {
+			top.showInfoWinWarn("请先添加基本信息!");
+			 return;
+		}
+		aoData.push( { "name": "askNotes.delegate_code", "value": $("#delegate_code").val() } );
+		aoData.push( { "name": "askNotes.start_hour", "value": $("#ask_start_hour").val() } );
+		aoData.push( { "name": "askNotes.start_minute", "value": $("#ask_start_minute").val() } );
+		aoData.push( { "name": "askNotes.end_hour", "value": $("#ask_end_hour").val() } );
+		aoData.push( { "name": "askNotes.end_minute", "value": $("#ask_end_minute").val() } );
+		aoData.push( { "name": "askNotes.addr", "value": $("#ask_addr").val() } );
+		aoData.push( { "name": "askNotes.investigator1", "value": $("#ask_investigator1").val() } );
+		aoData.push( { "name": "askNotes.unit_and_position1", "value": $("#ask_unit_and_position1").val() } );
+		aoData.push( { "name": "askNotes.investigator2", "value": $("#ask_investigator2").val() } );
+		aoData.push( { "name": "askNotes.unit_and_position2", "value": $("#ask_unit_and_position2").val() } );
+		aoData.push( { "name": "askNotes.recorder", "value": $("#ask_recorder").val() } );
+		aoData.push( { "name": "askNotes.witness", "value": $("#ask_witness").val() } );
+		aoData.push( { "name": "askNotes.quizzed_person", "value": $("#quizzed_person").val() } );
+		aoData.push( { "name": "askNotes.ask_item", "value": $("#ask_item").val() } );
+		aoData.push( { "name": "askNotes.ask_detail_content", "value": $("#ask_detail_content").val() } );
+		aoData.push( { "name": "askNotes.day", "value": top.toTimestamp($("#ask_day").val()) } );
+		
+		var xurl="/actions/Delegate.action?saveAskNotes";
+		top.sendAjaxRequest(xurl,aoData,saveAskNotesOptCallback);
+   }
+   //调用回调函数---保存询问信息
+   function saveAskNotesOptCallback(obj){
+	try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功");
+		 isChange = false;
+	    }else{
+	    	isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+   //保存谈话信息
+    function saveTalkNotes(){
+	 var aoData=[];
+		if ( infoId == '' ) {
+			top.showInfoWinWarn("请先添加基本信息!");
+			 return;
+		}
+		aoData.push( { "name": "talkNotes.delegate_code", "value": infoId} );
+		aoData.push( { "name": "talkNotes.start_hour", "value": $("#talk_start_hour").val() } );
+		aoData.push( { "name": "talkNotes.start_minute", "value": $("#talk_start_minute").val() } );
+		aoData.push( { "name": "talkNotes.end_hour", "value": $("#talk_end_hour").val() } );
+		aoData.push( { "name": "talkNotes.end_minute", "value": $("#talk_end_minute").val() } );
+		aoData.push( { "name": "talkNotes.addr", "value": $("#talk_addr").val() } );
+		aoData.push( { "name": "talkNotes.investigator1", "value": $("#talk_investigator1").val() } );
+		aoData.push( { "name": "talkNotes.unit_and_position1", "value": $("#talk_unit_and_position1").val() } );
+		aoData.push( { "name": "talkNotes.investigator2", "value": $("#talk_investigator2").val() } );
+		aoData.push( { "name": "talkNotes.unit_and_position2", "value": $("#talk_unit_and_position2").val() } );
+		aoData.push( { "name": "talkNotes.recorder", "value": $("#talk_recorder").val() } );
+		aoData.push( { "name": "talkNotes.witness", "value": $("#talk_witness").val() } );
+		aoData.push( { "name": "talkNotes.talker", "value": $("#talker").val() } );
+		aoData.push( { "name": "talkNotes.unit_and_addr", "value": $("#talk_unit_and_addr").val() } );
+		aoData.push( { "name": "talkNotes.relation_of_respondent", "value": $("#relation_of_respondent").val() } );
+		aoData.push( { "name": "talkNotes.talk_item", "value": $("#talk_item").val() } );
+		aoData.push( { "name": "talkNotes.talk_detail_content", "value": $("#talk_detail_content").val() } );
+		aoData.push( { "name": "talkNotes.day", "value": top.toTimestamp($("#talk_day").val()) } );
+	
+		var xurl="/actions/Delegate.action?saveTalkNotes";
+		top.sendAjaxRequest(xurl,aoData,saveTalkNtesOptCallback);
+	}
+   //调用回调函数---谈话信息
+   function saveTalkNtesOptCallback(obj){
+	try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功");
+		 isChange = false;
+	    }else{
+	    	isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+   
+  
+   function doCancel(){
+	   top.closeDialog();
+   }
+   function doSave(){
+	 var aoData=[];
+	 var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+     aoData.push( { "name": "delegateInfo.delegate_code", "value": $("#delegate_code").val() } );
+	 //if ( optType == 'insert' ) {
+		 aoData.push( { "name": "delegateInfo.delegate_unit_name", "value": $("#delegate_unit_name").val() } );
+		 aoData.push( { "name": "delegateInfo.undertake_unit_name", "value": $("#undertake_unit_name").val() } );
+		 aoData.push( { "name": "delegateInfo.defendant_name", "value": $("#defendant_name").val() } );
+		 aoData.push( { "name": "delegateInfo.defendant_sex", "value": $("#defendant_sex").val() } );
+		 aoData.push( { "name": "delegateInfo.defendant_id", "value": $("#defendant_id").val() } );
+		 aoData.push( { "name": "delegateInfo.criminal_type", "value": $("#criminal_type").val() } );
+		 aoData.push( { "name": "delegateInfo.domicile_place", "value": $("#domicile_place").val() } );
+		 aoData.push( { "name": "delegateInfo.addr", "value": $("#addr").val() } );
+		 aoData.push( { "name": "delegateInfo.delegate_unit_id", "value": $("#delegate_unit_id").val() } );
+		 aoData.push( { "name": "delegateInfo.undertake_unit_id", "value": $("#undertake_unit_id").val() } );
+		 aoData.push( { "name": "delegateInfo.expect_reply_date", "value": top.toTimestamp($("#expect_reply_date").val()) } );
+     //}
+	// else {
+	  //   aoData.push( { "name": "delegateInfo.survey_condition", "value": $("#survey_condition").val() } );
+		// aoData.push( { "name": "delegateInfo.assessment", "value": $("#assessment").val() } );
+		// aoData.push( { "name": "delegateInfo.survey_start", "value": top.toTimestamp($("#survey_start").val()) } );
+		// aoData.push( { "name": "delegateInfo.survey_end", "value": top.toTimestamp($("#survey_end").val()) } );
+	// }
+	 var xurl="/actions/Delegate.action?updateDelegateInfo";
+	 if ( optType == 'insert' ) {
+	   xurl="/actions/Delegate.action?insertDelegateInfo";
+	 }
+	 top.sendAjaxRequest(xurl,aoData,doSaveCallback);
+   }
+   
+   function checkForm(){
+     var msg = "";
+	// if ( optType == 'insert' ) {
+		 msg += checkString($("#delegate_code").val(),true,32,"委托函编号");
+		 msg += checkString($("#delegate_unit_name").val(),true,32,"委托单位");
+		 msg += checkString($("#undertake_unit_name").val(),true,32,"司法局");
+		 msg += checkString($("#defendant_name").val(),true,10,"被告人姓名");
+		 msg += checkString($("#defendant_sex").val(),true,20,"被告人性别");
+		 msg += checkString($("#defendant_id").val(),true,20,"身份证号");
+		 msg += checkString($("#criminal_type").val(),true,20,"犯罪类型");
+		 msg += checkString($("#domicile_place").val(),true,128,"户籍所在地");
+		 msg += checkString($("#addr").val(),true,128,"现居住地址");
+		 msg += checkString($("#expect_reply_date").val(),true,20,"期望回复日期");
+	// }else{
+	    // msg += checkString($("#survey_start").val(),true,20,"调查开始日期");
+		// msg += checkString($("#survey_end").val(),true,20,"调查结束日期");
+		// msg += checkString($("#assessment").val(),true,20,"评估意见");
+		// msg += checkString($("#survey_condition").val(),true,1024,"调查情况");
+	// }
+     return msg;
+   }
+   
+   function doSubmit(){
+       top.showConfirm("确定提交此委托函？",doSubmitDelegateInfo);
+   }
+   function doSubmitDelegateInfo(){
+        var aoData=[];
+		aoData.push( { "name": "delegateInfo.delegate_code", "value": $("#delegate_code").val() } );
+        var xurl = "/actions/Delegate.action?submitDelegateInfo";
+        top.sendAjaxRequest(xurl,aoData,doSubmitCallback);
+   }
+   function  doSubmitCallback(obj){
+    try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功");
+		 top.closeDialog();
+	    }else{
+	    	isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+    function doSaveCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功");
+		 isChange = false;
+		 if(optType=="insert"){
+		 $("#delegate_code").attr("disabled",true);
+		 infoId =  $("#delegate_code").val();
+		 if(obj.msg!=""){
+		 $("#tdStatus").html( top.getCodeName( "DELEGATE_STATUS",obj.msg ) );
+		 $("#trStatus").show();
+		 $("#okBtn").show();
+		  optType="update"
+		 }
+		 }
+	    }else{
+	    	isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功");
+		 top.closeDialog();
+	    }else{
+	    	isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+   function initData(){
+	   try{//上传附件
+	        interId = setInterval("selectAllUploadFile()",1000);
+			optType=top.getUrlParam(document.URL,"optType");
+			infoId=decodeURI(top.getUrlParam(document.URL,"infoId"));
+			$( "#tdsex" ).html( top.getCodeSelectHtml("SEX","defendant_sex",true) );
+			$( "#tdcriminal_type" ).html( top.getCodeSelectHtml("CRIMINAL_TYPE","criminal_type",true,"",null,"",'200px') );
+			$( "#tdassessment" ).html( top.getCodeSelectHtml("DELEGATE_ASSESSMENT","assessment",true) );
+			$( "#span_total_opinion" ).html( top.getCodeSelectHtml("TOTAL_OPINION","total_opinion",false) );
+			$( "#span_control_method" ).html( top.getCodeSelectHtml("CONTROL_METHOD","control_method",false) );
+			$( "#span_accused_person" ).html( top.getCodeSelectHtml("ACCUSED_PERSON","accused_person",false) );
+			
+		   if ( optType == 'update' ) {
+		     $("#trStatus").show();
+			 $("#delegate_code").val(infoId);
+			 $("#delegate_code").attr("disabled",true);
+			 $("#cancelBtn").hide();
+			 var aoData=[];
+		     aoData.push( { "name": "delegateInfo.delegate_code", "value": infoId } );
+		     top.sendAjaxRequest("/actions/Delegate.action?getDelegateInfoById",aoData,userInfoCallback);
+			 //$(".baseInfo").attr("disabled",true);
+			 //$("#defendant_sex").attr("disabled",true);
+			 //s$("#criminal_type").attr("disabled",true);
+		   } else if ( optType == 'insert' ) {
+		     $("#trStatus").hide();
+			 $("#okBtn").hide();
+			 var user=top.getCurrentUser();
+			 if ( user ) {
+			  $("#delegate_unit_id").val( user.deptId );
+			 }
+		   } else {
+		     //$("input").attr("disabled",true);
+			 //$("select").attr("disabled",true);
+			 //$("textarea").attr("disabled",true);
+		   }
+	   }catch(e){
+		   top.showInfoWinError(e.message);
+	   }
+   }
+   
+   function userInfoCallback(obj){
+       try{
+        if ( obj.status == true ){
+          var o=obj.body;
+			dStatus=o.status;
+			delegateInfo=o;
+		  $("#delegate_code").val(o.delegate_code);
+		  $("#delegate_unit_name").val(o.delegate_unit_name);
+		  $("#undertake_unit_name").val(o.undertake_unit_name);
+		  $("#defendant_name").val(o.defendant_name);
+		  $("#defendant_sex").val(o.defendant_sex);
+		  $("#defendant_id").val(o.defendant_id);
+		  $("#criminal_type").val(o.criminal_type);
+		  $("#domicile_place").val(o.domicile_place);
+		  $("#addr").val(o.addr);
+		  $("#tdStatus").html( top.getCodeName( "DELEGATE_STATUS",o.status ) );
+		  $("#expect_reply_date").val( top.getTimeStr(o.expect_reply_date,true) );
+		  $("#delegate_unit_id").val(o.delegate_unit_id);
+		  $("#undertake_unit_id").val(o.undertake_unit_id);
+		  $("#survey_start").val( top.getTimeStr(o.survey_start,true) );
+		  $("#survey_end").val( top.getTimeStr(o.survey_end,true) );
+		  $("#assessment").val(o.assessment);
+		  $("#survey_condition").val(o.survey_condition);
+		  
+		  /**if ( optType != 'insert' ) {
+			  $("#delegate_code_txt").html( o.delegate_code );
+			  $("#delegate_unit_name_txt").html( o.delegate_unit_name );
+			  $("#undertake_unit_name_txt").html( o.undertake_unit_name );
+			  $("#defendant_name_txt").html( o.defendant_name );
+			  $("#expect_reply_date_txt").html( o.expect_reply_date );
+			  $("#tdsex").html( o.defendant_sex );
+			  $("#defendant_id_txt").html( o.defendant_id );
+			  $("#tdcriminal_type").html( o.criminal_type );
+			  $("#domicile_place_txt").html( o.domicile_place );
+			  $("#addr_txt").html( o.addr );
+		  }*/
+		  if(o.status=='1'){
+		  $(".baseInfo").attr("disabled",true);
+		  $("#okBtn").hide();
+		  $("#saveBtn").hide();
+		  }
+		  if ( o.status == '2' ) {
+		   $(".baseInfo").attr("disabled",true);
+		   $("#okBtn").hide();
+		   $("#saveBtn").hide();
+		   $("#cancelBtn").hide();
+		   $("#defendant_sex").attr("disabled",true);
+		   $("#criminal_type").attr("disabled",true);
+			// $("#optBtnEvaluate").hide();
+			// $("#optBtnAsk").hide();
+			 //$("#optBtnPosition").hide();
+			// $("#optBtnTalk").hide();
+			 //$("#optBtnApproval").hide();
+			 $("#saveTalkNotesBtn").hide();
+			 $("#saveAskNotesBtn").hide();
+			 $("#saveEvaluateBtn").hide();
+			 $("#saveTalkNotesBtn").hide();
+		     $("#saveApprovalBtn").hide();
+			 $("#tab5 input").attr("disabled",true);
+			 $("#tab5 textarea").attr("disabled",true);
+			 $("#tab4 input").attr("disabled",true);
+			 $("#select").attr("disabled",true);
+			 $("#tab4 textarea").attr("disabled",true);
+			 $("#tab3 input").attr("disabled",true);
+			 $("#tab3_01 textarea").attr("disabled",true); 
+			 $("#tab2 input").attr("disabled",true);
+			 $("#tab2 textarea").attr("disabled",true);
+			 $("#tab1 input").attr("disabled",true);
+			 $("#tab1 textarea").attr("disabled",true);
+		  }
+		  
+		  if(o.talkNotes){
+			talkNotes=o.talkNotes;
+			$("#talk_start_hour").val(o.talkNotes.start_hour);
+			$("#talk_start_minute").val(o.talkNotes.start_minute);
+			$("#talk_end_hour").val(o.talkNotes.end_hour);
+			$("#talk_end_minute").val(o.talkNotes.end_minute);
+			$("#talk_addr").val(o.talkNotes.addr);
+			$("#talk_investigator1").val(o.talkNotes.investigator1);
+			$("#talk_unit_and_position1").val(o.talkNotes.unit_and_position1);
+			$("#talk_investigator2").val(o.talkNotes.investigator2);
+			$("#talk_unit_and_position2").val(o.talkNotes.unit_and_position2);
+			$("#talk_recorder").val(o.talkNotes.recorder);
+			$("#talk_witness").val(o.talkNotes.witness);
+			$("#talker").val(o.talkNotes.talker);
+			$("#talk_unit_and_addr").val(o.talkNotes.unit_and_addr);
+			$("#relation_of_respondent").val(o.talkNotes.relation_of_respondent);
+			$("#talk_item").val(o.talkNotes.talk_item);
+			$("#talk_detail_content").val(o.talkNotes.talk_detail_content);
+			$("#talk_day").val( top.getTimeStr( o.talkNotes.day, true ) );
+		  }
+		  
+		  if(o.askNotes){
+			penNotes=o.askNotes;
+			$("#ask_start_hour").val(o.askNotes.start_hour);
+			$("#ask_start_minute").val(o.askNotes.start_minute);
+			$("#ask_end_hour").val(o.askNotes.end_hour);
+			$("#ask_end_minute").val(o.askNotes.end_minute);
+			$("#ask_addr").val(o.askNotes.addr);
+			$("#ask_investigator1").val(o.askNotes.investigator1);
+			$("#ask_unit_and_position1").val(o.askNotes.unit_and_position1);
+			$("#ask_investigator2").val(o.askNotes.investigator2);
+			$("#ask_unit_and_position2").val(o.askNotes.unit_and_position2);
+			$("#ask_recorder").val(o.askNotes.recorder);
+			$("#ask_witness").val(o.askNotes.witness);
+			$("#quizzed_person").val(o.askNotes.quizzed_person);
+			$("#ask_item").val(o.askNotes.ask_item);
+			$("#ask_detail_content").val(o.askNotes.ask_detail_content);
+			$("#ask_day").val( top.getTimeStr( o.askNotes.day, true ) );
+		  }
+		  
+		  if(o.evaluateInfo){
+			assertScore=o.evaluateInfo;
+			$("#memo1").val(o.evaluateInfo.memo1);
+			$("#memo2").val(o.evaluateInfo.memo2);
+			$("#memo4").val(o.evaluateInfo.memo4);
+			$("#memo5").val(o.evaluateInfo.memo5);
+			$("#memo6").val(o.evaluateInfo.memo6);
+			$("#memo7").val(o.evaluateInfo.memo7);
+			$("#memo8").val(o.evaluateInfo.memo8);
+			$("#memo9").val(o.evaluateInfo.memo9);
+			$("#memo10").val(o.evaluateInfo.memo10);
+			$("#memo11").val(o.evaluateInfo.memo11);
+			$("#memo12").val(o.evaluateInfo.memo12);
+			$("#memo13").val(o.evaluateInfo.memo13);
+			$("#memo14").val(o.evaluateInfo.memo14);
+			$("#memo15").val(o.evaluateInfo.memo15);
+			$("#memo16").val(o.evaluateInfo.memo16);
+			$("#memo17").val(o.evaluateInfo.memo17);
+			$("#memo18").val(o.evaluateInfo.memo18);
+			$("#memo19").val(o.evaluateInfo.memo19);
+			$("#memo20").val(o.evaluateInfo.memo20);
+			$("#memo21").val(o.evaluateInfo.memo21);
+			$("#memo22").val(o.evaluateInfo.memo22);
+			$("#memo23").val(o.evaluateInfo.memo23);
+			$("#memo24").val(o.evaluateInfo.memo24);
+			$("#memo25").val(o.evaluateInfo.memo25);
+			$("#memo26").val(o.evaluateInfo.memo26);
+			$("#memo27").val(o.evaluateInfo.memo27);
+			$("#memo28").val(o.evaluateInfo.memo28);
+			$("#memo29").val(o.evaluateInfo.memo29);
+			$("#memo30").val(o.evaluateInfo.memo30);
+			$("#memo31").val(o.evaluateInfo.memo31);
+			$("#total_memo").val(o.evaluateInfo.total_memo);
+			$("#opinion1").val(o.evaluateInfo.opinion1);
+			$("#opinion2").val(o.evaluateInfo.opinion2);
+			$("#opinion3").val(o.evaluateInfo.opinion3);
+			$("#opinion4").val(o.evaluateInfo.opinion4);
+			$("#opinion5").val(o.evaluateInfo.opinion5);
+			$("#opinion6").val(o.evaluateInfo.opinion6);
+			$("#score1").val( o.evaluateInfo.score1);
+			$("#score2").val( o.evaluateInfo.score2);
+			$("#score3").val( o.evaluateInfo.score3);
+			$("#score4").val( o.evaluateInfo.score4);
+			$("#score5").val( o.evaluateInfo.score5);
+			$("#score6").val( o.evaluateInfo.score6);
+			$("#score7").val( o.evaluateInfo.score7);
+			$("#score8").val( o.evaluateInfo.score8);
+			$("#score9").val( o.evaluateInfo.score9);
+			$("#score10").val( o.evaluateInfo.score10);
+			$("#score11").val( o.evaluateInfo.score11);
+			$("#score12").val( o.evaluateInfo.score12);
+			$("#score13").val( o.evaluateInfo.score13);
+			$("#score14").val( o.evaluateInfo.score14);
+			$("#score15").val( o.evaluateInfo.score15);
+			$("#score16").val( o.evaluateInfo.score16);
+			$("#score17").val( o.evaluateInfo.score17);
+			$("#score18").val( o.evaluateInfo.score18);
+			$("#score19").val( o.evaluateInfo.score19);
+			$("#score20").val( o.evaluateInfo.score20);
+			$("#score21").val( o.evaluateInfo.score21);
+			$("#score22").val( o.evaluateInfo.score22);
+			$("#score23").val( o.evaluateInfo.score23);
+			$("#score24").val( o.evaluateInfo.score24);
+			$("#score25").val( o.evaluateInfo.score25);
+			$("#score26").val( o.evaluateInfo.score26);
+			$("#score27").val( o.evaluateInfo.score27);
+			$("#score28").val( o.evaluateInfo.score28);
+			$("#score29").val( o.evaluateInfo.score29);
+			$("#score30").val( o.evaluateInfo.score30);
+			$("#score31").val( o.evaluateInfo.score31);
+			$("#total_score").val( o.evaluateInfo.total_score);
+			
+			$( "#span_total_opinion" ).html( top.getCodeSelectHtml("TOTAL_OPINION","total_opinion",false,o.evaluateInfo.total_opinion) );
+			$( "#span_control_method" ).html( top.getCodeSelectHtml("CONTROL_METHOD","control_method",false,o.evaluateInfo.control_method) );
+		  }
+		  
+		  if(o.positionPaper){
+			assertSuggest=o.positionPaper;
+			$("#detail_describe").val(o.positionPaper.detail_describe);
+			$("#seggestion").val(o.positionPaper.seggestion);
+			$("#position_start_date").val( top.getTimeStr( o.positionPaper.start_date, true ) );
+			$("#position_end_date").val( top.getTimeStr( o.positionPaper.end_date, true ) );
+			$("#span_accused_person" ).html( top.getCodeSelectHtml("ACCUSED_PERSON","accused_person",false,o.positionPaper.accused_person) );
+		  }
+		  
+		  if(o.approvaInfo){
+			approvaInfo=o.approvaInfo;
+			$("#justice_bureau").val(o.approvaInfo.justice_bureau);
+			$("#judicial").val(o.approvaInfo.judicial);
+			$("#worker_opinion").val(o.approvaInfo.worker_opinion);
+			$("#manager_opinion").val(o.approvaInfo.manager_opinion);
+			$("#leader_opinion").val(o.approvaInfo.leader_opinion);
+			$("#memo").val(o.approvaInfo.memo);
+			$("#approva_start_date").val( top.getTimeStr( o.approvaInfo.start_date, true ) );
+			$("#approva_end_date").val( top.getTimeStr( o.approvaInfo.end_date, true ) );
+		  }
+		  
+        }else{
+          top.showInfoWinError("操作失败");
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+   
+    function selectDept(){
+       var xurl="pages/organization/selectTreeNode.html?type=dept";
+       top.openSelectDialog("选择部门",xurl,300,450,selectDeptCallback);
+   }
+   
+    function selectDeptCallback(){
+       try{
+         var obj = top.getTempValue();
+         if ( obj.nodeId == -1 ) return ;
+         if ( obj.nodeId == -2 ) {
+             qDeptId = "";
+             qDeptName = "";
+         } else {
+             qDeptId = obj.nodeId;
+             qDeptName = obj.nodeName;
+         }
+         $("#undertake_unit_id").val(qDeptId);
+         $("#undertake_unit_name").val(qDeptName);
+       }catch(e){
+       }
+   }
+ 
+	function openApprovalPrintPreview(){
+    var xurl="assertmentPrint.html";
+	window.open(xurl,"_blank","width=900,height=800");
+   }
+   function openDelegatePrintPreview(){
+    var xurl="delegateInfoPrint.html";
+	window.open(xurl,"_blank","width=900,height=800");
+   }
+   function openChatPrintPreview(){
+    var xurl="chatRecdPrint.html";
+	window.open(xurl,"_blank","width=900,height=800");
+   }
+   function openPenPrintPreview(){
+    var xurl="penRecdPrint .html";
+	window.open(xurl,"_blank","width=900,height=800");
+   }
+   function openSuggestionPrintPreview(){
+    var xurl="assertSuggestPrint.html";
+	window.open(xurl,"_blank","width=900,height=800");
+   }
+   function openScorePrintPreview(){
+    var xurl="scoreAssertPrint.html";
+	window.open(xurl,"_blank","width=900,height=800");
+   }
+   function getScoreValue(){
+    assertScore.memo1 = $("#memo1").val();
+    assertScore.memo2 = $("#memo2").val();
+	assertScore.memo3 = $("#memo3").val();
+	assertScore.memo4 = $("#memo4").val();
+	assertScore.memo5 = $("#memo5").val();
+	assertScore.memo6 = $("#memo6").val();
+    assertScore.memo7 = $("#memo7").val();
+	assertScore.memo8 = $("#memo8").val();
+	assertScore.memo9 = $("#memo9").val();
+	assertScore.memo10 = $("#memo10").val();
+	assertScore.memo11 = $("#memo11").val();
+	assertScore.memo12 = $("#memo12").val();
+	assertScore.memo13 = $("#memo13").val();
+	assertScore.memo14 = $("#memo14").val();
+	assertScore.memo15 = $("#memo15").val();
+	assertScore.memo16 = $("#memo16").val();
+	assertScore.memo17 = $("#memo17").val();
+	assertScore.memo18 = $("#memo18").val();
+	assertScore.memo19 = $("#memo91").val();
+	assertScore.memo20 = $("#memo20").val();
+	assertScore.memo21 = $("#memo21").val();
+	assertScore.memo22 = $("#memo22").val();
+	assertScore.memo23 = $("#memo23").val();
+	assertScore.memo24 = $("#memo24").val();
+	assertScore.memo25 = $("#memo25").val();
+	assertScore.memo26 = $("#memo26").val();
+	assertScore.memo27 = $("#memo27").val();
+	assertScore.memo28 = $("#memo28").val();
+	assertScore.memo29 = $("#memo29").val();
+	assertScore.memo30 = $("#memo30").val();
+	assertScore.memo31 = $("#memo31").val();
+	assertScore.total_score = $("#total_score").val();
+	assertScore.total_memo = $("#total_memo").val();
+	assertScore.opinion1 = $("#opinion1").val();
+	assertScore.opinion2 = $("#opinion2").val();
+	assertScore.opinion3 = $("#opinion3").val();
+	assertScore.opinion4 = $("#opinion4").val();
+	assertScore.opinion5 = $("#opinion5").val();
+	assertScore.opinion6 = $("#opinion6").val();
+	assertScore.score1 = $("#score1").val();	
+	assertScore.score2 = $("#score2").val();
+	assertScore.score3 = $("#score3").val();
+	assertScore.score4 = $("#score4").val();
+	assertScore.score5 = $("#score5").val();
+	assertScore.score6 = $("#score6").val();
+	assertScore.score7 = $("#score7").val();
+	assertScore.score8 = $("#score8").val();
+	assertScore.score9 = $("#score9").val();
+	assertScore.score10 = $("#score10").val();
+	assertScore.score11 = $("#score11").val();
+	assertScore.score12 = $("#score12").val();
+	assertScore.score13 = $("#score13").val();
+	assertScore.score14 = $("#score14").val();
+	assertScore.score15 = $("#score15").val();
+	assertScore.score16 = $("#score16").val();
+	assertScore.score17 = $("#score17").val();
+	assertScore.score18 = $("#score18").val();
+	assertScore.score19 = $("#score19").val();
+	assertScore.score20 = $("#score20").val();
+	assertScore.score21 = $("#score21").val();
+	assertScore.score22 = $("#score22").val();
+	assertScore.score23 = $("#score23").val();
+	assertScore.score24 = $("#score24").val();
+	assertScore.score25 = $("#score25").val();
+	assertScore.score26 = $("#score26").val();
+	assertScore.score27 = $("#score27").val();
+	assertScore.score28 = $("#score28").val();
+	assertScore.score29 = $("#score29").val();
+	assertScore.score30 = $("#score30").val();
+	assertScore.score31 = $("#score31").val();
+	return assertScore;
+   }
+   function getSuggestionValue(){
+		assertSuggest.accused_person = $("#accused_person").val();
+		assertSuggest.detail_describe = $("#detail_describe").val();
+		assertSuggest.seggestion = $("#seggestion").val();
+		assertSuggest.start_date = top.toTimestamp($("#position_start_date").val());
+		assertSuggest.end_date = top.toTimestamp($("#position_end_date").val());
+		return assertSuggest;
+   }
+   function getPenNotesValue(){
+		penNotes.start_hour = $("#ask_start_hour").val();
+	    penNotes.start_minute = $("#ask_start_minute").val();
+		penNotes.end_hour = $("#ask_end_hour").val();
+		penNotes.end_minute = $("#ask_end_minute").val();
+		penNotes.addr = $("#ask_addr").val();
+		penNotes.investigator1 = $("#ask_investigator1").val();
+		penNotes.unit_and_position1 = $("#ask_unit_and_position1").val();
+		penNotes.investigator2 = $("#ask_investigator2").val();
+		penNotes.unit_and_position2 = $("#ask_unit_and_position2").val();
+		penNotes.recorder = $("#ask_recorder").val();
+		penNotes.witness = $("#ask_witness").val();
+		penNotes.quizzed_person = $("#quizzed_person").val();
+		penNotes.ask_item = $("#ask_item").val();
+		penNotes.ask_detail_content = $("#ask_detail_content").val();
+		penNotes.day = top.toTimestamp($("#ask_day").val());
+		return penNotes;
+   }
+   function getTalkNotesValue(){
+		talkNotes.start_hour = $("#talk_start_hour").val();
+	    talkNotes.start_minute = $("#talk_start_minute").val();
+		talkNotes.end_hour = $("#talk_end_hour").val();
+		talkNotes.end_minute = $("#talk_end_minute").val();
+		talkNotes.addr = $("#talk_addr").val();
+		talkNotes.investigator1 = $("#talk_investigator1").val();
+		talkNotes.unit_and_position1 = $("#talk_unit_and_position1").val();
+		talkNotes.investigator2 = $("#talk_investigator2").val();
+		talkNotes.unit_and_position2 = $("#talk_unit_and_position2").val();
+		talkNotes.recorder = $("#talk_recorder").val();
+		talkNotes.witness = $("#talk_witness").val();
+		talkNotes.talker = $("#talker").val();
+		talkNotes.unit_and_addr = $("#talk_unit_and_addr").val();
+		talkNotes.relation_of_respondent = $("#relation_of_respondent").val();
+		talkNotes.talk_item = $("#talk_item").val();
+		talkNotes.talk_detail_content = $("#talk_detail_content").val();
+		talkNotes.day = top.toTimestamp($("#talk_day").val());
+		return talkNotes;
+	}
+   
+	function getDelegateValue(){
+		delegateInfo.undertake_unit_name = $("#undertake_unit_name").val();
+		delegateInfo.delegate_unit_name = $("#delegate_unit_name").val();
+		delegateInfo.defendant_id = $("#defendant_id").val();
+		delegateInfo.defendant_sex = $("#defendant_sex").val();
+		delegateInfo.defendant_name = $("#defendant_name").val();
+		delegateInfo.criminal_type = $("#criminal_type").val();
+		delegateInfo.addr=$("#addr").val();
+		delegateInfo.domicile_place = $("#domicile_place").val();
+		delegateInfo.expect_reply_date = top.toTimestamp($("#expect_reply_date").val());
+		return delegateInfo;
+	}
+	
+	function getTimeStr(t){
+	   return top.getTimeStr(t,true);
+	}
+	
+	function getCodeName(dictoryName,value){
+	   return top.getCodeName(dictoryName,value);
+	}
+   
+   function getApprovaValue(){
+	
+	approvaInfo.worker_opinion = $("#worker_opinion").val();
+	approvaInfo.manager_opinion = $("#manager_opinion").val();
+	approvaInfo.leader_opinion = $("#manager_opinion").val();
+	approvaInfo.memo = $("#memo").val();
+	approvaInfo.justice_bureau = $("#justice_bureau").val();
+	approvaInfo.judicial = $("#judicial").val();
+	approvaInfo.start_date = top.getTimestamp($("#approva_start_date").val());
+	approvaInfo.end_date = top.getTimestamp($("#approva_end_date").val());
+	return approvaInfo;
+   }
+   //上传文件
+	function uploadFile(){
+	if(infoId!=""){
+		var xurl="../uploadFile.html?belong_id="+infoId+"&belong_type=1";
+		openDialog("上传文件",xurl,true,600,230,saveFileCallBack);
+		}
+		else{
+		top.showInfoWinWarn("请先添加基本信息!");
+			 return;
+		}
+	}
+	function openDialog(t,xurl,isModal,w,h,callback){
+		if ( isModal == undefined ) isModal=true;
+		if ( !h ) h=200;
+		if ( !w ) w=400;
+		$( "#dialog" ).dialog({
+			title: t,
+			height: h,
+			width: w,
+			modal: isModal,
+			resizable: false,
+		    beforeClose: function(event, ui) {
+		        try{
+		            document.getElementById("self_iframe").contentWindow.doBeforeClose();
+		            if ( callback ) callback.apply();
+		        }catch(e){
+		        }
+		        return true;
+		    }
+		});
+		document.getElementById("self_iframe").src = xurl;
+    }
+	
+	function closeDialog(){
+		$( "#dialog" ).dialog( "close" );
+	}
+	//调用回调函数---上传文件
+   	function saveFileCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQueryFileList();
+				}catch(e){
+				}
+	}
+	
+	//查询所有上传的附件
+	function selectAllUploadFile(){
+	    clearInterval( interId );
+		var surl=top.getUrlBase()+"/actions/File.action?getFileInfoList";
+		fileListTable = $('#filePathList').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":5,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					        if(infoId==""){
+							aoData.push( { "name": "fileinfo.belong_id", "value": -1} );
+							}
+							else{
+							aoData.push( { "name": "fileinfo.belong_id", "value": infoId} );
+							}
+							
+			        },
+			      "sDom": "frtip",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": [
+							{"sTitle": "文件名称", "mDataProp": "file_name", "sWidth": "500px","sClass": "left", "bUseRendered": false },
+			                {"sTitle": "类型","mDataProp": "file_type", "sWidth": "100px","sClass": "center",
+								 "fnRender": function ( oObj ) {
+                                          return top.getCodeName( "FILE_TYPE", oObj.aData.file_type );
+                            },
+							  "bUseRendered": false },
+							{"sTitle": "上传时间","mDataProp": "upload_time", "sWidth": "150px", "sClass": "center",
+								    "fnRender": function ( oObj ) {
+                                           return top.getTimeStr(oObj.aData.upload_time ,false);
+                            },
+							
+							 "bUseRendered": false},
+							{ "sTitle": "操作", "mDataProp": "file_name", "sWidth": "100px","sClass": "center",
+								"fnRender": function ( oObj ) {
+										ht='<a href="'+top.getUrlBase()+'/download?filePath='+oObj.aData.file_path+'+"&fileName="'+oObj.aData.file_name+'">下载</a>';
+										if(top.isCanPreview(oObj.aData.file_name))
+										ht+='||<a href=\'javascript:void(0)\' onclick="previewFile(\''+oObj.aData.file_path+'\',\''+oObj.aData.file_name+'\')">预览</a>';
+										return ht;
+									},
+									"bUseRendered": false 
+							}
+							 
+                      ]
+				} );
+			
+   }
+   	//预览
+	function previewFile(filePath,fileName){
+		var xurl="../openFile.html?filePath="+filePath+"&fileName="+fileName;
+		openDialog("文件预览",xurl,true,700,600,null);
+	}
+	
+	//doQuery---上传文件
+	function doQueryFileList(){
+		fileListTable.fnDraw();
+	}
+ function doBeforeClose(){
+     //if(isChange==true){
+	 // top.showConfirm("内容已被编辑，是否保存？",changeSaveInfo);
+	// }
+	// else{
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+	// }
+   }
+	function tabOnClick(index){
+     // if(isChange==true){
+	 //   top.showConfirm("内容已被编辑，是否保存？",changeSaveInfo);
+	 // }
+	 // else{
+	    menu = index;
+		//isChange = false;
+	 // }
+	}
+	function changeSaveInfo(){
+	  if(menu==0){
+	  doSave();
+	  }
+	  else if(menu==1){
+	  saveTalkNotes();
+	  }
+	   else if(menu==2){
+	  saveAskNotes();
+	  }
+	   else if(menu==3){
+	  saveEvaluateInfo();
+	  }
+	   else if(menu==4){
+	  savePositionPaper();
+	  }
+	   else if(menu==5){
+	  saveApprovalInfo();
+	  }
+	}
+ </script> 
+  <style>
+		body,td {
+			font-size: 13px;
+		}
+
+		.roomTd {
+			border: 1px;
+			border-style: dotted none none none;
+			border-color: blue;
+			color: #000000;
+			padding-left: 5px;
+		}
+
+		#KinSlideshow {
+			overflow: hidden;
+			width: 500px;
+			height: 450px;
+		}
+
+		.inputBottomLine {
+			border-top: hide;
+			border-left: hide;
+			border-center: hide;
+		}
+		#hall_count,#room_count,#bath_count,#measure_cust_sex,#measure_room_count,#measure_bath_count,#measure_hall_count,#many_members{
+			width: 50px;
+		}
+
+		#function_require,#design_key{
+			width: 65%;
+		}
+
+		#project_addr,#measure_project_addr,#fault_condition,#heater_suggest,#gas_suggest,#partition_position,#members_desc,#switch_position {
+			width: 70%;
+		}
+
+		#struct_area,#usable_area,#planinvest_money,#major_material,#measure_district,#measure_struct_area,#measure_usable_area,#measure_planinvest_money,#measure_major_material  {
+			width: 60px;
+}
+</style>
+</head>
+<body>
+<input type="hidden" id="undertake_unit_id" value="" />
+<input type="hidden" id="delegate_unit_id" value="" />
+<br/>
+<div id="tabs">
+	<ul>
+		<li><a href="#tabs-0" onclick="tabOnClick(0)"><span>委托函</span></a></li>
+		<li><a href="#tabs-5" onclick="tabOnClick(5)"><span>调查评估审批表</span></a></li>
+		<li><a href="#tabs-1" onclick="tabOnClick(1)"><span>谈话笔录</span></a></li>
+		<li><a href="#tabs-2" onclick="tabOnClick(2)"><span>询问笔录</span></a></li>
+		<li><a href="#tabs-3" onclick="tabOnClick(3)"><span>评估分值</span></a></li>
+		<li><a href="#tabs-6" onclick="tabOnClick(6)"><span>附件</span></a></li>
+		<li><a href="#tabs-4" onclick="tabOnClick(4)"><span>评估意见书</span></a></li>
+	</ul>
+<div id="tabs-0">
+<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+ <tr class="tr_data">
+    <td width="20%" align="right">委托函编号:</td>
+    <td width="50%" align="left" colspan="3"><span id="delegate_code_txt"></span><input type="text" class="baseInfo" id="delegate_code" value="" size="30"/>&nbsp;&nbsp;<span id="trStatus" >调查函状态:<span id="tdStatus"></span></span></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">委托单位:</td>
+    <td align="left" colspan="3"><span id="delegate_unit_name_txt"></span><input type="text" class="baseInfo" id="delegate_unit_name" value="" style="width:450px" /></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">司法局:</td>
+    <td align="left" colspan="3"><span id="undertake_unit_name_txt"></span><input type="text" class="baseInfo" id="undertake_unit_name" readonly="true" onclick="selectDept()" style="width:450px"/></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">期望回复日期:</td>
+    <td align="left" colspan="3"><span id="expect_reply_date_txt"></span><input type="text" class="baseInfo" id="expect_reply_date" value="" onclick="new Calendar().show(this);" size="15" /></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">被告人姓名:</td>
+    <td align="left"><span id="defendant_name_txt"></span><input type="text" class="baseInfo" id="defendant_name" value="" size="10" /></td>
+    <td align="right">性别:</td>
+    <td align="left" id="tdsex"></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">身份证号:</td>
+    <td align="left"><span id="defendant_id_txt"></span><input type="text" class="baseInfo" id="defendant_id" value="" size="20" /></td>
+    <td align="right">犯罪类型:</td>
+    <td align="left" id="tdcriminal_type"></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">户籍所在地:</td>
+    <td align="left" colspan="3"><span id="domicile_place_txt"></span><textarea class="baseInfo" id="domicile_place" cols="60" rows="2" ></textarea></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">现居住地址:</td>
+    <td align="left" colspan="3"><span id="addr_txt"></span><textarea class="baseInfo" id="addr" cols="60" rows="2" ></textarea></td>
+ </tr>
+</table>
+<p align="center" id="optBtnArea">
+   <table><tr>
+            <td id="saveBtn"><span class="buttonTwo"><a href="javascript:doSave()">保存</a></span></td>
+		    <td id="okBtn"><span  class="buttonTwo"><a href="javascript:doSubmit()">提交</a></span></td>
+		    <td id="cancelBtn"><span  class="buttonTwo"><a href="javascript:doCancel()">取消</a></span></td>
+			<td><span id="pshow" class="buttonTwo"><a href="javascript:openDelegatePrintPreview()" target="_blank">打印</a></span></td>
+   </tr></table>
+</p>
+</div>
+
+<div id="tabs-1">
+   <table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="tab1">
+	 <tr class="tr_data">
+		<td width="20%" align="right">时间:</td>
+		<td width="80%" align="left" colspan="3">
+		  <input type="text" id="talk_day" value="" size="10" onclick="new Calendar().show(this);"/>日&nbsp;
+		  <input type="text" id="talk_start_hour" value="" size="3"/>时<input type="text" id="talk_start_minute" value="" size="3"/>分&nbsp;至&nbsp;<input type="text" id="talk_end_hour" value="" size="3"/>时<input type="text" id="talk_end_minute" value="" size="3"/>分
+		</td>
+	 </tr>
+	 <tr class="tr_data">
+		<td width="20%" align="right">地点:</td>
+		<td width="80%" align="left" colspan="3"><input type="text" id="talk_addr" value="" size="50"/></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td width="20%" align="right">调查人:</td>
+		<td width="30%" align="left"><input type="text" id="talk_investigator1" value="" size="20"/></td>
+		<td width="20%" align="right">工作单位及职务:</td>
+		<td width="30%" align="left"><input type="text" id="talk_unit_and_position1" value="" size="20"/></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td width="20%" align="right">调查人:</td>
+		<td width="30%" align="left"><input type="text" id="talk_investigator2" value="" size="20"/></td>
+		<td width="20%" align="right">工作单位及职务:</td>
+		<td width="30%" align="left"><input type="text" id="talk_unit_and_position2" value="" size="20"/></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td width="20%" align="right">记录人:</td>
+		<td width="30%" align="left"><input type="text" id="talk_recorder" value="" size="20"/></td>
+		<td width="20%" align="right">在场人或见证人:</td>
+		<td width="30%" align="left"><input type="text" id="talk_witness" value="" size="20"/></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td width="20%" align="right">谈话人:</td>
+		<td width="30%" align="left"><input type="text" id="talker" value="" size="20"/></td>
+		<td width="20%" align="right">工作单位或住址:</td>
+		<td width="30%" align="left"><input type="text" id="talk_unit_and_addr" value="" size="20"/></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td width="20%" align="right" colspan="2">&nbsp;</td>
+		<td width="20%" align="right">与被调查人关系:</td>
+		<td width="30%" align="left"><input type="text" id="relation_of_respondent" value="" size="20"/></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td width="20%" align="right">谈话事项:</td>
+		<td width="80%" align="left" colspan="3"><input type="text" id="talk_item" value="" size="50"/></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td width="20%" align="right">具体谈话内容:</td>
+		<td width="80%" align="left" colspan="3">
+		   <textarea id="talk_detail_content" style="width:549px;height:207px"></textarea>
+		</td>
+	 </tr>
+   </table>
+   <p align="center" id="optBtnTalk">
+   <table><tr>
+		    <td><span id="saveTalkNotesBtn" class="buttonTwo" style="display:inline"><a href="javascript:saveTalkNotes()">保存</a></span></td>
+		    <td><span id="cancelTalkNotesBtn" class="buttonTwo"><a href="javascript:doCancel()">取消</a></span></td>
+			<td><span class="buttonTwo"><a href="javascript:openChatPrintPreview()" target="_blank">打印</a></span></td>
+   </tr></table>
+</p>
+</div>
+
+<div id="tabs-2">
+   <table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="tab2">
+	 <tr class="tr_data">
+		<td width="20%" align="right">时间:</td>
+		<td width="80%" align="left" colspan="3">
+		  <input type="text" id="ask_day" value="" size="10" onclick="new Calendar().show(this);"/>日&nbsp;
+		  <input type="text" id="ask_start_hour" value="" size="3"/>时<input type="text" id="ask_start_minute" value="" size="3"/>分&nbsp;至&nbsp;<input type="text" id="ask_end_hour" value="" size="3"/>时<input type="text" id="ask_end_minute" value="" size="3"/>分
+		</td>
+	 </tr>
+	 <tr class="tr_data">
+		<td width="20%" align="right">地点:</td>
+		<td width="80%" align="left" colspan="3"><input type="text" id="ask_addr" value="" size="50"/></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td width="20%" align="right">调查人:</td>
+		<td width="30%" align="left"><input type="text" id="ask_investigator1" value="" size="20"/></td>
+		<td width="20%" align="right">工作单位及职务:</td>
+		<td width="30%" align="left"><input type="text" id="ask_unit_and_position1" value="" size="20"/></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td width="20%" align="right">调查人:</td>
+		<td width="30%" align="left"><input type="text" id="ask_investigator2" value="" size="20"/></td>
+		<td width="20%" align="right">工作单位及职务:</td>
+		<td width="30%" align="left"><input type="text" id="ask_unit_and_position2" value="" size="20"/></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td width="20%" align="right">记录人:</td>
+		<td width="30%" align="left"><input type="text" id="ask_recorder" value="" size="20"/></td>
+		<td width="20%" align="right">在场人或见证人:</td>
+		<td width="30%" align="left"><input type="text" id="ask_witness" value="" size="20"/></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="right">被询问人:</td>
+		<td align="left" colspan="3"><input type="text" id="quizzed_person" value="" size="20"/></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td width="20%" align="right">询问事项:</td>
+		<td width="80%" align="left" colspan="3"><input type="text" id="ask_item" value="" size="50"/></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td width="20%" align="right">具体询问内容:</td>
+		<td width="80%" align="left" colspan="3">
+		   <textarea id="ask_detail_content" style="width:549px;height:207px"></textarea>
+		</td>
+	 </tr>
+   </table>
+      <p align="center" id="optBtnAsk">
+   <table><tr>
+		    <td><span id="saveAskNotesBtn" class="buttonTwo"><a href="javascript:saveAskNotes()">保存</a></span></td>
+		    <td><span id="cancelAskNotesBtn" class="buttonTwo"><a href="javascript:doCancel()">取消</a></span></td>
+			<td><span class="buttonTwo"><a href="javascript:openPenPrintPreview()" target="_blank">打印</a></span></td>
+   </tr></table>
+</p>
+</div>
+
+<div id="tabs-3">
+   <table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="tab3">
+	 <tr class="tr_data">
+		<td width="60%" align="center" colspan="3">调查内容</td>
+		<td width="10%" align="center">标准<br/>分值</td>
+		<td width="10%" align="center">评估<br/>分值</td>
+		<td width="20%" align="center">备注</td>
+	 </tr>
+	 <tr class="tr_data">
+		<td width="10%" align="center" rowspan="15">表<br/><br/>现<br/><br/>情<br/><br/>况<br/><br/>(50分)</td>
+		<td width="5%" align="center">1</td>
+		<td width="48%" align="left">有无犯罪前科和其他犯罪嫌疑</td>
+		<td width="10%" align="center">6分</td>
+		<td width="7%" align="center"><input type="text" id="score1" value="" size="5" name="score"></input></td>
+		<td width="20%" align="center"><input type="text" id="memo1" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">2</td>
+		<td align="left">有无违法记录和其他违法嫌疑</td>
+		<td align="center">5分</td>
+		<td align="center"><input type="text" id="score2" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo2" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">3</td>
+		<td align="left">有无网恋、吸毒、赌博、嗜酒等恶习</td>
+		<td align="center">2分</td>
+		<td align="center"><input type="text" id="score3" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo3" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">4</td>
+		<td align="left">个人成长经历中有无重大挫折</td>
+		<td align="center">1分</td>
+		<td align="center"><input type="text" id="score4" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo4" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">5</td>
+		<td align="left">重大挫折与其犯罪有无关联性</td>
+		<td align="center">1分</td>
+		<td align="center"><input type="text" id="score5" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo5" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">6</td>
+		<td align="left">有无孤僻、偏执、易冲动等异常的性格特征</td>
+		<td align="center">2分</td>
+		<td align="center"><input type="text" id="score6" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo6" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">7</td>
+		<td align="left">个人习性、行为和情绪控制能力与其犯罪有无关联性</td>
+		<td align="center">5分</td>
+		<td align="center"><input type="text" id="score7" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo7" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">8</td>
+		<td align="left">有无暴力倾向习性</td>
+		<td align="center">4分</td>
+		<td align="center"><input type="text" id="score8" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo8" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">9</td>
+		<td align="left">有无较重的报复心理和行为</td>
+		<td align="center">4分</td>
+		<td align="center"><input type="text" id="score9" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo9" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">10</td>
+		<td align="left">同一类型违法犯罪有无一贯性</td>
+		<td align="center">5分</td>
+		<td align="center"><input type="text" id="score10" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo10" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">11</td>
+		<td align="left">本次犯罪与过去违法记录、犯罪嫌疑及犯罪前科有无同一性</td>
+		<td align="center">3分</td>
+		<td align="center"><input type="text" id="score11" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo11" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">12</td>
+		<td align="left">有无经常参加团伙性违法犯罪行为</td>
+		<td align="center">4分</td>
+		<td align="center"><input type="text" id="score12" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo12" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">13</td>
+		<td align="left">与其他团伙成员有无密切联系交往</td>
+		<td align="center">2分</td>
+		<td align="center"><input type="text" id="score13" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo13" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">14</td>
+		<td align="left">家庭成员中有无现实违法行为、犯罪嫌疑情况和违法犯罪史</td>
+		<td align="center">3分</td>
+		<td align="center"><input type="text" id="score14" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo14" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">15</td>
+		<td align="left">上述情况对该人本次犯罪有无影响和关联</td>
+		<td align="center">3分</td>
+		<td align="center"><input type="text" id="score15" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo15" value="" ></input></td>
+	 </tr>
+	 
+	 <tr class="tr_data">
+		<td width="10%" align="center" rowspan="9">家<br/>庭<br/>、<br/>社<br/>会<br/>状<br/>况<br/>(20分)</td>
+		<td width="5%" align="center">16</td>
+		<td width="48%" align="left">有无固定职业</td>
+		<td width="10%" align="center">3分</td>
+		<td width="7%" align="center"><input type="text" id="score16" value="" size="5" name="score"></input></td>
+		<td width="20%" align="center"><input type="text" id="memo16" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">17</td>
+		<td align="left">有无稳定的收入和经济来源</td>
+		<td align="center">3分</td>
+		<td align="center"><input type="text" id="score17" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo17" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">18</td>
+		<td align="left">有无正当的谋生技能</td>
+		<td align="center">2分</td>
+		<td align="center"><input type="text" id="score18" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo18" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">19</td>
+		<td align="left">家庭成员经济状况和现实表现对该人有无影响</td>
+		<td align="center">2分</td>
+		<td align="center"><input type="text" id="score19" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo19" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">20</td>
+		<td align="left">家庭是否和睦，对家庭有无责任感</td>
+		<td align="center">2分</td>
+		<td align="center"><input type="text" id="score20" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo20" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">21</td>
+		<td align="left">家庭对其有无约束力</td>
+		<td align="center">2分</td>
+		<td align="center"><input type="text" id="score21" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo21" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">22</td>
+		<td align="left">日常生活中有无交往密切的亲属、朋友、同事，且对其行为有正面影响力</td>
+		<td align="center">2分</td>
+		<td align="center"><input type="text" id="score22" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo22" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">23</td>
+		<td align="left">有无固定居所</td>
+		<td align="center">2分</td>
+		<td align="center"><input type="text" id="score23" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo23" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">24</td>
+		<td align="left">家庭居住地有无良好的治安环境</td>
+		<td align="center">2分</td>
+		<td align="center"><input type="text" id="score24" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo24" value="" ></input></td>
+	 </tr>
+	 
+	 <tr class="tr_data">
+		<td width="10%" align="center" rowspan="7">有<br/>关<br/>个<br/>人<br/>、<br/>组<br/>织<br/>意<br/>见<br/>(80分)</td>
+		<td width="5%" align="center">25</td>
+		<td width="48%" align="left">家庭成员意见</td>
+		<td width="10%" align="center">10分</td>
+		<td width="7%" align="center"><input type="text" id="score25" value="" size="5" name="score"></input></td>
+		<td width="20%" align="center"><input type="text" id="memo25" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">26</td>
+		<td align="left">被害人或其家属意见</td>
+		<td align="center">10分</td>
+		<td align="center"><input type="text" id="score26" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo26" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">27</td>
+		<td align="left">所在单位、学校意见</td>
+		<td align="center">10分</td>
+		<td align="center"><input type="text" id="score27" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo27" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">28</td>
+		<td align="left">社区、居（村）民小组或周边知情群众意见</td>
+		<td align="center">10分</td>
+		<td align="center"><input type="text" id="score28" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo28" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">29</td>
+		<td align="left">社区（村屯）、街道(乡镇)意见</td>
+		<td align="center">10分</td>
+		<td align="center"><input type="text" id="score29" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo29" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">20</td>
+		<td align="left">辖区公安派出所意见</td>
+		<td align="center">10分</td>
+		<td align="center"><input type="text" id="score30" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo30" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center">31</td>
+		<td align="left">辖区司法所意见</td>
+		<td align="center">20分</td>
+		<td align="center"><input type="text" id="score31" value="" size="5" name="score"></input></td>
+		<td align="center"><input type="text" id="memo31" value="" ></input></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td width="60%" align="center" colspan="3">合计</td>
+		<td width="10%" align="center">150分</td>
+		<td width="10%" align="center"><input type="text" id="total_score" name="total_score" disabled size="5"/></td>
+		<td width="20%" align="center">&nbsp;</td>
+	 </tr>
+	</table>
+   <br/>
+   <table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="tab3_01">
+	 <tr class="tr_data">
+		<td align="center" colspan="2">县（市、区、风景区）司法局调查评估工作小组初步意见</td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="left">1、居所情况<br/>
+		  <textarea cols="60" rows="5" id="opinion1" value=""></textarea>
+		</td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="left">2、家庭和社会状况<br/>
+		  <textarea cols="60" rows="5" id="opinion2" value=""></textarea>
+		</td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="left">3、一贯表现、犯罪行为的后果和影响<br/>
+		  <textarea cols="60" rows="5" id="opinion3" value=""></textarea>
+		</td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="left">4、被害人、居住地社区（村屯）和有关单位、组织意见<br/>
+		  <textarea cols="60" rows="5" id="opinion4" value=""></textarea>
+		</td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="left">5、监护人、具保人情况<br/>
+		  <textarea cols="60" rows="5" id="opinion5" value=""></textarea>
+		</td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="left">6、禁止令情况<br/>
+		  <textarea cols="60" rows="5" id="opinion6" value=""></textarea>
+		</td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="left">&nbsp;&nbsp;综合以上情况，调查评估小组的评估意见为：<span id="span_total_opinion"></span>
+		该人适用管制<span id="span_control_method"></span>
+		</td>
+	 </tr>
+   </table>
+         <p align="center" id="optBtnEvaluate">
+   <table><tr>
+			<td><span id="saveEvaluateBtn" class="buttonTwo"><a href="javascript:saveEvaluateInfo()">保存</a></span></td>
+		    <td><span id="cancelEvaluateBtn" class="buttonTwo"><a href="javascript:doCancel()">取消</a></span></td>
+			<td><span  class="buttonTwo"><a href="javascript:openScorePrintPreview()" target="_blank">打印</a></span></td>
+		</tr></table>
+	</p>
+</div>
+
+<div id="tabs-4">
+   <table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="tab4">
+	 <tr class="tr_data">
+		<td width="100%" align="left">
+		  我局于<input type="text" size="10" id="position_start_date" onclick="new Calendar().show(this);" value=""/>至<input type="text" size="10" onclick="new Calendar().show(this);" value="" id="position_end_date"/>对被告人
+		  <span id="span_accused_person"></span>进行了调查评估。<br/>有关情况如下:
+		  <br/>
+		  <textarea rows="10" style="width:700px" value="" id="detail_describe">
+		  </textarea>
+		  <br/>
+		   综合以上情况，评估意见为:
+		   <br/>
+		  <textarea rows="2" style="width:700px"  value="" id="seggestion"></textarea>
+		</td>
+	 </tr>
+	
+   </table>
+   <p align="center" id="optBtnPosition">
+   <table><tr>
+		    <td><span id="savePositionBtn" class="buttonTwo"><a href="javascript:savePositionPaper()">回复</a></span></td>
+		    <td><span id="cancelPositionBtn" class="buttonTwo"><a href="javascript:doCancel()">取消</a></span></td>
+			<td><span class="buttonTwo"><a href="javascript:openSuggestionPrintPreview()" target="_blank">打印</a></span></td>
+   </tr></table>
+</p>
+</div>
+
+<div id="tabs-5">
+   <table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="tab5">
+	 <tr class="tr_data">
+		<td width="20%" align="right">开展调查评估人员:</td>
+		<td width="80%" align="left">
+		  <table>
+		    <tr><td>司法局：<input type="text" id="justice_bureau" value="" size="20"/></td></tr>
+		    <tr><td>司法所：<input type="text" id="judicial" value="" size="20"/></td></tr>
+		  </table>
+		</td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="right">调查评估起止时限:</td>
+		<td align="left"><input type="text" id="approva_start_date" value="" size="10" onclick="new Calendar().show(this);"/>~<input type="text" id="approva_end_date" value="" size="10" onclick="new Calendar().show(this);"/></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="right">社区矫正股<br/>工作人员<br/>意    见:</td>
+		<td align="left"><textarea id="worker_opinion" rows="5" cols="50"></textarea></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="right">社区矫正股<br/>负 责 人<br/>意    见:</td>
+		<td align="left"><textarea id="manager_opinion" rows="5" cols="50"></textarea></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="right">司 法 局<br/>主管领导<br/>意    见:</td>
+		<td align="left"><textarea id="leader_opinion" rows="5" cols="50"></textarea></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="right">备    注:</td>
+		<td align="left"><textarea id="memo" rows="5" cols="50"></textarea></td>
+	 </tr>
+   </table>
+   
+   <p align="center" id="optBtnApproval">
+   <table><tr>
+		    <td><span id="saveApprovalBtn" class="buttonTwo"><a href="javascript:saveApprovalInfo()">保存</a></span></td>
+		    <td><span id="cancelApprovalBtn" class="buttonTwo"><a href="javascript:doCancel()">取消</a></span></td>
+			<td><span class="buttonTwo"><a href="javascript:openApprovalPrintPreview()" target="_blank">打印</a></span></td>
+   </tr></table>
+</p>
+</div>
+<div id="tabs-6">
+ <table width="100%">
+	<tr>
+		<td width="10%">相关附件</td>
+		<td width="90%" align="left">
+			<div id="uploadFile" class="buttonDivTwo">
+				<a href="javascript:uploadFile()">上传</a>
+			</div>
+		</td></tr>
+  </table>
+  <table id="filePathList" class="display" cellpadding="0" width="100%" cellspacing="0" border="0" ></table>
+</div>
+<div id="dialog" title="" style="display:none;padding: 0 0 0 0;margin: 0 0 0 0;z-index:10000">
+    <iframe id="self_iframe" src="about:blank" width="100%" height="96%" frameborder="0"></iframe>
+ </div>
+</body>
+</html>

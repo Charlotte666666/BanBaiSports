@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.helpyouworkeasy.persistence.ToolBookMapper">
+ <insert id="insertToolBook" parameterType="ToolBook">
+    INSERT INTO tbl_tool_book (book_title,book_context,update_user,id,update_time,type_id,is_deleted)
+    VALUES (#{book_title}, #{book_context}, #{update_user}, #{id}, #{update_time}, #{type_id}, #{is_deleted})
+  </insert>
+  
+  <update id="deleteToolBook" parameterType="map">
+    update tbl_tool_book set is_deleted=1  where id=#{id}
+  </update>
+  
+  <update id="updateToolBook" parameterType="ToolBook">
+    update tbl_tool_book set 
+    book_title=#{book_title},book_context=#{book_context},update_user=#{update_user},update_time=#{update_time},type_id=#{type_id}
+    where id=#{id}
+  </update>
+
+  <select id="getToolBookListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_tool_book where 1=1 
+    <if test="o.book_title != '' and o.book_title != null" >
+      and book_title like '%${o.book_title}%'
+    </if>
+    <if test="o.update_user != '' and o.update_user != null" >
+      and update_user=#{o.update_user}
+    </if>
+    <if test="o.id != 0" >
+      and id=#{o.id}
+    </if>
+    <if test="o.type_id != 0" >
+      and type_id=#{o.type_id}
+    </if>
+      and is_deleted=0
+  </select>
+
+  <select id="getToolBookPageList" parameterType="map" resultType="ToolBook">
+    select 
+    book_title,update_user,id,update_time,type_id
+    from tbl_tool_book where 1=1 
+    <if test="o.book_title != '' and o.book_title != null" >
+      and book_title like '%${o.book_title}%'
+    </if>
+    <if test="o.update_user != '' and o.update_user != null" >
+      and update_user=#{o.update_user}
+    </if>
+    <if test="o.id != 0" >
+      and id=#{o.id}
+    </if>
+    <if test="o.type_id != 0" >
+      and type_id=#{o.type_id}
+    </if>
+      and is_deleted=0
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+
+ <select id="getToolBookById" parameterType="map" resultType="ToolBook">
+    select 
+    book_title,book_context,update_user,id,update_time,type_id
+    from tbl_tool_book where id=#{id} 
+  </select>
+	<!-- 工具书类型 -->
+    <insert id="insertToolType" parameterType="ToolType">
+    INSERT INTO tbl_tool_type (type_name,is_deleted,type_id,parent_id,order_num)
+    VALUES (#{type_name}, #{is_deleted}, #{type_id}, #{parent_id}, #{order_num})
+  </insert>
+    
+    <update id="deleteToolType" parameterType="map">
+    update tbl_tool_type set is_deleted=1  where type_id=#{type_id}
+  </update>
+
+  <update id="updateToolType" parameterType="ToolType">
+    update tbl_tool_type set 
+    type_name=#{type_name}
+    where type_id=#{type_id}
+  </update>
+
+
+  <select id="getToolTypeList" parameterType="map" resultType="ToolType">
+    select 
+    type_name,type_id,parent_id,order_num
+    from tbl_tool_type where 
+     is_deleted=0
+  </select>
+
+ <select id="getToolTypeById" parameterType="map" resultType="ToolType">
+    select 
+    type_name,type_id,parent_id,order_num
+    from tbl_tool_book where id=#{id} and is_deleted=0
+  </select>
+  
+   <update id="updateOrderAndParent" parameterType="map">
+    UPDATE tbl_tool_type SET
+      parent_id=#{parentId}, order_num=#{orderNum}
+    WHERE type_id=#{typeId}
+  </update>
+  
+   <select id="getToolBookListByKeyWord" parameterType="map" resultType="ToolBook">
+    select  *  from tbl_tool_book where 
+    book_title like '%${key_word}%'  or  book_context like '%${key_word}%'
+  </select>
+  
+</mapper>

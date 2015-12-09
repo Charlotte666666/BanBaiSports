@@ -1,0 +1,124 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		
+		    var oTable=null;
+		    var optType="";
+			var prison_code="";
+			var objs=[];
+			var isSaveOK=false;
+			
+$(document).ready(function() {
+       
+        var d=new Date();
+		timeStamp=d.getTime();
+		optType=top.getUrlParam(document.URL,"optType");
+		infoId=top.getUrlParam(document.URL,"infoId");
+		prison_code=top.getUrlParam(document.URL,"prison_code");
+		var inter_time=top.getUrlParam(document.URL,"inter_time");
+		if(!inter_time)  report_time = "";
+		var addr=decodeURI( top.getUrlParam(document.URL,"addr") );
+		if(!addr)  addr = "";
+		var inter_user=decodeURI(top.getUrlParam(document.URL,"inter_user"));
+		if ( !inter_user ) inter_user="";
+		var inter_desc=decodeURI(top.getUrlParam(document.URL,"inter_desc"));
+	    if ( !inter_desc ) inter_desc="";
+		$("#inter_time").val(top.getTimeStr(inter_time,true));
+		$("#addr").val( addr );
+		$("#inter_user").val( inter_user );
+		$("#inter_desc").val( inter_desc );
+   } );
+   function checkSaveInterviewInfo(){
+		var msg="";
+		if( $("#addr").val() == '' )msg += "走访地点不能为空！<br/>";
+		if( $("#inter_user").val() == '' )msg += "走访人员不能为空！<br/>";
+		if( $("#inter_desc").val() == '' )msg += "走访情况不能为空！";
+		return msg;
+	}
+    function saveInterviewInfo(){
+	var checkMsg = checkSaveInterviewInfo();
+	    if ( checkMsg != '' ) {
+	       top.showInfoWinWarn(checkMsg);
+           return ;
+	    }
+	 var aoData=[];
+	     aoData.push( { "name": "interview.prison_code", "value": prison_code });
+         aoData.push( { "name": "interview.inter_time", "value": top.toTimestamp($("#inter_time").val())} );
+		 aoData.push( { "name": "interview.addr", "value": $("#addr").val() } );
+		 aoData.push( { "name": "interview.inter_user", "value": $("#inter_user").val() } );
+		 aoData.push( { "name": "interview.inter_desc", "value": $("#inter_desc").val() } );
+	  if(optType == "insert"){
+	  var xurl="/actions/Prison.action?insertInterviewInfo";
+	  }
+	  else if(optType == "update"){
+	   aoData.push( { "name": "interview.id", "value": infoId} );
+	  var xurl="/actions/Prison.action?updateInterviewInfo";
+	  }
+
+	 top.sendAjaxRequest(xurl,aoData,optCallback);
+   }
+   
+    function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功");
+		 parent.closeDialog();
+	    }else{
+	    	isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   
+function doCancel(){
+	   parent.closeDialog();
+   }
+		</script>
+		
+	</head>
+	<body>
+		<div width="100%">
+		    <div style='border: 2px solid #89A1B9;margin:5px;margin-top:25px'>
+			<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				<tr class="tr_data">
+					<td width="30%">走访时间</td><td width="70%" align="left"><input type="text" id="inter_time" value="" onclick="new Calendar().show(this);"  size="20"></input></td>
+				</tr>
+				<tr class="tr_data">
+					<td >走访地点</td><td align="left"><input type="text" id="addr" value=""/></td>
+				</tr>
+				<tr class="tr_data">
+				  <td >走访人员</td><td align="left"><input type="text" id="inter_user" value=""  size="20"/></td>
+				</tr>
+				<tr class="tr_data">
+				  <td >走访情况</td><td align="left"><textarea id="inter_desc" rows="4" cols="60"></textarea></td>
+				</tr>
+		</table>
+		<p>
+		   <table  width="100%" align="center"><tr>
+					<td align="right"><span id="okBtn" class="buttonTwo"><a href="javascript:saveInterviewInfo()">提交</a></span></td>
+					<td align="left"><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">取消</a></span></td>
+		   </tr></table>
+		   </p>
+		</div>
+	</body>
+</html>

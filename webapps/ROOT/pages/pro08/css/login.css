@@ -1,0 +1,87 @@
+@charset "UTF-8";
+
+.login-bg{
+	width: auto;
+	height: 100%;
+	margin: 0 auto;
+}
+.login{
+	width: 320px;
+	margin: 0 auto;
+	padding-top: 4em;
+}
+.login-title{
+	text-align: center;
+	text-shadow: 1px 1px 2px #000;
+	-webkit-text-shadow: 1px 1px 2px #000;
+	-ms-text-shadow: 1px 1px 2px #000;
+	filter:progid:dXImageTransform.Microsoft.DropShadow(color=#333333,offX=0,offY=1,positives=true);
+	*filter:progid:dXImageTransform.Microsoft.DropShadow(color=#333333,offX=0,offY=1,positives=true);
+}
+.log-main{
+	background: rgba(255,255,255,0.2);
+	background: url(../images/logo-main-bg.png) repeat;
+	_filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(src='images/gifie/logo-main-bg.gif', sizingMethod='scale');
+	width: 300px;
+	height: 400px;
+	padding: 10px;
+}
+.log-cont{
+	background: #fff;
+	width: 270px;
+	height: 400px;
+	padding: 0 15px;
+	*zoom: 1;
+}
+.lg-logo{
+	background: url(../images/logo.png) no-repeat;
+	_filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(src='images/gifie/logo.gif', sizingMethod='scale');
+	color: #59636B;
+	display: block;
+	width: 80px;
+	height: 80px;
+	margin: 20px auto 0;
+	text-indent: 300px;
+	white-space: nowrap;
+	overflow: hidden;
+}
+.log-n{
+	color: #59636B;
+}
+input.user-name,
+input.password{
+	border: 1px solid #E2E3E6;
+	color: #999A9A;
+	display: block;
+	_position: relative;
+	width: 200px;
+	height: 35px;
+	line-height: 37px;
+	font-style: oblique;
+	margin-bottom: 25px;
+	border-radius: 0;
+	-webkit-border-radius: 0;
+}
+.log-on{
+	_position: relative;
+	background: #D63B23;
+	display: block;
+	width: 200px;
+	height: 40px;
+	text-align: center;
+	line-height: 40px;
+	padding: 4px 6px;
+}
+/*.geek-zoo-logo{
+	background: url(../images/geek-zoo-icon.png) no-repeat;
+	_filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(src='images/geek-zoo-icon.gif', sizingMethod='scale');
+	display: block;
+	width: 93px;
+	height: 13px;
+	margin: 0 auto;
+	text-indent: 500px;
+	white-space: nowrap;
+	overflow: hidden;
+	_position: relative;
+	_cursor: pointer;
+}*/

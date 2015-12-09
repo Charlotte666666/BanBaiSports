@@ -1,0 +1,47 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+<style type="text/css">
+body, html,#allmap {margin:10px;width: 100%;height: 100%;overflow: hidden;margin:0;}
+</style>
+<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=OBRxzWlMWAK4phVNAnL55Cj3"></script>
+</head>
+<body>
+<div id="allmap"></div>
+</body>
+</html>
+<script type="text/javascript">
+var myIcon = new BMap.Icon("../img/red.png", new BMap.Size(16,16));
+var map = new BMap.Map("allmap");
+map.enableScrollWheelZoom(); 
+map.addControl(new BMap.NavigationControl());
+map.centerAndZoom(new BMap.Point( top.getCenterLon(), top.getCenterLat() ), top.getDefaultMapLevel());
+
+map.addEventListener("click",function(e){
+   try{
+    parent.onClickMap(e.point.lng, e.point.lat);
+	map.clearOverlays(); 
+	var bp=new BMap.Point(e.point.lng, e.point.lat);
+	map.addOverlay(new BMap.Marker(bp,{icon:myIcon}));
+   }catch(e){}
+});
+
+function initDot(lon,lat){
+   if ( lon == 0 || lat == 0 ) return ;
+   try{
+	map.clearOverlays(); 
+	var bp=new BMap.Point(lon, lat);
+	map.addOverlay(new BMap.Marker(bp,{icon:myIcon}));
+   }catch(e){
+   }
+   toCenter(lon,lat);
+}
+
+function toCenter(lon,lat){
+   map.centerAndZoom(new BMap.Point(lon,lat), 13);
+}
+
+ initDot( parent.getLon(), parent.getLat() );
+ 
+</script>

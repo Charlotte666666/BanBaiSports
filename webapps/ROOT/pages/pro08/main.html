@@ -1,0 +1,512 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/jquery.jWebAudio.min.js" ></script>
+
+<script type="text/javascript">
+var interGetResult1=0;
+var currentUserCode="";
+var isNeedAlarm=false;
+var interPlayAlert=0;
+var todoObjs=[];
+var interIdChart = 0;
+var source={};
+var engine={};
+var father_dept_id="";
+var portletsAttr = [{title:"当前告警信息",url:"",code:"c1p1"}
+                    ,{title:"工作提醒",url:"",code:"c1p2"}
+					,{title:"报到信息",url:"",code:"c1p3"}
+					,{title:"数据统计",url:"",code:"c1p4"}
+                    ];
+var interCorrectInfo=0;
+$(document).ready( function() {
+   getAlarmList();
+   getMainCountList();
+   queryNotice();
+   getCorrectInfo();
+   interGetResult1 = setInterval("getAlarmList()", 10000 );
+   interPlayAlert = setInterval("playAlert()", 10000 );
+   interCorrectInfo = setInterval("getCorrectInfo()",10000);
+   father_dept_id = top.getCurrentUser().deptId;
+   try{
+		engine = new jWebAudio.SoundEngine();
+		source = engine.addSoundSource({
+			'url': '../../resources/ringin.wav',
+			'preLoad': true,
+			'callback': function() {
+				source.sound.play();
+			}
+		});
+	}catch(e){
+	} 
+	
+	var protletHeight = ($(document).height() - 120);
+		$( ".column" ).height( $(document).height() - 20 ).sortable({
+			connectWith: ".column"
+		});
+        for ( var i=0;i<portletsAttr.length;i++ ) {
+          var p = $( "#"+portletsAttr[i].code );
+          if ( !p ) continue;
+		  p.addClass( "ui-widget ui-widget-content ui-helper-clearfix ui-corner-all" )
+			.find( ".portlet-header" )
+                .append(portletsAttr[i].title)
+				.addClass( "ui-widget-header ui-corner-all" )
+				.prepend( "<span class='ui-icon ui-icon-minusthick'></span>")
+				.end();
+		  if ( portletsAttr[i].url != '' ) {
+		    $( "#"+portletsAttr[i].code+"Content" ).html('<iframe src="'+portletsAttr[i].url+'" height="100%" width="100%" frameborder="0"/>');
+		  }
+        }
+
+		$( ".portlet-header .ui-icon" ).click(function() {
+			$( this ).toggleClass( "ui-icon-minusthick" ).toggleClass( "ui-icon-plusthick" );
+			$( this ).parents( ".portlet:first" ).find( ".portlet-content" ).toggle();
+		});
+
+		$( ".column" ).disableSelection();
+		
+});
+
+ function getAlarmList(){
+      //isNeedAlarm=false;
+			   var surl=top.getUrlBase()+"/actions/ProMonitor.action?getFiveDaysProAlarmInfoList";
+			   var oTable = $('#alarmDataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":10,
+					"sAjaxSource": surl,
+					"aaSorting": [[ 0, "desc" ]],
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								//top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+						   aoData.push( { "name": "info.is_show", "value": 1 } );
+						   aoData.push( { "name": "info.user_code", "value": "" } );
+						   aoData.push( { "name": "info.alarm_type", "value": "" } );
+			        },
+			      "sDom": "frtp",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": [
+								{ "sTitle": "报警时间", "mDataProp": "alarm_time", "sWidth": "120px", "sClass": "center",
+                                     "fnRender": function ( oObj ) {
+									    isNeedAlarm=true;
+							            return top.getTimeStr( oObj.aData.alarm_time, false );
+                                     },
+                                     "bUseRendered": false 
+							    },
+							    { "sTitle": "报警类型", "mDataProp": "alarm_type", "sWidth": "100px", "sClass": "center",
+                                     "fnRender": function ( oObj ) {
+								        return top.getCodeName( "ALARM_TYPE", oObj.aData.alarm_type );
+                                     },
+                                     "bUseRendered": false 
+							    },
+								{ "sTitle": "服刑人员编号", "mDataProp": "user_code", "sWidth": "100px", "sClass": "center",
+                                     "fnRender": function ( oObj ) {
+							            return '<a href=\'javascript:void(0)\' onclick="openPrisonInfo(\''+oObj.aData.user_code+'\')" >'+oObj.aData.user_code+"</a>";
+							
+                                     },
+                                     "bUseRendered": false 
+							     },
+								 { "sTitle": "服刑人员姓名", "mDataProp": "user_name", "sWidth": "100px", "sClass": "center","bUseRendered": false},
+								 { "sTitle": "操作", "mDataProp": "id", "sWidth": "50px", "bSortable":false ,
+								     "fnRender": function ( oObj ) {
+							            return "<a href=\'javascript:void(0)\' onclick=\"optAlartInfo(\'"+oObj.aData.user_code+"\',\'"+oObj.aData.alarm_type+"\',\'"+oObj.aData.alarm_time+"\',\'"+oObj.aData.id+"\')\">操作</a>";
+                                     },
+								  "bUseRendered": false }
+                      ]
+				} );
+
+	 getTodoList();
+
+ }
+ 
+function getTodoList(){
+    var ht="";
+    var surl=top.getUrlBase()+"/actions/Approve.action?getApproveList";
+			   var oTable = $('#todoDataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":10,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								//top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					        aoData.push( { "name": "time1", "value": $("#q_time1").val() } );
+							aoData.push( { "name": "time2", "value": $("#q_time2").val() } );
+							aoData.push( { "name": "approve.approve_type", "value": -1 } );
+							aoData.push( { "name": "approve.status", "value": 0 } );
+			        },
+			      "sDom": "frtp",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": [
+								{ "sTitle": "提醒信息", "mDataProp": "title", "sWidth": "70%", "bUseRendered": false, "bSortable":false  },
+                                { "sTitle": "操作", "mDataProp": "id", "sWidth": "30%", "sClass": "center","bSortable":false,
+								  "fnRender": function ( oObj ) {
+								       todoObjs[todoObjs.length]=oObj.aData;
+                                       ht='<a href="javascript:void(0)" onclick="viewTodoInfo(\''+oObj.aData.apply_id+'\',\''+oObj.aData.apply_user+'\','+oObj.aData.approve_type+')">查看人员信息</a>';
+									   if ( oObj.aData.status == 0 ) {
+									     ht+='&nbsp;&nbsp;&nbsp;<a href="javascript:void(0)" onclick="checkApply(\''+oObj.aData.id;
+										 ht+='\',\''+oObj.aData.apply_id+'\',\''+oObj.aData.title+'\',\''+oObj.aData.apply_desc+'\',\''+oObj.aData.ext_info+'\','+oObj.aData.approve_type+')">审核</a>';
+									   }
+									   return ht;
+                                  },
+								  "bUseRendered": false  }
+                      ]
+				} );
+}
+
+function getTodoObj(infoId){
+	 for ( var i=0;i<todoObjs.length;i++ ) {
+		  if ( todoObjs[i].id == infoId ) return todoObjs[i];
+	  }
+	 return null;
+ }
+			
+			function checkApply(id,apply_id,title,desc,ext_info,check_type){
+			    top.setTempValue( getTodoObj( id ) );
+			    var xurl="pages/pro08/checkInfo.html?opt="+check_type+"&infoId="+id+"&applyId="+apply_id+"&ext_info="+ext_info;
+	            top.openDialog("审核[&nbsp;"+title+"&nbsp;]",xurl,true,600,330,saveTodoCallBack);
+			}
+			
+			function viewTodoInfo(applyId,apply_user,check_type){
+			  top.viewCheckInfo( check_type, applyId, apply_user );
+			}
+function getMainCountList(){
+    var ht="";
+    var surl=top.getUrlBase()+"/actions/Pro08Report.action?mainPageInfoCount";
+			   var oTable = $('#mainCountDataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":10,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								//top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					        aoData.push({ "name": "deptId", "value":father_dept_id });
+			        },
+			      "sDom": "frtp",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": [
+								{ "sTitle": "地区", "mDataProp": "dept", "sWidth": "10%", "bUseRendered": false, 
+								  "fnRender": function ( oObj ) {
+									   return top.getDeptName(oObj.aData.dept);
+                                  },   "bSortable":false  },
+								{ "sTitle": "服刑人员总数", "mDataProp": "c_1", "sWidth": "10%","sClass": "center", "bUseRendered": false, "bSortable":false  },
+								{ "sTitle": "管制人数", "mDataProp": "c_2", "sWidth": "9%", "sClass": "center","bUseRendered": false, "bSortable":false  },
+								{ "sTitle": "缓刑人数", "mDataProp": "c_3", "sWidth": "9%", "sClass": "center","bUseRendered": false, "bSortable":false  },
+								{ "sTitle": "假释人数", "mDataProp": "c_4", "sWidth": "9%", "sClass": "center","bUseRendered": false, "bSortable":false  },
+								{ "sTitle": "暂予监外执行人数", "mDataProp": "c_5", "sWidth": "13%", "sClass": "center","bUseRendered": false, "bSortable":false  },
+								{ "sTitle": "下月到期人数", "mDataProp": "c_6", "sWidth": "10%", "sClass": "center","bUseRendered": false, "bSortable":false  },
+								{ "sTitle": "电子监控人数", "mDataProp": "c_7", "sWidth": "10%", "sClass": "center","bUseRendered": false, "bSortable":false  },
+								{ "sTitle": "今日新增", "mDataProp": "c_8", "sWidth": "10%", "sClass": "center","bUseRendered": false, "bSortable":false  },
+								{ "sTitle": "今日解矫", "mDataProp": "c_9", "sWidth": "10%", "sClass": "center","bUseRendered": false, "bSortable":false  }
+                      ]
+				} );
+}
+			function saveTodoCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) getTodoList();
+				}catch(e){
+				}
+			}
+
+			
+function getCorrectInfo(){
+ var iaoColumns= [
+                               { "sTitle": "服刑人员编号", "mDataProp": "prison_code", "sWidth": "120px", "sClass": "center","bUseRendered": false },
+							   { "sTitle": "时间", "mDataProp": "start_time", "sWidth": "230px", "sClass": "center","fnRender": function ( oObj ) {
+                                        isNeedAlarm=true;							           
+									   var start_time = top.getTimeStr( oObj.aData.start_time, false ).substring(0,16);
+										var end_time = top.getTimeStr( oObj.aData.end_time, false ).substring(11,16);
+                                        return  start_time+" -- "+end_time;
+                                   }, "bUseRendered": false },
+							   { "sTitle": "事项", "mDataProp": "item", "sWidth": "300px","sClass": "center" ,"fnRender": function ( oObj ) {
+							             var str="";
+										 if(oObj.aData.item=="null"){
+										    return str;
+										 }
+										 var values = oObj.aData.item.split(",");
+										 for(var i=0;i<values.length;i++){
+										   str+=top.getCodeName("STRATEGY_TYPE",values[i])+"、";
+										 }
+                                        return str.substring(0,str.length-1);
+                                   },"bSortable":false,"bUseRendered": false },								
+							   { "sTitle": "备注", "mDataProp": "memo", "sWidth": "350px","sClass": "center","bSortable":false, "bUseRendered": false },
+							   { "sTitle": "操作", "mDataProp": "correct_id", "sWidth": "100px","sClass": "center", "bSortable":false, 
+							   "fnRender": function ( oObj ) {
+							    
+								  // str+='<a href=\'javascript:void(0)\' onclick="updateCorrectInfo(\''+oObj.aData.correct_id+'\')">修改</a>'
+						           // str+='&nbsp;&nbsp;<a href=\'javascript:void(0)\' onclick="deleteCorrectInfo(\''+oObj.aData.correct_id+'\')">删除</a>';
+									var  ht='<a href="javascript:void(0)" onclick="viewTodoInfo(\''+oObj.aData.prison_code+'\',\''+oObj.aData.prison_code+'\','+1+')">查看人员信息</a>';
+									return ht;
+								}, "bUseRendered": false}];
+								
+			   var surl=top.getUrlBase()+"/actions/Prison.action?getCorrectInfoList";
+			   var oTable = $('#correctdataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": false,
+					"bInfo":false,
+					"iDisplayLength":10,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+						 aoData.push( { "name": "correctInfo.item", "value": "null" } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+ }
+
+function optAlartInfo(userCode,alarmType,alarmTime,id){
+   var xurl="pages/pro08/optAlarmInfo.html?userCode="+userCode+"&alarmType="+alarmType+"&alarmTime="+alarmTime+"&id="+id;
+   top.openDialog("操作告警信息",xurl,true,700,400, viewAlarmCallBack);
+}
+
+function viewAlarmCallBack(){
+	getAlarmList();
+}
+
+function openPrisonInfo(infoId){
+	var xurl="pages/pro08/CorrectionUserInfo.html?optType=update&infoId="+infoId;
+	//top.openDialog("服刑人员信息",xurl,true,1100,620,null);
+	top.toSysTab('服刑人员详细信息',xurl,'21');
+}
+
+ function playAlert(){
+	  try{
+	 
+	    if ( !isNeedAlarm ) return ;
+		if ( document.getElementById("isPlayAlert").checked ) {
+	     // play
+		 source.sound.play();
+		 isNeedAlarm = false;
+		}
+	  }catch(e){
+	  }
+ }
+ function queryNotice(){
+    var aoData=[];
+	top.sendAjaxRequest("/actions/ProNotice.action?getNewNoticeInfoList",aoData,noticeInfoCallback);
+ }
+ 
+ function noticeInfoCallback(obj){
+          var ht='';
+		   ht+='<tr align="left"><td height="10">&nbsp;</td></tr><tr align="left"><td class="thead_td" height="30">';
+           ht+='<img src="images/main_notice.png" width="16" height="16" />通知公告[<a href="javascript:void(0)" onclick="javascript:top.toSysTab(\'通知公告管理\',\'pages/pro08/noticeManage.html\')">&nbsp;全部&nbsp;</a>]</td></tr>';
+           try{
+			rs=obj.aaData;
+			for(var i=0;i<rs.length;i++ ){
+			var j = i+1;
+			ht+='<tr align="left"><td class="tbody_td" height="30">&nbsp;<a href=\'javascript:void(0)\' onclick="updateInfo(\''+rs[i].id+'\')">'+j+"、"+rs[i].notice_title+'</a></td></tr>';
+			}
+		  $("#NoticeInfotable").html(ht);
+		}catch(e)
+		{
+			alert(e.message);
+		}
+		}
+		function updateInfo(infoId){
+				var xurl="pages/pro08/noticeInfo.html?optType=update&infoId="+infoId;
+				top.openDialog("查看通知公告",xurl,true,800,450,saveCallBack);
+			}
+			function saveCallBack(){
+				queryNotice();
+			}
+</script>
+
+<style type="text/css">
+body {font-size: 62.5%;float: center; margin: 0;
+          height:100%;width: 100%; overflow-x: hidden; overflow-y: auto; }
+    .main { float: center;margin:10px; }
+	.column { width: 100%; float: center;}
+	.portlet { margin: 0 1em 0.5em 0.5em; float: center; }
+	.portlet-header { margin: 0.3em; padding-bottom: 4px; padding-left: 0.2em; cursor: pointer;}
+	.portlet-header .ui-icon { float: right; }
+	.portlet-content { padding: 0.4em; }
+	.ui-sortable-placeholder { border: 1px dotted black; visibility: visible !important; height: 265px !important; }
+	.ui-sortable-placeholder * { visibility: hidden; }
+</style>
+
+</head>
+<body>
+<div style="display:none" id="audio"></div>
+
+<div class="main">
+<!--
+ <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+                <tr align="center">
+                <td class="tbody_td" width="150" height="100">
+                    <a href="javascript:void(0)" onclick="javascript:top.toSysTab('委托调查','pages/pro08/delegateManage.html')"><img src="images/main_add.jpg" width="60" height="60" border="0" /><br />委托调查管理</a>
+                </td>
+                <td class="tbody_td" width="150" height="100">
+                  <a href="javascript:void(0)" onclick="javascript:top.toSysTab('服刑人员信息','pages/pro08/CorrectionUserManage.html')"><img src="images/1-1.jpg" width="60" height="60" border="0" /><br />服刑人员信息</a></td>
+                <td class="tbody_td" width="150" height="100">
+                   <a href="javascript:void(0)" onclick="javascript:top.toSysTab('每月评估报告','pages/pro08/reportInfo.html')"><img src="images/1-2.jpg" width="60" height="60" border="0" /><br />每月评估报告</a></td>
+                <td class="tbody_td" width="150" height="100">
+                	<a href="javascript:void(0)"  onclick="javascript:top.toSysTab('数据图形分析','pages/pro08/chartAnalysis.html')"><img src="images/1-9.jpg" width="60" height="60" border="0" /><br />数据图形分析</a>
+                </td>
+                <td class="tbody_td" width="150">
+                	<a href="javascript:void(0)" onclick="javascript:top.toSysTab('人员信息统计','pages/pro08/InfoCount.html')"><img src="images/main_lbs.jpg" width="60" height="60" border="0" /><br />人员信息统计</a>
+                </td>
+                <td class="tbody_td" width="150" height="100">
+                	<a href="javascript:void(0)" onclick="javascript:top.toSysTab('活动范围管理','pages/pro08/AreaManage.html')"><img src="images/1-3.jpg" width="60" height="60" border="0" /><br />活动范围管理</a>
+                </td>
+                <td class="tbody_td" width="150">
+                	<a href="javascript:void(0)" onclick="javascript:top.toSysTab('个人定位跟踪','pages/pro08/pathManage.html')"><img src="images/warn.png" width="60" height="60" border="0" /><br />个人定位跟踪</a>
+                </td>
+                <td>&nbsp;</td>
+            </tr>
+            <tr align="center">
+                <td class="tbody_td" width="150" height="100">
+                	<a href="javascript:void(0)"  onclick="javascript:top.toSysTab('部门定位跟踪','pages/pro08/pathGroupManage.html')"><img src="images/1-5.jpg" width="60" height="60" border="0" /><br />部门定位跟踪</a>
+                </td>
+                <td class="tbody_td" width="150" height="100">
+            <a href="javascript:void(0)" onclick="javascript:top.toSysTab('轨迹列表查询','pages/pro08/pathQuery.html')"><img src="images/1-4.jpg" width="60" height="60" border="0" /><br />轨迹列表查询</a>
+            </td>
+                <td class="tbody_td" width="150">
+            <a href="javascript:void(0)" onclick="javascript:top.toSysTab('禁区信息管理','pages/pro08/forbiddenAreaManage.html')"><img src="images/main_doc.jpg" width="60" height="60" border="0" /><br />禁区信息管理</a></td>
+                <td class="tbody_td" width="150" height="100">
+             <a href="javascript:void(0)" onclick="javascript:top.toSysTab('进入特定区域','pages/pro08/specialInfo.html')"><img src="images/1-6.jpg" width="60" height="60" border="0" /><br />进入特定区域</a></td>
+                <td class="tbody_td" width="150" height="100">
+             <a href="javascript:void(0)" onclick="javascript:top.toSysTab('居住地变更','pages/pro08/addressInfo.html')"><img src="images/1-7.jpg" width="60" height="60" border="0" /><br />居住地变更</a></td>
+             <td class="tbody_td" width="150">
+             <a href="javascript:void(0)" onclick="javascript:top.toSysTab('外出申请管理','pages/pro08/holidayInfoManage.html')"><img src="images/main_tixing.jpg" width="60" height="60" border="0" /><br />外出申请管理</a></td>
+             <td class="tbody_td" width="150"><a href="javascript:void(0)" onclick="javascript:top.toSysTab('工作队伍管理','pages/pro08/workGroupManage.html')"><img src="images/main_daiban.jpg" width="60" height="60" border="0" /><br />工作队伍管理</a>
+           </td>
+            </tr>
+        </table>
+	!-->
+ <p><input type="checkbox" id ="isPlayAlert"  checked><b>开启声音提示</b></p><br>
+<div id="column1" class="column">
+	<div id="c1p2" class="portlet">
+		<div class="portlet-header"></div>
+		<div class="portlet-content">
+		  <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="todoDataTable"></table>
+		</div>
+	</div>
+	<div id="c1p3" class="portlet">
+	   <div class="portlet-header"></div>
+		<div class="portlet-content" >
+		   <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="correctdataTable"></table>
+		</div>
+	</div>
+	<div id="c1p1" class="portlet">
+		<div class="portlet-header"></div>
+		<div class="portlet-content">
+		  <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="alarmDataTable"></table>
+		</div>
+	</div>
+	
+    <!--<div id="c1p3" class="portlet">
+	  <div class="portlet-header"></div>
+		<div class="portlet-content" >
+		   <table id="NoticeInfotable" cellpadding="0" cellspacing="0" style="background-color:#ffffff;margin:10px;">
+	        </table>
+		</div>
+	</div>!-->
+	
+	<div id="c1p4" class="portlet">
+	   <div class="portlet-header"></div>
+		<div class="portlet-content" >
+		   <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="mainCountDataTable"></table>
+		</div>
+	</div>
+</div>
+
+
+</body>
+</html> 

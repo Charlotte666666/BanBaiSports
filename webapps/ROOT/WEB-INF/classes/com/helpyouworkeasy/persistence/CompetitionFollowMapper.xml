@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.helpyouworkeasy.persistence.CompetitionFollowMapper">
+
+  <insert id="insertCompetitionFollow" parameterType="CompetitionFollow">
+    INSERT INTO tbl_competition_follow (user_id,schedule_id,opt_time,id)
+    VALUES (#{user_id}, #{schedule_id}, #{opt_time}, #{id})
+  </insert>
+
+  <update id="updateCompetitionFollow" parameterType="CompetitionFollow">
+    update tbl_competition_follow set 
+    user_id=#{user_id},schedule_id=#{schedule_id},opt_time=#{opt_time}
+    where id=#{id}
+  </update>
+  
+  <delete id="deleteCompetitionFollow" parameterType="CompetitionFollow">
+     delete from tbl_competition_follow where user_id=#{user_id} and schedule_id=#{schedule_id} 
+  </delete>
+
+  <select id="getCompetitionFollowListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_competition_follow where 1=1 
+    <if test="o.user_id != -1" >
+      and user_id=#{o.user_id}
+    </if>
+    <if test="o.schedule_id != -1" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+  </select>
+
+  <select id="getCompetitionFollowPageList" parameterType="map" resultType="CompetitionFollow">
+    select 
+    user_id,schedule_id,opt_time,id
+    from tbl_competition_follow where 1=1 
+    <if test="o.user_id != -1" >
+      and user_id=#{o.user_id}
+    </if>
+    <if test="o.schedule_id != -1" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+  
+  <select id="getCompetitionFollowListByUsercode" parameterType="map" resultType="CompetitionFollow">
+    select 
+    user_id,schedule_id,opt_time,id
+    from tbl_competition_follow where user_id=#{user_id}
+  </select>
+
+</mapper>

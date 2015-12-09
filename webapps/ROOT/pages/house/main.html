@@ -1,0 +1,735 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+
+<script type="text/javascript">
+var nodesObjs=[];
+var interGetResult1=0;
+var interGetResult2=0;
+var interGetResult3=0;
+var currentUserCode="";
+var toDateStr="";
+var to30DateStr="";
+var ownerRentTable=null;
+var custRentTable=null;
+var ownerContractTable=null;
+var custContractTable=null;
+var saleHouseTable=null;
+var rentRoomTable=null;
+
+// 交租提醒
+var ownerRentColumns= [
+              { "sTitle": "房源编号", "mDataProp": "house_id", "sWidth": "10%", "sClass": "center","bSortable":false,
+	            "fnRender": function ( oObj ) {
+                    return "<a href='javascript:void(0)' onclick='updateHouse(\""+oObj.aData.house_id+"\")'>"+oObj.aData.house_id+"</a>";
+                },
+                "bUseRendered": false 
+	          },
+		       { "sTitle": "业主姓名", "mDataProp": "owner_name", "sWidth": "10%", "sClass": "center","bSortable":false},
+		       { "sTitle": "金额", "mDataProp": "amount","sWidth": "10%", "sClass": "center","bSortable":false},
+               { "sTitle": "交租日期", "mDataProp": "pay_date", "sWidth": "10%", "sClass": "center","bSortable":true,
+                   "fnRender": function ( oObj ) {
+                       return top.getTimeStr( oObj.aData.pay_date, true );
+                    },
+                   "bUseRendered": false  
+               }
+];
+
+// 收租提醒
+var custRentColumns= [
+	 { "sTitle": "房间编号", "mDataProp": "room_id", "sWidth": "10%","sClass": "center","bSortable":false,
+            "fnRender": function ( oObj ) {
+               return "<a href='javascript:void(0)' onclick='showRoomInfo(\""+oObj.aData.house_id+"\",\""+oObj.aData.room_id+"\")'>"+oObj.aData.room_id+"</a>";
+            },
+            "bUseRendered": false 
+    },
+	{ "sTitle": "租房客户", "mDataProp": "cust_name", "sWidth": "10%", "sClass": "center","bSortable":false},
+	{ "sTitle": "客户电话", "mDataProp": "cust_tel", "sWidth": "10%", "sClass": "center","bSortable":false},
+	{ "sTitle": "金额", "mDataProp": "amount","sWidth": "10%", "sClass": "center","bSortable":false},
+	{ "sTitle": "收租日期", "mDataProp": "pay_date", "sWidth": "10%", "sClass": "center","bSortable":true,
+         "fnRender": function ( oObj ) {
+              return top.getTimeStr( oObj.aData.pay_date, true );
+         },
+         "bUseRendered": false  
+     }
+ ];
+ 
+// 出租合同到期提醒
+var custContractColumns= [
+		  { "sTitle": "合同编号", "mDataProp": "code", "sWidth": "10%","sClass": "center","bSortable":false,
+                      "fnRender": function ( oObj ) {
+                        return "<a href='javascript:void(0)' onclick='showRoomContract(\""+oObj.aData.code+"\")'>"+oObj.aData.code+"</a>";
+                      },
+                      "bUseRendered": false 
+          },
+          { "sTitle": "房间编号", "mDataProp": "room_id", "sWidth": "10%","sClass": "center","bSortable":false,
+                     "fnRender": function ( oObj ) {
+                         return "<a href='javascript:void(0)' onclick='showRoomInfo(\""+oObj.aData.house_id+"\",\""+oObj.aData.room_id+"\")'>"+oObj.aData.room_id+"</a>";
+                     },
+                     "bUseRendered": false 
+          },
+		  { "sTitle": "小区", "mDataProp": "belong_area", "sWidth": "10%","sClass": "center","bSortable":false,
+				   "fnRender": function ( oObj ) {
+                      return top.getCodeName( "HOUSE_BELONG", oObj.aData.belong_area );
+                   },
+                   "bUseRendered": false
+		  },
+		  { "sTitle": "门牌号", "mDataProp": "house_number", "sWidth": "20%","sClass": "center","bSortable":false},
+          { "sTitle": "租客姓名", "mDataProp": "cust_name", "sWidth": "10%", "sClass": "center","bSortable":false},
+		  { "sTitle": "到期日期", "mDataProp": "end_renttime", "sWidth": "10%", "sClass": "center","bSortable":true,
+                 "fnRender": function ( oObj ) {
+                    return top.getTimeStr( oObj.aData.end_renttime, true );
+                 },
+                  "bUseRendered": false  
+          }
+ ];
+ 
+// 承租合同到期提醒
+var ownerContractColumns= [
+	 { "sTitle": "合同编号", "mDataProp": "code", "sWidth": "10%","sClass": "center","bSortable":false,
+             "fnRender": function ( oObj ) {
+                 return "<a href='javascript:void(0)' onclick='showOwnerContract(\""+oObj.aData.house_id+"\",\""+oObj.aData.code+"\",\""+oObj.aData.status+"\")'>"+oObj.aData.code+"</a>";
+             },
+            "bUseRendered": false 
+     },
+	 { "sTitle": "房源编号", "mDataProp": "house_id", "sWidth": "10%","sClass": "center","bSortable":false,
+			   "fnRender": function ( oObj ) {
+                     return "<a href='javascript:void(0)' onclick='updateHouse(\""+oObj.aData.house_id+"\")'>"+oObj.aData.house_id+"</a>";
+              },
+              "bUseRendered": false 
+	 },
+	{ "sTitle": "小区", "mDataProp": "belong_area", "sWidth": "10%","sClass": "center","bSortable":false,
+			  "fnRender": function ( oObj ) {
+                  return top.getCodeName( "HOUSE_BELONG", oObj.aData.belong_area );
+             },
+           "bUseRendered": false
+	},
+	{ "sTitle": "门牌号", "mDataProp": "house_number", "sWidth": "20%","sClass": "center","bSortable":false},
+    { "sTitle": "业主姓名", "mDataProp": "owner_name", "sWidth": "10%", "sClass": "center","bSortable":false},
+	{ "sTitle": "到期时间", "mDataProp": "end_renttime", "sWidth": "10%", "sClass": "center","bSortable":true,
+            "fnRender": function ( oObj ) {
+                 return top.getTimeStr( oObj.aData.end_renttime, true );
+            },
+         "bUseRendered": false  
+     }
+ ];
+ 
+ // 最新出租单间房源
+var rentRoomColumns= [
+	 { "sTitle": "房间编号", "mDataProp": "roomId", "sWidth": "10%","bSortable":false,
+			 "fnRender": function ( oObj ) {
+                 return '<a href=\'javascript:void(0)\' onclick="showRoomInfo(\''+oObj.aData.id+'\',\''+oObj.aData.roomId+'\')" >'+oObj.aData.roomId+"</a>" ;
+              },
+		   "bUseRendered": false
+	  },
+	  { "sTitle": "小区", "mDataProp": "belong_area", "sWidth": "10%","sClass": "center","bSortable":false,
+             "fnRender": function ( oObj ) {
+                 return top.getCodeName( "HOUSE_BELONG", oObj.aData.belong_area );
+             },
+           "bUseRendered": false 
+      },
+	  { "sTitle": "门牌号", "mDataProp": "house_number", "sWidth": "20%","bUseRendered": false,"bSortable":false},
+	  { "sTitle": "租金(元/月)", "mDataProp": "roomRentPrice", "sWidth": "10%","sClass": "center","bUseRendered": false,"bSortable":false},
+	  { "sTitle": "房间面积", "mDataProp": "farea", "sWidth": "10%","sClass": "center","bUseRendered": false,"bSortable":false},
+	  { "sTitle": "房间类型", "mDataProp": "roomType", "sWidth": "10%", "sClass": "center","bSortable":false,
+           "fnRender": function ( oObj ) {
+                return top.getCodeName( "HOUSE_ROOM_TYPE", oObj.aData.roomType );
+           },
+         "bUseRendered": false  
+      }
+   ];
+
+ // 最新买卖房源
+var saleHouseColumns= [
+ { "sTitle": "房源编号", "mDataProp": "id", "sWidth": "10%","bSortable":false,
+	   "fnRender": function ( oObj ) {
+            return '<a href=\'javascript:void(0)\' onclick="updateSaleHouse(\''+oObj.aData.id+'\')" >'+oObj.aData.id+"</a>" ;
+       },
+	  "bUseRendered": false
+   },
+ { "sTitle": "小区", "mDataProp": "belong_area", "sWidth": "10%","sClass": "center","bSortable":false,
+       "fnRender": function ( oObj ) {
+           return top.getCodeName( "HOUSE_BELONG", oObj.aData.belong_area );
+       },
+     "bUseRendered": false 
+ },
+ { "sTitle": "门牌号", "mDataProp": "house_number", "sWidth": "20%","bUseRendered": false,"bUseRendered": false,"bSortable":false},
+ { "sTitle": "总价(万元)", "mDataProp": "total_price", "sWidth": "10%","sClass": "center","bUseRendered": false,"bSortable":false},
+ { "sTitle": "建筑面积", "mDataProp": "struct_farea", "sWidth": "10%","sClass": "center","bUseRendered": false,"bSortable":false}
+];
+
+
+ 
+$(document).ready( function() {
+   var d=new Date();
+   toDateStr=top.top.getTimeStr( (d.getTime()+7*24*60*60000), true );
+   to30DateStr=top.top.getTimeStr( (d.getTime()+30*24*60*60000), true );
+   var ww=$(window).width();
+   var boxWidth=(ww-60)/2;
+   $('#box_newestList').css({"left":"20px","top":"20px","width":boxWidth+"px"});
+   $('#box_getRentPayRemindList').css({"left":(boxWidth+40)+"px","top":"20px","width":boxWidth+"px"});
+   getNewestHouseRoomList();
+   getRentPayRemindList();
+   getContractRemindList();
+});
+
+/* 交租和收租提醒 */
+function getRentPayRemindList(){
+               // 交租提醒
+			   var surl=top.getUrlBase()+"/actions/HouseMain.action?getTblHouseRentList";
+			   ownerRentTable = $('#ownerRentDataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":10,
+					"aaSorting": [[ 3, "asc" ]],
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+					aoData.push( { "name": "time1", "value": "" } );
+					aoData.push( { "name": "time2", "value": toDateStr } );
+					aoData.push( { "name": "rent.contract_code", "value": "" } );
+					aoData.push( { "name": "custName", "value": "" } );
+				    aoData.push( { "name": "rent.house_id", "value": -1  } );
+					aoData.push( { "name": "rent.rent_type", "value": '1' } );
+					aoData.push( { "name": "rent.owner_id", "value": -1 } );
+					aoData.push( { "name": "rent.cust_id", "value": -1 } );
+					aoData.push( { "name": "rent.status", "value": 0 } );
+			    },
+			    "sDom": "frt",
+				"sPaginationType": "full_numbers",
+				"aoColumns": ownerRentColumns
+				} );
+				
+				// 收租提醒
+			   surl=top.getUrlBase()+"/actions/HouseMain.action?getTblHouseRentList";
+			   custRentTable = $('#custRentDataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":10,
+					"aaSorting": [[ 3, "asc" ]],
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+					aoData.push( { "name": "time1", "value": "" } );
+					aoData.push( { "name": "time2", "value": toDateStr } );
+				    aoData.push( { "name": "rent.house_id", "value": -1 } );
+					aoData.push( { "name": "rent.room_id", "value": -1  } );
+					aoData.push( { "name": "rent.rent_type", "value": '0' } );
+					aoData.push( { "name": "rent.owner_id", "value": -1 } );
+					aoData.push( { "name": "rent.cust_id", "value": -1 } );
+					aoData.push( { "name": "rent.status", "value":0 } );
+			    },
+			    "sDom": "frt",
+				"sPaginationType": "full_numbers",
+				"aoColumns": custRentColumns
+				} );
+				
+     try{
+	   clearInterval( interGetResult3 );
+	   interGetResult3 = setInterval("getRentPayRemindList()", 70000 );
+	 }catch(e){}
+}
+
+/* 合同到期提醒 */
+function getContractRemindList(){
+   var surl=top.getUrlBase()+"/actions/Contract.action?getTblCustContractList";
+   custContractTable = $('#custContractdataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":10,
+					"aaSorting": [[ 5, "asc" ]],
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+					aoData.push( { "name": "time1", "value": "" } );
+					aoData.push( { "name": "time2", "value": to30DateStr } );
+					aoData.push( { "name": "custcontract.code", "value":"" } );
+					aoData.push( { "name": "custName", "value": "" } );
+					aoData.push( { "name": "custcontract.house_id", "value": -1 } );
+					aoData.push( { "name": "custcontract.room_id", "value": -1 } );
+					aoData.push( { "name": "custcontract.status", "value": 0 } );
+			    },
+			    "sDom": "frt",
+				"sPaginationType": "full_numbers",
+				"aoColumns": custContractColumns
+				} );
+				
+	surl=top.getUrlBase()+"/actions/Contract.action?getTblOwnerContractList";
+    ownerContractTable = $('#ownerContractdataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":10,
+					"aaSorting": [[ 5, "asc" ]],
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+					aoData.push( { "name": "time1", "value": "" } );
+					aoData.push( { "name": "time2", "value": to30DateStr } );
+					aoData.push( { "name": "ownercontract.house_id", "value": -1 } );
+					aoData.push( { "name": "ownercontract.status", "value": -1 } );
+			    },
+			    "sDom": "frt",
+				"sPaginationType": "full_numbers",
+				"aoColumns": ownerContractColumns
+				} );
+}
+
+/* 最新房源 */
+function getNewestHouseRoomList(){
+   var surl=top.getUrlBase()+"/actions/HouseMain.action?getTblHouseInfoList";
+   saleHouseTable = $('#saleHousedataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":10,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+					aoData.push( { "name": "house.owner_id", "value": -1 } );
+					aoData.push( { "name": "house.category", "value": 1 } );
+				    aoData.push( { "name": "price1", "value": -1 } );
+					aoData.push( { "name": "price2", "value": -1 } );
+					aoData.push( { "name": "floor1", "value": -1 } );
+					aoData.push( { "name": "floor2", "value": -1 } );
+					aoData.push( { "name": "farea1", "value": -1 } );
+					aoData.push( { "name": "farea2", "value": -1 } );
+					aoData.push( { "name": "opt", "value": "NEW" } );
+					aoData.push( { "name": "house.num_bedroom", "value": -1 } );
+					aoData.push( { "name": "house.status", "value": 0 } );
+					aoData.push( { "name": "house.id", "value": -1 } );
+			    },
+			    "sDom": "frt",
+				"sPaginationType": "full_numbers",
+				"aoColumns": saleHouseColumns
+    } );
+
+   
+    surl=top.getUrlBase()+"/actions/HouseMain.action?getRoomWithHouseInfoList";
+    rentRoomTable = $('#rentRoomdataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":10,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+					aoData.push( { "name": "house.owner_id", "value": -1 } );
+					aoData.push( { "name": "house.category", "value": 0 } );
+				    aoData.push( { "name": "price1", "value": -1 } );
+					aoData.push( { "name": "price2", "value": -1 } );
+					aoData.push( { "name": "floor1", "value":-1 } );
+					aoData.push( { "name": "floor2", "value":-1 } );
+					aoData.push( { "name": "farea1", "value":-1 } );
+					aoData.push( { "name": "farea2", "value":-1 } );
+					aoData.push( { "name": "opt", "value": "NEW" } );
+					aoData.push( { "name": "house.num_bedroom", "value": -1 } );
+					aoData.push( { "name": "house.status", "value": 0 } );
+					aoData.push( { "name": "house.roomId", "value": -1 } );
+			    },
+			    "sDom": "frt",
+				"sPaginationType": "full_numbers",
+				"aoColumns": rentRoomColumns
+	 } );
+
+	 try{
+	   clearInterval( interGetResult1 );
+	   interGetResult1 = setInterval("getNewestHouseRoomList()", 60000 );
+	 }catch(e){}
+}
+
+/* 备忘录提醒 */
+function getNotesList(){
+   nodesObjs=[];
+   var aoData=[];
+   aoData.push( { "name": "time4", "value": 'NOW' } );
+   aoData.push( { "name": "info.status", "value": 0 } );
+   try{
+     top.sendAjaxRequest("/actions/Notes.action?getNotesInfoList",aoData,optGetNotesCallback,true);
+     clearInterval( interGetResult2 );
+	 interGetResult2 = setInterval("getNotesList()", 310000 );
+   }catch(e){}
+}
+
+function optGetNotesCallback(obj){
+   try{
+    nodesObjs=obj.aaData;
+	if ( nodesObjs.length == 0 ) {
+	  $("#notesTD").html( "您没有要提醒的备忘录信息" );
+ 	  return ;
+	}
+    var ht='<div style="overflow: auto;width:100%;height:170px" ><table width="100%" style="padding: 2px;" border="0">';
+	for ( var i=0;i<nodesObjs.length;i++ ) {
+	  ht+="<tr><td style='margin: 10px; padding: 10px;'>"+(i+1)+"、 <a href='javascript:void(0)' onclick=\"showNodesDetail("+nodesObjs[i].notes_id+")\" >"+nodesObjs[i].notes_desc+"</a></td></tr>";
+	}
+	ht+='</table></div>';
+	$("#notesTD").html( ht );
+   }catch(e){
+   }
+}
+
+function updateHouse(id){
+	var xurl="pages/house/houseInfo.html?opt=update&id="+id;
+	top.openDialog("内部出租房源信息",xurl,true,1100,660,viewHouseCallBack());
+}
+
+function showRoomInfo(houseId,roomId){
+ var xurl="pages/house/houseInfo.html?opt=update&id="+houseId+"&roomId="+roomId;
+ top.openDialog("出租房源信息",xurl,true,1200,660,null);
+}
+		   
+function showRoomContract(code){
+  var xurl="pages/house/houseContractInfo.html?code="+code+"&status=-1";
+  top.openDialog("出租合同信息",xurl,true,800,600,null);
+}
+
+function showOwnerContract(id,code,status){
+    var xurl="pages/house/ownerContractInfo.html?code="+code;
+	if ( status == 0 ) {
+	   xurl="pages/house/houseInfo.html?opt=update&toTab=contract&id="+id;
+	   top.openDialog("内部出租房源信息",xurl,true,1200,700,saveCallBack);
+    } else {
+	   top.openDialog("承租合同信息",xurl,true,1200,700,null);
+	}
+}
+
+function updateSaleHouse(id){
+	var xurl="pages/house/houseSaleInfo.html?opt=update&id="+id;
+	top.openDialog("买卖房源信息",xurl,true,1100,660,viewSaleHouseCallBack);
+}
+
+function showNodesDetail(code){
+	top.setTempValue( getNoteObj(code) );
+	var xurl="pages/notes/notesInfo.html?opt=update&infoId="+code;
+	top.openDialog("备忘录信息",xurl,true,600,400,viewNoteCallBack);
+}
+
+function getNoteObj(infoId){
+   for ( var i=0;i<nodesObjs.length;i++ ) {
+     if ( nodesObjs[i].notes_id == infoId ) return nodesObjs[i];
+   }
+   return null;
+}
+
+function viewHouseCallBack(obj){
+   
+}
+
+function viewSaleHouseCallBack(obj){
+
+}
+
+function viewNoteCallBack(){
+	try{
+	  var obj = top.getTempValue();
+	  if ( obj.isSaveOK ) getNotesList();
+	}catch(e){
+	}
+}
+
+// 租房客户登记
+function addRentCustInfo(){
+  var xurl="pages/house/custRent.html?optType=insert";
+  top.openDialog("登记我的出租客源信息",xurl,true,500,450,null);
+}
+// 买卖客户登记
+function addBuyCustInfo(){
+  var xurl="pages/house/custBuyInfo.html?optType=insert";
+  top.openDialog("登记我的买卖客户信息",xurl,true,600,550,null);
+}
+</script>
+
+<style type="text/css">
+* html .ui-autocomplete {
+	height: 100px;
+	width: 40px;
+}
+
+* {
+    font-family: Arial, "Free Sans";
+}
+#box {
+    margin-top: 45px;
+	margin-left: 12px;
+}
+.bt, .clicked {
+    height: 20px;
+    color: #666;
+    font-size: 13px;
+    padding: 4px 10px;
+    text-decoration: none;
+    background: #f9f9f9;
+}
+#box .bt {
+    background: -moz-linear-gradient(top,  #fff,  #f3f3f3);
+    background: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#f3f3f3));
+
+    /* For Internet Explorer 5.5 - 7 */
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#ffffff, endColorstr=#f3f3f3);
+    /* For Internet Explorer 8 */
+    -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#ffffff, endColorstr=#f3f3f3)";
+}
+#box .bt:hover {
+    background: #f3f3f3;
+    background: -moz-linear-gradient(top,  #fff,  #e9e9e9);
+    background: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#e9e9e9));
+
+    /* For Internet Explorer 5.5 - 7 */
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#ffffff, endColorstr=#e9e9e9);
+    /* For Internet Explorer 8 */
+    -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#ffffff, endColorstr=#e9e9e9)";
+}
+#box .bt:active, .clicked {
+    background: #e9e9e9;
+    background: -moz-linear-gradient(top,  #e9e9e9,  #fff);
+    background: -webkit-gradient(linear, left top, left bottom, from(#e9e9e9), to(#fff));
+
+    /* For Internet Explorer 5.5 - 7 */
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#e9e9e9, endColorstr=#ffffff);
+    /* For Internet Explorer 8 */
+    -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#e9e9e9, endColorstr=#ffffff)";
+}
+
+.tuxing {
+	width: 280px;
+	position: absolute; 
+}
+.tab_ty {
+}
+.tab_ty table .tab_t2 {
+	background-image: url(../../img/table_t2.png);
+	background-repeat: repeat-x;
+	padding-top: 6px;
+}
+.tab_ty table .tab_m1 {
+	background-image: url(../../img/table_m1.png);
+	background-repeat: repeat-y;
+}
+.tab_ty table .tab_m2 {
+	background-image: url(../../img/table_m2.png);
+	background-repeat: repeat;
+	font-size: 14px;
+	color: #151515;
+	font-weight:normal;
+}
+.tab_ty table .tab_m3 {
+	background-image: url(../../img/table_m3.png);
+	background-repeat: repeat-y;
+}
+.tab_ty table tr .tab_b2 {
+	background-image: url(../../img/table_b2.png);
+	background-repeat: repeat-x;
+}
+</style>
+
+</head>
+<body>
+
+ <div id="box_newestList" class="tuxing" style="width: 400px;height:200px">
+	  <div class="tab_ty">
+		<table width="100%" border="0" cellspacing="0" cellpadding="0">
+		  <tr id="box_newestList_top">
+			<td width="20" align="left" valign="top"><img src="../../img/table_t1.png" width="20" height="36" /></td>
+			<td align="left" valign="top" class="tab_t2"><table border="0" cellspacing="0" cellpadding="0">
+				<tr>
+				  <td width="34px" height="24px" align="left" valign="bottom"><img src="../../img/tab_icon7.png" width="20" height="20" /></td>
+				  <td width="100px" align="left" valign="bottom"><font color="#0778C5">最新房源</font></td>
+				  <td width="150px" align="center" valign="bottom"><div id="addRentCustBtn" class="buttonDivSix"><a href="javascript:addRentCustInfo()">租房客户登记</a></div></td>
+				  <td width="10px">&nbsp;</td>
+				  <td width="120px" align="center" valign="bottom"><div id="addRentCustBtn" class="buttonDivSix"><a href="javascript:addBuyCustInfo()">买卖客户登记</a></div></td>
+				</tr>
+			  </table></td>
+			<td width="15" align="left" valign="top"><img src="../../img/table_t3.png" width="15" height="36" /></td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top" class="tab_m1">&nbsp;</td>
+			<td align="left" valign="top" class="tab_m2"><br/>
+			  最新买卖房源：<br/>
+			  <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="saleHousedataTable"></table>
+			  <br/>
+			  最新出租单间房源：<br/>
+			  <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="rentRoomdataTable"></table>
+			</td>
+			<td align="left" valign="top" class="tab_m3">&nbsp;</td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top"><img src="../../img/table_b1.png" width="20" height="15" /></td>
+			<td align="left" valign="top" class="tab_b2">&nbsp;</td>
+			<td align="left" valign="top"><img src="../../img/table_b3.png" width="15" height="15" /></td>
+		  </tr>
+		</table>
+	  </div>
+ </div>
+ 
+   <div id="box_getRentPayRemindList" class="tuxing" style="width: 400px;height:200px">
+	  <div class="tab_ty">
+		<table width="100%" border="0" cellspacing="0" cellpadding="0">
+		  <tr id="box_getRentPayRemindList_top">
+			<td width="20" align="left" valign="top"><img src="../../img/table_t1.png" width="20" height="36" /></td>
+			<td align="left" valign="top" class="tab_t2"><table border="0" cellspacing="0" cellpadding="0">
+				<tr>
+				  <td width="34" height="24" align="left" valign="bottom"><img src="../../img/tab_icon5.png" width="20" height="20" /></td>
+				  <td align="left" valign="bottom"><font color="#0778C5">提醒信息</font></td>
+				</tr>
+			  </table></td>
+			<td width="15" align="left" valign="top"><img src="../../img/table_t3.png" width="15" height="36" /></td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top" class="tab_m1">&nbsp;</td>
+			<td align="left" valign="top" class="tab_m2"><br/>
+			  收租提醒：<br/>
+			  <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="custRentDataTable"></table>
+			  <br/>
+			  交租提醒：<br/>
+			  <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="ownerRentDataTable"></table>
+			  <br/>
+			  出租合同到期提醒：<br/>
+			  <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="custContractdataTable"></table>
+			  <br/>
+			  承租合同到期提醒：<br/>
+			  <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="ownerContractdataTable"></table>
+			</td>
+			<td align="left" valign="top" class="tab_m3">&nbsp;</td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top"><img src="../../img/table_b1.png" width="20" height="15" /></td>
+			<td align="left" valign="top" class="tab_b2">&nbsp;</td>
+			<td align="left" valign="top"><img src="../../img/table_b3.png" width="15" height="15" /></td>
+		  </tr>
+		</table>
+	  </div>
+ </div>
+ 
+</body>
+</html> 

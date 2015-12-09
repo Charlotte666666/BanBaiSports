@@ -1,0 +1,103 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css" media="print, projection, screen">
+<script src="../../js/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+<script type="text/javascript" src="js/correctionInfo.js"></script>
+<script type="text/javascript">
+ 
+   var isCreated=false;
+   var optType="";
+   
+   $(document).ready(function() {
+		optType=top.getUrlParam(document.URL,"optType");
+   } );
+   function saveBaseInfo(){
+	 var aoData=[];
+
+     var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 } 
+	     
+	     aoData.push( { "name": "studyRecd.prison_code", "value": $("#prison_code").val() } );
+		 aoData.push( { "name": "studyRecd.study_time", "value": top.toTimestamp($("#study_time").val()) } );
+         aoData.push( { "name": "studyRecd.addr", "value": $("#addr").val() } );
+		 aoData.push( { "name": "studyRecd.study_content", "value": $("#study_content").val() } );
+		 aoData.push( { "name": "studyRecd.duration", "value": $("#duration").val() } );
+
+	 if ( optType == 'insert' ) {
+	    var xurl="/actions/StudyRecd.action?insertStudyRecd";
+	 }
+	   top.sendAjaxRequest(xurl,aoData,optCallback);
+   }
+   
+   function checkForm(){
+     var msg = "";
+	 if ( optType == 'insert' ) {
+	     msg += checkString($("#prison_code").val(),true,20,"服刑人员编号");
+		 msg += checkString($("#study_time").val(),true,20,"学习服务时间");
+		 msg += checkString($("#addr").val(),true,256,"学习服务地点");
+		 msg += checkString($("#study_content").val(),true,256,"学习服务内容");
+		 msg += checkString($("#duration").val(),true,20,"学习服务时长");
+	 }
+     return msg;
+   }
+
+    function doBeforeClose(){
+     var obj={
+    		  "isCreated":isCreated
+    		};
+           top.setTempValue(obj);
+   }
+   
+    function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	        isCreated = true;
+	        top.showInfoWinOK("操作成功");
+		    top.closeDialog();
+	    }else{
+	    	isCreated = false;
+	        top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		    top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+
+  </script> 
+</head>
+<body>
+<br/>
+  <table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				<tr class="tr_data">
+				    <td>服刑人员编号</td><td align="left"><input type="text" id="prison_code" value="" /></td>
+				    <td>学习服务时间</td>
+					<td align="left"><input type="text" id="study_time" value="" onclick="new Calendar().show(this);" size="15" /></td>
+					<td>学习服务地点</td><td align="left"><input type="text" id="addr" value="" /></td>
+				</tr>
+				<tr class="tr_data">
+					<td>学习服务内容</td><td align="left"><input type="text" id="study_content" value="" /></td>			 
+					<td>学习服务时长</td><td align="left"><input type="text" id="duration" value="" /></td>
+					<td></td>
+					<td></td>
+				</tr>
+				
+		</table>
+		<p align="center" id="optBtnArea">
+		   <table><tr>
+					<td><span id="okBtn" class="buttonTwo"><a href="javascript:saveBaseInfo()">提交</a></span></td>
+					<td><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">取消</a></span></td>
+		   </tr></table>
+		</p>
+</body>
+</html>

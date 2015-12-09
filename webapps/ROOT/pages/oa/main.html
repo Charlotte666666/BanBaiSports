@@ -1,0 +1,56 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+<style type="text/css">
+ td{
+   border: 1px solid #89A1B9
+ }
+</style>
+<script type="text/javascript">
+var interGetResult1=0;
+var currentUserCode="";
+
+$(document).ready( function() {
+  //startFlow
+  getMyFlow();
+});
+function getMyFlow(){
+ var xurl="/actions/WorkOrder.action?getStartFlowList";
+ top.sendAjaxRequest(xurl,null,getMyFlowCallback);
+}
+ function openStartFlowForm(flow_id,flow_name,startTemplateId){
+       var xurl="pages/oa/flowStartInstance.html?flow_id="+flow_id+"&flow_name="+flow_name+"&startTemplateId="+startTemplateId;
+       top.openDialog("创建流程实例【"+flow_name+"】",xurl,true,600,350,null);
+}
+function getMyFlowCallback(obj){
+	var myFlows=obj.aaData;
+	var ht="";
+	if(myFlows){
+	        ht+="<tr class='tr_data' style='background-color: #b9d8f3;'><td>流程名称</td><td>操作</td><td >工单状态</td><td>临近超时</td></tr>"
+		for(var i=0;i<myFlows.length;i++){
+			ht+='<tr class="tr_data"><td align="left" width="30%">【'+myFlows[i].flow_name+'】';
+			ht+='</td><td align="center" width="10%"><div class="buttonDivTwo"><a onclick="openStartFlowForm(\''+myFlows[i].flow_id+'\',\''+myFlows[i].flow_name+'\',\''+myFlows[i].startTemplateId+'\')">创建</a></div></td>';
+			ht+="<td width='30%'>待处理【<span style='color:red'>2</span>】&nbsp;&nbsp;&nbsp;处理中【<span style='color:red'>10</span>】&nbsp;&nbsp;&nbsp;处理完成【<span style='color:red'>2</span>】</td>";
+			ht+="<td width='30%'>已超时【<span style='color:red'>1</span>】&nbsp;&nbsp;&nbsp;黄牌【<span style='color:red'>12</span>】&nbsp;&nbsp;&nbsp;红牌【<span style='color:red'>2</span>】</td>";
+            ht+="</tr>"			
+		}
+	}
+	$("#flowTable").html(ht);
+}
+</script>
+
+</head>
+<body >
+	<div id="flowcreater" style="padding:10px">
+		<table id="flowTable" width="100%" align="center" border="0" cellpadding="0" cellspacing="0" style="margin-top:4px;border-collapse:collapse;">
+	</div>
+</body>
+</html>

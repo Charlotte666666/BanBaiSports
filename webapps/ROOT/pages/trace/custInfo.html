@@ -1,0 +1,128 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var infoId=0;
+   
+   $(document).ready(function() {
+     initData();
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   function doSubmit(){
+     var aoData=[];
+	 var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+     aoData.push( { "name": "cust.cust_name", "value": $("#q_cust_name").val() } );
+     aoData.push( { "name": "cust.cust_code", "value":$("#q_cust_code").val() } );
+     aoData.push( { "name": "cust.cust_password", "value": top.hex_md5( $("#q_cust_password").val() ) } );
+     aoData.push( { "name": "cust.tel", "value": $("#q_cust_tel").val() } );
+	 aoData.push( { "name": "cust.status", "value": $("#q_cust_status").val() } );
+	 if(optType=='insert'){
+	   top.sendAjaxRequest("/actions/Customer.action?insertCustomerInfo",aoData,optCallback);
+	 }else if(optType=='update'){
+	  top.sendAjaxRequest("/actions/Customer.action?updateCustomerInfo",aoData,optCallback);
+	 }
+   }
+   
+   function checkForm(){
+     var msg = "";
+	 msg += checkString($("#q_cust_code").val(),true,40,"客户账号");
+	 msg += checkString($("#q_cust_password").val(),true,40,"密码");
+	 msg += checkString($("#q_cust_name").val(),true,64,"客户姓名");
+	// msg += checkString($("#q_cust_status").val(),true,20,"状态");
+     return msg;
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功！");
+		 top.closeDialog();
+	    }else{
+	     isSaveOK = false;
+	     top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		 top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   function initData(){
+	   try{
+		   optType=top.getUrlParam(document.URL,"opt");
+  	       infoId=top.getUrlParam(document.URL,"infoId");
+		   if ( optType == 'insert' ) {
+			 $("#statusSpan").html(top.getCodeSelectHtml("CUST_STATUS","q_cust_status",false));
+		   }
+		   else if( optType == 'update'){
+		   var aoData=[];
+		   aoData.push( { "name": "cust.cust_code", "value": infoId } );
+		   top.sendAjaxRequest("/actions/Customer.action?getCustomerInfoById",aoData,getInfoCallback);
+		   }
+	   }catch(e){
+		   top.showInfoWinError(e.message);
+	   }
+   }
+   function getInfoCallback(obj){
+    $("#q_cust_code").attr("disabled",true)
+     $("#q_cust_name").val(obj.body.CustomerInfo.cust_name);
+	 $("#q_cust_code").val(obj.body.CustomerInfo.cust_code);
+	 $("#q_cust_password").val(obj.body.CustomerInfo.cust_password);
+	 $("#q_cust_tel").val(obj.body.CustomerInfo.tel);
+	 $("#statusSpan").html(top.getCodeSelectHtml("CUST_STATUS","q_cust_status",false,obj.body.CustomerInfo.status));
+   }
+  </script> 
+</head>
+<body>
+<br>
+<table width="100%" border="0" padding="0" spacing="0">
+ 	<tr class="tr_data" height="40">
+					<td width="40%" align="right"><b>客户账号:</b></td>
+					<td width="60%" align="left"><input type="text" id="q_cust_code" value=""  size="20" /></td>
+				</tr>
+				<tr class="tr_data" height="40">
+					<td width="50%" align="right"><b>密码:</b></td>
+					<td width="50%" align="left"><input type="text" id="q_cust_password" value=""  size="20" /></td>
+				</tr>
+				<tr class="tr_data" height="40">
+					<td width="50%" align="right"><b>客户姓名:</b></td>
+					<td width="50%" align="left"><input type="text" id="q_cust_name" value=""  size="20" /></td>
+				</tr>
+				<tr class="tr_data" height="40">
+					<td width="50%" align="right"><b>联系方式:</b></td>
+					<td width="50%" align="left"><input type="text" id="q_cust_tel" value=""  size="20" /></td>
+				</tr>
+				<tr class="tr_data" height="40">
+					<td width="50%" align="right"><b>状态:</b></td>
+					<td width="50%" align="left"><span id="statusSpan"></span></td>
+				</tr>
+</table>
+<br>
+<p align="center">
+   <table><tr>
+		    <td><span id="submitBtn" class="buttonTwo"><a href="javascript:doSubmit()">保存</a></span></td>
+		    <td><span id="closeBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+   </tr></table>
+</p>
+</body>
+</html>

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>色斑图</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="../../css/comm.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript" src="../../js/echart/echarts.js"></script>
+<script type="text/javascript">
+var pdata=[];
+var min=100;
+var myChart = null;
+var pieChart = null;
+var currentSelected="";
+var currentProvinceName="北京";
+	
+        require.config({
+            paths: {
+                echarts: '../../js/echart'
+            }
+        });
+		
+ jQuery(document).ready(function() {
+    var today=new Date();
+	var y = today.getFullYear();
+	var m = today.getMonth();
+	if ( m == 0 ) {
+		 m=12;
+		 y=y-1;
+	}
+	$( "#yearSpan" ).html( parent.get5YearSelectHtml("q_year",false,y,"doQuery()") );
+	$( "#monthSpan" ).html( parent.get12MonthSelectHtml("q_month",false,m,"doQuery()") );
+	$("#q_year").val(y);
+
+    doQuery();
+ });
+		
+ function doQuery(){
+    try{
+	  var aoData=[];
+	  aoData.push( { "name": "year", "value": $("#q_year").val() } );
+	  aoData.push( { "name": "month", "value": $("#q_month").val() } );
+	  aoData.push( { "name": "area", "value": parent.getRadioValue( document.getElementsByName("q_area") ) } );
+	  aoData.push( { "name": "notExam", "value": parent.getRadioValue( document.getElementsByName("q_notExam") ) } );
+	  top.showLoadingInfo(true);
+	  $("#titleTxt").html("");
+	  top.sendAjaxRequest("/actions/CmaTable.action?dailyCountGroupByProvince",aoData,callbackGetTableList,true,60000);
+	  //top.sendAjaxRequest("/pages/pro10/testDataMap.txt",aoData,callbackGetTableList,true,60000);
+	}catch(e){
+	}
+ }
+ 
+ function callbackGetTableList(obj){
+    top.showLoadingInfo(false);
+	pdata=[];
+    try{
+	  var dlist=obj.nat;
+	  if ( parent.getRadioValue( document.getElementsByName("q_area") ) == 'REG' ) {
+	    dlist=obj.reg;
+	  }
+	  if ( dlist.length > 0 ) {
+		var i=0;
+		var v=0;
+		var n="";
+		min=100;
+	    for ( i=0;i<dlist.length;i++ ) {
+		   v=Math.round(Number( dlist[i].right )*10000/Number( dlist[i].receive ))/100;
+		   if ( min > v ) min=v;
+		   n=parent.getNationalName( dlist[i].province );
+		   pdata[i]={name:n, value:v, right:dlist[i].right, err:dlist[i].err, lack:dlist[i].lack, suspi:dlist[i].suspi, receive:dlist[i].receive };
+		}
+		doChart();
+ 	  } else {
+	    
+	  }
+	}catch(e){
+	}
+ }
+ 
+ function doChart(){
+    require(
+            [
+                'echarts',
+                'echarts/chart/map',
+				'echarts/chart/pie'
+            ],
+            function (ec) {
+                 myChart = ec.init(document.getElementById('main'));
+				 pieChart = ec.init(document.getElementById('mainPie'));
+				 var option = {
+					title : {
+						text: '全国各省份数据质量',
+						subtext: ''
+					},
+					tooltip : {
+						trigger: 'item'
+					},
+				    color:['#2A3FFF','#558ED5','#B7DEE8','#FF99FF'],
+					dataRange: {
+						orient: 'horizontal',
+						min: min,
+						max: 100,
+						text:['可用率由高到低',''],
+						splitNumber:5,
+						color:['#2A3FFF','#558ED5','#B7DEE8','#FF99FF','#FF217B']
+					},
+					toolbox: {
+						show : false,
+						orient: 'vertical',
+						x:'right',
+						y:'center',
+						feature : {
+							mark : {show: true},
+							dataView : {show: true, readOnly: true}
+						}
+					},
+					series : [
+						{
+							name: '数据可用率(%)',
+							type: 'map',
+							mapType: 'china',
+							mapLocation: {
+								x: 'left'
+							},
+							selectedMode : 'single',
+							itemStyle:{
+								normal:{label:{show:true}},
+								emphasis:{label:{show:true}}
+							},
+							data:pdata
+						},
+						{
+							name:'',
+							type:'pie',
+							tooltip: {
+								trigger: 'item',
+								formatter: "{a}<br>{d}%"
+							},
+							center: [document.getElementById('main').offsetWidth - 170, 225],
+							radius: [0, 70],
+							data:[]
+						}
+					],
+					animation: false
+				 };
+				 myChart.setOption(option, true);
+				 
+				    var ecConfig = require('echarts/config');
+					myChart.on(ecConfig.EVENT.MAP_SELECTED, function (param){
+						currentSelected = param.selected;
+						var mapSeries = option.series[0];
+						for (var p = 0, len = mapSeries.data.length; p < len; p++) {
+							if ( currentSelected[mapSeries.data[p].name] ) {
+							  currentProvinceName=mapSeries.data[p].name;
+							  break;
+							}
+						}
+						
+						initPie( mapSeries );
+					});	
+					initPie( option.series[0] );
+            }
+        );
+ }
+ 
+ function initPie(mapSeries){
+						var data = [];
+						var legendData = [];
+						var name="";
+						var vname="";
+
+						var pieOption = {
+							title : {
+								text: '',
+								subtext: '',
+								x:'center'
+							},
+							legend: {
+							    show : false,
+								x : 'left',
+								data:[]
+							},
+							color:['blue','gray','red','#E31EC2'],
+							toolbox: {
+								show : false,
+								orient: 'vertical',
+								x:'right',
+								y:'center',
+								feature : {
+									mark : {show: true},
+									dataView : {show: true, readOnly: true}
+								}
+							},
+							calculable : false,
+							series : [
+								{
+									name:'',
+									type:'pie',
+									radius : '50%',
+									center: ['50%', '50%'],
+									data:[]
+								}
+							]
+						};
+
+						for (var p = 0, len = mapSeries.data.length; p < len; p++) {
+							if ( currentProvinceName==mapSeries.data[p].name ) {
+							  name = mapSeries.data[p].name;
+							  var titleTxt="<font size='4'>&nbsp;"+name+":";
+							  for ( var j=0;j<pdata.length;j++ ) {
+							    if ( pdata[j].name == name ) {
+								    titleTxt+="<br/>&nbsp;<font color='blue'>可用率("+Math.round(pdata[j].right*10000/pdata[j].receive)/100+"%)</font>";
+									vname="可用率";
+									data.push({name: vname,value: pdata[j].right });
+									legendData.push(vname);
+
+									titleTxt+="<br/>&nbsp;<font color='gray'>缺测率("+Math.round(pdata[j].lack*10000/pdata[j].receive)/100+"%)</font>";
+									vname="缺测率";
+									data.push({name: vname,value: pdata[j].lack });
+									legendData.push(vname);
+									
+									titleTxt+="<br/>&nbsp;<font color='red'>错误率("+Math.round(pdata[j].err*10000/pdata[j].receive)/100+"%)</font>";
+									vname="错误率";
+									data.push({name: vname,value: pdata[j].err });
+									legendData.push(vname);
+									
+									titleTxt+="<br/>&nbsp;<font color='#E31EC2'>可疑率("+Math.round(pdata[j].suspi*10000/pdata[j].receive)/100+"%)</font>";
+									titleTxt+="</font>";
+									vname="可疑率";
+									data.push({name: vname,value: pdata[j].suspi});
+									legendData.push(vname);
+									break;
+								}
+							  }
+							  $("#titleTxt").html(titleTxt);
+							}
+						}
+						pieOption.legend.data = legendData;
+						pieOption.series[0].data = data;
+						pieOption.series[0].name = name;
+						pieChart.setOption(pieOption, true);
+ }
+</script>
+</head>
+<body>
+<br/>
+<table width="100%" align="center">
+<tr>
+<td width="100%" colspan="3">
+<table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0">
+					<tr class="tr_data">
+						<td align="right">台站类型</td>
+						<td align="left">
+						  <input type="radio" checked name="q_area" value="NAT" onclick="doQuery()"/>国家站
+                          &nbsp;<input type="radio" name="q_area" value="REG" onclick="doQuery()"/>区域站
+						</td>
+						<td align="right">是否考核</td>
+						<td align="left">
+						  <input type="radio" checked name="q_notExam" value="" onclick="doQuery()"/>考核站
+                          &nbsp;<input type="radio" name="q_notExam" value="not" onclick="doQuery()"/>非考核站
+						</td>
+						<td align="right">统计月份</td>
+						<td align="left">
+						   <span id="yearSpan"></span>年<span id="monthSpan"></span>月
+						</td>
+					</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td align="center" width="50%">
+<div id="main" style="height:500px;width:500px"></div>
+</td>
+<td align="center" width="30%">
+<div id="mainPie" style="height:500px;width:300px"></div>
+</td>
+<td align="left" width="20%">
+ <p id="titleTxt"></p>
+</td>
+</tr>
+</table>
+</body>
+</html>

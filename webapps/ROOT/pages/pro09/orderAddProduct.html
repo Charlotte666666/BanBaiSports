@@ -1,0 +1,145 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+ 
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+		    var aSelected = [];
+		    var tempStr="";
+		    var optType="";
+		    var qTypeId="";
+		    var qTypeName="";
+			var dialogLevel="1";
+			var objs=[];
+			var returnObjs=[];
+
+			$(document).ready(function() { 
+			   var iaoColumns= [
+                               { "sTitle": "多选", "mDataProp": "product_id", "sWidth": "14%",
+                                      "fnRender": function ( oObj ) {
+										 objs[objs.length]=oObj.aData;
+										 return '<input type=\'checkbox\' name=\'checkId\' value=\''+oObj.aData.product_id+'\' />&nbsp;';
+                                      },
+                                      "bUseRendered": false
+                               },
+                               { "sTitle": "品牌", "mDataProp": "product_brand", "sWidth": "13%","sClass": "center",
+									    "fnRender": function ( oObj ) {
+                                           return top.getSupplierNameById(oObj.aData.product_brand );
+                                      },
+							   "bUseRendered": false },
+                               { "sTitle": "名称", "mDataProp": "product_name", "sWidth": "13%","sClass": "center","bUseRendered": false},
+                               { "sTitle": "型号", "mDataProp": "product_model", "sWidth": "13%", "sClass": "center","bUseRendered": false},
+                               { "sTitle": "规格", "mDataProp": "product_standard","sWidth": "13%","sClass": "center","bUseRendered": false },
+                               { "sTitle": "单位","mDataProp": "unit","sWidth": "13%", "sClass": "center",
+								    "fnRender": function ( oObj ) {
+                                           return top.getCodeName( "UNIT", oObj.aData.unit );
+                                      },
+							   "bUseRendered": false },
+							   { "sTitle": "价格", "mDataProp": "price","sWidth": "13%","sClass": "center","bUseRendered": false  }
+               ];
+			   
+			  var surl=top.getUrlBase()+"/actions/ProductInfo.action?getProductInfoList";
+
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+							aoData.push( { "name": "product.type_id", "value":$("#type_id").val() } );
+					},
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			});
+			function queryBySelectedPro(nid,name){
+				 qTypeId = nid;
+				 qTypeName = name;
+				if(qTypeId=='')
+				{
+					qTypeId=-1;
+				}
+				document.getElementById("type_id").value = qTypeId;
+				doQuery();
+			}
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+			//选中要添加的产品
+			function AddPorduct(){
+				var ids=top.getAllCheckedValue( document.getElementsByName('checkId') );
+				try{
+					var idArr=ids.split(",");
+					var os={};
+					for (var n=0;n<idArr.length;n++) {
+					   os=getObj(idArr[n]);
+					   if ( os ) { 
+						 returnObjs[returnObjs.length]=os;
+					   }
+					}
+					top.setTempValue(returnObjs);
+				}catch(e){
+				 //alert(e.message);
+				}
+				parent.closeDialog();
+			}
+
+			function getObj(cid){
+			   try{
+			     for ( var i=0;i<objs.length;i++ ) {
+				    if ( objs[i].product_id == cid ) return objs[i];
+				 }
+			   }catch(e){}
+			   return null;
+			}
+	</script>
+	</head>
+	<body>
+		<input type="hidden" id="type_id" value="-1" />
+		<div width="100%;">
+	        <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+		<table width="90%" style="margin: 10px;">
+					<tr>
+						<td width="100%" align="center">
+							<div id="choosePorductBtn" class="buttonDivTwo">
+								<a href="javascript:void(0)" onclick="AddPorduct()">保存</a>
+							</div>
+						</td>
+					</tr>
+		</table>
+	</body>
+</html>

@@ -1,0 +1,355 @@
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/fileuploader.css">
+		<link rel="stylesheet" type="text/css" href="../../css/drag-drop-folder-tree.css" />
+		<link rel="stylesheet" type="text/css" href="../../css/context-menu.css"></link>
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css"/>
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css" media="print, projection, screen">
+		
+		<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-latest.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" src="../../js/fileuploader.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" src="../../js/SimpleMap.js"></script>
+		
+		<script type="text/javascript" language="JavaScript1.2"  src="js/designInfo.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"  src="js/custProjectInfo.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="js/custProductInfo.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="js/custOtherInfo.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/myDtree.js" ></script>
+		<script type="text/javascript" language="javascript" src="../../js/context-menu.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/drag-drop-folder-tree.js" ></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+		<script type="text/javascript">
+		var check="1";
+	       $(document).ready(function(){
+		       var contract_id=top.getUrlParam(document.URL,"contract_id");
+		       var contract_type=top.getUrlParam(document.URL,"contract_type");
+			   switch(contract_type){
+			      case '1'://工程合同信息
+				      $("#contractDetail").append($("#project_contract_info"));
+				      $("#design_agreement_info").attr("style","display:none");
+				      $("#project_contract_info").show();
+				      initContract(contract_id,contract_type);
+				      break;
+				  case '2'://设计协议信息
+				      $("#contractDetail").append($("#design_agreement_info"));
+				      $("#project_contract_info").attr("style","display:none");
+				      $("#project_contract_info").attr("height","0");
+					  $("#design_agreement_info").show();
+				      initContract(contract_id,contract_type);
+				      break;
+				  default:
+				      break;
+			   }
+			   
+			   
+		   });
+		   
+		   //获取合同信息及客户信息
+		   function initContract(id,type){
+		      var aoData=[];
+			  aoData.push({"name":"contract.contract_id","value":id});
+			  aoData.push({"name":"contract.contract_type","value":type});
+			  top.sendAjaxRequest("/actions/Contract.action?getContractInfoAndCust",aoData,initContractCallBack);
+		   }
+		   
+		   function initContractCallBack(obj){
+		      if(obj.status==true){
+			       var o=obj.body.contract;//合同信息
+				   var cust=obj.body.custInfo;//用户信息
+				   var requireInfo=obj.body.requireInfo;//用户需求信息
+				   if(requireInfo!=null){
+					   $("#measure_room_count").html(requireInfo.room_count);
+					   $("#measure_hall_count").html(requireInfo.hall_count);
+					   $("#measure_bath_count").html(requireInfo.bath_count);
+					   $("#district").html(top.getCodeName("DISTRICT",requireInfo.district)+requireInfo.project_addr);
+				   }
+				   if(cust!=null){
+				       $("#cust_type").html(cust.cust_type);
+				       $("#cust_code").html(cust.code);
+					   $("#cust_name").html(cust.cust_name);
+				  }
+				   switch(o.contract_type){
+				      case "1"://工程合同
+					     $("#project_agreement_id").text(o.contract_code);
+						$("#sign_date").text(top.getTimeStr(o.sign_date,true));
+						$("#cdbh").text(o.ext1);
+						$("#project_contract_type").text(top.getCodeName("PROJECT_CONTRACT_TYPE",o.ext6));
+						$("#project_dateline").text(o.ext3);
+						$("#project_begin_date").text(top.getTimeStr(o.ext2,true));
+						$("#project_end_date").text(top.getTimeStr(o.ext4,true));
+						$("#tz_apply_type").text(top.getCodeName("TZ_APPLY_TYPE",o.ext7));
+						$("#project_money").text(o.ext5);
+					    var paymentRecordList=obj.body.paymentRecordList;
+						var paymentVioRecordList=obj.body.paymentVioRecordList;
+						var projectAgrFj=obj.body.projectAgrFj;
+				       
+						var ht="<tr class='tr_data' height='25px'><td>付款进度</td><td style='width:120px'>说明</td><td>付款时间</td> <td>付款比例(%)</td><td>金额</td></tr>";
+						
+						if(projectAgrFj!=null){
+						   $("#fj").html("<label style='font-size:13px;font-weight:bold;'>附件:</label><a style='font-size:13px;font-color:blue;' color='blue'>"+projectAgrFj.file_name+"</a>");
+						   $("#fj a").attr("href",top.getUrlBase()+"/download?filePath='"+projectAgrFj.file_path+"'&fileName='"+projectAgrFj.file_name+"'");
+						   $("#fj a").attr("path",top.getUrlBase()+"/download?filePath='"+projectAgrFj.file_path+"'&fileName='"+projectAgrFj.file_name+"'");
+						}
+						
+						//获取付款信息
+						if(paymentRecordList!=null && paymentRecordList.length>0){
+						   for(var i=0;i<paymentRecordList.length;i++){
+							   ht+="<tr class='tr_data'><td>"+paymentRecordList[i].project_process+"</td><td>"+paymentRecordList[i].pay_record_bz+"</td><td>"+top.getTimeStr(paymentRecordList[i].pay_record_time,true)+"</td><td>"+paymentRecordList[i].pay_scale+"</td><td>"+parseFloat(paymentRecordList[i].pay_scale)*parseFloat($("#project_money").text())+"</td></tr>";
+						   }
+						}else{
+						    ht+="<tr><td colspan='5' align='center'>暂无数据</td></tr>";
+						}
+						$("#project_process_List").html(ht);   
+						
+						//获取违款信息
+						var vo="<tr class='tr_data' height='25px'><td colspan='3' style='width:280px;'>罚责</td><td style='width:120px'>罚款比例</td><td>罚金</td></tr>";
+
+						//获取付款信息及罚款信息
+						if(paymentVioRecordList!=null && paymentVioRecordList.length>0){
+						   for(var i=0;i<paymentVioRecordList.length;i++){
+							   vo+="<tr class='tr_data'><td colspan='3'>"+paymentVioRecordList[i].violation_bz+"</td><td>"+paymentVioRecordList[i].violation_scale+"</td><td>"+paymentVioRecordList[i].violation_money+"</td></tr>";
+						   }
+						}else{
+						  vo+="<tr><td colspan='3' align='center'>暂无数据</td></tr>";
+						}
+						
+						$("#project_forfeit_List").html(vo); 
+						
+				        break;
+					  case "2"://设计协议 
+					    var require_id=o.require_id;
+				        $("#d_c").html(o.contract_code);
+						$("#d_t").html(top.getTimeStr(o.sign_date,true));
+						$("#price").html(o.ext10);
+						$("#pay").html(o.ext5);
+						$("#p_t").html(top.getTimeStr(o.ext4,true));
+						if(o.ext6=="0"){
+						   $("#f_c").html("未确认");
+						}else{
+						   $("#f_c").html("已确认");
+						}
+						$("#f_o").html(top.getUserNameByCode(o.ext11));
+						$("#are").html(o.ext9);
+
+						$("#a_p_t").html(top.getTimeStr(o.ext2,true));
+						if(o.ext7=="0"){
+						    $("#f_c1").html("未确认");
+						}else{
+						    $("#f_c1").html("已确认");
+						}
+						$("#f_o1").html(top.getUserNameByCode(o.ext12));
+						$("#d_da").html(o.ext3);
+						$("#ext17").html(o.ext17);
+						$("#ext18").html(o.ext18);
+						if(o.ext16=="0"){
+						      $("#designsum").html(o.ext10*o.ext9);
+							  $("#f_p").html(o.ext10*o.ext9-o.ext5);
+						}
+						if(o.ext16=="1"){
+						      $("#designsum").html(o.ext10*o.ext17);
+							  $("#f_p").html(o.ext10*o.ext17-o.ext5);
+						}
+						if(o.ext16=="2"){
+						      $("#designsum").html(o.ext10*o.ext18);
+						}
+						
+				        $("#paysum").html(o.ext5+o.ext8);
+						
+						//获取附件信息
+					    var aoData=[];
+					    aoData.push( { "name": "fileinfo.belong_id", "value":require_id } );
+					    aoData.push( { "name": "fileinfo.belong_type", "value":'2' } );
+
+					    top.sendAjaxRequest("/actions/Contract.action?getDesignAgrFj",aoData,getAgreementFjInfoCallback);
+				        break;
+				  }
+			  }else{
+			     top.showInfoWinError(obj.msg);
+			  }
+		   }
+	    </script>
+	</head>
+	<body style="margin:0px;padding:0px">
+	<table width="99%" height='98%'>
+	<tr>
+	  <td valign="top">
+		<table id='top_cust_table' border="1" cellpadding="3" cellspacing="1" width="99%"
+						align="center" style="background-color: #b9d8f3;margin:1px">
+			<tr class="tr_data" height="25px">
+				<td class="table_property_title">客户编号</td><td align="left" id="cust_code"></td>
+				<td class="table_property_title">客户姓名</td><td align="left" id="cust_name"></td>
+				<td class="table_property_title">户型</td>
+				<td align="left">
+					<label id="measure_room_count"></label>
+					室
+					<label id="measure_hall_count"></label>
+					厅
+					<label id="measure_bath_count"></label>
+					卫
+				</td>
+			</tr>
+			<tr class="tr_data" height="25px">
+				<td class="table_property_title">工程地址</td><td align="left" colspan="3" id="district"></td>
+				<td class="table_property_title">客户类型</td><td align="left" id="cust_type"></td>
+			</tr>
+		</table>
+		</td>
+	</tr>
+	<tr>
+	<td id="contractDetail">
+	</td>
+	</tr>
+	 </table>
+	 	    <div id="project_contract_info" style="display:none;">
+			   <table width="100%"><tr><td style="font-weight:bold;font-size:13px;">工程基本信息</td><td  align="right" id="fj" ></div></td></tr></table>
+			   <table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+					<tr class="tr_data" height="25px">
+					    <input type="hidden" id="contract_id"/>
+						<td width="15%" class="table_property_title">工程合同号</td>
+						<td align="left" colspan="3"><span id="project_agreement_id" style="200px;"></span></td>
+						<td width="15%" class="table_property_title">工程签订日期</td>                                                                    
+						<td align="left" colspan="3"><span id="sign_date"></span></td>
+						<td width="15%" class="table_property_title">存档编号</td>
+						<td align="left" colspan="3"><span id="cdbh" style="width:100px;"></span></td>
+					</tr>
+				</table>
+			    <br/>
+				<b style="font-size:13px;">工程概况</b><br/>
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				    <tr class="tr_data" height="25px">
+				      <td colspan="6" align="left" style="font-weight:bold">1、工程承包方式</td> 
+				   </tr>
+				   <tr class="tr_data" height="25px">
+				    <td colspan="6" align="left">
+					  &nbsp;&nbsp;工程承包采取<span id="project_contract_type" style="width:200px;"> </span>方式
+				    </td>
+					</tr>
+				   <tr class="tr_data" height="25px">
+				      <td colspan="6" align="left" style="font-weight:bold">2、工期</td>
+					 
+				   </tr>
+				   <tr class="tr_data" height="25px">
+				      <td class="table_property_title">工程期限</td><td style="width:180px;" align="left"><span id="project_dateline"></span>日</td>
+				      <td class="table_property_title">开工日期</td><td style="width:150px;" align="left"><span id="project_begin_date"></span></td>
+				      <td class="table_property_title">竣工日期</td><td style="width:150px;" align="left"><span id="project_end_date"></span></td>
+				   </tr>
+				   <tr class="tr_data" height="25px">
+				      <td colspan="6" align="left" style="font-weight:bold">3、施工图纸</td> 
+				   </tr>
+				   <tr class="tr_data" height="25px">
+				    <td colspan="6" align="left">
+					  &nbsp;&nbsp;施工图纸采取<span id="tz_apply_type" style="width:200px;"></span> 方式提供
+				    </td>
+				   </tr>
+				   <tr class="tr_data" height="25px">
+				      <td colspan="6" align="left" style="font-weight:bold">4、工程验收及付款方式</td> 
+				   </tr>
+				   <tr class="tr_data" height="25px">
+				    <td colspan="6" align="left" style="border-bottom: 0;">
+					   &nbsp;&nbsp;本合同工程造价为<span id="project_money"></span>人民币.
+				    </td>
+				   </tr>
+				  <tr class="tr_data">
+				    <td colspan="6">
+				    <table id="project_process_List" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;border-top: 0;border-bottom: 0;">
+				    </table>
+					</td>
+				   </tr>
+				   <tr class="tr_data" height="25px">
+				      <td colspan="6" align="left" style="font-weight:bold">5、违约责任</td> 
+				   </tr>
+				   <tr class="tr_data">
+				     <td colspan="6">
+						<table id="project_forfeit_List" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+						</table>
+					</td>
+				   </tr>
+				</table>
+				
+	 </div>
+	<div id="design_agreement_info" style="display:none;">
+		     <b style="font-size:13px;">协议信息</b><br/>
+		     <table id="designAgreementList" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+							<tr class="tr_data" height="25px">
+								<td   class="table_property_title">协议编号</td>
+								<td align="left" colspan="4" id="tddeal_code"><span id="d_c" style="width:120px;"></span></td>
+								<td  class="table_property_title" colspan="2">协议日期</td>
+								<td  align="left" colspan="3" id="tddeal_time"><span id="d_t" style="width:120px;"></span></td>
+							</tr>
+							<tr class="tr_data" height="25px">
+							    <td align="center" colspan="3">协议报价</td>
+								<td align="center" colspan="5">付款说明</td>
+								<td align="center">财务确认</td>
+								<td align="center">财务操作人</td>
+							</tr>
+							<tr class="tr_data" height="25px">
+							   <td class="table_property_title">设计单价</td><td align="left" id="tdprice" style="width:100px;"><span id="price"></span></td><td width="5%" align="left">元/m2</td>
+							   <td class="table_property_title">定金</td><td style="width:100px;" align="left"><span id="pay"></span></td><td align="left">元</td>
+							   <td class="table_property_title">交款日期</td><td style="width:100px;" align="left"><span id="p_t"></span></td>
+							   <td><span id="f_c" style="width:100px;"></span></td>
+							   <td><span id="f_o" style="width:100px;"></span></td>
+
+
+							</tr>
+							<tr class="tr_data" height="25px">
+							   <td class="table_property_title">套内建筑面积</td><td align="left" style="width:100px;"><span id="are"></span></td><td width="5%" align="left">m2</td>
+							   <td class="table_property_title" rowspan="3">设计尾款</td><td  style="width:100px;" align="left" rowspan="3"><span id="f_p"></span></td><td align="left" rowspan="3">元</td>
+							   <td class="table_property_title" rowspan="3">预计交款日期</td><td  style="width:100px;" align="left" rowspan="3"><span id="a_p_t"></span></td>
+							   <td id="tdfinancial_confirm1" rowspan="3"><span id="f_c1" style="width:100px;"></span></td>
+							   <td id="tdfinancial_operator1" rowspan="3"><span id="f_o1" style="width:100px;"></span></td>
+							</tr>
+							<tr class="tr_data" height="25px">
+							   <td class="table_property_title">不含公摊外墙面积</td><td align="left" style="width:100px;"><span id="ext17"></span></td><td width="5%" align="left">m2</td>
+							</tr>
+							<tr class="tr_data" height="25px">
+							   <td class="table_property_title">套内使用面积 </td><td align="left" style="width:100px;"><span id="ext18"></span></td><td width="5%" align="left">m2</td>
+							</tr>
+							<tr class="tr_data" height="25px">
+							   <td class="table_property_title">设计总额</td><td align="left" id="designsum" style="width:100px;"></td><td width="5%" align="left">元</td>
+							   <td class="table_property_title">付款总额</td><td align="left" id="paysum" style="width:100px;"></td><td align="left">元</td>
+							   <td colspan="4"></td>
+							</tr>
+						</table>
+						<br/>
+						<table id="anti_design_date">
+						    <tr tr class="tr_data" height="25px">
+							  <td class="table_property_title" style="font-weight:bold">设计期预计</td><td><span id="d_da" style="width:100px;"></span></td><td style="font-weight:bold" align="left">工作日</td>
+							</tr>
+						</table>
+					    <br/>
+						<b style="font-size:13px;">协议扫描件</b><br/>
+						<table id="upDeAg" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+						 <tr class="tr_data" height="25px">
+						     <td>序号</td>
+							 <td>扫描件名称</td>
+							 <td>上传人</td>
+							 <td>上传日期</td>
+							 <td>操作</td>
+						  </tr>
+						  <tr class="tr_data" height="25px">
+						     <td id="num">1</td>
+						     <td id="name"></td>
+						     <td id="upName"></td>
+						     <td id="upTime"></td>
+						     <td id="load"></td>
+						  </tr>
+						</table>
+	</div>
+</body>
+</html>

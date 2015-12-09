@@ -1,0 +1,122 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery.ui.all.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			$(document).ready(function() {
+			   var tempStr = "";
+			   var iaoColumns= [
+			                   { "sTitle": "标识", "mDataProp": "code", "sWidth": "30%","sClass": "left","bSortable":false,
+                                      "fnRender": function ( oObj ) {
+										   tempStr = '<a href=\'javascript:void(0)\' onclick="updateMetaFTP(\''+oObj.aData.code+'\',\'';
+										   tempStr += oObj.aData.server_ip+'\',\''+oObj.aData.server_port+'\',\'';
+										   tempStr += oObj.aData.user_name+'\',\''+oObj.aData.pass_word+'\')" >';
+										   tempStr += oObj.aData.code+"</a>";
+                                           return tempStr;
+                                      },
+                                      "bUseRendered": false 
+                               },
+                               { "sTitle": "服务器IP", "mDataProp": "server_ip", "sWidth": "20%","sClass": "left","bUseRendered": false,"bSortable":false},
+                               { "sTitle": "端口", "mDataProp": "server_port", "sWidth": "10%","sClass": "center","bSortable":false,"bUseRendered": false},
+							   { "sTitle": "用户名", "mDataProp": "user_name", "sWidth": "20%","sClass": "left","bUseRendered": false,"bSortable":false}
+               ];
+ 
+			   var surl=top.getUrlBase()+"/actions/Metadata.action?getMetaFTPList";
+
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": false,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+			        },
+			      "sDom": "frt",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumns
+				} );
+
+			} );
+
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+			function addMetaFTP(){
+				var xurl="pages/metadata/metaFTPInfo.html?opt=create";
+				top.openDialog("添加FTP服务器信息",xurl,true,450,300,saveCallBack);
+			}
+			
+			function updateMetaFTP(code,server_ip,server_port,user_name,pass_word){
+				var xurl="pages/metadata/metaFTPInfo.html?opt=update&code="+code+"&server_ip="+server_ip+"&server_port="+server_port;
+				xurl+="&user_name="+user_name+"&pass_word="+pass_word;
+				top.openDialog("修改FTP服务器信息",xurl,true,450,300,saveCallBack);
+			}
+			
+			function saveCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				}
+			}
+			
+			function optCallback(obj){
+			       try{
+			        if ( obj.status == true ){
+			          top.showInfoWin("操作成功");
+			          doQuery();
+			        }else{
+			          top.showInfoWin("操作失败 "+obj.msg);
+			        }
+			       }catch(e){
+			          top.showInfoWin("处理异常:"+e.message);
+			       }
+		  }
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+	     	  <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0" >
+		         <tr class="tr_data">
+			      <td colspan="11">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				   <td>&nbsp;FTP服务器信息管理&nbsp;</td>
+				   <td><div id="createBtn" class="buttonDivTwo"><a href="javascript:addMetaFTP()">添加</a></div><td>
+				   </tr></table></td>
+			     </tr>
+			   </table>
+	           <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

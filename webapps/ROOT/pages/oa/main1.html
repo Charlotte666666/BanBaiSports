@@ -1,0 +1,283 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css" media="print, projection, screen">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+    <script src="../../lib/ligerUI/js/core/base.js" type="text/javascript"></script>
+    <script src="../../lib/ligerUI/js/plugins/ligerPanel.js" type="text/javascript"></script>
+    <script src="../../lib/ligerUI/js/plugins/ligerPortal.js" type="text/javascript"></script>
+	
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/chart.js"></script>
+    <script src="../../js/ui.tabs.js" type="text/javascript"></script>
+<style type="text/css">
+ body {font-size: 62.5%;float: center; margin: 0;
+          height:100%;width: 100%; overflow-x: hidden; overflow-y: auto; }
+	.ui-sortable-placeholder { border: 1px dotted black; visibility: visible !important; height: 265px !important; }
+	.ui-sortable-placeholder * { visibility: hidden; }
+	
+	.div_btn{
+	  width:200px;
+	  height:100px;
+	  padding:2px;
+	  margin:2px;
+	}
+	table.alarm{
+	border-collapse:collapse;
+	}
+	table.alarm td{
+	border:solid 1px #c5dbec;
+	}
+	
+/* 快捷入口菜单*/
+*
+	.toolbgline {
+		border-bottom: 1px solid #aac1de;
+		background-color: #c1d9f3;
+		padding: 7px;
+		background-image: none;
+		overflow:auto;
+	}
+	
+	.nowrap {
+	white-space: nowrap;
+	}
+/*信息表格*/
+ .table-title{background-color:#E7E7E7;border:1px solid #79BAEC;height:30px}
+
+ a.alamTip{
+	display:block;
+	text-decoration: none;
+	color:black;
+	margin:10px;
+	height:30px;
+ }
+ 
+ .box{height:260px;overflow-y:auto;width:99%}
+ .outerBox{border:2px solid #79BAEC;}
+</style>
+<script type="text/javascript">
+var currentUser=top.getCurrentUser();
+var interMesResult=0;
+$(document).ready( function() { 
+   getMyIntegrationList();
+   myRemindList();
+});
+
+function myRemindList(){
+                       var surl=top.getUrlBase()+"/actions/OADailyManage.action?getWorkRemindList";
+					   var remindTable = $('#myRemindList').dataTable( {
+							"bProcessing": false,
+							"bServerSide": true,
+							"bJQueryUI": true,
+							"bFilter": false,
+							"bDestroy": true,
+							"bLengthChange": true,
+							"iDisplayLength":4,
+							"sAjaxSource": surl,
+							"oLanguage": {
+							  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+						  },
+						  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+								$.ajax( {
+									"url":  sUrl,
+									"data": aoData,
+									"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+									"success": function (json) {
+										fnCallback( json );
+										setScrollMesTimer();
+									},
+									"dataType": "json",
+									"cache": false,
+									"type": "POST",
+									"error": function (xhr, error, thrown) {
+										top.showInfoWinError("发生异常:"+error);
+									    setScrollMesTimer();
+									}
+								} );
+							},
+							"fnServerParams": function ( aoData ) {
+								   aoData.push( { "name":"workRemind.accept_person","value":currentUser.userCode } );
+								   aoData.push( { "name":"time1","value":-1 } );
+								   aoData.push( { "name":"time2","value":-1 } );
+							},
+						  "sDom": "frtlip",
+						  "sPaginationType": "full_numbers",
+							"aoColumns": [
+										{ "sTitle": "内容", "mDataProp": "content", "sWidth": "20%", "sClass": "center",
+											 "bUseRendered": false 
+										},
+										{ "sTitle": "发送人", "mDataProp": "send_person", "sWidth": "10%", "sClass": "center",
+											 "fnRender": function ( oObj ) {
+												return top.getUserNameByCode(oObj.aData.send_person);
+											 },
+											 "bUseRendered": false 
+										},
+										{ "sTitle": "日期", "mDataProp": "remind_time", "sWidth": "10%", "sClass": "center",
+											 "fnRender": function ( oObj ) {
+												  return top.getTimeStr(oObj.aData.remind_time,true);
+											 },
+											 "bUseRendered": false 
+										},
+										{ "sTitle": "具体明细", "mDataProp": "key_id", "sWidth": "10%", "sClass": "center",
+											 "fnRender": function ( oObj ) {
+												  return "<a href='javascript:void(0)' onclick='queryIntegration(\""+oObj.aData.key_id+"\")'>查看</a>";
+											 },
+											 "bUseRendered": false 
+										}
+							  ]
+						} );
+}
+ 
+function queryIntegration(key_id){
+   top.openDialog("积分明细","pages/oa/addIntegrationRecord.html?optType=query&id="+key_id,true,600,430,null);
+}
+
+function getMyIntegrationList(){
+					   var surl=top.getUrlBase()+"/actions/IntegrationItem.action?getIntegrationList";
+					   var integrationTable = $('#myIntegrationList').dataTable( {
+							"bProcessing": false,
+							"bServerSide": true,
+							"bJQueryUI": true,
+							"bFilter": false,
+							"bDestroy": true,
+							"bLengthChange": true,
+							"iDisplayLength":4,
+							"sAjaxSource": surl,
+							"oLanguage": {
+							  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+						  },
+						  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+								$.ajax( {
+									"url":  sUrl,
+									"data": aoData,
+									"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+									"success": function (json) {
+										fnCallback( json );
+										setScrollMesTimer();
+									},
+									"dataType": "json",
+									"cache": false,
+									"type": "POST",
+									"error": function (xhr, error, thrown) {
+									    setScrollMesTimer();
+									}
+								} );
+							},
+							"fnServerParams": function ( aoData ) {
+								   aoData.push( { "name": "time1", "value": "" } );
+								   aoData.push( { "name": "time2", "value": "" } );
+								   aoData.push( { "name": "item.employee_code", "value": currentUser.userCode } );
+								   aoData.push( { "name": "item.dept", "value": currentUser.deptId } );
+								   aoData.push( { "name": "item.id", "value": -1 } );
+							},
+						  "sDom": "frtlip",
+						  "sPaginationType": "full_numbers",
+							"aoColumns": [
+										{ "sTitle": "积分项目内容", "mDataProp": "integration_item", "sWidth": "20%", "sClass": "center",
+											 "bUseRendered": false 
+										},
+										{ "sTitle": "奖扣分来源", "mDataProp": "source_award_points", "sWidth": "10%", "sClass": "center",
+											 "fnRender": function ( oObj ) {
+												return top.getCodeName("SOURCE_AWARD_POINTS",oObj.aData.source_award_points);
+											 },
+											 "bUseRendered": false 
+										},
+										{ "sTitle": "积分来源", "mDataProp": "record_source", "sWidth": "10%", "sClass": "center",
+											 "fnRender": function ( oObj ) {
+												  return top.getCodeName("RECORD_SOURCE",oObj.aData.record_source);
+											 },
+											 "bUseRendered": false 
+										 }, 
+										{ "sTitle": "奖扣分", "mDataProp": "reward_points", "sWidth": "10%", "sClass": "center",
+											 "fnRender": function ( oObj ) {
+												 if(oObj.aData.reward_points=="0"){
+												    return "扣分";
+												 }else{
+												    return "奖分";
+												 }
+											 },
+											 "bUseRendered": false 
+										 },
+										 { "sTitle": "分数", "mDataProp": "score", "sWidth": "5%", "sClass": "center",
+											 "bUseRendered": false 
+										 },
+										{ "sTitle": "日期", "mDataProp": "id", "sWidth": "10%", "bSortable":false ,
+											 "fnRender": function ( oObj ) {
+												return top.getTimeStr(oObj.aData.opt_time,true);
+											 },
+										  "bUseRendered": false }
+							  ]
+						} );
+		 }
+		 
+		function setScrollMesTimer(){
+			clearInterval( interMesResult );
+			interMesResult=self.setInterval("getMyIntegrationList()",18000);
+        }
+
+</script>
+
+</head>
+<body >
+	<div style="width:100%;padding:8px;" id="portalMain">
+		<table width="98%">
+		  <tr>
+		    <td width="50%" valign="top">
+			  <div width="100%">
+		      <table width="100%"  style="float:left;" id="myIntegrationTable">
+		        <tr>
+		         <td class="outerBox" width="50%"  valign="top">
+					<div class="nowrap toolbgline">我的积分</div>
+					<div width="99%" class="box">
+					<table cellpadding="0"  cellspacing="0" border="0" class="alarm display" id="myIntegrationList" style="width:99%;background-color:#ffffff;margin:1px;"></table>
+					</div>
+				</td>
+			   </tr>
+		     </table>
+			 </div>
+		    </td>
+			<td width="50%" valign="top">
+			  <div width="100%">
+				  <table width="100%"  style="float:left;" id="myNoticeTable">
+					<tr>
+					 <td class="outerBox" width="50%"  valign="top">
+						<div class="nowrap toolbgline">通知公告</div>
+						<div width="99%" class="box">
+						 <iframe id="myNoticeList" src="noticeQuery.html" style="border:0px" width="98%" height="250px"></iframe>
+						
+						</div>
+					</td>
+				   </tr>
+				 </table>
+			 </div>
+			</td>
+		  </tr>
+		  <tr>
+		    <td width="50%" valign="top">
+				 <div width="100%">
+					  <table width="100%"  style="float:left;" id="myRemindTable">
+						<tr>
+						 <td class="outerBox" width="50%"  valign="top">
+							<div class="nowrap toolbgline">我的消息</div>
+							<div width="99%" class="box">
+							   <table cellpadding="0"  cellspacing="0" border="0" class="alarm display" id="myRemindList" style="width:99%;background-color:#ffffff;margin:1px;"></table>
+							</div>
+						</td>
+					   </tr>
+					 </table>
+				 </div>
+			</td>
+			<td>&nbsp;</td>
+		  </tr>
+		</table>
+		</div>
+
+</body>
+</html>

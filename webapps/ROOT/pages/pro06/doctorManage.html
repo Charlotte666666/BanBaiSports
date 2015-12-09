@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery.dataTables.min.js"></script>
+
+<script type="text/javascript">
+var oTable = null;
+var currentOptCode=0;
+
+$(document).ready( function() {
+   $( "#tdlevel" ).html( top.getCodeSelectHtml("JOB_LEVEL","level",true) );
+   $("#tdsex").html( top.getCodeSelectHtml("SEX","sex",true) );
+   $("#tdstatus").html( top.getCodeSelectHtml("DOC_STATUS","status",true) );
+   loadList();
+});
+ 
+ function loadList(){
+    var iaoColumns= [
+               { "sTitle": "手机号", "mDataProp": "cell_phone", "sWidth": "10%", 
+			       "fnRender": function ( oObj ) {
+				     return '<a href=\'javascript:void(0)\' onclick="updateInfo(\''+oObj.aData.id+'\')" >'+oObj.aData.cell_phone+"</a>" ;
+                   },
+                   "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "姓名", "mDataProp": "real_name", "sWidth": "10%", "bUseRendered": false , "bSortable":false},
+               { "sTitle": "性别", "mDataProp": "sex", "sWidth": "10%",
+                   "fnRender": function ( oObj ) {
+				      return top.getCodeName("SEX",oObj.aData.sex);
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "医院", "mDataProp": "hospital_name", "sWidth": "10%","bUseRendered": false, "bSortable":false },
+			   { "sTitle": "职称", "mDataProp": "level", "sWidth": "10%",
+                   "fnRender": function ( oObj ) {
+				      return top.getCodeName("JOB_LEVEL",oObj.aData.level);
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "星级", "mDataProp": "star", "sWidth": "10%", "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "状态", "mDataProp": "status", "sWidth": "10%",
+                   "fnRender": function ( oObj ) {
+				      return top.getCodeName( "DOC_STATUS", oObj.aData.status );
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "操作", "mDataProp": "id", "sWidth": "10%","bSortable":false,
+                    "fnRender": function ( oObj ) {
+					  if ( oObj.aData.status == 1 ) {
+					   return '<a href="javascript:void(0)" onclick="feezeInfo(\''+oObj.aData.id+'\')">冻结账号</a>';
+					  } else if ( oObj.aData.status == 2 ) {
+					   return '<a href="javascript:void(0)" onclick="checkPassInfo(\''+oObj.aData.id+'\')">审核通过</a>';
+					  } else if ( oObj.aData.status == 3 ) {
+					   return '<a href="javascript:void(0)" onclick="activeInfo(\''+oObj.aData.id+'\')">激活账号</a>';
+					  } else if ( oObj.aData.status == 0 ) {
+					   return '<a href="javascript:void(0)" onclick="updateInfo(\''+oObj.aData.id+'\')">审核</a>';
+					  } else return "";
+                    },
+                    "bUseRendered": false
+               }
+        ];
+ 	
+		oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": top.getUrlBase()+"/actions/Doctor.action?getDoctorList",
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     aoData.push( { "name": "doctor.cell_phone", "value": $("#cell_phone").val() } );
+						 aoData.push( { "name": "doctor.real_name", "value": $("#real_name").val() } );
+						 aoData.push( { "name": "doctor.level", "value": top.g_GetNumValue( $("#level").val(), -1 ) } );
+						 aoData.push( { "name": "doctor.sex", "value": top.g_GetNumValue( $("#sex").val(), -1 ) } );
+						 aoData.push( { "name": "doctor.status", "value": top.g_GetNumValue( $("#status").val(), -1 ) } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumns
+	   } );
+ }
+ 
+ function doQuery(){
+	oTable.fnDraw();
+ }
+ 
+ function addInfo(){
+	var xurl="pages/pro06/doctorInfo.html?opt=insert";
+	top.openDialog("创建医生信息",xurl,true,600,500,doQuery);
+ }
+ 
+ function updateInfo(uid){
+	var xurl="pages/pro06/doctorInfo.html?opt=update&infoId="+uid;
+	top.openDialog("医生信息",xurl,true,600,500,doQuery);
+ }
+ 
+ function deleteInfo(code){
+     currentOptCode=code;
+     top.showConfirm("您确定要删除选中的医生信息吗？", doDelete);
+ }
+ 
+ function feezeInfo(code){
+     currentOptCode=code;
+     top.showConfirm("您确定要冻结选中的医生账户吗？", doFeeze);
+ }
+ 
+ function activeInfo(code){
+     currentOptCode=code;
+     top.showConfirm("您确定要激活选中的医生账户吗？", doActive);
+ }
+
+ function checkPassInfo(code){
+    var aoData=[];
+	aoData.push( { "name": "doctor.id", "value": code } );
+	aoData.push( { "name": "doctor.status", "value": 1 } );
+	var xurl="/actions/Doctor.action?updateDoctorStatus";
+    top.sendAjaxRequest(xurl,aoData,doQuery);
+ }
+ 
+ function doFeeze(){
+    var aoData=[];
+	aoData.push( { "name": "doctor.id", "value": currentOptCode } );
+	aoData.push( { "name": "doctor.status", "value": 3 } );
+	var xurl="/actions/Doctor.action?updateDoctorStatus";
+    top.sendAjaxRequest(xurl,aoData,doQuery);
+ }
+ 
+ function doActive(){
+    var aoData=[];
+	aoData.push( { "name": "doctor.id", "value": currentOptCode } );
+	aoData.push( { "name": "doctor.status", "value": 1 } );
+	var xurl="/actions/Doctor.action?updateDoctorStatus";
+    top.sendAjaxRequest(xurl,aoData,doQuery);
+ }
+
+  function doDelete(){
+    var aoData=[];
+	aoData.push( { "name": "doctor.id", "value": currentOptCode } );
+	var xurl="/actions/Doctor.action?deleteDoctor";
+    top.sendAjaxRequest(xurl,aoData,doQuery);
+ }
+
+</script>
+</head>
+<body>
+            <div style='border: 1px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="110px">&nbsp;医生信息查询&nbsp;</td>
+				  <td align="left">&nbsp;<!--div id="createBtn" class="buttonDivTwo"><a href="javascript:addInfo()">创建</a></div--></td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+			      <td align="right" width="10%">手机号:</td>
+				  <td align="left" width="10%"><input type="text" id="cell_phone" size="15" /></td>
+                  <td align="right" width="10%">姓名:</td>
+				  <td align="left" width="10%"><input type="text" id="real_name" size="15" /></td>
+                  <td align="right" width="10%">职称:</td>
+				  <td align="left" width="10%" id="tdlevel"></td>
+                  <td align="right" width="10%">性别:</td>
+				  <td align="left" width="10%" id="tdsex"></td>
+                  <td align="right" width="10%">账号状态:</td>
+				  <td align="left" width="10%" id="tdstatus"></td>				  
+			     </tr>
+			 </table>
+			</div>
+<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+</body>
+</html> 

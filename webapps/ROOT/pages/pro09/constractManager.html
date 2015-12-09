@@ -1,0 +1,254 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css"	href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+        <script type="text/javascript" language="JavaScript1.2"	src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var queryCtlMark=0;//控制查询条件显示标志
+			$(document).ready(function() {
+			 
+			if (!top.g_isPermit('cust_add') ) {
+				// 将相关字段隐藏或变成不可用 ， 保存按钮、提交按钮隐藏
+				$('#createBtn').hide();
+				$('#exportBtn').hide();
+			}
+			$("#spancontract_type").html(top.getCodeSelectHtml("CONTRACT_TYPE","contract_type",true,''));
+			   var iaoColumns= [
+			                   { "sTitle": "合同类型", "mDataProp": "contract_type", "sWidth": "8%","sClass": "center","fnRender":function( oObj ){
+										return top.getCodeName("CONTRACT_TYPE",oObj.aData.contract_type);
+							   },"bUseRendered": false 
+                               },
+			                   { "sTitle": "合同编号", "mDataProp": "contract_code", "sWidth": "8%","sClass": "center","bUseRendered": false
+							   },
+							   { "sTitle": "客户编号", "mDataProp": "cust_code", "sWidth": "8%", "sClass": "center",
+								    "fnRender": function ( oObj ) {
+										return  '<a href="javascript:void(0);" onclick="openCustDetail(\''+oObj.aData.cust_code+'\',\''+oObj.aData.contract_type+'\')">'+oObj.aData.cust_code+'</a>';
+                                     },
+							  "bUseRendered": false},
+							  { "sTitle": "客户姓名", "mDataProp": "cust_name", "sWidth": "8%", "sClass": "center",
+								    "fnRender": function ( oObj ) {
+                                           return oObj.aData.cust_name ;
+                                     },
+							  "bUseRendered": false},
+							   { "sTitle": "签订日期", "mDataProp": "sign_date", "sWidth": "8%", "sClass": "center",
+								    "fnRender": function ( oObj ) {
+                                           return top.getTimeStr(oObj.aData.sign_date ,true);
+                                     },
+							  "bUseRendered": false},
+							   { "sTitle": "合同金额", "mDataProp": "ext5", "sWidth": "8%", "sClass": "center", "fnRender":function(oObj){
+							        if(oObj.aData.contract_type=="2"){//设计协议金额=定金+尾款
+									  return oObj.aData.ext5+oObj.aData.ext8;
+									}else{//工程合同
+									  return oObj.aData.ext5;
+									}
+							   },"bUseRendered": false}
+               ];
+			   
+			   var surl=top.getUrlBase()+"/actions/Contract.action?getContractList";
+			   oTable = $('#dataTable').dataTable( {
+			        "aaSorting": [[4,"desc"]],
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData=getParamDate(aoData);
+			    },
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+			function updateInfo(id){
+				var xurl="pages/pro09/constractInfo.html?optType=update&id="+id;
+				top.openDialog("合同详细信息",xurl,true,900,600,saveCallBack);
+			}
+
+			function saveCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) {
+				     doQuery();
+				  }
+				}catch(e){
+				}
+			}
+
+		    function getParamDate(aoData){
+			    if($("#money1").val()!="" && !IsFloat($("#money1").val())){top.showInfoWinWarn("合同款范围类型错误，请重新输入！");return;}
+			    if($("#money2").val()!="" && !IsFloat($("#money2").val())){top.showInfoWinWarn("合同款范围类型错误，请重新输入！");return;}
+			    var role=top.getUserRole();
+			    aoData.push( { "name": "contract.contract_code", "value":$("#contract_code").val() } );
+			    aoData.push( { "name": "contract.cust_code", "value":$("#cust_code").val() } );
+			    aoData.push( { "name": "contract.cust_name", "value":$("#cust_name").val() } );
+				aoData.push( { "name": "time1", "value":$("#time1").val() } );
+				aoData.push( { "name": "time2", "value":$("#time2").val() } );
+				aoData.push( { "name": "contract.contract_type", "value":$("#contract_type").val() } );
+				aoData.push( { "name": "contract.money1", "value":$("#money1").val() } );
+				aoData.push( { "name": "contract.money2", "value":$("#money2").val() } );
+				aoData.push( { "name": "role", "value":role } );
+				return aoData;
+			}
+		 //查询条件的展开与收缩
+		 function dwOup(){
+		   if(queryCtlMark==0){//展开
+			 $("#queryCtlIcon").attr("src","../../img/icons/arrow-up.gif"); 
+			 $("#queryTab").slideToggle();
+			 queryCtlMark=1;
+		   }else{//收缩
+			 $("#queryCtlIcon").attr("src","../../img/icons/arrow-down.gif"); 
+			 $("#queryTab").slideToggle();
+			 queryCtlMark=0;
+		   }
+		 }
+		 
+		 //打开客户详细信息页面
+		 function openCustDetail(code,type){
+		    var page="";
+			var tabTitle="";
+		    if(type=="1"){//工程合同
+			   page="7-0";
+			}else if(type=="2"){//设计协议
+			   page="2-0";
+			   tabTitle=2;
+			}else if(type=="3"){//产品购买
+			   page="4-0";
+			}
+			if(tabTitle!=""){
+			  top.openCustDetailPage(code,page,"query","客户详细信息",null,tabTitle); 
+			}else{
+			  top.openCustDetailPage(code,page,"query","客户详细信息"); 
+			}
+		 }
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+			<div style='border: 1px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="150px">
+							&nbsp;合同查询&nbsp;
+						</td>
+						<td align="right">
+							&nbsp;
+						</td>
+						<td align="right">
+							<span><image id="queryCtlIcon" src="../../img/icons/arrow-down.gif" alt="展开" onclick="javascript:dwOup();"/></span>
+						</td>
+						<td width="2px">
+							&nbsp;
+						</td>
+					</tr>
+				</table>
+				<table width="100%" align="center" cellpadding="1px" id="queryTab" style="display:none"
+					cellspacing="1px" border="0">
+					<tr class="tr_data">
+						<td align="right">
+							合同类型
+						</td>
+						<td align="left">
+							<span id="spancontract_type"></span>
+						</td>
+						<td align="right">
+							客户编号
+						</td>
+						<td align="left">
+							<input type="text" id="cust_code" value="" size="15" onkeydown="if(event.keyCode==13) doQuery();" />
+						</td>
+						<td align="right">
+							签订日期
+						</td>
+						<td align="left">
+							<input type="text" id="time1" value="" onclick="new Calendar().show(this);" size="15" readonly="true"/> 至
+							<input type="text" id="time2" value="" onclick="new Calendar().show(this);" size="15" readonly="true"/>
+						</td>
+						<td>
+						  &nbsp;
+						</td>
+					</tr>
+					<tr class="tr_data">
+					    <td align="right">
+							合同编号
+						</td>
+						<td align="left">
+							<input type="text" id="contract_code" value="" size="14" onkeydown="if(event.keyCode==13) doQuery();" />
+						</td>
+						<td align="right">
+							客户姓名
+						</td>
+						<td align="left">
+							<input type="text" id="cust_name" value="" size="15" onkeydown="if(event.keyCode==13) doQuery();" />
+						</td>
+					    <td align="right">
+							合同款范围
+						</td>
+						<td align="left">
+							<input type="text" id="money1"   size="10" /> --
+							<input type="text" id="money2"  size="10" />元
+						</td>
+					    <td align="left">
+						    <div class="buttonDivTwo">
+								<a href="javascript:doQuery()">查询</a>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0"
+				border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									&nbsp;查询结果列表&nbsp;
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<table cellpadding="0" width="100%" cellspacing="0" border="0"
+				class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

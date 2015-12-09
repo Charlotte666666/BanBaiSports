@@ -1,0 +1,351 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>addIntegrationRule.html</title>
+	
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	
+	<script type="text/javascript" src="../../js/checkForm.js"></script>
+	<script type="text/javascript">
+	    var optType="";
+		var info_id=0;
+        var current_points_score=0;
+		var current_award_score=0;
+		var old_score=0;
+		var dept_score=[];
+		var xz_per_score=30;
+	　　var deptList=[];
+	    var currentDeptId=0;
+		
+		$(document).ready(function(){
+		   var date=new Date();
+		   optType=top.getUrlParam(document.URL,"optType");
+		   top.sendAjaxRequest("/actions/IntegrationItem.action?getUnderJurisdictionOfDept",[],getUnderJurisdictionOfDeptCallback);
+		   
+		   $("#tdsource_award_points").html(top.getCodeSelectHtml("SOURCE_AWARD_POINTS","source_award_points",false));
+		   $("#tdrecord_source").html(top.getCodeSelectHtml("RECORD_SOURCE","record_source",false));
+		   $("#opt_time").html(top.getTimeStr(date.getTime(),true));
+		   if(top.g_isPermit("oa_jifen_modify")){
+		     $("#label_score").hide();
+			 $("#score").show();
+		   }else{
+		     $("#label_score").show();
+			 $("#score").hide();
+		   }
+		   if(optType=="update" || optType=="query"){
+		    info_id=top.getUrlParam(document.URL,"id");
+		    var aoData=[];
+			aoData.push( { "name":"item.id","value":info_id } );
+			top.sendAjaxRequest("/actions/IntegrationItem.action?getIntegrationById",aoData,getIntegrationRecordCallback);
+		   }
+		});
+		
+		function getDeptUsers(){
+		  var deptId=$("#dept").val();
+		  createUserListHtml( deptId );
+		 
+		  var filiale=$("#dept option:selected").attr("purl").split(",");
+		  $("#tdfiliale").html(filiale[0]);
+		  $("#filiale").val(filiale[1]);
+		}
+		
+		function getUnderJurisdictionOfDeptCallback(obj){
+		  dept_score=[];
+		  deptList=[];
+		  if(obj.status==true){
+		    var ht="<select id='dept' onchange='getDeptUsers()'>";
+		    if(obj.body){
+				 if(obj.body.dept){
+					deptList=obj.body.dept;
+					var scores=[];
+					current_points_score=obj.body.current_points_score;
+					current_award_score=obj.body.current_award_score;
+					xz_per_score=obj.body.xz_ava_score;
+					var right=obj.body.inte_right;
+					var dept=right.reward_detail_id.split(",");
+					var award_score=right.dept_award_score.split(",");
+					var point_score=right.dept_point_score.split(",");
+					for(var k=0;k<dept.length;k++){
+					   var obj={
+					     "dept_id":dept[k],
+						 "award_score":award_score[k],
+						 "point_score":point_score[k],
+						 "dept_award_score":deptList[k].dept_award_score,
+						 "dept_point_score":deptList[k].dept_point_score,
+						 "xz_score":deptList[k].xz_score,
+						 "user_count":deptList[k].user_count
+					   };
+					   dept_score.push(obj);
+					}
+					
+					for(var i=0;i<deptList.length;i++){
+					  if ( i == 0 ) {
+					    currentDeptId=deptList[i].deptInfo.deptId;
+					  }
+					  ht+="<option value='"+deptList[i].deptInfo.deptId+"' purl='"+deptList[i].filiale.name+","+deptList[i].filiale.deptId+"'>"+deptList[i].deptInfo.name+"</option>";
+					}
+					var message="";
+					for(var p=0;p<dept_score.length;p++){
+					    if(p>0){
+						  message+="<br><br>";
+						}
+						var num=dept_score[p].user_count==0?0:changeTwoDecimal_f((parseInt(dept_score[p].xz_score)/dept_score[p].user_count));
+						message+="&nbsp;&nbsp;&nbsp;&nbsp;"+top.getDeptPath(dept_score[p].dept_id)+"奖分:"+dept_score[p].award_score+"分,"+"扣分:"+dept_score[p].point_score+"分;目前奖分值为"+dept_score[p].dept_award_score+"分,扣分值为"+dept_score[p].dept_point_score+"分,行政奖分总值为"+dept_score[p].xz_score+"分,人均为"+num+"分";
+					}
+					$("#message").html(message);
+				 }
+				
+				 
+			 }
+			 ht+="</select>";
+			 $("#tddept").html(ht); 
+			 getDeptUsers();
+		  }else{
+		    top.showInfoWinError("操作失败!");
+		  }
+		}
+		
+		function changeTwoDecimal_f(x) { 	
+			var f_x = parseFloat(x);  
+			if (isNaN(f_x)) {  
+				top.showInfoWinError("数据转换失败!");
+				return false;  
+			}  
+			var f_x = Math.round(x * 100) / 100;  
+			var s_x = f_x.toString();  
+			var pos_decimal = s_x.indexOf('.');  
+			if (pos_decimal < 0) {  
+				pos_decimal = s_x.length;  
+				s_x += '.';  
+			}  
+			while (s_x.length <= pos_decimal + 2) {  
+				s_x += '0';  
+			}  
+			return s_x;  
+		}  
+		
+		function createUserListHtml(deptId){
+		    var userList=[];
+		    for ( var n=0;n<deptList.length;n++ ) {
+			  if ( deptList[n].deptInfo.deptId == deptId ) {
+			    userList=deptList[n].deptUser;
+			    break;
+			  }
+			}
+
+		    var users="<select id='employee_code'>";
+		    for(var j=0;j<userList.length;j++){
+			   users+="<option value='"+userList[j].userCode+"' purl='"+userList[j].deptId+"' xurl='"+userList[j].job_title+"' qurl='"+userList[j].job_level+"'>"+userList[j].userName+"</option>";				  
+			}
+		    users+="</select>";
+		    $("#tdemployee_code").html(users);
+		}
+		
+		function getIntegrationRecordCallback(obj){
+		   if(obj.status==true){
+		     var o=obj.body;
+			 if(optType=="update"){
+				 $("#employee_code").val(o.employee_code);
+				 $("#dept").val(o.dept);
+				 $("#filiale").val(o.filiale);
+				 $("#item_id").val(o.item_id);
+				 $("#source_award_points").val(o.source_award_points);
+				 $("#record_source").val(o.record_source);
+				 $("#integration_item").val(o.integration_item);
+				 $("input[type=radio]").each(function(){
+					if(o.reward_points==$(this).val()){
+					  $(this).attr("checked",true);
+					}
+				 });
+				 $("#score").val(o.score);
+				 $("#label_score").html(o.score);
+				 $("#opt_time").val(top.getTimeStr(o.opt_time,true));
+				 old_score=o.score;
+			 }else{
+			     $("#messageDiv").hide();
+			     $("#buttonTR").hide();
+				 $("#tddept").html(top.getDeptPath(o.dept));
+				 $("#tdemployee_code").html(o.employee_name);
+				 $("#tdfiliale").html(top.getDeptPath(o.filiale));
+				 $("#filiale").val(o.filiale);
+				 $("#tdsource_award_points").html(top.getCodeName(o.source_award_points));
+				 $("#tdrecord_source").html(top.getCodeName("RECORD_SOURCE",o.record_source));
+				 $("#tdintegration_item").html(o.integration_item);
+				 $("input[type=radio]").each(function(){
+					if(o.reward_points==$(this).val()){
+					  $(this).attr("checked",true);
+					}
+				 });
+				 $("#tdscore").html(o.score);
+				 $("#tdopt_time").html(top.getTimeStr(o.opt_time,true));
+			 }
+		   }else{
+		     top.showInfoWinError("操作失败!");
+		   }
+		}
+		
+	    function cancle(){
+		  top.closeDialog();
+		}
+		
+		function doBeforeClose(){
+		}
+		
+		function checkDoSubmit(){
+		  var message="";
+		  message+=checkString($("#employee_code").val(),true,20,"姓名");
+		  message+=checkString($("#dept").val(),true,20,"部门");
+		  message+=checkString($("#filiale").val(),true,20,"所在分公司");
+		  message+=checkString($("#item_id").val(),true,20,"积分项目");
+		  var re = /^\d+(?=\.{0,1}\d+$|$)/ ;
+		  if($("#score").val()!="" && !re.test($("#score").val())){
+		    message+="分数应为数字类型<br/>";
+		  }
+		  
+		  return message;
+		}
+		
+		function doSubmit(){
+		  var checkMsg=checkDoSubmit();
+		   if(checkMsg!=""){
+		     top.showInfoWinWarn(checkMsg);return;
+		   }
+		   if(top.getRadioValue( document.getElementsByName("reward_points") )=="0"){
+		     if((Number(current_points_score)-Number($("#score").val()))<0){
+			    top.showInfoWinWarn("当前剩余的扣分为"+current_points_score+",所扣分数超过扣分下限！");return;
+			 }
+			 for(var i=0;i<dept_score.length;i++){
+			    if($("#dept").val()==dept_score[i].dept){
+				  if((Number($("#score").val())+Number(dept_score[i].dept_point_score))>dept_score[i].point_score){
+				    top.showInfoWinWarn("超过了该部门分配的扣分值!");return;
+				  }
+				}
+			 }
+		   }else{
+		      if((Number(current_points_score)-Number($("#score").val()))<0){
+			    top.showInfoWinWarn("当前剩余的奖分为"+current_award_score+",所奖分数超过奖分上限！");return;
+			  }
+			  for(var i=0;i<dept_score.length;i++){
+			    if($("#dept").val()==dept_score[i].dept){
+				  if((Number($("#score").val())+Number(dept_score[i].dept_award_score))>dept_score[i].award_score){
+				    top.showInfoWinWarn("超过了该部门分配的奖分值!");return;
+				  }
+				}
+				if($("#record_source").val()=="0"){
+				  if((Number($("#score").val())+Number(dept_score[i].xz_score))/dept_score[i].user_count>xz_per_score){
+				    top.showInfoWinWarn("该部门的行政奖分人均值超过了"+xz_per_score+"分");return;
+				  }
+				}
+			 }
+		   }
+		   var aoData=[];
+		   aoData.push( { "name":"item.employee_code","value":$("#employee_code").val() } );
+		   aoData.push( { "name":"item.employee_name","value":$("#employee_code option:selected").text() } );
+		   aoData.push( { "name":"item.job_title","value":$("#employee_code option:selected").attr("xurl") } );
+		   aoData.push( { "name":"item.job_level","value":$("#employee_code option:selected").attr("qurl") } );
+		   aoData.push( { "name":"item.integration_item","value":$("#integration_item").val() } );
+		   aoData.push( { "name":"item.source_award_points","value":$("#source_award_points").val() } );
+		   aoData.push( { "name":"item.item_id","value":$("#item_id").val() } );
+		   aoData.push( { "name":"item.score","value":$("#score").val() } );
+		   aoData.push( { "name":"item.reward_points","value":top.getRadioValue( document.getElementsByName("reward_points") ) } );
+		   aoData.push( { "name":"item.dept","value":$("#dept").val()  } );
+		   aoData.push( { "name":"item.filiale","value":$("#filiale").val()  } );
+		   aoData.push( { "name":"item.opt_time","value":top.toTimestamp($("#opt_time").html())  } );
+		   aoData.push( { "name":"item.record_source","value":$("#record_source").val()  } );
+		   var xurl="/actions/IntegrationItem.action?insertIntegration";
+		   if(info_id!=0){
+		     aoData.push( { "name":"item.id","value": info_id} );
+			 aoData.push( { "name":"old_score","value": old_score} );
+			 xurl="/actions/IntegrationItem.action?updateIntegration";
+		   }
+		   top.sendAjaxRequest(xurl,aoData,doSubmitCallback);
+		}
+		
+		function doSubmitCallback(obj){
+		  if(obj.status==true){
+		    top.showInfoWinOK("操作成功！");
+			cancle();
+		  }else{
+		    top.showInfoWinError("操作失败--》"+obj.msg);
+		  }
+		}
+		
+	    function openItemDialog(){
+		  top.openSelectDialog("选择积分项目","pages/oa/chooseIntegrationItem.html?source_award_points="+$("#source_award_points").val(),900,500,openItemDialogCallback);
+		}
+		
+		function openItemDialogCallback(){
+		    var obj=top.getTempValue();
+			$("#item_id").val(obj.item_id);
+			$("#integration_item").val(obj.integration_item);
+			$("#source_award_points").val(obj.source_award_points);
+			$("#label_score").html(obj.score);
+			$("#score").val(obj.score);
+			 $("input[type=radio]").each(function(){
+			  	if(obj.reward_points==$(this).val()){
+				  $(this).attr("checked",true);
+				}
+			 });
+		}
+	</script>
+  </head>
+  
+  <body>
+    <div id="main" style="margin:4px;">
+	    <div id="messageDiv" style="background-color: #b9d8f3;font-size:12px;"><label style="font-weight:bold;">奖扣分值分布情况及行政奖分情况：</label><br><br><label id="message" style="margin:4px;"></label></div>
+		<div style="margin-top:4px;">
+		    <table  width="100%" border="1" cellpadding="3" cellspacing="1" style="background-color: #b9d8f3;">
+			   <tr class="tr_data" height="35px">
+			      <td align="right" width="40%" style="font-weight:bold;">所在部门:</td>
+				  <td align="left" width="60%" id="tddept">
+				     
+				  </td>
+			   </tr>
+			   <tr class="tr_data" height="35px">
+			      <td align="right" width="40%" style="font-weight:bold;">姓名:</td>
+				  <td align="left" width="60%">
+				      <span id="tdemployee_code"></span>
+				  </td>
+			   </tr> 
+			   <tr class="tr_data" height="35px">
+			      <td align="right" width="40%" style="font-weight:bold;">所在分公司:</td>
+				  <td align="left" width="60%">
+				      <label id="tdfiliale"></label><input type="hidden" id="filiale" size="20"/>
+				  </td>
+			   </tr>
+			   <tr class="tr_data" height="35px">
+			      <td align="right" width="40%" style="font-weight:bold;">积分来源:</td>
+				  <td align="left" width="60%" id="tdrecord_source"></td>
+			   </tr>
+			   <tr class="tr_data" height="35px">
+			      <td align="right" width="40%" style="font-weight:bold;">奖扣分来源:</td>
+				  <td align="left" width="60%" id="tdsource_award_points"></td>
+			   </tr>
+			   <tr class="tr_data">
+			      <td align="right" style="font-weight:bold;" width="40%">积分项目:</td>
+				  <td align="left" width="60%" id="tdintegration_item"><input id="item_id"  type="hidden" /><textarea id="integration_item" rowspan="8"  type="text" style="width:100%" onclick="openItemDialog()" onkeydown="openItemDialog()" ></textarea></td>
+			   </tr>
+			   <tr class="tr_data" height="35px"> 
+			      <td align="right" style="font-weight:bold;">奖/扣分:</td>
+			      <td align="left" style="font-weight:bold;" width="60%"><input name="reward_points" value="1" type="radio" checked disabled />奖<input name="reward_points" value="0" type="radio" disabled/>扣</td>
+			   </tr>
+			   <tr class="tr_data" height="35px">
+			      <td align="right" width="40%"  style="font-weight:bold;">分数:</td>
+				  <td align="left" width="60%" id="tdscore"><label id="label_score"></label>&nbsp;<input type="text" id="score" size="20"/>分</td>
+			   </tr>
+			   <tr class="tr_data" height="35px">
+			      <td align="right" width="40%"  style="font-weight:bold;">日期:</td>
+				  <td align="left" width="60%"><label  id="opt_time" ><label/></td>
+			   </tr>
+			   <tr class="tr_data" id="buttonTR">
+			      <td align="right" width="40%" ><div class="buttonDivTwo"><a href="javascript:void(0)" onclick="doSubmit()">提交</a></div></td>
+				  <td align="left" width="60%"><div class="buttonDivTwo"><a href="javascript:void(0)" onclick="cancle()">取消</a></div></td>
+			   </tr>
+			</table>
+		</div>
+	</div>
+  </body>
+</html>

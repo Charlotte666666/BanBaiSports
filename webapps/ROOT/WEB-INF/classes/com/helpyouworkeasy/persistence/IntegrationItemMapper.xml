@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.helpyouworkeasy.persistence.IntegrationItemMapper">
+  <insert id="insertIntegrationItem" parameterType="IntegrationItem">
+    INSERT INTO tbl_integration_item (integration_item,source_award_points,reward_points,opt_user,id,opt_time,upper_limit,score,is_deleted)
+    VALUES (#{integration_item}, #{source_award_points}, #{reward_points}, #{opt_user}, #{id}, #{opt_time}, #{upper_limit}, #{score},#{is_deleted})
+  </insert>
+
+  <update id="updateIntegrationItem" parameterType="IntegrationItem">
+    update tbl_integration_item set 
+    integration_item=#{integration_item},source_award_points=#{source_award_points},reward_points=#{reward_points},opt_user=#{opt_user},opt_time=#{opt_time},upper_limit=#{upper_limit},score=#{score}
+    where id=#{id}
+  </update>
+
+  <select id="getIntegrationItemListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_integration_item where is_deleted=0 
+    <if test="o.source_award_points != '' and o.source_award_points != null" >
+      and source_award_points=#{o.source_award_points}
+    </if>
+    <if test="o.reward_points != '' and o.reward_points != null" >
+      and reward_points=#{o.reward_points}
+    </if>
+    <if test="o.id != -1" >
+      and id=#{o.id}
+    </if>
+    <if test="time1 != -1" >
+      and opt_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=opt_time
+    </if>
+  </select>
+
+  <select id="getIntegrationItemPageList" parameterType="map" resultType="IntegrationItem">
+    select 
+    integration_item,source_award_points,reward_points,opt_user,id,opt_time,upper_limit,score
+    from tbl_integration_item where is_deleted=0 
+    <if test="o.source_award_points != '' and o.source_award_points != null" >
+      and source_award_points=#{o.source_award_points}
+    </if>
+    <if test="o.reward_points != '' and o.reward_points != null" >
+      and reward_points=#{o.reward_points}
+    </if>
+    <if test="o.id != -1" >
+      and id=#{o.id}
+    </if>
+    <if test="time1 != -1" >
+      and opt_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=opt_time
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+  
+  <select id="getIntegrationItemById" parameterType="long" resultType="IntegrationItem">
+    select *
+    from tbl_integration_item
+    where is_deleted=0 and id=#{value}
+  </select>
+  
+  <update id="deleteIntegrationItem" parameterType="long">
+     update tbl_integration_item
+     set is_deleted=1
+     where id=#{value}
+  </update>
+  
+  <select id="getIntegrationItemBySource" parameterType="string" resultType="IntegrationItem">
+     select *
+     from tbl_integration_item
+     where source_award_points=#{value}
+  </select>
+  
+  
+  <!--*************************           积分记录             ******************************-->
+  <insert id="insertIntegration" parameterType="Integration">
+    INSERT INTO tbl_integration (employee_code,employee_name,dept,filiale,source_award_points,reward_points,opt_user,id,item_id,score,opt_time,integration_item,is_deleted,job_title,job_level,record_source)
+    VALUES (#{employee_code}, #{employee_name}, #{dept}, #{filiale}, #{source_award_points}, #{reward_points}, #{opt_user}, #{id}, #{item_id}, #{score}, #{opt_time},#{integration_item},#{is_deleted},#{job_title},#{job_level},#{record_source})
+  </insert>
+
+  <update id="updateIntegration" parameterType="Integration">
+    update tbl_integration set 
+    employee_code=#{employee_code},employee_name=#{employee_name},dept=#{dept},filiale=#{filiale},source_award_points=#{source_award_points},reward_points=#{reward_points},opt_user=#{opt_user},item_id=#{item_id},score=#{score},
+    opt_time=#{opt_time},integration_item=#{integration_item},job_title=#{job_title},job_level=#{job_level},record_source=#{record_source}
+    where id=#{id}
+  </update>
+
+  <select id="getIntegrationListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_integration where is_deleted=0 
+    <if test="o.employee_code != '' and o.employee_code != null" >
+      and employee_code=#{o.employee_code}
+    </if>
+    <if test="o.employee_name != '' and o.employee_name != null" >
+      and employee_name like '%${o.employee_name}%'
+    </if>
+    <if test="o.dept != '' and o.dept != null" >
+      and dept in (${o.dept})
+    </if>
+    <if test="o.filiale != '' and o.filiale != null" >
+      and filiale=#{o.filiale}
+    </if>
+    <if test="o.source_award_points != '' and o.source_award_points != null" >
+      and source_award_points=#{o.source_award_points}
+    </if>
+    <if test="o.id != -1" >
+      and id=#{o.id}
+    </if>
+    <if test="time1 != -1" >
+      and opt_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=opt_time
+    </if>
+  </select>
+
+  <select id="getIntegrationPageList" parameterType="map" resultType="Integration">
+    select 
+    employee_code,employee_name,dept,filiale,source_award_points,reward_points,opt_user,id,item_id,score,opt_time,integration_item,job_title,job_level,record_source
+    from tbl_integration where is_deleted=0 
+    <if test="o.employee_code != '' and o.employee_code != null" >
+      and employee_code=#{o.employee_code}
+    </if> 
+    <if test="o.employee_name != '' and o.employee_name != null" >
+      and employee_name like '%${o.employee_name}%'
+    </if>
+    <if test="o.dept != '' and o.dept != null" >
+      and dept in ( ${o.dept} )
+    </if>
+    <if test="o.filiale != '' and o.filiale != null" >
+      and filiale=#{o.filiale}
+    </if>
+    <if test="o.source_award_points != '' and o.source_award_points != null" >
+      and source_award_points=#{o.source_award_points}
+    </if>
+    <if test="o.id != -1" >
+      and id=#{o.id}
+    </if>
+    <if test="time1 != -1" >
+      and opt_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=opt_time
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+  
+  <select id="getIntegrationById" parameterType="long" resultType="Integration">
+     select *
+     from tbl_integration
+     where is_deleted=0 and id=#{value}
+  </select>
+  
+  <update id="deleteIntegration" parameterType="long">
+     update tbl_integration
+     set is_deleted=1
+     where id=#{value}
+  </update>
+  
+  <select id="getIntegrationSumaryList" parameterType="map" resultType="Integration">
+    SELECT  @rowno := @rowno+1 AS serial_number,employee_code,employee_name,filiale,dept,SUM(score) as score,(select @rowno :=0) t
+	FROM tbl_integration
+	WHERE is_deleted=0 
+	<if test="o.reward_points != '' and o.reward_points != null">
+	   AND reward_points=#{o.reward_points}
+	</if>
+	<if test="o.dept != '' and o.dept != null">
+	   AND dept=#{o.dept} 
+	</if> 
+    <if test="o.employee_name != '' and o.employee_name != null">
+	   AND employee_name like '%${o.employee_name}%' 
+	</if> 
+	<if test="o.source_award_points != '' and o.source_award_points != null">
+	   AND source_award_points=#{o.source_award_points}
+	</if>
+	<if test="o.filiale != '' and o.filiale != null">
+	   AND filiale=#{o.filiale}
+	</if>
+	<if test="time1 != -1">
+	   AND opt_time >=#{time1}
+	</if>
+	<if test="time2 != -1"> 
+	   AND #{time2} >= opt_time
+	</if>
+	GROUP BY employee_code,filiale
+	<if test="orderName != '' " >
+	   Order by ${orderName} ${orderAZ}
+	</if>
+	
+  </select>
+  
+  <select id="getIntegrationAnalyze" parameterType="map" resultType="Integration">
+    select dept,record_source,sum(score) as score
+    from tbl_integration
+    where is_deleted=0
+    <if test="o.filiale != '' and o.filiale != null">
+       and ( filiale=#{o.filiale} or dept=#{o.filiale} )
+    </if>
+    <if test="o.reward_points != '' and o.reward_points != null">
+       and reward_points=#{o.reward_points}
+    </if>
+    <if test="time1 != -1">
+       and opt_time>=#{time1}
+    </if>
+    <if test="time2 != -1">
+       and #{time2}>=opt_time
+    </if>
+    group by dept,record_source
+  </select>
+  
+  <select id="getIntegrationChartData" parameterType="map" resultType="Integration">
+     select employee_code,record_source,SUM(score) as score
+     from tbl_integration
+     where is_deleted=0
+     <if test="o.employee_code != '' and o.employee_code != null">
+       and employee_code=#{o.employee_code}
+     </if>
+     <if test="o.employee_name != '' and o.employee_name != null">
+       and employee_name=#{o.employee_name}
+     </if>
+     <if test="o.dept != '' and o.dept != null">
+       and dept=#{o.dept}
+     </if>
+     <if test="o.reward_points != '' and o.reward_points != null">
+       and reward_points=#{o.reward_points}
+     </if>
+     <if test="time1 != -1">
+       and opt_time >= #{time1}
+     </if>
+     <if test="time2 != -1">
+       and #{time2} >= opt_time
+     </if>
+    group by record_source
+    
+  </select>
+  
+  <!-- 根据积分管理员获取积分记录信息 -->
+  <select id="getIntegrationList" parameterType="map" resultType="Integration">
+     select *
+     from tbl_integration
+     where is_deleted=0
+     <if test="dept != '' and dept != null">
+        and dept=#{dept}
+     </if>
+     <if test="reward_points != '' and reward_points != null">
+        and reward_points=#{reward_points}
+     </if>
+     <if test="manager != '' and manager != null">
+        and opt_user=#{manager}
+     </if>
+     <if test="source_award_points != '' and source_award_points != null">
+        and source_award_points=#{source_award_points}
+     </if>
+     <if test="filiale != '' and filiale != null">
+        and filiale=#{filiale}
+     </if>
+     <if test="item_id != 0">
+        and item_id=#{item_id}
+     </if>
+  </select>
+  
+  <select id="getIntegrationScreen" parameterType="Integration" resultType="Integration">
+     SELECT employee_code,employee_name,dept,filiale,source_award_points,reward_points,
+       opt_user,id,item_id,SUM(score) AS score,opt_time,integration_item,job_title,job_level,record_source
+	FROM tbl_integration
+	where is_deleted=0
+	<if test="record_source !='' and record_source != null">
+	   and record_source=#{record_source}
+	</if> 
+	<if test="source_award_points != '' and source_award_points !=null">
+	   and source_award_points=#{source_award_points}
+	</if>
+	<if test="reward_points != '' and reward_points !=null">
+	   and reward_points=#{reward_points}
+	</if>
+	<if test="dept != '' and dept !=null">
+	   and dept in ( ${dept} )
+	</if>
+	GROUP BY employee_code
+	ORDER BY score 
+
+  </select>
+
+</mapper>

@@ -1,0 +1,13 @@
+<Context path="/console" 
+   docBase="D:/workspace/console1.4/WebRoot">
+   <Resource name="jdbc/qxconsole" auth="Container" 
+  			type="javax.sql.DataSource"
+  			username="rdb_test" password="test_2_rdb"
+            driverClassName="oracle.jdbc.driver.OracleDriver"
+            url="jdbc:oracle:thin:@127.0.0.1:1521:DB"
+            maxActive="10" maxIdle="2"/>   
+  
+  <ResourceLink name="UserTransaction"
+            global="UserTransaction"
+            type="javax.transaction.UserTransaction"/>
+</Context>

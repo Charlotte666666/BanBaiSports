@@ -1,0 +1,112 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>社区矫正工作数字化管理系统</title>
+	<link type="text/css" href="pages/pro08/css/bootstrap.css" rel="stylesheet" />
+	<link type="text/css" href="pages/pro08/css/common.css" rel="stylesheet" />
+	<link type="text/css" href="pages/pro08/css/main.css" rel="stylesheet" />
+	
+<link href="css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<script type="text/javascript" src="js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="js/SimpleMap.js"></script>
+<script type="text/javascript" src="js/helpyouworkeasy-core.js"></script>
+<script type="text/javascript" src="js/md5.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.16.custom.min.js"></script>
+	
+  <script src="pages/pro08/js/html5shiv.js"></script>
+<script type="text/javascript" src="pages/pro08/js/placeholder_fix.js"></script>
+<link type="text/css" href="pages/pro08/css/login.css" rel="stylesheet" />
+<meta name="viewport" content="initial-scale=1, user-scalable=no">
+<style>
+body{
+	background-image: url(pages/pro08/images/bg.jpg);
+	background-repeat: no-repeat;
+	box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	background-position: 50% 20%;
+	background-size: cover;
+	-webkit-background-size: cover;
+	background-origin: padding-box;
+	-webkit-background-origin: padding-box;
+	position: auto;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: #000;
+}
+</style>
+
+</head>
+<body>
+<div class="login-bg">
+	<div class="login">
+		<h1 class="login-title fs-24 fc-white fw-normal mgb20">社区矫正工作数字化管理系统</h1>
+		<div class="log-main mgb10">
+			<div class="log-cont pull-left">
+				<span class="lg-logo">logo</span>
+				<hr>
+				<form class="pdl30 pdr30" method="post" id="login">
+					<p class="log-n fs-16 fw-normal mgb30">系统登录</p>
+					<input class="user-name" type="text" id="userCode" name="username" placeholder="用户名" required/>
+					<input class="password" type="password" id="userPass" name="password" placeholder="密码" required/>
+					<input class="password_txt user-name" type="text" value="密码" style="color:#ccc;display:none;" required/>
+					<a href="javascript:void(0)" class="log-on fw-normal fc-white fs-14" >登录系统</a>
+				</form>
+			</div>
+		</div>
+		<p align="center"><font color="red"><b><span id="loginResult"></span></b></font></p><br/>
+		<p align="center"><font color="white">Copyright &copy; <a target="_blank" href="http://www.helpyouworkeasy.com">北京一维慧动科技有限公司</a></font></p>
+	</div>
+</div>
+
+<script type="text/javascript" charset="utf-8">
+	$('input').keydown(function(event){
+		if (event.keyCode == 13){
+		  doLogin();
+		};
+	});
+
+	$('.log-on').click(function(){
+		doLogin();
+		return false;
+	});
+	
+jQuery(document).ready(function() {
+    g_systemVersion="v1.0.0";
+    initGlobalData(false);
+	$("#userCode").focus();
+ });
+ 
+function doLogin(){
+   	   var userCode = $("#userCode").val();
+   	   var pass = $("#userPass").val();
+   	   if ( userCode == '' || pass == '' ) {
+   	 	 showInfoWin("请输入登录账号和密码");
+   	 	 return ;
+   	   }
+	   var aoData=[];
+       aoData.push( { "name": "user.userCode", "value": userCode } );
+       aoData.push( { "name": "user.password", "value": hex_md5(pass) } );
+	   sendAjaxRequest("/actions/System.action?signon",aoData,loginCallback);
+ }
+ 
+ function loginCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	       document.location.href="index.html";
+	    }else{
+		  $('#loginResult').html("登录失败:"+obj.msg);
+	    }
+	   }catch(e){
+		  $('#loginResult').html("登录异常:"+e.message);
+	   }
+ }
+
+</script>
+
+
+<script type="text/javascript" >writeCommonDiv();</script>
+</body>
+</html>

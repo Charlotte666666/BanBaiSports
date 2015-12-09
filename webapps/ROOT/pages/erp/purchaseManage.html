@@ -1,0 +1,155 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery.ui.all.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" src="../../js/checkForm.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var objs=[];
+			$(document).ready(function() {
+			   var iaoColumns= [
+                               { "sTitle": "进货单号", "mDataProp": "orderId", "sWidth": "10%","sClass": "center",
+                                      "fnRender": function ( oObj ) {
+									       objs[objs.length]=oObj.aData;
+                                           var ht='<a href=\'javascript:void(0)\' onclick="showDetail(\''+oObj.aData.orderId+'\')" >'+oObj.aData.orderId+'</a>';
+										   return ht;
+                                      },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "操作时间", "mDataProp": "orderId", "sWidth": "15%","sClass": "center",
+                            	   "fnRender": function ( oObj ) {
+                                      return top.getTimeStr( oObj.aData.orderId );
+                                   },
+                                   "bUseRendered": false
+                               },
+							   { "sTitle": "合计(元)", "mDataProp": "total", "sWidth": "10%", "bUseRendered": false },
+							   { "sTitle": "供应商", "mDataProp": "provider_name", "sWidth": "15%","sClass": "center", "bUseRendered": false },
+							   { "sTitle": "采购员账号", "mDataProp": "purchaser", "sWidth": "10%", "bUseRendered": false },
+							   { "sTitle": "采购商品", "mDataProp": "goodsNames", "sWidth": "20%", "bUseRendered": false, "bSortable":false },
+							   { "sTitle": "备注", "mDataProp": "memo", "sWidth": "10%", "bUseRendered": false ,"bSortable":false }
+               ];
+
+			   var surl=top.getUrlBase()+"/actions/ProGoods.action?getPurchaseOrderList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"aaSorting": [[ 1, "desc" ]],
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     var t=($("#q_orderId").val()==''?"-1":$("#q_orderId").val());
+						 if ( !IsFloat(t) ) {
+						    t=-1;
+							$("#q_orderId").val("");
+						 }
+					     aoData.push( { "name": "time1", "value": $("#q_time1").val() } );
+						 aoData.push( { "name": "time2", "value": $("#q_time2").val() } );
+						 aoData.push( { "name": "purchaseOrder.orderId", "value": t } );
+						 aoData.push( { "name": "purchaseOrder.userCode", "value": $("#q_userCode").val() } );
+						 aoData.push( { "name": "purchaseOrder.purchaser", "value": $("#q_purchaser").val() } );
+						 aoData.push( { "name": "purchaseOrder.goodsNames", "value": $("#q_goodsNames").val() } );
+						 t=($("#q_provider").val()==''?"-1":$("#q_provider").val());
+						 aoData.push( { "name": "purchaseOrder.provider_id", "value": t } );
+			        },
+			        "sDom": "frtlip",
+				    "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+			    objs=[];
+				oTable.fnDraw();
+			}
+			
+			function getObj(infoId){
+			   for ( var i=0;i<objs.length;i++ ) {
+			     if ( objs[i].orderId == infoId ) return objs[i];
+			   }
+			   return null;
+			}
+			
+			function showDetail(orderId){
+			    top.setTempValue( getObj(orderId) );
+			    var xurl="pages/erp/purchaseInfo.html?orderId="+orderId;
+	            top.openDialog("进货单明细",xurl,true,600,600,null);
+			}
+			
+function selectProvider(){
+    var xurl="pages/erp/selectProvider.html";
+	top.openSelectDialog("选择供应商",xurl,830,600,doSelectedProvider);
+}
+
+function doSelectedProvider(){
+	var o = top.getTempValue();
+	if ( !o ) return ;
+	try{
+	 $("#q_provider").val( o.provider );
+	 $("#q_providerName").val( o.providerName );
+	}catch(e){
+	}
+}
+
+function clearProvider(){
+    $("#q_provider").val( "" );
+	$("#q_providerName").val( "" );
+}
+</script>
+	</head>
+	<body>
+		<div width="100%">
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			     <tr>
+			      <td align="right" width="10%">进货单号:</td><td align="left" width="15%"><input type="text" id="q_orderId" value="" size="15" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+			      <td align="right" width="10%">操作时间从:</td><td align="left" width="15%"><input type="text" id="q_time1" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" /></td>
+			      <td align="right" width="10%">供应商:</td><td align="left" width="15%">
+				    <input type="hidden" id="q_provider" value="" />
+				    <input type="text" id="q_providerName" value="" style="cursor:pointer" onclick="selectProvider()" size="15" />
+					<img src="../../img/edit.gif" title="清空" onclick="clearProvider()" /></td>
+				  <td align="right" width="10%">采购人账号:</td><td align="left" width="15%"><input type="text" id="q_purchaser" value="" size="10" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+				 </tr>
+				 <tr>
+				  <td align="right" width="10%">操作人账号:</td><td align="left" width="15%"><input type="text" id="q_userCode" value="" size="15" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+				  <td align="right" width="10%">操作时间到:</td><td align="left" width="15%"><input type="text" id="q_time2" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" /></td>
+				  <td align="right" width="10%">采购的商品名称:</td><td align="left" width="15%"><input type="text" id="q_goodsNames" value="" size="15" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+				  <td align="center" colspan="2"><span class="buttonTwo"><a href="javascript:doQuery()">查询</a></span></td>
+			     </tr>
+				 <tr bgcolor="#C6DEFF">
+			      <td colspan="8">&nbsp;进货单查询列表</td>
+			     </tr>
+			</table>
+	        <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

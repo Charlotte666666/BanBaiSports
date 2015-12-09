@@ -1,0 +1,4201 @@
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css"/>
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css"
+			media="print, projection, screen">
+		<link rel="stylesheet" type="text/css" href="../../css/fileuploader.css">
+<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" src="../../js/fileuploader.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+		<script type="text/javascript">
+		
+   var callbackTable=null;
+   var fileListTable=null;
+   var isSaveOK=false;
+   var optType="";
+   var info_id=0;
+   var requireId=0;
+   var sati_id=0;
+   var interInt=0;
+   var ischecked=false;
+   var status="0";
+   var consultInfo_id=0;
+   var designer="";
+   var designplanid="";
+   var interId=0;
+   var measurehouseid=0;
+   var uploader = null;
+   var uploadFileNames=[];
+   var currentFileName="";
+   var file_path="";
+   var file_name="";
+   var cbNext_id=0;
+   var callbackNum=2;
+   var quoteId=0;
+   var contractId=0;
+   var cust_status='';
+   var is_send = false;
+   //其他按钮控制文本框输入
+	var other_focus=false;
+	var otherRequireStyle=false;
+	var other_cust_lost_reason=false;
+	var shoukuan_total=0;
+	var sms_id="";
+	var file_id="";
+	var moneyListTable=null;
+	var interpose=null;
+	$(document).ready(function() {
+     $( "#tabs ul" ).tabs();
+	 getKnowWay();
+   });
+   //认识公司途径
+	function getKnowWay(){
+		var aoData=[];
+		aoData.push( { "name": "knowWay.id", "value": info_id } );
+		top.sendAjaxRequest("/actions/CustInfo.action?getKnowWayList",aoData,getKnowWayCallback);	
+	}
+	
+	function getKnowWayCallback(obj){
+		var wayList=top.getCodeListByType("WAY_TYPE");
+		var ht="";
+		var rowNum=0;
+		var wid=0;
+		ht+="<tr>";
+		if(wayList){
+			if(wayList.length>0)
+			 wid=100/Number(wayList.length);
+			for(var i=0;i<wayList.length;i++){
+				ht+="<td align='center' width='"+wid+"%'>"+wayList[i].name+"</td>";
+				rowNum++;
+			}
+			ht+="</tr><tr  class='tr_data'>";
+			for(var i=0;i<wayList.length;i++){
+				ht+="<td valign='top'><table id='way0"+(Number(i)+Number(1))+"'></table></td>";
+				rowNum++;
+			}
+		}
+		ht+="</tr>";
+		$("#knowWayTable").html(ht);
+		var wayDataList=obj.aaData;
+		var way_type="";
+		var str="";
+		if(wayDataList){
+			if(wayDataList.length>0){
+				way_type=wayDataList[0].way_type;
+			for(var i=0;i<wayDataList.length;i++){
+				if(wayDataList[i].way_type!=way_type){
+					if(way_type=='05'){
+						str+='<tr class="tr_data"><td align="left"><input type="text" id="other_way"></td></tr>';
+					}
+					$("#way"+way_type).html(str);
+					str='<tr class="tr_data"><td align="left"><input type="checkbox" name="path_way" value="'+wayDataList[i].way_title+'" />'+wayDataList[i].way_title+'</td><tr>';
+					way_type=wayDataList[i].way_type;
+				}else{
+					str+='<tr class="tr_data"><td align="left"><input type="checkbox" name="path_way" value="'+wayDataList[i].way_title+'" />'+wayDataList[i].way_title+'</td><tr>';
+				}		
+			}
+			$("#way"+way_type).html(str);
+			}
+		}
+		initData();
+	}
+	//初始化方法
+   function initData(){
+		optType=top.getUrlParam(document.URL,"optType");
+		designer=top.getUrlParam(document.URL,"designer");
+		var today=new Date();
+		$("#register_date").val(top.getTimeStr(today.getTime(),true));
+		$("#tdcust_manager").html(top.getUserListByRole('custManager','cust_manager',false));
+		$("#tdanalyze_designer").html(top.getUserListByRole('designer','designer',false));
+		$("#tdmarket_dept").html(top.getUserListByRole('market_dept','market_dept',false));
+		$("#tdanalyae_cust_manager").html(top.getUserListByRole('custManager','custManager',false));
+		$("#tdfitment_designer").html(top.getUserListByRole('fitment_designer','fitment_designer',true));
+		$("#span_designer_code").html( top.getAllDesignerSelect("designer_code",designer) );
+		$("#span_interpose_type").html(top.getCodeSelectHtml("INTERPOSE_TYPE","interpose_type",false));
+		$("#cust_code").attr( "disabled", true );
+		$("#tr_interpose_type").hide();
+		$("#tr_interpose_memo").hide();
+		toggleOtherTab(false);
+	    if ( optType=='update'||optType=='query'){
+			if(optType=='query'){
+				top.closeDialog();
+			}
+			toggleOtherTab(true);
+			info_id=top.getUrlParam(document.URL,"id");
+			$("#cust_code").val( info_id );
+			var aoData=[];
+			aoData.push( { "name": "custInfo.code", "value": info_id } );
+			top.sendAjaxRequest("/actions/CustInfo.action?getFitmentCustInfo",aoData,infoCallback);
+		} 
+		else if(optType=='interpose_update' ){
+			toggleOtherTab(true);
+		    info_id=top.getUrlParam(document.URL,"id");
+			$("#cust_code").val( info_id );
+			$("#tr_interpose_type").show();
+		    $("#tr_interpose_memo").show();
+			var aoData=[];
+			aoData.push( { "name": "custInfo.code", "value": info_id } );
+			top.sendAjaxRequest("/actions/CustInfo.action?getFitmentCustInfo",aoData,infoCallback);
+		}else if(optType=='moneyRecord'){
+			showMoneyRecord();
+			requireId=top.getUrlParam(document.URL,"requireId");
+			queryMoneyRecordList();
+		}else {
+			$("#hideDesigner").hide();
+			for(var i=0;i<6;i++){
+				$("#hidetr"+(i+1)+"").hide();
+			}
+			info_id=top.getUrlParam(document.URL,"id");
+			$( "#tdcheck_result" ).html( top.getCodeSelectHtml("CHECK_RESULT","check_result",false) );
+			$( "#tdpaper_is_complete" ).html( top.getCodeSelectHtml("ISYESORNO","paper_is_complete",false) );
+			$( "#tdcust_sex" ).html( top.getCodeSelectHtml("SEX","cust_sex",false) );
+			$( "#tdcust_type" ).html( top.getCodeSelectHtml("CUST_TYPE","cust_type",true ) ); 
+			$( "#tdfrom_type" ).html( top.getCodeSelectHtml("CUST_FROM_TYPE","from_type",true ) );
+			$( "#span_cust_job" ).html( top.getCodeSelectHtml("CUST_JOB","cust_job",true,'','onchangeCustJob()' ) );
+			$("#span_room_type").html( top.getCodeSelectHtml("ROOM_TYPE","room_type",true,'','onchangeRoomType()'));
+			//$("#span_interpose_type").html(top.getCodeSelectHtml("INTERPOSE_TYPE","interpose_type",true));
+			$("#cust_code").val(info_id);
+			$("#span_designer_code").html( top.getAllDesignerSelect("designer_code",designer) );
+			$("#designer_code").attr("disabled",true);
+			if(optType=='interpose_insert'){
+			$("#tr_interpose_type").show();
+		    $("#tr_interpose_memo").show();
+			var aoData=[];
+			aoData.push( { "name": "interpose.cust_code", "value": info_id } );
+			top.sendAjaxRequest("/actions/DesignPlan.action?getInterposeInfo",aoData,initInterposeCallback);
+			}
+		}
+		
+		if (!top.g_isPermit('design_auditing') ) {
+				$('#tab_designPlan_check').hide();
+			}
+		if (!top.g_isPermit('contract_auditing') ) {
+			$('#tab1_contract_check').hide();
+			$('#tab2_contract_check').hide();
+			$('#tab3_contract_check').hide();
+		}
+		if (!top.g_isPermit('quote_auditing') ) {
+				$('#picLi6').hide();
+			}
+		//$("#span_interpose_type").html( top.getCodeSelectHtml("INTERPOSE_TYPE","interpose_type",false) );
+		$("#tdresult_status").html( top.getCodeSelectHtml("RESULT_STATUS","result_status",false) );
+		$("#tdresult_status").html( top.getCodeSelectHtml("RESULT_STATUS","result_status",false) );
+		$("#span_cust_status").html( top.getCodeSelectHtml("CUST_STATUS","cust_status",false) );
+		$("#tdis_supervisor").html( top.getCodeSelectHtml("ISYESORNO","is_supervisor",true) );
+		$("#tdis_outsourcing").html( top.getCodeSelectHtml("ISYESORNO","is_outsourcing",true) );
+		$("#tdcheck_result").html( top.getCodeSelectHtml("CHECK_RESULT","check_result",true) );
+		$("#tdpaper_is_complete").html( top.getCodeSelectHtml("ISYESORNO","paper_is_complete",true) );
+		$("#tdcallback_type").html( top.getCodeSelectHtml("CALLBACK_TYPE","callback_type",true) );
+		$("#tdintention_evaluate").html( top.getCodeSelectHtml("INTENTION_EVALUATE","intention_evaluate",true) );
+		$("#tdcust_intention").html( top.getCodeSelectHtml("INTENTION_EVALUATE","cust_intention",true) );
+		$("#tdappraise_designer").html( top.getCodeSelectHtml("APPRAISE_DESIGNER","appraise_designer",true) );
+		$("#tdcust_sati").html( top.getCodeSelectHtml("APPRAISE_DESIGNER","cust_sati",true) );
+		$("#tdfitment_designer").html(top.getUserListByRole('FITMENT_DESIGNER','fitment_designer',false));
+		$("#tdmarket_dept").html(top.getUserListByRole('MARKET_DEPT','market_dept',false));
+		$("#span_district").html( top.getCodeSelectHtml("DISTRICT","district",false) );
+
+		// 初始化复选
+		var isHasRight=top.g_isPermit('save_cust_analyze');
+		//查询所有的上传附件
+		
+		//量贩信息中的YESORNO
+		$("#span_is_fault").html( top.getCodeSelectHtml("ISYESORNO","is_fault",true,'','onchangeIsfault()'));
+		$("#span_heater_is_change").html( top.getCodeSelectHtml("ISYESORNO","heater_is_change",true,'','onchangeHeaterIsChange()') );
+		$("#span_gas_is_change").html( top.getCodeSelectHtml("ISYESORNO","gas_is_change",true,'','onchangeGasIsChange()') );
+		$("#span_partition_is_remove").html( top.getCodeSelectHtml("ISYESORNO","partition_is_remove",true) );
+		$("#span_is_need_airconditioning").html( top.getCodeSelectHtml("ISYESORNO","is_need_airconditioning",true) );
+		$("#span_water_heater_type").html( top.getCodeSelectHtml("WATER_HEATER_TYPE","water_heater_type",true) );
+		$("#span_is_buy").html( top.getCodeSelectHtml("ISYESORNO","is_buy",true) );
+		$("#span_is_bearing_wall").html( top.getCodeSelectHtml("ISYESORNO","is_bearing_wall",false) );
+		$("#span_has_airconditioning").html( top.getCodeSelectHtml("ISYESORNO","has_airconditioning",false,'','onchangeHasAirconditioning()') );
+   }
+   
+    function initInterposeCallback(obj){
+	 interpose = obj.body;
+	 if(obj.status){
+	 $("#interpose_type").val(interpose.interpose_type);
+	 $("#interpose_memo").val(interpose.memo);
+	 }
+	}
+   //控制标签页显示
+   function toggleOtherTab(isShow){
+	if(isShow){
+		$('#tabs ul li').show();
+		$('#tabs-0').show();
+		//$('#tabs-8').hide();
+	}else{
+		$('#tabs ul li').hide();
+		$('#picLi').show();
+		$('#tabs-0').show();
+		//$('#tabs-8').hide();
+	}
+   }
+   function showMoneyRecord(){
+   $('#tabs ul li').hide();
+		$('#picLi8').show();
+		$('#tabs-0').hide();
+		$('#tabs-8').show();
+		optType="";
+   }
+	//保存量房信息
+	function saveMeasureHouse(){
+		 // 检查
+		var checkMsg = checkSaveMeasureHouse();
+	    if ( checkMsg != '' ) {
+	       top.showInfoWinWarn(checkMsg);
+           return ;
+	    }
+		var aoData=[];
+		aoData.push( { "name": "custRequire.id", "value": requireId } );
+		aoData.push( { "name": "measurehouse.require_id", "value": requireId } );
+		aoData.push( { "name": "measurehouse.measure_designer", "value": $("#measure_designer").val() } );
+		aoData.push( { "name": "measurehouse.measure_tool", "value": $("#measure_tool").val() } );
+		aoData.push( { "name": "measurehouse.old_structure", "value": $("#old_structure").val() } );
+		aoData.push( { "name": "measurehouse.is_fault", "value": $("#is_fault").val() } );
+		aoData.push( { "name": "measurehouse.fault_condition", "value": $("#fault_condition").val() } );
+		aoData.push( { "name": "measurehouse.heater_is_change", "value": $("#heater_is_change").val() } );
+		aoData.push( { "name": "measurehouse.heater_suggest", "value": $("#heater_suggest").val() } );
+		aoData.push( { "name": "measurehouse.gas_is_change", "value": $("#gas_is_change").val() } );
+		aoData.push( { "name": "measurehouse.gas_suggest", "value": $("#gas_suggest").val() } );
+		aoData.push( { "name": "measurehouse.partition_is_remove", "value": $("#partition_is_remove").val() } );
+		aoData.push( { "name": "measurehouse.partition_position", "value": $("#partition_position").val() } );
+		aoData.push( { "name": "measurehouse.is_need_airconditioning", "value": $("#is_need_airconditioning").val() } );
+		aoData.push( { "name": "measurehouse.water_heater_type", "value": $("#water_heater_type").val() } );
+		aoData.push( { "name": "measurehouse.many_members", "value": $("#many_members").val() } );
+		aoData.push( { "name": "measurehouse.members_desc", "value": $("#members_desc").val() } );
+		aoData.push( { "name": "measurehouse.is_buy", "value": $("#is_buy").val() } );
+		aoData.push( { "name": "measurehouse.analyse", "value": $("#analyse").val() } );
+		aoData.push( { "name": "measurehouse.major_wood_material", "value": $("#major_wood_material").val() } );
+		aoData.push( { "name": "measurehouse.living_room", "value": $("#living_room").val() } );
+		aoData.push( { "name": "measurehouse.dining_room", "value": $("#dining_room").val() } );
+		aoData.push( { "name": "measurehouse.kitchen", "value": $("#kitchen").val() } );
+		aoData.push( { "name": "measurehouse.guest_bathroom", "value": $("#guest_bathroom").val() } );
+		aoData.push( { "name": "measurehouse.main_bathroom", "value": $("#main_bathroom").val() } );
+		aoData.push( { "name": "measurehouse.guest_bedroom1", "value": $("#guest_bedroom1").val() } );
+		aoData.push( { "name": "measurehouse.guest_bedroom2", "value": $("#guest_bedroom2").val() } );
+		aoData.push( { "name": "measurehouse.main_bedroom", "value": $("#main_bedroom").val() } );
+		aoData.push( { "name": "measurehouse.measure_other", "value": $("#measure_other").val() } );
+		aoData.push( { "name": "measurehouse.is_bearing_wall", "value": $("#is_bearing_wall").val() } );
+		aoData.push( { "name": "measurehouse.beam_position", "value": $("#beam_position").val() } );
+		aoData.push( { "name": "measurehouse.has_airconditioning", "value": $("#has_airconditioning").val() } );
+		aoData.push( { "name": "measurehouse.gas_pipe_position", "value": $("#gas_pipe_position").val() } );
+		aoData.push( { "name": "measurehouse.flue_pipe_position", "value": $("#flue_pipe_position").val() } );
+		aoData.push( { "name": "measurehouse.heater_position", "value": $("#heater_position").val() } );
+		aoData.push( { "name": "measurehouse.switch_position", "value": $("#switch_position").val() } );
+		aoData.push( { "name": "measurehouse.wall_size", "value": top.g_GetNumValue($("#wall_size").val()) } );
+		aoData.push( { "name": "measurehouse.beam_height", "value": top.g_GetNumValue($("#beam_height").val()) } );
+		aoData.push( { "name": "measurehouse.door_height", "value": top.g_GetNumValue($("#door_height").val()) } );
+		aoData.push( { "name": "measurehouse.window_height", "value": top.g_GetNumValue($("#window_height").val()) } );
+		aoData.push( { "name": "measurehouse.airconditioning_height", "value": top.g_GetNumValue($("#airconditioning_height").val()) } );
+		aoData.push( { "name": "measurehouse.water_closet", "value": top.g_GetNumValue($("#water_closet").val()) } );
+		aoData.push( { "name": "measurehouse.measure_date", "value":  top.toTimestamp($("#measure_date").val()) } );
+		aoData.push( { "name": "measurehouse.make_table_man", "value":  $("#make_table_man").val() } );
+		
+		var xurl="/actions/CustInfo.action?saveMeasureHouse";
+		top.sendAjaxRequest(xurl,aoData,optMeasureHouseCallback);
+	}
+	//校验量房信息
+	function checkSaveMeasureHouse(){
+		var msg="";
+	    if ( $("#wall_size").val() != '' && !IsFloat( $("#wall_size").val() )) msg += "[墙的尺寸]应为数字类型<br>";
+		if ( $("#beam_height").val() != '' && !IsNumber( $("#beam_height").val() )) msg +="[梁的高度]应为数字类型<br>";
+		if ( $("#door_height").val() != '' && !IsNumber( $("#door_height").val() )) msg +="[门洞高]应为数字类型<br>";
+		if ( $("#window_height").val() != '' && !IsNumber( $("#window_height").val() )) msg +="[窗洞高]应为数字类型<br>";
+		if ( $("#water_closet").val() != '' && !IsNumber( $("#water_closet").val() )) msg +="[卫生间坐便孔距]应为数字类型<br>";
+		 msg += checkString($("#wall_size").val(),true,64,"墙的尺寸");
+		msg += checkString($("#beam_position").val(),true,20,"梁的位置");
+		msg += checkString($("#beam_height").val(),true,32,"梁的高度");
+		msg += checkString($("#door_height").val(),true,256,"门洞高度");
+		msg += checkString($("#window_height").val(),true,256,"窗洞高度");
+		if($("#has_airconditioning").val()==1){
+			msg += checkString($("#airconditioning_height").val(),true,256,"中央空调的高度及尺寸");
+		}
+		msg += checkString($("#water_closet").val(),true,256,"卫生间坐便孔距");
+		msg += checkString($("#gas_pipe_position").val(),true,256,"煤气管道位置");
+		msg += checkString($("#flue_pipe_position").val(),true,256,"烟道位置");
+		msg += checkString($("#heater_position").val(),true,256,"暖气位置");
+		msg += checkString($("#switch_position").val(),true,256,"开关位置及电路位置");
+		return msg;
+	}
+	// 操作回调函数--添加量房信息
+	function optMeasureHouseCallback(obj){
+       try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	//上传文件
+	function uploadFile(){
+		var xurl="../uploadFile.html?belong_id="+designplanid+"&belong_type=0";
+		openDialog("上传文件",xurl,true,600,230,saveFileCallBack);
+	}
+	//调用回调函数---上传文件
+   	function saveFileCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQueryFileList();
+				}catch(e){
+				}
+	}
+	
+	//上传文件
+	function uploadSalesMeasureFile(num){
+	    file_id = num;
+		var xurl="../uploadFile.html?belong_id="+requireId+"&belong_type=2";
+		openDialog("上传文件",xurl,true,600,230,saveSalesMeasureFileCallBack);
+	}
+	//保存销售文件策略
+	function saveSalesMeasureFileCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) {
+				 var name = fixFilename(obj.filePath);
+			     var ht="";
+				 ht+='&nbsp;&nbsp;<a href="'+top.getUrlBase()+'/download?filePath='+obj.filePath+'+"&fileName="'+name+'">'+name+'</a>';
+				 $("#lab_file_path"+file_id).html(ht);
+				 $("#file_path"+file_id).val(obj.filePath);
+				  }
+				}catch(e){
+				}
+	}
+	
+	//查询回访信息传参
+	function getParamDate(aoData){
+	  aoData.push( { "name": "callbackinfo.cust_code", "value": info_id } );
+	  return aoData;
+	}
+	//doQuery---回访信息		
+	function doQueryCallbackList(){
+		callbackTable.fnDraw();
+	}
+	//doQuery---上传文件
+	function doQueryFileList(){
+		fileListTable.fnDraw();
+	}
+	// 保存合同信息操作
+	function saveContractInfo(){
+			  // 检查
+			var checkMsg = checkFormContract();
+			if ( checkMsg != '' ) {
+			   top.showInfoWinWarn(checkMsg);
+			   return ;
+			}
+			var aoData=[];
+			aoData.push( { "name": "contractinfo.sign_date", "value": top.toTimestamp($("#sign_date").val() )} );
+			aoData.push( { "name": "contractinfo.start_date", "value": top.toTimestamp($("#start_date").val() )} );
+			aoData.push( { "name": "contractinfo.end_date", "value": top.toTimestamp($("#end_date").val() )} );
+			aoData.push( { "name": "contractinfo.contract_code", "value": $("#contract_code").val() } );
+			aoData.push( { "name": "contractinfo.require_id", "value": requireId} );
+			aoData.push( { "name": "contractinfo.duration_require", "value": $("#duration_require").val() } );
+			aoData.push( { "name": "contractinfo.is_supervisor", "value": $("#is_supervisor").val() } );
+			aoData.push( { "name": "contractinfo.annotation", "value": $("#annotation").val() } );
+			aoData.push( { "name": "contractinfo.is_outsourcing", "value": $("#is_outsourcing").val() } );
+			aoData.push( { "name": "contractinfo.not_sure_factor", "value": $("#not_sure_factor").val() } );
+			aoData.push( { "name": "contractinfo.un_stand_recd", "value": $("#un_stand_recd").val() } );
+			aoData.push( { "name": "contractinfo.memo", "value": $("#con_memo").val() } );
+			aoData.push( { "name": "contractinfo.design_fee", "value": top.g_GetNumValue($("#design_fee").val()) } );
+			aoData.push( { "name": "contractinfo.offer_money", "value": top.g_GetNumValue($("#offer_money").val()) } );
+			aoData.push( { "name": "contractinfo.project_amount", "value": top.g_GetNumValue($("#project_amount").val()) } );
+			aoData.push( { "name": "contractinfo.product_amount", "value": top.g_GetNumValue($("#product_amount").val()) } );
+			/*aoData.push( { "name": "contractinfo.first_pay", "value": top.g_GetNumValue($("#first_pay").val()) } );
+			aoData.push( { "name": "contractinfo.second_pay", "value": top.g_GetNumValue($("#second_pay").val()) } );
+			aoData.push( { "name": "contractinfo.final_pay", "value": top.g_GetNumValue($("#final_pay").val()) } );
+			*/
+			var xurl="/actions/CustInfo.action?saveContractInfo";
+			top.sendAjaxRequest(xurl,aoData,optContractInfoCallback);
+	}
+	//校验合同信息
+	function checkFormContract(){	
+		var msg="";
+	    if ( $("#product_amount").val() != '' && !IsFloat( $("#product_amount").val() )) msg += "[产品报价]应为数字类型<br>";
+		/*if ( $("#first_pay").val() != '' && !IsNumber( $("#first_pay").val() )) msg +="[首款]应为数字类型<br>";
+		if ( $("#second_pay").val() != '' && !IsNumber( $("#second_pay").val() )) msg +="[中款]应为数字类型<br>";
+		if ( $("#final_pay").val() != '' && !IsNumber( $("#final_pay").val() )) msg +="[尾款]应为数字类型<br>";
+		*/
+		msg += checkString($("#contract_code").val(),true,64,"合同编号");
+		return msg;
+   }
+	// 操作回调函数--添加合同信息
+	function optContractInfoCallback(obj){
+       try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	// 添加设计方案和审核结果操作
+	function saveDesignPlanAndResult(){
+			var aoData=[];
+			//设计方案信息    
+			aoData.push( { "name": "designplan.require_id", "value": requireId} );
+			aoData.push( { "name": "designplan.user_code", "value": $("#user_code").val() } );
+			aoData.push( { "name": "designplan.signed_time", "value": top.toTimestamp($("#signed_time").val() )} );
+			aoData.push( { "name": "designplan.designe_money", "value": top.toTimestamp($("#designe_money").val() )} );
+			aoData.push( { "name": "designplan.update_paper_time", "value":top.toTimestamp( $("#update_paper_time").val() )} );
+			aoData.push( { "name": "designplan.alter_paper_date", "value":top.toTimestamp( $("#alter_paper_date").val() )} );
+			aoData.push( { "name": "designplan.finish_paper_date", "value":top.toTimestamp( $("#finish_paper_date").val() )} );
+			aoData.push( { "name": "designplan.signed_cycle", "value": $("#signed_cycle").val() } );
+			aoData.push( { "name": "designplan.paper_is_complete", "value": $("#paper_is_complete").val() } );
+			aoData.push( { "name": "designplan.promotion_apply", "value": $("#promotion_apply").val() } );
+			aoData.push( { "name": "designplan.memo", "value": $("#memo").val() } );
+			aoData.push( { "name": "designplan.design_fee", "value": $("#design_fee2").val() } );
+			//方案审核结果信息
+			aoData.push( { "name": "checkinfo.require_id", "value": requireId } );
+			aoData.push( { "name": "checkinfo.user_code", "value": $("#user_code").val() } );
+			aoData.push( { "name": "checkinfo.check_result", "value": $("#check_result").val() } );
+			aoData.push( { "name": "checkinfo.check_opinion", "value": $("#check_opinion").val() } );
+			aoData.push( { "name": "checkinfo.check_time", "value": top.toTimestamp($("#check_time").val() )} );
+			
+			var xurl="/actions/CustInfo.action?saveDesignPlan";
+			top.sendAjaxRequest(xurl,aoData,optDesignAndResultCallback);
+	}
+	// 操作回调函数--添加回访记录
+	function optDesignAndResultCallback(obj){
+       try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	// 添加回访信息操作
+	function addCallback(){
+			var aoData=[];
+			if($("#callback_content").val()==""){
+				 top.showInfoWinWarn("请在输入框中输入回访内容!");
+				 return;
+			}
+			aoData.push( { "name": "callbackinfo.cust_code", "value": info_id } );
+			aoData.push( { "name": "callbackinfo.require_id", "value": requireId } );
+			aoData.push( { "name": "callbackinfo.callback_type", "value": top.getRadioValue( document.getElementsByName("callback1") ) } );
+			aoData.push( { "name": "callbackinfo.callback_date", "value": top.toTimestamp($("#callback_date").val() )} );
+			aoData.push( { "name": "callbackinfo.callback_content", "value": $("#callback_content").val() } );
+			var xurl="/actions/CustInfo.action?insertCallbackInfo";
+			top.sendAjaxRequest(xurl,aoData,optCBCallback);
+	}
+	//查询回访信息
+	function queryCallBack(){
+		var iaoColumns= [
+				{ "sTitle": "回访日期", "mDataProp": "callback_date", "sWidth": "100px","sClass": "center",
+                     "fnRender": function ( oObj ) {
+                        return top.getTimeStr( oObj.aData.callback_date,true );
+					},
+                        "bUseRendered": false 
+                },
+				{ "sTitle": "回访类型", "mDataProp": "callback_type", "sWidth": "100px", "sClass": "center","bUseRendered": false},
+				{ "sTitle": "回访内容", "mDataProp": "callback_content", "sWidth": "400px", "sClass": "center", "bUseRendered": false}
+			];
+			   
+			   var surl=top.getUrlBase()+"/actions/CustInfo.action?getCallbackInfoList";
+			   callbackTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData=getParamDate(aoData);
+			    },
+			    "sDom": "frt",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+	}
+	// 操作回调函数--添加回访记录
+	function optCBCallback(obj){
+       try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+			doQueryCallbackList();
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	// 执行添加满意度调查操作
+	function saveSurvey(){
+			var aoData=[];
+			aoData.push( { "name": "surveyInfo.id", "value": sati_id } );
+			aoData.push( { "name": "surveyInfo.cust_code", "value": info_id } );
+			aoData.push( { "name": "surveyInfo.require_id", "value":  requireId } );
+			aoData.push( { "name": "surveyInfo.sati_designer", "value": top.g_GetNumValue($("#sati_designer").val()) } );
+			aoData.push( { "name": "surveyInfo.sati_build", "value": top.g_GetNumValue($("#sati_build").val()) } );
+			aoData.push( { "name": "surveyInfo.sati_service", "value": top.g_GetNumValue($("#sati_service").val()) } );
+			aoData.push( { "name": "surveyInfo.sati_other", "value": top.g_GetNumValue($("#sati_other").val()) } );
+			var xurl="/actions/CustInfo.action?insertSatisfactionSurvey";
+			if ( sati_id != 0 ) xurl="/actions/CustInfo.action?updateSatisfactionSurvey";
+			top.sendAjaxRequest(xurl,aoData,optSurveyCallback);
+	}
+	// 操作回调函数--添加满意度调查记录
+	function optSurveyCallback(obj){
+       try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+			if ( sati_id == 0 ) sati_id=obj.msg;
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	//取消按钮，控制窗口关闭
+	function doCancel(){
+		if(optType=="regist"||optType=="interpose_insert"){
+			try{
+				window.parent.custRegistOkey();
+			  }catch(e){}
+		}else{
+			 top.closeDialog();
+		}
+	}
+	// 保存基本信息
+    function doSubmit(){
+	  // 检查
+	var checkMsg = checkFormDoSubmit();
+	    if ( checkMsg != '' ) {
+	       top.showInfoWinWarn(checkMsg);
+          return ;
+	    }
+	var aoData=[];
+
+	 aoData.push( { "name": "custInfo.code", "value": info_id } );
+	 aoData.push( { "name": "custInfo.cust_name", "value": $("#cust_name").val() } );
+	 aoData.push( { "name": "custInfo.cust_manager", "value": $("#cust_manager").val() } );
+	 aoData.push( { "name": "custInfo.register_date", "value": top.toTimestamp($("#register_date").val()) });
+	 aoData.push( { "name": "custInfo.from_type", "value": $("#from_type").val() } );
+	 if($("#from_type").val()=="05"){
+		aoData.push( { "name": "custInfo.other_from_type", "value": $("#other_from_type").val() } );
+	 }
+	 aoData.push( { "name": "custInfo.cust_sex", "value": $("#cust_sex").val() } );
+	 aoData.push( { "name": "custInfo.cust_type", "value": $("#cust_type").val() } );
+	 aoData.push( { "name": "custInfo.cust_level", "value": $("#cust_level").val() } );
+	 aoData.push( { "name": "custInfo.cust_phone", "value": $("#cust_phone").val() } );
+	 aoData.push( { "name": "custInfo.cust_mobile", "value": $("#cust_mobile").val() } );
+	 aoData.push( { "name": "custInfo.cust_job", "value": $("#cust_job").val() } );	
+	 aoData.push( { "name": "custInfo.cust_job_else", "value": $("#cust_job_else").val() } );
+	aoData.push( { "name": "custRequire.room_count", "value": top.g_GetNumValue($("#room_count").val()) } );
+	aoData.push( { "name": "custRequire.hall_count", "value": top.g_GetNumValue($("#hall_count").val() )} );
+	aoData.push( { "name": "custRequire.bath_count", "value": top.g_GetNumValue($("#bath_count").val() )} );
+	
+	aoData.push( { "name": "custRequire.require_manager", "value": $("#designer_code").val() } );
+	
+
+	aoData.push( { "name": "custRequire.cust_code", "value": info_id } );
+	aoData.push( { "name": "custRequire.district", "value": $("#district").val() } );
+	aoData.push( { "name": "custRequire.project_addr", "value": $("#project_addr").val() } );
+	aoData.push( { "name": "custRequire.room_type", "value": $("#room_type").val() } );
+	aoData.push( { "name": "custRequire.other_room_type", "value": $("#room_type_else").val() } );
+	aoData.push( { "name": "custRequire.planinvest_money", "value": $("#planinvest_money").val() } );
+	aoData.push( { "name": "custRequire.major_material", "value": $("#major_material").val() } );
+	aoData.push( { "name": "custInfo.path_way", "value": top.getAllCheckedValue( document.getElementsByName("path_way") ) } );
+	aoData.push( { "name": "custInfo.other_way", "value": $("#other_way").val() } );
+	aoData.push( { "name": "custRequire.focus", "value": top.getAllCheckedValue( document.getElementsByName("focus") ) } );
+	aoData.push( { "name": "custRequire.other_focus", "value": $("#other_focus").val() } );
+	aoData.push( { "name": "custRequire.other_require_style", "value": $("#other_require_style").val() } );
+	aoData.push( { "name": "custRequire.require_style", "value": top.getAllCheckedValue( document.getElementsByName("require_style") ) } );
+	aoData.push( { "name": "custRequire.function_require", "value": $("#function_require").val() } );
+	aoData.push( { "name": "custRequire.design_key", "value": $("#design_key").val() } );
+	aoData.push( { "name": "custRequire.struct_area", "value": top.g_GetNumValue($("#struct_area").val()) } );
+	aoData.push( { "name": "custRequire.completed_date", "value": top.toTimestamp($("#completed_date").val()) } );
+	aoData.push( { "name": "custRequire.usable_area", "value": top.g_GetNumValue($("#usable_area").val()) } );
+	aoData.push( { "name": "custRequire.planfitment_date", "value": top.toTimestamp($("#planfitment_date").val()) });
+	aoData.push( { "name": "custRequire.cust_status", "value": $("#cust_status").val() } );
+	if(cust_status!="02"&&'02'==$("#cust_status").val()){
+		var d=new Date();
+		var str=top.toTimestamp(top.getTimeStr(d.getTime(),true));
+		aoData.push( { "name": "custRequire.date_update", "value": str});
+	}
+	if($("#cust_status").val()=="06"&&cust_status!="06"){
+		var d=new Date();
+		var str=top.toTimestamp(top.getTimeStr(d.getTime(),true));
+		aoData.push( { "name": "custRequire.date_fail", "value": str});
+	}
+	aoData.push( { "name": "custRequire.cust_receiver", "value": $("#cust_receiver").val() } );
+	aoData.push( { "name": "custRequire.cust_description", "value": $("#cust_description").val() } );
+	aoData.push( { "name": "custRequire.intention_evaluate", "value": $("#intention_evaluate").val() } );
+	aoData.push( { "name": "custRequire.is_measure_house", "value": top.getRadioValue( document.getElementsByName("is_measure_house") ) } );
+	aoData.push( { "name": "custRequire.is_visit_model_house", "value": top.getRadioValue( document.getElementsByName("is_visit_model_house") ) } );
+	
+	
+	var xurl="/actions/CustInfo.action?updateFitmentCustInfo";
+	if(is_send==false && $("#designer_code").val()!=''){
+	   is_send=true;
+	}
+	else{
+	   is_send=false;
+	}
+	 aoData.push( { "name": "is_send", "value": is_send } );
+	 if ( optType=='interpose_insert'||optType=='regist'|| optType=='insert') {
+	     if(optType=='interpose_insert'){
+		  aoData.push( { "name": "is_interpose", "value": true } );
+		  if(interpose!=null){
+		   aoData.push( { "name": "interpose.id", "value": interpose.id} );
+		   aoData.push( { "name": "interpose.cust_code", "value": info_id } );
+	       aoData.push( { "name": "interpose.deal_user", "value": $("#designer_code").val()} );
+	       aoData.push( { "name": "interpose.interpose_type", "value": $("#interpose_type").val() } );
+           aoData.push( { "name": "interpose.memo", "value": $("#interpose_memo").val() } );
+		  }
+		 }
+		 else{
+		   aoData.push( { "name": "is_interpose", "value": false } );
+		 }
+	    xurl="/actions/CustInfo.action?insertFitmentCustInfo";
+		
+	 }
+	
+     top.sendAjaxRequest(xurl,aoData,optCallback);
+   }
+   
+	//校验客户基本信息
+	function checkFormDoSubmit(){	
+	    var mobile="";
+		var phone="";
+		mobile=$("#cust_mobile").val();
+		phone=$("#cust_phone").val();
+		var msg="";
+	    if ( $("#struct_area").val() != '' && !IsFloat( $("#struct_area").val() )) msg += "[MTX累积剂量]应为数字类型<br>";
+		if ( $("#room_count").val() != '' && !IsNumber( $("#room_count").val() )) msg +="房间数量应是正整数!<br>";
+		if ( $("#hall_count").val() != '' && !IsNumber( $("#hall_count").val() )) msg +="大厅数量应是正整数!<br>";
+		if ( $("#bath_count").val() != '' && !IsNumber( $("#bath_count").val() )) msg +="厨卫数量应是正整数!<br>";
+		msg += checkString($("#cust_name").val(),true,64,"客户姓名");
+		msg += checkString($("#from_type").val(),true,20,"客户来源");
+		if(top.getRadioValue( document.getElementsByName("handhouse_type") )=='1'){
+			msg += checkString($("#completed_date").val(),true,20,"交房日期");
+		}
+		msg += checkString($("#cust_manager").val(),true,20,"客户经理");
+		msg += checkString($("#register_date").val(),true,32,"登记日期");
+		msg += checkString($("#project_addr").val(),true,256,"工程地址");
+		//msg += checkString($("#struct_area").val(),true,256,"建筑面积");
+		if(optType=="interpose_insert"||optType=="interpose_update"){
+		msg += checkString($("#designer_code").val(),true,20,"派单设计师");
+		}
+		if ( mobile != '' && !checkPhone(mobile) ) {msg += "移动号码格式不正确<br>";};
+		if ( phone != '' && !checkPhone(phone) ) {msg += "固定电话号码格式不正确<br>";};
+		return msg;
+   }
+	// 关闭当前页面前，页面框架自动调用的函数
+	function doBeforeClose(){
+     var obj={
+              "isSaveOK":isSaveOK
+            };
+     top.setTempValue(obj);
+	 optType="";
+   }
+
+	function optCallback(obj){
+       try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+			if(optType=="regist"){
+			  try{
+				window.parent.custRegistOkey();
+				return;
+			  }catch(e){}
+			}
+			toggleOtherTab(true);
+			if ( info_id == 0 ) {
+			  info_id=obj.msg;
+			  $("#cust_code").val( info_id );
+			  var aoData=[];
+			  aoData.push( { "name": "custInfo.code", "value": info_id } );
+			  top.sendAjaxRequest("/actions/CustInfo.action?getFitmentCustInfo",aoData,infoCallback);
+			}
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+	//查询所有上传的附件
+	function selectAllUploadFile(){
+		var surl=top.getUrlBase()+"/actions/File.action?getFileInfoList";
+		fileListTable = $('#filePathList').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":5,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+							aoData.push( { "name": "fileinfo.belong_id", "value": designplanid} );
+			        },
+			      "sDom": "frtip",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": [
+							{"sTitle": "文件名称", "mDataProp": "file_name", "sWidth": "500px","sClass": "left", "bUseRendered": false },
+			                {"sTitle": "类型","mDataProp": "file_type", "sWidth": "100px","sClass": "center",
+								 "fnRender": function ( oObj ) {
+                                          return top.getCodeName( "FILE_TYPE", oObj.aData.file_type );
+                            },
+							  "bUseRendered": false },
+							{"sTitle": "上传时间","mDataProp": "upload_time", "sWidth": "150px", "sClass": "center",
+								    "fnRender": function ( oObj ) {
+                                           return top.getTimeStr(oObj.aData.upload_time ,false);
+                            },
+							
+							 "bUseRendered": false},
+							{ "sTitle": "操作", "mDataProp": "file_name", "sWidth": "100px","sClass": "center",
+								"fnRender": function ( oObj ) {
+										var s='<a href="'+top.getUrlBase()+'/download?filePath='+oObj.aData.file_path+'+"&fileName="'+oObj.aData.file_name+'">下载</a>';
+										if(top.isCanPreview(oObj.aData.file_name))
+										s+='||<a href=\'javascript:void(0)\' onclick="previewFile(\''+oObj.aData.file_path+'\',\''+oObj.aData.file_name+'\')">预览</a>';
+										return s;
+									 },
+									"bUseRendered": false 
+							}
+							 
+                      ]
+				} );
+			
+   }
+   	//预览
+	function previewFile(filePath,fileName){
+		var xurl="../openFile.html?filePath="+filePath+"&fileName="+fileName;
+		openDialog("文件预览",xurl,true,700,600,null);
+	}
+	
+	//调用回调函数---基本信息
+	function CallbackInfo(obj){
+			try{
+				if ( obj.status == true ){
+				var o=obj.body;
+					$("#callback_type").html( top.getCodeSelectHtml("CALLBACK_TYPE","callback_type",true, o.callback_type ) );
+					$("#callback_content").val( o.callback_content);
+					$("#callback_date").val( top.getTimeStr( o.callback_date, true ) );
+				}else{
+					top.showInfoWinError("操作失败");
+			}
+		}catch(e){
+			top.showInfoWinError("处理异常:"+e.message);
+		}
+	}
+	//调用回调函数---满意度调查
+	function SurveyInfo(obj){
+			try{
+			if ( obj.status == true ){
+			    var o=obj.body;
+			    sati_id=o.id;
+				$("#sati_designer").val( o.sati_designer);
+				$("#sati_build").val( o.sati_build);
+				$("#sati_service").val( o.sati_service);
+				$("#sati_other").val( o.sati_other);
+			}else{
+				top.showInfoWinError("操作失败");
+			}
+		}catch(e){
+			top.showInfoWinError("处理异常:"+e.message);
+		}
+	}
+	//查询时调用的函数
+	function infoCallback(obj){
+	   try{
+			if ( obj.status == true ){
+				var o=obj.body;
+				info_id=o.code;
+				
+				$("#cust_code").val(o.code); 
+				$("#cust_name").val(o.cust_name);
+				$("#register_date").val(top.getTimeStr(o.register_date,true));
+				$("#cust_manager").val(o.cust_manager);
+				$("#cust_phone").val(o.cust_phone);
+				$("#cust_mobile").val(o.cust_mobile);
+				$("#cust_job_else").val(o.cust_job_else);
+				$( "#tdcust_sex" ).html( top.getCodeSelectHtml("SEX","cust_sex",false,o.cust_sex) );
+				$( "#tdcust_type" ).html( top.getCodeSelectHtml("CUST_TYPE","cust_type",true, o.cust_type ) ); 
+				$( "#tdfrom_type" ).html( top.getCodeSelectHtml("CUST_FROM_TYPE","from_type",true,o.from_type ) );
+				fromTypeChange();
+				$( "#other_from_type").val(o.other_from_type);
+				$( "#span_cust_job" ).html( top.getCodeSelectHtml("CUST_JOB","cust_job",true,o.cust_job,'onchangeCustJob()' ) );
+				
+				$("#lab_measure_cust_name").html(o.cust_name);
+				$("#lab_measure_cust_mobile").html(o.cust_mobile);
+				$("#lab_measure_cust_sex" ).html(top.getCodeName("SEX",o.cust_sex));
+				
+				$("#measure_cust_name").val(o.cust_name);
+				$("#measure_cust_mobile").val(o.cust_mobile);
+				$("#measure_cust_sex" ).val(top.getCodeName("SEX",o.cust_sex));
+		    if(o.interpose){
+			  $("#interpose_memo").val(o.interpose.memo);
+			  $("#interpose_type").val( o.interpose.interpose_type);
+			}
+		  // if ( optType=='interpose_insert' ) {
+			 // var aoData=[];
+			//  aoData.push( { "name": "interpose.cust_code", "value": info_id } );
+			//  aoData.push( { "name": "interpose.deal_user", "value": $("#designer_code").val()} );
+			//  aoData.push( { "name": "interpose.interpose_type", "value": $("#interpose_type").val() } );
+			//  aoData.push( { "name": "interpose.memo", "value": $("#interpose_memo").val() } );
+			//  aoData.push( { "name": "interpose.require_id", "value": o.requireInfo.id } );
+			//  top.sendAjaxRequest("/actions/CustInfo.action?insertProInterposeRecd",aoData,interposeInfoCallback);
+			//}
+			if ( o.requireInfo ) {
+				$("#span_room_type").html( top.getCodeSelectHtml("ROOM_TYPE","room_type",true, o.requireInfo.room_type,'onchangeRoomType()'));
+				
+				$("#span_designer_code").html( top.getAllDesignerSelect("designer_code",o.requireInfo.require_manager) );
+				if(o.requireInfo.require_manager!=''&&o.requireInfo.require_manager!=null){
+				is_send = true;
+				}
+				else{
+				is_send = false;
+				}
+				$("#project_addr").val(o.requireInfo.project_addr);
+				$("#room_type_else").val(o.requireInfo.other_room_type);  
+				$("#function_require").val(o.requireInfo.function_require);
+				$("#design_key").val(o.requireInfo.design_key);
+				$("#planinvest_money").val(o.requireInfo.planinvest_money);
+				$("#major_material").val(o.requireInfo.major_material);
+				$("#other_way").val(o.other_way);
+				initCheckedValue( document.getElementsByName("path_way"), o.path_way  );
+				if(o.requireInfo.other_focus!=""){
+					doOtherFocus();//显示文本框
+					$("#other_focus").val(o.requireInfo.other_focus);
+				} 
+				if(o.requireInfo.other_require_style!=""){
+					doOtherRequireStyle();//显示文本框
+					$("#other_require_style").val(o.requireInfo.other_require_style);
+				}
+				initCheckedValue( document.getElementsByName("focus"), o.requireInfo.focus  );
+				initCheckedValue( document.getElementsByName("require_style"), o.requireInfo.require_style  );
+				top.initRadioValue(document.getElementsByName("handhouse_type"), o.requireInfo.completed_date)
+				$("#struct_area").val( o.requireInfo.struct_area);
+				$("#usable_area").val( o.requireInfo.usable_area);
+				$("#fill_date").val( top.getTimeStr( o.requireInfo.fill_date, true ) );
+				$("#completed_date").val( top.getTimeStr( o.requireInfo.completed_date, true ) );
+				$("#room_count").val( o.requireInfo.room_count);
+				$("#hall_count").val(  o.requireInfo.hall_count);
+				$("#bath_count").val( o.requireInfo.bath_count);
+				$("#planfitment_date").val( top.getTimeStr( o.requireInfo.planfitment_date, true ) );
+				$("#cust_receiver").val(o.requireInfo.cust_receiver);
+				$("#cust_description").val(o.requireInfo.cust_description);
+				$("#tdintention_evaluate").html( top.getCodeSelectHtml("INTENTION_EVALUATE","intention_evaluate",true,o.requireInfo.intention_evaluate) );
+
+				top.initRadioValue( document.getElementsByName("is_measure_house"), o.requireInfo.is_measure_house);
+				top.initRadioValue( document.getElementsByName("is_visit_model_house"), o.requireInfo.is_visit_model_house);
+				$("#span_district").html( top.getCodeSelectHtml("DISTRICT","district",false,o.requireInfo.district) );
+				$("#span_cust_status").html( top.getCodeSelectHtml("CUST_STATUS","cust_status",false,o.requireInfo.cust_status) );
+				require_id=o.requireInfo.id;
+				cust_status=o.requireInfo.cust_status;
+				$("#lab_measure_project_addr").html(o.requireInfo.project_addr);
+				$("#lab_measure_room_count").html( o.requireInfo.room_count);
+				$("#lab_measure_hall_count").html( o.requireInfo.hall_count);
+				$("#lab_measure_bath_count").html( o.requireInfo.bath_count);
+				$("#lab_measure_bath_count").html( o.requireInfo.bath_count);
+				$("#lab_measure_require_style").html(o.requireInfo.require_style);
+				$("#other_require_style").val(o.requireInfo.other_require_style);
+				$("#lab_measure_struct_area").html( o.requireInfo.struct_area);
+				$("#lab_measure_usable_area").html( o.requireInfo.usable_area);
+				$("#lab_measure_planinvest_money").html(o.requireInfo.planinvest_money);
+				$("#lab_measure_major_material").html(o.requireInfo.major_material);
+				$("#lab_measure_designer").html(top.getUserNameByCode(o.requireInfo.require_manager));
+				$("#lab_measure_district").html(top.getCodeName("DISTRICT",o.requireInfo.district));  
+				
+				$("#measure_project_addr").val(o.requireInfo.project_addr);
+				$("#measure_room_count").val( o.requireInfo.room_count);
+				$("#measure_hall_count").val( o.requireInfo.hall_count);
+				$("#measure_bath_count").val( o.requireInfo.bath_count);
+				$("#measure_bath_count").val( o.requireInfo.bath_count);
+				$("#measure_require_style").val(o.requireInfo.require_style);
+				$("#measure_struct_area").val( o.requireInfo.struct_area);
+				$("#measure_usable_area").val( o.requireInfo.usable_area);
+				$("#measure_planinvest_money").val(o.requireInfo.planinvest_money);
+				$("#measure_major_material").val(o.requireInfo.major_material);
+				$("#measure_designer").val(top.getUserNameByCode(o.requireInfo.require_manager));
+				$("#measure_district").val(top.getCodeName("DISTRICT",o.requireInfo.district));  
+				
+			}
+			  
+			if ( o.surveyInfo ) {
+				$("#sati_designer").val(o.surveyInfo.sati_designer);
+				$("#sati_build").val(o.surveyInfo.sati_build);
+				$("#sati_service").val( o.surveyInfo.sati_service);
+				$("#sati_other").val( o.surveyInfo.sati_other);
+				sati_id=o.surveyInfo.id;
+			}
+			  
+			if ( o.custanalyze ) {
+				initCheckedValue( document.getElementsByName("general3"), o.custanalyze.general3  );
+				initCheckedValue( document.getElementsByName("general4"), o.custanalyze.general4  );
+				initCheckedValue( document.getElementsByName("cust_focus"), o.custanalyze.cust_focus  );
+				initCheckedValue( document.getElementsByName("is_consume_ability"), o.custanalyze.is_consume_ability  );
+				initCheckedValue( document.getElementsByName("cust_lost_reason"), o.custanalyze.cust_lost_reason  );
+				if(o.custanalyze.other_cust_lost_reason!=""){
+					doOtherCustLostReason();
+					$("#other_cust_lost_reason").val(o.custanalyze.other_cust_lost_reason);
+				}
+				initCheckedValue( document.getElementsByName("choose_reason"), o.custanalyze.cust_choose_reason  );
+				
+				$("#span_general1").html( top.getCodeSelectHtml("IMPRESSION","general1",true,o.custanalyze.general1) );
+				$("#span_general2").html( top.getCodeSelectHtml("APPRAISE_DESIGNER","general2",true,o.custanalyze.general2) );
+				$("#des_next_measure").val(o.custanalyze.des_next_measure);
+				$("#cusm_next_measure").val(o.custanalyze.cusm_next_measure);
+				$("#other_measure").val(o.custanalyze.other_measure);
+				$("#design_director").val(o.custanalyze.design_director);
+				$("#service_center").val(o.custanalyze.service_center);
+				$("#other").val(o.custanalyze.other);
+				$("#cy1").val(o.custanalyze.cy1);
+				$("#cy2").val(o.custanalyze.cy2);
+				$("#cy3").val(o.custanalyze.cy3);
+				$("#cy4").val(o.custanalyze.cy4);
+				$("#cy5").val(o.custanalyze.cy5);
+				$("#cy6").val(o.custanalyze.cy6);
+				$("#cy7").val(o.custanalyze.cy7);
+				$("#cy8").val(o.custanalyze.cy8);
+				$("#cy9").val(o.custanalyze.cy9);
+				$("#cy10").val(o.custanalyze.cy10);
+				$("#cy11").val(o.custanalyze.cy11);
+				$("#cy12").val(o.custanalyze.cy12);
+				$("#cy13").val(o.custanalyze.cy13);
+				$("#cy14").val(o.custanalyze.cy14);
+				$("#cy15").val(o.custanalyze.cy15);
+				$("#cy16").val(o.custanalyze.cy16);
+				$("#cy17").val(o.custanalyze.cy17);
+				$("#special1").val(o.custanalyze.special1);
+				$("#special2").val(o.custanalyze.special2);
+				$("#special3").val(o.custanalyze.special3);
+				$("#special4").val(o.custanalyze.special4);
+				$("#special5").val(o.custanalyze.special5);
+			}
+			if(o.salesstrategy){
+				$("#cust_suggest").val(o.salesstrategy.cust_suggest);
+				$("#sales_measure").val(o.salesstrategy.sales_measure);
+				$("#cusm_callback_info").val(o.salesstrategy.cusm_callback_info);
+				$("#des_callback_info").val(o.salesstrategy.des_callback_info);
+				$("#custom_tactics").val(o.salesstrategy.custom_tactics);
+				$("#sms_textarea").val(o.salesstrategy.sms_content);
+				$("#next_come_time").val( top.getTimeStr( o.salesstrategy.next_come_time, true ) );
+				$("#ssm_measure_date").val( top.getTimeStr( o.salesstrategy.measure_date, true ) );
+				$("#tdresult_status").html( top.getCodeSelectHtml("RESULT_STATUS","result_status",false,o.salesstrategy.result_status) );
+				$("#tdcust_intention").html( top.getCodeSelectHtml("INTENTION_EVALUATE","cust_intention",true,o.salesstrategy.cust_intention) );
+				$("#tdcust_sati").html( top.getCodeSelectHtml("APPRAISE_DESIGNER","cust_sati",true,o.salesstrategy.cust_sati) );
+			    
+			}
+			  requireId = o.requireInfo.id;
+			if(o.designplan){
+				$("#user_code").val(o.designplan.user_code);
+				$("#signed_cycle").val(o.designplan.signed_cycle);
+				$("#paper_is_complete").html( top.getCodeSelectHtml("ISYESORNO","paper_is_complete",true,o.designplan.paper_is_complete) );
+				$("#promotion_apply").val(o.designplan.promotion_apply);
+				$("#memo").val(o.designplan.memo);
+				$("#design_fee2").val(o.designplan.design_fee);
+				$("#design_plan_id").val( top.getTimeStr( o.designplan.design_plan_id, true ) );
+				$("#require_id").val( top.getTimeStr( o.designplan.require_id, true ) );
+				$("#update_paper_time").val( top.getTimeStr( o.designplan.update_paper_time, true ) );
+				$("#alter_paper_date").val( top.getTimeStr( o.designplan.alter_paper_date, true ) );
+				$("#finish_paper_date").val( top.getTimeStr( o.designplan.finish_paper_date, true ) );
+				$("#signed_time").val( top.getTimeStr( o.designplan.signed_time, true ) );
+				$("#designe_money").val( top.getTimeStr( o.designplan.designe_money, true ) );
+				
+				designplanid=o.designplan.design_plan_id;
+				selectAllUploadFile();
+		
+			}
+			if(o.checkinfo){
+				$("#check_opinion").val(o.checkinfo.check_opinion);
+				$("#user_code").val(o.checkinfo.user_code);
+				$("#tdcheck_result").html( top.getCodeSelectHtml("CHECK_RESULT","check_result",true,o.checkinfo.check_result) );
+				$("#check_time").val( top.getTimeStr( o.checkinfo.check_time, true ) );
+			}
+			if(o.contractinfo){
+				$("#tdis_supervisor").html( top.getCodeSelectHtml("ISYESORNO","is_supervisor",true,o.contractinfo.is_supervisor) );
+				$("#tdis_outsourcing").html( top.getCodeSelectHtml("ISYESORNO","is_outsourcing",true,o.contractinfo.is_outsourcing) );
+				$("#contract_code").val(o.contractinfo.contract_code);
+				$("#duration_require").val(o.contractinfo.duration_require);
+				$("#annotation").val(o.contractinfo.annotation);
+				$("#not_sure_factor").val(o.contractinfo.not_sure_factor);
+				$("#un_stand_recd").val(o.contractinfo.un_stand_recd);
+				$("#con_memo").val(o.contractinfo.memo);
+				$("#design_fee").val( o.contractinfo.design_fee);
+				$("#offer_money").val( o.contractinfo.offer_money);
+				$("#project_amount").val( o.contractinfo.project_amount);
+				$("#product_amount").val( o.contractinfo.product_amount);
+				/*$("#first_pay").val( o.contractinfo.first_pay);
+				$("#second_pay").val( o.contractinfo.second_pay);
+				$("#final_pay").val( o.contractinfo.final_pay);*/
+				$("#require_id").val( top.getTimeStr( o.contractinfo.require_id, true ) );
+				$("#sign_date").val( top.getTimeStr( o.contractinfo.sign_date, true ) );
+				$("#start_date").val( top.getTimeStr( o.contractinfo.start_date, true ) );
+				$("#end_date").val( top.getTimeStr( o.contractinfo.end_date, true ) );
+			}
+			if(o.measurehouse){
+			
+				measurehouseid=o.id;
+				$("#measure_tool").val(o.measurehouse.measure_tool);
+				$("#old_structure").val(o.measurehouse.old_structure);
+				$("#is_fault").val(o.measurehouse.is_fault);
+				$("#fault_condition").val(o.measurehouse.fault_condition);
+				$("#heater_is_change").val(o.measurehouse.heater_is_change);
+				$("#heater_suggest").val(o.measurehouse.heater_suggest);
+				$("#gas_is_change").val(o.measurehouse.gas_is_change);
+				$("#gas_suggest").val(o.measurehouse.gas_suggest);
+				$("#partition_is_remove").val(o.measurehouse.partition_is_remove);
+				$("#partition_position").val(o.measurehouse.partition_position);
+				$("#is_need_airconditioning").val(o.measurehouse.is_need_airconditioning);
+				$("#water_heater_type").val(o.measurehouse.water_heater_type);
+				$("#many_members").val(o.measurehouse.many_members);
+				$("#members_desc").val(o.measurehouse.members_desc);
+				$("#is_buy").val(o.measurehouse.is_buy);
+				$("#analyse").val(o.measurehouse.analyse);
+				$("#major_wood_material").val(o.measurehouse.major_wood_material);
+				$("#living_room").val(o.measurehouse.living_room);
+				$("#dining_room").val(o.measurehouse.dining_room);
+				$("#kitchen").val(o.measurehouse.kitchen);
+				$("#guest_bathroom").val(o.measurehouse.guest_bathroom);
+				$("#main_bathroom").val(o.measurehouse.main_bathroom);
+				$("#guest_bedroom1").val(o.measurehouse.guest_bedroom1);
+				$("#guest_bedroom2").val(o.measurehouse.guest_bedroom2);
+				$("#main_bedroom").val(o.measurehouse.main_bedroom);
+				$("#measure_other").val(o.measurehouse.measure_other);
+				$("#is_bearing_wall").val(o.measurehouse.is_bearing_wall);
+				$("#beam_position").val(o.measurehouse.beam_position);
+				$("#has_airconditioning").val(o.measurehouse.has_airconditioning);
+				$("#gas_pipe_position").val(o.measurehouse.gas_pipe_position);
+				$("#flue_pipe_position").val(o.measurehouse.flue_pipe_position);
+				$("#heater_position").val(o.measurehouse.heater_position);
+				$("#switch_position").val(o.measurehouse.switch_position);
+				$("#wall_size").val( o.measurehouse.wall_size);
+				$("#beam_height").val( o.measurehouse.beam_height);
+				$("#door_height").val( o.measurehouse.door_height);
+				$("#window_height").val( o.measurehouse.window_height);
+				$("#airconditioning_height").val( o.measurehouse.airconditioning_height);
+				$("#water_closet").val( o.measurehouse.water_closet);
+				$("#id").val( top.getTimeStr( o.measurehouse.id, true ) );
+				$("#measure_date").val( top.getTimeStr( o.measurehouse.measure_date, true ) );
+				$("#make_table_man").val(o.measurehouse.make_table_man);
+				$("#require_id").val( top.getTimeStr( o.measurehouse.require_id, true ) );
+				
+			}
+	if(o.cbmList){
+		for(var i=0;i<o.cbmList.length;i++){
+		    var name = fixFilename(o.cbmList[i].file_path);
+			var ht="";
+			ht+='<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="callback'+callbackNum+'">';
+			ht+='<tr class="tr_data" height="35px">';
+				ht+='<td align="left" width="100%" colspan="4">第'+callbackNum+'次回访</td>';
+			ht+='</tr>';
+			ht+='<tr class="tr_data" height="35px">';
+
+				ht+='<td align="center" width="100px">本次来店时间</td>';
+				ht+='<td align="left" colspan="3"><input type="text" id="come_time'+callbackNum+'" onclick="new Calendar().show(this);" readonly="true" value="'+top.getTimeStr(o.cbmList[i].come_time,true)+'"/></td>';
+			ht+='</tr>';
+			ht+='<tr class="tr_data" height="35px">';
+				ht+='<td align="center" width="30%">预约下次来店时间</td>';
+				ht+='<td align="left" width="30%"><input type="text" id="next_time'+callbackNum+'" onclick="new Calendar().show(this);" readonly="true" value="'+top.getTimeStr(o.cbmList[i].next_time,true)+'"/></td>';
+				ht+='<td align="center" width="20%">结果达成</td>';
+				ht+='<td align="left" width="20%" id="tdresult_status'+callbackNum+'"></td>';
+			ht+='</tr>';
+			ht+='<tr class="tr_data" height="35px">';
+				ht+='<td align="center" >电话回访时间</td>';
+				ht+='<td align="left"><input type="text" id="callback_time'+callbackNum+'" onclick="new Calendar().show(this);" readonly="true" value="'+top.getTimeStr(o.cbmList[i].callback_time,true)+'"/></td>';
+				ht+='<td align="center" >客户满意度</td>';
+				ht+='<td align="left" id="tdcust_sati'+callbackNum+'"></td>';
+			ht+='</tr>';
+			ht+='<tr class="tr_data" height="35px">';
+				ht+='<td align="center">预约量房时间</td>';
+				ht+='<td align="left" ><input type="text" id="measure_date'+callbackNum+'" onclick="new Calendar().show(this);" readonly="true" value="'+top.getTimeStr(o.cbmList[i].measure_date,true)+'"/></td>';
+				ht+='<td align="center">客户意向</td>';
+				ht+='<td align="left" id="tdcust_intention'+callbackNum+'"></td>';
+			ht+='</tr>';
+			ht+='<tr class="tr_data" height="35px">';
+				ht+='<td align="center" >客户意见或建议</td>';
+				ht+='<td align="left" colspan="3"><textarea style="width:700px" id="cust_suggest'+callbackNum+'" rows="3" cols="70">'+o.cbmList[i].cust_suggest+'</textarea></td>';
+			ht+='</tr>';
+			ht+='<tr class="tr_data" height="35px">';
+				ht+='<td align="center" >销售策略</td>';
+				ht+='<td align="left" colspan="3"><textarea style="width:700px" id="sales_measure'+callbackNum+'" rows="3" cols="70">'+o.cbmList[i].sales_measure+'</textarea></td>';
+			ht+='</tr>';
+			ht+='<tr class="tr_data" height="35px">';
+				ht+='<td align="center"><a href="javascript:uploadSalesMeasureFile(\''+callbackNum+'\')">其他销售策略上传附件</a></td>';
+				ht+='<td align="left" colspan="3"><div id="lab_file_path'+callbackNum+'"></div><input type="hidden" id="file_path'+callbackNum+'" size="20" disabled /></td>';
+			ht+='</tr>';
+			ht+='<tr class="tr_data" height="45px">';
+				ht+='<td align="center">短信内容</td>';
+				ht+='<td align="left" colspan="2"><textarea style="width:560px" id="msg_content'+callbackNum+'" cols="80" rows="3">'+o.cbmList[i].msg_content+'</textarea></td>';
+				ht+='<td align="center"><a href="javascript:selectMessage(\'msg_content'+callbackNum+'\')">选择模板</a>&nbsp;<a href="javascript:sendMessage(2,true)">发送</a></td>';
+			ht+='</tr>';
+			ht+='</table>';
+			$("#callbackMoreDiv").append( ht );
+			$("#lab_file_path"+callbackNum).html('&nbsp;&nbsp;<a href="'+top.getUrlBase()+'/download?filePath='+o.cbmList[i].file_path+'+"&fileName="'+name+'">'+name+'</a>');
+			$("#tdresult_status"+callbackNum+"").html( top.getCodeSelectHtml("RESULT_STATUS","result_status"+callbackNum+"",false,o.cbmList[i].result_status) );
+			$("#tdcust_intention"+callbackNum+"").html( top.getCodeSelectHtml("INTENTION_EVALUATE","cust_intention"+callbackNum+"",true,o.cbmList[i].cust_intention) );
+			$("#tdcust_sati"+callbackNum+"").html( top.getCodeSelectHtml("APPRAISE_DESIGNER","cust_sati"+callbackNum+"",true,o.cbmList[i].cust_sati) );
+			
+			callbackNum++;
+		}
+	}
+		if(o.quoteCheck){
+			quoteId=o.quoteCheck.check_id;
+			$("#quote_assessor").val(o.quoteCheck.quote_assessor);
+			$("#goover_explain").val(o.quoteCheck.goover_explain);
+			$("#goover_date").val(top.getTimeStr(o.quoteCheck.goover_date,true));
+			$("#check_date").val(top.getTimeStr(o.quoteCheck.check_date,true));
+			$("#deduct_marks").val(o.quoteCheck.deduct_marks);
+			$("#total_score").val(o.quoteCheck.total_score);
+			$("#time_limit").val(o.quoteCheck.time_limit);
+			$("#quote_pro1_score").val(o.quoteCheck.check_pro1_score);
+			$("#quote_pro2_score").val(o.quoteCheck.check_pro2_score);
+			$("#quote_pro3_score").val(o.quoteCheck.check_pro3_score);
+			$("#quote_pro4_score").val(o.quoteCheck.check_pro4_score);
+			$("#quote_pro5_score").val(o.quoteCheck.check_pro5_score);
+			$("#quote_pro6_score").val(o.quoteCheck.check_pro6_score);
+			$("#quote_pro7_score").val(o.quoteCheck.check_pro7_score);
+			$("#quote_pro8_score").val(o.quoteCheck.check_pro8_score);
+			$("#quote_pro9_score").val(o.quoteCheck.check_pro9_score);
+			$("#quote_pro10_score").val(o.quoteCheck.check_pro10_score);
+			
+			$("#quote_pro11_score").val(o.quoteCheck.check_pro11_score);
+			$("#quote_pro12_score").val(o.quoteCheck.check_pro12_score);
+			$("#quote_pro13_score").val(o.quoteCheck.check_pro13_score);
+			$("#quote_pro14_score").val(o.quoteCheck.check_pro14_score);
+			$("#quote_pro15_score").val(o.quoteCheck.check_pro15_score);
+			$("#quote_pro16_score").val(o.quoteCheck.check_pro16_score);
+			$("#quote_pro17_score").val(o.quoteCheck.check_pro17_score);
+			$("#quote_pro18_score").val(o.quoteCheck.check_pro18_score);
+			$("#quote_pro19_score").val(o.quoteCheck.check_pro19_score);
+			$("#quote_pro20_score").val(o.quoteCheck.check_pro20_score);
+			
+			
+			$("#quote_pro21_score").val(o.quoteCheck.check_pro21_score);
+			$("#quote_pro22_score").val(o.quoteCheck.check_pro22_score);
+			$("#quote_pro23_score").val(o.quoteCheck.check_pro23_score);
+			$("#quote_pro24_score").val(o.quoteCheck.check_pro24_score);
+			$("#quote_pro25_score").val(o.quoteCheck.check_pro25_score);
+			$("#quote_pro26_score").val(o.quoteCheck.check_pro26_score);
+			$("#quote_pro27_score").val(o.quoteCheck.check_pro27_score);
+			$("#quote_pro28_score").val(o.quoteCheck.check_pro28_score);
+			$("#quote_pro29_score").val(o.quoteCheck.check_pro29_score);
+			$("#quote_pro30_score").val(o.quoteCheck.check_pro30_score);
+			
+			
+			$("#quote_pro31_score").val(o.quoteCheck.check_pro31_score);
+			$("#quote_pro32_score").val(o.quoteCheck.check_pro32_score);
+			$("#quote_pro33_score").val(o.quoteCheck.check_pro33_score);
+			$("#quote_pro34_score").val(o.quoteCheck.check_pro34_score);
+			$("#quote_pro35_score").val(o.quoteCheck.check_pro35_score);
+			$("#quote_pro36_score").val(o.quoteCheck.check_pro36_score);
+			$("#quote_pro37_score").val(o.quoteCheck.check_pro37_score);
+			$("#quote_pro38_score").val(o.quoteCheck.check_pro38_score);
+			$("#quote_pro39_score").val(o.quoteCheck.check_pro39_score);
+			$("#quote_pro40_score").val(o.quoteCheck.check_pro40_score);
+			
+			
+			$("#quote_pro41_score").val(o.quoteCheck.check_pro41_score);
+			$("#quote_pro42_score").val(o.quoteCheck.check_pro42_score);
+			$("#quote_pro43_score").val(o.quoteCheck.check_pro43_score);
+			$("#quote_pro44_score").val(o.quoteCheck.check_pro44_score);
+			$("#quote_pro45_score").val(o.quoteCheck.check_pro45_score);
+			$("#quote_pro46_score").val(o.quoteCheck.check_pro46_score);
+			$("#quote_pro47_score").val(o.quoteCheck.check_pro47_score);
+			$("#quote_pro48_score").val(o.quoteCheck.check_pro48_score);
+			$("#quote_pro49_score").val(o.quoteCheck.check_pro49_score);
+			$("#quote_pro50_score").val(o.quoteCheck.check_pro50_score);
+			
+			
+			$("#quote_pro51_score").val(o.quoteCheck.check_pro51_score);
+			$("#quote_pro52_score").val(o.quoteCheck.check_pro52_score);
+			$("#quote_pro53_score").val(o.quoteCheck.check_pro53_score);
+			$("#quote_pro54_score").val(o.quoteCheck.check_pro54_score);
+			
+			$("#quote_pro1_num").val(o.quoteCheck.check_pro1_num);
+			$("#quote_pro2_num").val(o.quoteCheck.check_pro2_num);
+			$("#quote_pro3_num").val(o.quoteCheck.check_pro3_num);
+			$("#quote_pro4_num").val(o.quoteCheck.check_pro4_num);
+			$("#quote_pro5_num").val(o.quoteCheck.check_pro5_num);
+			$("#quote_pro6_num").val(o.quoteCheck.check_pro6_num);
+			
+			$("#quote_pro7_num").val(o.quoteCheck.check_pro7_num);
+			$("#quote_pro8_num").val(o.quoteCheck.check_pro8_num);
+			$("#quote_pro9_num").val(o.quoteCheck.check_pro9_num);
+			$("#quote_pro10_num").val(o.quoteCheck.check_pro10_num);
+			
+			$("#quote_pro11_num").val(o.quoteCheck.check_pro11_num);
+			$("#quote_pro12_num").val(o.quoteCheck.check_pro12_num);
+			$("#quote_pro13_num").val(o.quoteCheck.check_pro13_num);
+			$("#quote_pro14_num").val(o.quoteCheck.check_pro14_num);
+			$("#quote_pro15_num").val(o.quoteCheck.check_pro15_num);
+			$("#quote_pro16_num").val(o.quoteCheck.check_pro16_num);
+			$("#quote_pro17_num").val(o.quoteCheck.check_pro17_num);
+			$("#quote_pro18_num").val(o.quoteCheck.check_pro18_num);
+			$("#quote_pro19_num").val(o.quoteCheck.check_pro19_num);
+			$("#quote_pro20_num").val(o.quoteCheck.check_pro20_num);
+			
+			
+			$("#quote_pro21_num").val(o.quoteCheck.check_pro21_num);
+			$("#quote_pro22_num").val(o.quoteCheck.check_pro22_num);
+			$("#quote_pro23_num").val(o.quoteCheck.check_pro23_num);
+			$("#quote_pro24_num").val(o.quoteCheck.check_pro24_num);
+			$("#quote_pro25_num").val(o.quoteCheck.check_pro25_num);
+			$("#quote_pro26_num").val(o.quoteCheck.check_pro26_num);
+			$("#quote_pro27_num").val(o.quoteCheck.check_pro27_num);
+			$("#quote_pro28_num").val(o.quoteCheck.check_pro28_num);
+			$("#quote_pro29_num").val(o.quoteCheck.check_pro29_num);
+			$("#quote_pro30_num").val(o.quoteCheck.check_pro30_num);
+			
+			
+			$("#quote_pro31_num").val(o.quoteCheck.check_pro31_num);
+			$("#quote_pro32_num").val(o.quoteCheck.check_pro32_num);
+			$("#quote_pro33_num").val(o.quoteCheck.check_pro33_num);
+			$("#quote_pro34_num").val(o.quoteCheck.check_pro34_num);
+			$("#quote_pro35_num").val(o.quoteCheck.check_pro35_num);
+			$("#quote_pro36_num").val(o.quoteCheck.check_pro36_num);
+			$("#quote_pro37_num").val(o.quoteCheck.check_pro37_num);
+			$("#quote_pro38_num").val(o.quoteCheck.check_pro38_num);
+			$("#quote_pro39_num").val(o.quoteCheck.check_pro39_num);
+			$("#quote_pro40_num").val(o.quoteCheck.check_pro40_num);
+			
+			
+			$("#quote_pro41_num").val(o.quoteCheck.check_pro41_num);
+			$("#quote_pro42_num").val(o.quoteCheck.check_pro42_num);
+			$("#quote_pro43_num").val(o.quoteCheck.check_pro43_num);
+			$("#quote_pro44_num").val(o.quoteCheck.check_pro44_num);
+			$("#quote_pro45_num").val(o.quoteCheck.check_pro45_num);
+			$("#quote_pro46_num").val(o.quoteCheck.check_pro46_num);
+			$("#quote_pro47_num").val(o.quoteCheck.check_pro47_num);
+			$("#quote_pro48_num").val(o.quoteCheck.check_pro48_num);
+			$("#quote_pro49_num").val(o.quoteCheck.check_pro49_num);
+			$("#quote_pro50_num").val(o.quoteCheck.check_pro50_num);
+			
+			
+			$("#quote_pro51_num").val(o.quoteCheck.check_pro51_num);
+			$("#quote_pro52_num").val(o.quoteCheck.check_pro52_num);
+			$("#quote_pro53_num").val(o.quoteCheck.check_pro53_num);
+			$("#quote_pro54_num").val(o.quoteCheck.check_pro54_num);
+		}
+		if(o.contractCheck){
+			contractId=o.contractCheck.check_id;
+			$("#contract_assessor").val(o.contractCheck.contract_assessor);
+			$("#contract_goover_explain").val(o.contractCheck.goover_explain);
+			$("#contract_goover_date").val(top.getTimeStr(o.contractCheck.goover_date,true));
+			$("#contract_check_date").val(top.getTimeStr(o.contractCheck.check_date,true));
+			$("#contract_deduct_marks").val(o.contractCheck.deduct_marks);
+			$("#contract_total_score").val(o.contractCheck.total_score);
+			$("#contract_time_limit").val(o.contractCheck.time_limit);
+			$("#contract_pro1_score").val(o.contractCheck.check_pro1_score);
+			$("#contract_pro2_score").val(o.contractCheck.check_pro2_score);
+			$("#contract_pro3_score").val(o.contractCheck.check_pro3_score);
+			$("#contract_pro4_score").val(o.contractCheck.check_pro4_score);
+			$("#contract_pro5_score").val(o.contractCheck.check_pro5_score);
+			$("#contract_pro6_score").val(o.contractCheck.check_pro6_score);
+			$("#contract_pro7_score").val(o.contractCheck.check_pro7_score);
+			$("#contract_pro8_score").val(o.contractCheck.check_pro8_score);
+			$("#contract_pro9_score").val(o.contractCheck.check_pro9_score);
+			$("#contract_pro10_score").val(o.contractCheck.check_pro10_score);
+			$("#contract_pro1_num").val(o.contractCheck.check_pro1_num);
+			$("#contract_pro2_num").val(o.contractCheck.check_pro2_num);
+			$("#contract_pro3_num").val(o.contractCheck.check_pro3_num);
+			$("#contract_pro4_num").val(o.contractCheck.check_pro4_num);
+			$("#contract_pro5_num").val(o.contractCheck.check_pro5_num);
+			$("#contract_pro6_num").val(o.contractCheck.check_pro6_num);
+			$("#contract_pro7_num").val(o.contractCheck.check_pro7_num);
+			$("#contract_pro8_num").val(o.contractCheck.check_pro8_num);
+			$("#contract_pro9_num").val(o.contractCheck.check_pro9_num);
+			$("#contract_pro10_num").val(o.contractCheck.check_pro10_num);
+		}
+		   //显示交款记录
+		queryMoneyRecordList();
+		queryMoneyChangeList();
+		queryCallBack();
+		}else{
+          top.showInfoWinError("操作失败");
+        }
+		// 权限控制
+		if ( !top.g_isPermit('cust_edit') ) {
+			$("#tabs-0 textarea").attr('disabled',true);
+			$("#tabs-0 input").attr('disabled',true);
+			$("#tabs-0 input[type=checkbox]").attr("disabled", true) ;
+			$("#tabs-0 input[type=radio]").attr("disabled", true) ;
+			$("#tabs-0 select").attr("disabled", true) ;
+			$('#saveCustBtn').hide();
+		}
+		if ( !top.g_isPermit('save_cust_analyze') ) {
+			$("#tabs-1 textarea").attr('disabled',true);
+			$("#tabs-1 input[type=checkbox]").attr("disabled", true) ;
+			$("#tabs-1 select").attr("disabled", true) ;
+			$('#savecustanalyzeBtn').hide();
+		}
+		if ( !top.g_isPermit('save_sales_strategy') ) {
+			$("#tabs-2 textarea").attr('disabled',true);
+			$("#tabs-2 select").attr("disabled", true) ;
+			$('#savesalesstrategyBtn').hide();
+		}
+		if (!top.g_isPermit('save_design_plan') ) {
+			$("#tabs-3 textarea").attr('disabled',true);
+			$("#tabs-3 input").attr('disabled',true);
+			$("#tabs-3 select").attr("disabled", true) ;
+			$('#saveDesignPlanAndResulttBtn').hide();
+		}
+		if ( !top.g_isPermit('save_contract') ) {
+			$("#tabs-5 textarea").attr('disabled',true);
+			$("#tabs-5 input").attr('disabled',true);
+			$("#tabs-5 select").attr("disabled", true) ;
+			$('#saveContractBtn').hide();
+		}
+		if ( !top.g_isPermit('save_consult') ) {
+			$("#tabs-4 textarea").attr('readonly',true);
+			$("#tabs-4 input[type=radio]").attr("disabled", true) ;
+			$('#saveConsultBtn').hide();
+		} 
+		if(!top.g_isPermit('sys_designer_cust_analysis') ) {
+			$("#tabs-1 input[type=checkbox]").attr("disabled",true);
+			$("#general1").attr("disabled",true);
+			$("#general2").attr("disabled",true);
+			$("#des_next_measure").attr("disabled",true);
+			$("#tabs-1 select").attr("disabled", true) ;
+		}
+		
+		if(!top.g_isPermit("09_measure_house")){
+			$("#tabs-6 input").attr('disabled',true);
+			$("#tabs-6 select").attr("disabled", true) ;
+			$("#tabs-6 textarea").attr('readonly',true);
+		}
+		//queryMoneyChangeList();
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	 function fixFilename(fp){
+     if ( !fp ) return "";
+	 var n=fp.indexOf("_");
+	 if ( n != -1 ) {
+	   return fp.substring(n+1);
+	 }
+	 return fp;
+   }
+	function interposeInfoCallback(obj){
+	  try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	//初始化复选框
+	function initCheckedValue(boxes,values) {
+	    if ( !values ) return ;
+	    if ( values == null || values == '' ) return ;
+		for (var i = 0; i < boxes.length; i++) {
+			if ( values.indexOf(boxes[i].value+",") != -1 || values.indexOf(","+boxes[i].value) != -1 ) {
+				boxes[i].checked = true;
+			}
+        }
+	}
+	//其他行业的changge事件
+	function onchangeCustJob(){
+	   if ($("#cust_job").val()==99) {
+		 $("#cust_job_else").attr("disabled",false);
+	   } else {
+	     $("#cust_job_else").attr("disabled",true);
+	   }
+	}
+	//房型的change事件
+	function onchangeRoomType(){
+	  if ($("#room_type").val()==99) {
+		 $("#room_type_else").attr("disabled",false);
+	  } else {
+	    $("#room_type_else").attr("disabled",true);
+	   }
+	}
+	//交房状态的change事件
+	function changeHandhouseType(){
+	   var v=top.getRadioValue( document.getElementsByName("handhouse_type") );
+	   if ( v == '' ) {
+		return ;
+	   } else {
+			if(v==0)
+			{
+				$("#completed_date").attr("disabled",true);
+				$("#completed_date").val("");
+			}else
+			{
+				 $("#completed_date").attr("disabled",false);
+			}
+	   }
+	}
+	//保存客情分析
+	function addCustAnalyze(){
+
+		var aoData=[];
+		aoData.push( { "name": "custanalyze.require_id", "value": requireId } );
+		
+		aoData.push( { "name": "custanalyze.general3", "value": top.getAllCheckedValue( document.getElementsByName("general3") ) } );
+		aoData.push( { "name": "custanalyze.general4", "value": top.getAllCheckedValue( document.getElementsByName("general4") ) } );
+		aoData.push( { "name": "custanalyze.cust_focus", "value": top.getAllCheckedValue( document.getElementsByName("cust_focus") ) } );
+		aoData.push( { "name": "custanalyze.is_consume_ability", "value": top.getAllCheckedValue( document.getElementsByName("is_consume_ability") ) } );
+		aoData.push( { "name": "custanalyze.cust_lost_reason", "value": top.getAllCheckedValue( document.getElementsByName("cust_lost_reason") ) } );
+		aoData.push( { "name": "custanalyze.other_cust_lost_reason", "value": $("#other_cust_lost_reason").val() } );
+		aoData.push( { "name": "custanalyze.cust_choose_reason", "value": top.getAllCheckedValue( document.getElementsByName("choose_reason") ) } );
+		
+		aoData.push( { "name": "custanalyze.is_consume_ability", "value": $("#is_consume_ability").val() });
+		/*aoData.push( { "name": "custanalyze.is_consume_will", "value": $("#is_consume_will").val() });
+		aoData.push( { "name": "custanalyze.is_handsel", "value": $("#is_handsel").val() });
+		*/
+		aoData.push( { "name": "custanalyze.general1", "value": $("#general1").val() });
+		aoData.push( { "name": "custanalyze.general2", "value": $("#general2").val() });
+		
+		aoData.push( { "name": "custanalyze.general3", "value": $("#general3").val() });
+		aoData.push( { "name": "custanalyze.general4", "value": $("#general4").val() });
+		//aoData.push( { "name": "custanalyze.is_handsel_will", "value": $("#is_handsel_will").val() });
+		/*aoData.push( { "name": "custanalyze.general5", "value": $("#general5").val() });
+		aoData.push( { "name": "custanalyze.general6", "value": $("#general6").val() });
+		aoData.push( { "name": "custanalyze.general7", "value": $("#general7").val() });
+		aoData.push( { "name": "custanalyze.general8", "value": $("#general8").val() });
+		aoData.push( { "name": "custanalyze.general9", "value": $("#general9").val() });
+		aoData.push( { "name": "custanalyze.general10", "value": $("#general10").val() });
+		aoData.push( { "name": "custanalyze.general11", "value": $("#general11").val() });
+		aoData.push( { "name": "custanalyze.general12", "value": $("#general12").val() });
+		aoData.push( { "name": "custanalyze.general13", "value": $("#general13").val() });
+		aoData.push( { "name": "custanalyze.general14", "value": $("#general14").val() });
+		aoData.push( { "name": "custanalyze.general15", "value": $("#general15").val() });
+		aoData.push( { "name": "custanalyze.general16", "value": $("#general16").val() });
+		aoData.push( { "name": "custanalyze.general17", "value": $("#general17").val() });
+		aoData.push( { "name": "custanalyze.general18", "value": $("#general18").val() });
+		aoData.push( { "name": "custanalyze.general19", "value": $("#general19").val() });
+		*/
+		aoData.push( { "name": "custanalyze.cy1", "value": $("#cy1").val() } );
+		aoData.push( { "name": "custanalyze.cy2", "value": $("#cy2").val() } );
+		aoData.push( { "name": "custanalyze.cy3", "value": $("#cy3").val() } );
+		aoData.push( { "name": "custanalyze.cy4", "value": $("#cy4").val() } );
+		aoData.push( { "name": "custanalyze.cy5", "value": $("#cy5").val() } );
+		aoData.push( { "name": "custanalyze.cy6", "value": $("#cy6").val() } );
+		aoData.push( { "name": "custanalyze.cy7", "value": $("#cy7").val() } );
+		aoData.push( { "name": "custanalyze.cy8", "value": $("#cy8").val() } );
+		aoData.push( { "name": "custanalyze.cy9", "value": $("#cy9").val() } );
+		aoData.push( { "name": "custanalyze.cy10", "value": $("#cy10").val() } );
+		aoData.push( { "name": "custanalyze.cy11", "value": $("#cy11").val() } );
+		aoData.push( { "name": "custanalyze.cy12", "value": $("#cy12").val() } );
+		aoData.push( { "name": "custanalyze.cy13", "value": $("#cy13").val() } );
+		aoData.push( { "name": "custanalyze.cy14", "value": $("#cy14").val() } );
+		aoData.push( { "name": "custanalyze.cy15", "value": $("#cy15").val() } );
+		aoData.push( { "name": "custanalyze.cy16", "value": $("#cy16").val() } );
+		aoData.push( { "name": "custanalyze.cy17", "value": $("#cy17").val() } );
+		
+		aoData.push( { "name": "custanalyze.special1", "value": $("#special1").val() } );
+		aoData.push( { "name": "custanalyze.special2", "value": $("#special2").val() } );
+		aoData.push( { "name": "custanalyze.special3", "value": $("#special3").val() } );
+		aoData.push( { "name": "custanalyze.special4", "value": $("#special4").val() } );
+		aoData.push( { "name": "custanalyze.special5", "value": $("#special5").val() } );
+		
+		aoData.push( { "name": "custanalyze.des_next_measure", "value": $("#des_next_measure").val() } );
+		aoData.push( { "name": "custanalyze.cusm_next_measure", "value": $("#cusm_next_measure").val() } );
+		aoData.push( { "name": "custanalyze.other_measure", "value": $("#other_measure").val() } );
+		aoData.push( { "name": "custanalyze.design_director", "value": $("#design_director").val() } );
+		aoData.push( { "name": "custanalyze.service_center", "value": $("#service_center").val() } );
+		aoData.push( { "name": "custanalyze.other", "value": $("#other").val() } );
+
+		 top.sendAjaxRequest("/actions/CustInfo.action?saveCustAnalyze",aoData,optCustAnalyzeCallback);
+	}
+	// 操作回调函数--添加客情分析
+	function optCustAnalyzeCallback(obj){
+       try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	//校验销售策略信息
+	function checkSaveSalesStrategy(){
+		var msg="";
+		msg += checkString($("#next_come_time").val(),true,256,"预约二次来店时间");
+		msg += checkString($("#cust_sati").val(),true,256,"客户满意度");
+		msg += checkString($("#cust_intention").val(),true,256,"客户意向");
+		msg += checkString($("#cust_suggest").val(),true,256,"客户意见或建议");
+		return msg;
+	}
+	//添加销售策略
+	function AddSalesStrategy(){ 
+		var checkMsg = checkSaveSalesStrategy();
+			if ( checkMsg != '' ) {
+			   top.showInfoWinWarn(checkMsg);
+			   return ;
+			}
+	
+		var aoData=[]; 
+		aoData.push( { "name": "salesstrategy.require_id", "value": requireId } );
+		aoData.push( { "name": "salesstrategy.cust_sati", "value": $("#cust_sati").val() } );
+		aoData.push( { "name": "salesstrategy.cust_suggest", "value": $("#cust_suggest").val() } );
+		aoData.push( { "name": "salesstrategy.cust_intention", "value": $("#cust_intention").val() } );
+		aoData.push( { "name": "salesstrategy.sales_measure", "value": $("#sales_measure").val() } );
+		aoData.push( { "name": "salesstrategy.result_status", "value": $("#result_status").val() } );
+		aoData.push( { "name": "salesstrategy.next_come_time", "value":top.toTimestamp($("#next_come_time").val()) } );
+		aoData.push( { "name": "salesstrategy.measure_date", "value":top.toTimestamp($("#ssm_measure_date").val()) } );
+		aoData.push( { "name": "salesstrategy.cusm_callback_info", "value": $("#cusm_callback_info").val() } );
+		aoData.push( { "name": "salesstrategy.des_callback_info", "value": $("#des_callback_info").val() } );
+		aoData.push( { "name": "salesstrategy.custom_tactics", "value": $("#custom_tactics").val() } );
+		aoData.push( { "name": "salesstrategy.sms_content", "value": $("#sms_textarea").val() } );
+		
+		top.sendAjaxRequest("/actions/SalesStrategy.action?saveSalesStrategy",aoData,optSalesStrategyCallback);
+	}
+	// 操作回调函数--添加销售策略信息
+	function optSalesStrategyCallback(obj){
+       try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	
+	//判断原房屋结构是否有缺陷
+	function onchangeIsfault(){
+	   if ($("#is_fault").val()==1) {
+		 $("#fault_condition").attr("disabled",false);
+	   } else {
+	     $("#fault_condition").attr("disabled",true);
+	   }
+	}
+	//判断暖气是否有改动
+	function onchangeHeaterIsChange(){
+	   if ($("#heater_is_change").val()==1) {
+		 $("#heater_suggest").attr("disabled",false);
+	   } else {
+	     $("#heater_suggest").attr("disabled",true);
+	   }
+	}
+	//判断煤气是否需要改动
+	function onchangeGasIsChange(){
+	   if ($("#gas_is_change").val()==1) {
+		 $("#gas_suggest").attr("disabled",false);
+	   } else {
+	     $("#gas_suggest").attr("disabled",true);
+	   }
+	}
+	//判断是否有中央空调
+	function onchangeHasAirconditioning(){
+	   if ($("#has_airconditioning").val()==1) {
+		 $("#airconditioning_height").attr("disabled",false);
+	   } else {
+	     $("#airconditioning_height").attr("disabled",true);
+	   }
+	}
+	
+	
+	function openDialog(t,xurl,isModal,w,h,callback){
+		if ( isModal == undefined ) isModal=true;
+		if ( !h ) h=200;
+		if ( !w ) w=400;
+		$( "#dialog" ).dialog({
+			title: t,
+			height: h,
+			width: w,
+			modal: isModal,
+			resizable: false,
+		    beforeClose: function(event, ui) {
+		        try{
+		            document.getElementById("self_iframe").contentWindow.doBeforeClose();
+		            if ( callback ) callback.apply();
+		        }catch(e){
+		        }
+		        return true;
+		    }
+		});
+		document.getElementById("self_iframe").src = xurl;
+    }
+	
+	function closeDialog(){
+		$( "#dialog" ).dialog( "close" );
+	}
+	//添加更多回访信息行
+	function AddMoreCallBack(){
+		var ht="";
+		ht+='<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="callback'+callbackNum+'">';
+		ht+='<tr class="tr_data" height="35px">';
+			ht+='<td align="left" colspan="4">第'+callbackNum+'次回访</td>';
+		ht+='</tr>';
+		ht+='<tr class="tr_data" height="35px">';
+
+			ht+='<td align="center" width="100px">本次来店时间</td>';
+			ht+='<td align="left" colspan="3"><input type="text" id="come_time'+callbackNum+'" onclick="new Calendar().show(this);" readonly="true" /></td>';
+		ht+='</tr>';
+		ht+='<tr class="tr_data" height="35px">';
+			ht+='<td align="center" width="30%">预约下次来店时间</td>';
+			ht+='<td align="left" width="30%"><input type="text" id="next_time'+callbackNum+'" onclick="new Calendar().show(this);" readonly="true"/></td>';
+			ht+='<td align="center" width="20%">结果达成</td>';
+			ht+='<td align="left" width="20%" id="tdresult_status'+callbackNum+'"></td>';
+		ht+='</tr>';
+		ht+='<tr class="tr_data" height="35px">';
+			ht+='<td align="center" >电话回访时间</td>';
+			ht+='<td align="left"><input type="text" id="callback_time'+callbackNum+'" onclick="new Calendar().show(this);" readonly="true" /></td>';
+			ht+='<td align="center" >客户满意度</td>';
+			ht+='<td align="left" id="tdcust_sati'+callbackNum+'" colspan="3"></td>';
+		ht+='</tr>';
+		ht+='<tr class="tr_data" height="35px">';
+			ht+='<td align="center">预约量房时间</td>';
+			ht+='<td align="left"><input type="text" id="measure_date'+callbackNum+'" onclick="new Calendar().show(this);" readonly="true"/></td>';
+			ht+='<td align="center">客户意向</td>';
+			ht+='<td align="left" id="tdcust_intention'+callbackNum+'"></td>';
+		ht+='</tr>';
+		ht+='<tr class="tr_data" height="35px">';
+			ht+='<td align="center" >客户意见或建议</td>';
+			ht+='<td align="left" colspan="3"><textarea style="width:700px" id="cust_suggest'+callbackNum+'" rows="3" cols="70"></textarea></td>';
+		ht+='</tr>';
+		ht+='<tr class="tr_data" height="35px">';
+			ht+='<td align="center">销售策略</td>';
+			ht+='<td align="left" colspan="3"><textarea style="width:700px" id="sales_measure'+callbackNum+'" rows="3" cols="70"></textarea></td>';
+		ht+='</tr>';
+		ht+='<tr class="tr_data" height="35px">';
+			ht+='<td align="center"><a href="javascript:uploadSalesMeasureFile(\''+callbackNum+'\')">其他销售策略上传附件</a></td>';
+			ht+='<td align="left" colspan="3"><div id="lab_file_path'+callbackNum+'"></div><input type="hidden" id="file_path'+callbackNum+'" size="20" disabled /></td>';
+		ht+='</tr>';
+		ht+='<tr class="tr_data" height="35px">';
+			ht+='<td align="center">短信内容</td>';
+			ht+='<td align="left" colspan="2"><textarea style="width:560px" id="msg_content'+callbackNum+'" cols="80" rows="3"></textarea><br/>&nbsp;</td>';
+			ht+='<td align="center"><a href="javascript:selectMessage(\'msg_content'+callbackNum+'\')">选择模板</a>&nbsp;<a href="javascript:sendMessage(2,true)">发送</a></td>';
+		ht+='</tr>';
+		ht+='<tr class="tr_data" height="45px" id="addTrBtn'+callbackNum+'">';
+			ht+='<td colspan="4" align="right"><a href="javascript:void(0)" onclick="saveMoreCallBack(\''+callbackNum+'\')">保存</a></td>';
+		ht+='</tr>';
+		ht+='</table>';
+		$("#callbackMoreDiv").append( ht );
+		$("#tdresult_status"+callbackNum+"").html( top.getCodeSelectHtml("RESULT_STATUS","result_status"+callbackNum+"",false) );
+		$("#tdcust_intention"+callbackNum+"").html( top.getCodeSelectHtml("INTENTION_EVALUATE","cust_intention"+callbackNum+"",true) );
+		$("#tdcust_sati"+callbackNum+"").html( top.getCodeSelectHtml("APPRAISE_DESIGNER","cust_sati"+callbackNum+"",true) );
+		
+		callbackNum++;
+		$("#addTrBtn").hide();
+		
+	}
+	//保存更多回访信息
+	function saveMoreCallBack(num){
+		var aoData=[];
+		aoData.push( { "name": "callbackMore.next_id", "value": cbNext_id } );
+		aoData.push( { "name": "callbackMore.cust_suggest", "value": $("#cust_suggest"+num+"").val() } );
+		aoData.push( { "name": "callbackMore.come_time", "value": top.toTimestamp($("#come_time"+num+"").val() )} );
+		aoData.push( { "name": "callbackMore.next_time", "value": top.toTimestamp($("#next_time"+num+"").val()) } );
+		aoData.push( { "name": "callbackMore.callback_time", "value": top.toTimestamp($("#callback_time"+num+"").val()) } );
+		aoData.push( { "name": "callbackMore.measure_date", "value":top.toTimestamp( $("#measure_date"+num+"").val()) } );
+		aoData.push( { "name": "callbackMore.result_status", "value": $("#result_status"+num+"").val() } );
+		aoData.push( { "name": "callbackMore.cust_intention", "value": $("#cust_intention"+num+"").val() } );
+		aoData.push( { "name": "callbackMore.sales_measure", "value": $("#sales_measure"+num+"").val() } );
+		aoData.push( { "name": "callbackMore.cust_sati", "value": $("#cust_sati"+num+"").val() } );
+		aoData.push( { "name": "callbackMore.msg_content", "value": $("#msg_content"+num+"").val() } );
+		aoData.push( { "name": "callbackMore.file_path", "value": $("#file_path"+num+"").val() } );
+		aoData.push( { "name": "callbackMore.require_id", "value": requireId } );
+		
+		top.sendAjaxRequest("/actions/CustInfo.action?saveCallbackMore",aoData,optCallbackMoreCallback);
+	}
+	function optCallbackMoreCallback(obj){
+	 try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+			$("#addTrBtn").show();
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	
+	//保存报价审核信息
+	function saveQuoteCheck(){
+		var aoData=[];
+		aoData.push( { "name": "quoteCheck.check_id", "value": quoteId } );
+		aoData.push( { "name": "quoteCheck.require_id", "value": requireId } );
+		aoData.push( { "name": "quoteCheck.cust_code", "value": info_id } );
+		aoData.push( { "name": "quoteCheck.quote_assessor", "value": $("#quote_assessor").val() } );
+		aoData.push( { "name": "quoteCheck.goover_explain", "value": $("#goover_explain").val() } );
+		aoData.push( { "name": "quoteCheck.goover_date", "value": top.toTimestamp($("#goover_date").val()) } );
+		aoData.push( { "name": "quoteCheck.check_date", "value": top.toTimestamp($("#check_date").val()) } );
+		aoData.push( { "name": "quoteCheck.deduct_marks", "value": $("#deduct_marks").val() } );
+		aoData.push( { "name": "quoteCheck.total_score", "value": $("#total_score").val() } );
+		aoData.push( { "name": "quoteCheck.time_limit", "value": $("#time_limit").val() } );
+		aoData.push( { "name": "quoteCheck.check_pro1_score", "value": $("#quote_pro1_score").val() } );
+		aoData.push( { "name": "quoteCheck.check_pro2_score", "value": $("#quote_pro2_score").val() } );
+		aoData.push( { "name": "quoteCheck.check_pro3_score", "value": $("#quote_pro3_score").val() } );
+		aoData.push( { "name": "quoteCheck.check_pro4_score", "value": $("#quote_pro4_score").val() } );
+		aoData.push( { "name": "quoteCheck.check_pro5_score", "value": $("#quote_pro5_score").val() } );
+		aoData.push( { "name": "quoteCheck.check_pro6_score", "value": $("#quote_pro6_score").val() } );
+		aoData.push( { "name": "quoteCheck.check_pro1_num", "value": $("#quote_pro1_num").val() } );
+		aoData.push( { "name": "quoteCheck.check_pro2_num", "value": $("#quote_pro2_num").val() } );
+		aoData.push( { "name": "quoteCheck.check_pro3_num", "value": $("#quote_pro3_num").val() } );
+		aoData.push( { "name": "quoteCheck.check_pro4_num", "value": $("#quote_pro4_num").val() } );
+		aoData.push( { "name": "quoteCheck.check_pro5_num", "value": $("#quote_pro5_num").val() } );
+		aoData.push( { "name": "quoteCheck.check_pro6_num", "value": $("#quote_pro6_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro7_num", "value": $("#quote_pro7_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro8_num", "value": $("#quote_pro8_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro9_num", "value": $("#quote_pro9_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro10_num", "value": $("#quote_pro10_num").val() } );
+		
+		aoData.push( { "name": "quoteCheck.quote_pro11_num", "value": $("#quote_pro11_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro12_num", "value": $("#quote_pro12_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro13_num", "value": $("#quote_pro13_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro14_num", "value": $("#quote_pro14_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro15_num", "value": $("#quote_pro15_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro16_num", "value": $("#quote_pro16_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro17_num", "value": $("#quote_pro17_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro18_num", "value": $("#quote_pro18_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro19_num", "value": $("#quote_pro19_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro20_num", "value": $("#quote_pro20_num").val() } );
+		
+		aoData.push( { "name": "quoteCheck.quote_pro21_num", "value": $("#quote_pro21_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro22_num", "value": $("#quote_pro22_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro23_num", "value": $("#quote_pro23_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro23_num", "value": $("#quote_pro24_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro25_num", "value": $("#quote_pro25_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro26_num", "value": $("#quote_pro26_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro27_num", "value": $("#quote_pro27_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro28_num", "value": $("#quote_pro28_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro29_num", "value": $("#quote_pro29_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro30_num", "value": $("#quote_pro30_num").val() } );
+		
+		aoData.push( { "name": "quoteCheck.quote_pro31_num", "value": $("#quote_pro31_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro32_num", "value": $("#quote_pro32_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro33_num", "value": $("#quote_pro33_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro34_num", "value": $("#quote_pro34_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro35_num", "value": $("#quote_pro35_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro36_num", "value": $("#quote_pro36_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro37_num", "value": $("#quote_pro37_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro38_num", "value": $("#quote_pro38_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro39_num", "value": $("#quote_pro39_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro40_num", "value": $("#quote_pro40_num").val() } );
+		
+		aoData.push( { "name": "quoteCheck.quote_pro41_num", "value": $("#quote_pro41_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro42_num", "value": $("#quote_pro42_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro43_num", "value": $("#quote_pro43_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro44_num", "value": $("#quote_pro44_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro45_num", "value": $("#quote_pro45_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro46_num", "value": $("#quote_pro46_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro47_num", "value": $("#quote_pro47_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro48_num", "value": $("#quote_pro48_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro49_num", "value": $("#quote_pro49_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro50_num", "value": $("#quote_pro50_num").val() } );
+		
+		
+		aoData.push( { "name": "quoteCheck.quote_pro51_num", "value": $("#quote_pro51_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro52_num", "value": $("#quote_pro52_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro53_num", "value": $("#quote_pro53_num").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro54_num", "value": $("#quote_pro54_num").val() } );
+		
+		
+		aoData.push( { "name": "quoteCheck.quote_pro7_score", "value": $("#quote_pro7_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro8_score", "value": $("#quote_pro8_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro9_score", "value": $("#quote_pro9_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro10_score", "value": $("#quote_pro10_score").val() } );
+		
+		aoData.push( { "name": "quoteCheck.quote_pro11_score", "value": $("#quote_pro11_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro12_score", "value": $("#quote_pro12_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro13_score", "value": $("#quote_pro13_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro14_score", "value": $("#quote_pro14_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro15_score", "value": $("#quote_pro15_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro16_score", "value": $("#quote_pro16_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro17_score", "value": $("#quote_pro17_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro18_score", "value": $("#quote_pro18_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro19_score", "value": $("#quote_pro19_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro20_score", "value": $("#quote_pro20_score").val() } );
+		
+		aoData.push( { "name": "quoteCheck.quote_pro21_score", "value": $("#quote_pro21_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro22_score", "value": $("#quote_pro22_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro23_score", "value": $("#quote_pro23_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro23_score", "value": $("#quote_pro24_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro25_score", "value": $("#quote_pro25_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro26_score", "value": $("#quote_pro26_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro27_score", "value": $("#quote_pro27_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro28_score", "value": $("#quote_pro28_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro29_score", "value": $("#quote_pro29_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro30_score", "value": $("#quote_pro30_score").val() } );
+		
+		aoData.push( { "name": "quoteCheck.quote_pro31_score", "value": $("#quote_pro31_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro32_score", "value": $("#quote_pro32_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro33_score", "value": $("#quote_pro33_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro34_score", "value": $("#quote_pro34_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro35_score", "value": $("#quote_pro35_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro36_score", "value": $("#quote_pro36_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro37_score", "value": $("#quote_pro37_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro38_score", "value": $("#quote_pro38_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro39_score", "value": $("#quote_pro39_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro40_score", "value": $("#quote_pro40_score").val() } );
+		
+		aoData.push( { "name": "quoteCheck.quote_pro41_score", "value": $("#quote_pro41_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro42_score", "value": $("#quote_pro42_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro43_score", "value": $("#quote_pro43_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro44_score", "value": $("#quote_pro44_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro45_score", "value": $("#quote_pro45_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro46_score", "value": $("#quote_pro46_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro47_score", "value": $("#quote_pro47_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro48_score", "value": $("#quote_pro48_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro49_score", "value": $("#quote_pro49_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro50_score", "value": $("#quote_pro50_score").val() } );
+		
+		
+		aoData.push( { "name": "quoteCheck.quote_pro51_score", "value": $("#quote_pro51_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro52_score", "value": $("#quote_pro52_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro53_score", "value": $("#quote_pro53_score").val() } );
+		aoData.push( { "name": "quoteCheck.quote_pro54_score", "value": $("#quote_pro54_score").val() } );
+		var xurl="/actions/CustInfo.action?updateQuoteCheck";
+		if(quoteId==0){
+			xurl="/actions/CustInfo.action?insertQuoteCheck";
+		}
+		top.sendAjaxRequest(xurl,aoData,optSaveQuoteCheckCallback);
+	}
+	
+	//保存报价审核信息---回调函数
+	function optSaveQuoteCheckCallback(obj){
+	try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	
+	//保存合同审核信息
+	function saveContractCheck(){
+		var aoData=[];
+		aoData.push( { "name": "contractCheck.check_id", "value": contractId } );
+		aoData.push( { "name": "contractCheck.require_id", "value": requireId } );
+		aoData.push( { "name": "contractCheck.cust_code", "value": info_id } );
+		aoData.push( { "name": "contractCheck.contract_assessor", "value": $("#contract_assessor").val() } );
+		aoData.push( { "name": "contractCheck.goover_explain", "value": $("#contract_goover_explain").val() } );
+		aoData.push( { "name": "contractCheck.goover_date", "value": top.toTimestamp($("#contract_goover_date").val()) } );
+		aoData.push( { "name": "contractCheck.check_date", "value": top.toTimestamp($("#contract_check_date").val()) } );
+		aoData.push( { "name": "contractCheck.deduct_marks", "value": $("#contract_deduct_marks").val() } );
+		aoData.push( { "name": "contractCheck.total_score", "value": $("#contract_total_score").val() } );
+		aoData.push( { "name": "contractCheck.time_limit", "value": $("#contract_time_limit").val() } );
+		aoData.push( { "name": "contractCheck.check_pro1_score", "value": $("#contract_pro1_score").val() } );
+		aoData.push( { "name": "contractCheck.check_pro2_score", "value": $("#contract_pro2_score").val() } );
+		aoData.push( { "name": "contractCheck.check_pro3_score", "value": $("#contract_pro3_score").val() } );
+		aoData.push( { "name": "contractCheck.check_pro4_score", "value": $("#contract_pro4_score").val() } );
+		aoData.push( { "name": "contractCheck.check_pro5_score", "value": $("#contract_pro5_score").val() } );
+		aoData.push( { "name": "contractCheck.check_pro6_score", "value": $("#contract_pro6_score").val() } );
+		aoData.push( { "name": "contractCheck.check_pro7_score", "value": $("#contract_pro7_score").val() } );
+		aoData.push( { "name": "contractCheck.check_pro8_score", "value": $("#contract_pro8_score").val() } );
+		aoData.push( { "name": "contractCheck.check_pro9_score", "value": $("#contract_pro9_score").val() } );
+		aoData.push( { "name": "contractCheck.check_pro10_score", "value": $("#contract_pro10_score").val() } );
+		aoData.push( { "name": "contractCheck.check_pro1_num", "value": $("#contract_pro1_num").val() } );
+		aoData.push( { "name": "contractCheck.check_pro2_num", "value": $("#contract_pro2_num").val() } );
+		aoData.push( { "name": "contractCheck.check_pro3_num", "value": $("#contract_pro3_num").val() } );
+		aoData.push( { "name": "contractCheck.check_pro4_num", "value": $("#contract_pro4_num").val() } );
+		aoData.push( { "name": "contractCheck.check_pro5_num", "value": $("#contract_pro5_num").val() } );
+		aoData.push( { "name": "contractCheck.check_pro6_num", "value": $("#contract_pro6_num").val() } );
+		aoData.push( { "name": "contractCheck.check_pro7_num", "value": $("#contract_pro7_num").val() } );
+		aoData.push( { "name": "contractCheck.check_pro8_num", "value": $("#contract_pro8_num").val() } );
+		aoData.push( { "name": "contractCheck.check_pro9_num", "value": $("#contract_pro9_num").val() } );
+		aoData.push( { "name": "contractCheck.check_pro10_num", "value": $("#contract_pro10_num").val() } );
+		var xurl="/actions/CustInfo.action?updateContractCheck";
+		if(contractId==0){
+			xurl="/actions/CustInfo.action?insertContractCheck";
+		}
+		top.sendAjaxRequest(xurl,aoData,optsaveContractCheckCallback);
+	}
+	
+	//保存合同审核信息---回调函数
+	function optsaveContractCheckCallback(obj){
+		try{
+			if ( obj.status == true ){
+				isSaveOK = true;
+				top.showInfoWinOK("操作成功");
+			}else{
+				isSaveOK = false;
+				top.showInfoWinError("操作失败 "+obj.msg);
+			}
+		   }catch(e){
+			  top.showInfoWinError("处理异常:"+e.message);
+		   }
+	}
+	
+	//计算分数
+	function computeScoreCon(index){
+		var deductMarks=0;
+		var score=[6,21,5,5,3,21,6,2,21,5];
+		var num=$("#contract_pro"+index+"_num").val();
+		deductMarks=Number(score[index-1]*num);
+		$("#contract_pro"+index+"_score").val( deductMarks );
+		
+		computeDeductMarksCon();
+	}
+	
+	function computeDeductMarksCon(){
+		var totalDeductMarks=0;
+		var deductMarks=0;
+		var totalScore=0;
+		for(var i=0;i<10;i++){
+			deductMarks=Number($("#contract_pro"+(i+1)+"_score").val());
+			totalDeductMarks=Number(totalDeductMarks+deductMarks);
+		}
+		if(totalDeductMarks>=100){
+			totalDeductMarks=100;
+		}
+			$("#contract_deduct_marks").val(totalDeductMarks);
+		
+		totalScore=Number(100-totalDeductMarks);
+		if(totalScore<=0){
+			totalScore=0;
+		}
+		$("#contract_total_score").val(totalScore);
+	}
+	
+		//计算分数
+	function computeScoreQuo(index,score){
+		var deductMarks=0;
+		//var score=[4,21,4,2,2,3];
+		if(score!=0){
+			var num=$("#quote_pro"+index+"_num").val();
+			deductMarks=Number(score*num);
+			$("#quote_pro"+index+"_score").val( deductMarks );
+		}
+		computeDeductMarksQuo();
+	}
+	
+	function computeDeductMarksQuo(){
+		var totalDeductMarks=0;
+		var deductMarks=0;
+		var totalScore=0;
+		for(var i=0;i<54;i++){
+			deductMarks=Number($("#quote_pro"+(i+1)+"_score").val());
+			totalDeductMarks=Number(totalDeductMarks+deductMarks);	
+		}
+		if(totalDeductMarks>=100){
+			totalDeductMarks=100;
+		}
+		$("#deduct_marks").val(totalDeductMarks);
+		
+		totalScore=Number(100-totalDeductMarks);
+		if(totalScore<=0){
+			totalScore=0;
+		}
+		$("#total_score").val(totalScore);
+	}
+	function doOtherFocus(){
+		if(other_focus){
+			$("#span_other_focus").hide();
+			other_focus=false;
+			$("#other_focus").val("");
+		}else{
+			$("#span_other_focus").show();
+			other_focus=true;
+			$("#other_focus").val("");
+		}
+	}
+	function doOtherRequireStyle(){
+		if(otherRequireStyle){
+			$("#span_other_require_style").hide();
+			otherRequireStyle=false;
+			$("#other_require_style").val("");
+		}else{
+			$("#span_other_require_style").show();
+			otherRequireStyle=true;
+			$("#other_require_style").val("");
+		}
+	}
+	function fromTypeChange(){
+
+		if($("#from_type").val()=="05"){
+			$("#spanOtherFromType").show();
+		}else{
+			$("#spanOtherFromType").hide();
+		}
+	}
+
+	function selectMessage(id){
+	sms_id = id;
+	var xurl="/pages/pro09/smsSelect.html";
+	 top.openSelectDialog("选择短信模板",xurl,800,500,selectMessageCallBack);
+	}
+	function selectMessageCallBack(obj){
+	   try{
+         var obj = top.getTempValue();
+         document.getElementById(sms_id).value = obj.sms_content;
+       }catch(e){
+       }
+	}
+	
+	function doOtherCustLostReason(){
+		if(other_cust_lost_reason){
+			$("#span_other_cust_lost_reason").hide();
+			other_cust_lost_reason=false;
+			$("#other_cust_lost_reason").val("");
+		}else{
+			$("#span_other_cust_lost_reason").show();
+			other_cust_lost_reason=true;
+			$("#other_cust_lost_reason").val("");
+		}
+	}
+	//----------------客户交款记录------------------
+	function addMoneyRecord(){
+		var xurl="/pages/pro09/custMoneyRecordInfo.html?cust_code="+info_id+"&require_id="+requireId;
+		top.openSelectDialog("增加客户交款记录",xurl,500,320,doMoneyListQuery);
+	}
+			
+	function updateMoneyRecord(id){
+		var xurl="/pages/pro09/custMoneyRecordInfo.html?id="+id+"&cust_code="+info_id+"&require_id="+requireId;
+		top.openSelectDialog("修改客户交款记录",xurl,500,320,doMoneyListQuery);
+	}
+	function queryMoneyRecordList(){
+		 shoukuan_total=0;
+			   var iaoColumns= [
+			                   { "sTitle": "交款日期", "mDataProp": "pay_time", "sWidth": "150", "sClass": "center",
+								    "fnRender": function ( oObj ) {
+                                           return "<a href='javasctipt:void(0)' onclick='updateMoneyRecord(\""+oObj.aData.id+"\")'>"+top.getTimeStr(oObj.aData.pay_time ,true)+"</a>";
+                                     },
+							  "bUseRendered": false},
+							   { "sTitle": "交款类别", "mDataProp": "money_type", "sWidth": "150px",
+							   "fnRender": function ( oObj ) {
+							              shoukuan_total+=Number(oObj.aData.money);
+                                          return top.getCodeName("MONEY_TYPE",oObj.aData.money_type);
+                                     },
+							  "bUseRendered": false},
+			                  { "sTitle": "缴纳金额（元）", "mDataProp": "money", "sWidth": "100px","sClass": "center","bUseRendered": false },
+							  { "sTitle": "操作人", "mDataProp": "opt_user", "sWidth": "150px","sClass": "center", 
+									"fnRender": function ( oObj ) {
+                                           return top.getTimeStr(oObj.aData.mark_time ,true);
+                                     },
+							  "bUseRendered": false },
+							  { "sTitle": "操作时间", "mDataProp": "mark_time", "sWidth": "150px", "sClass": "center",
+								    "fnRender": function ( oObj ) {
+                                           return top.getTimeStr(oObj.aData.mark_time ,true);
+                                     },
+							  "bUseRendered": false}, 
+							  { "sTitle": "备注", "mDataProp": "demo", "sWidth": "200px","sClass": "center", "bUseRendered": false },
+				 ];
+			   
+			   var surl=top.getUrlBase()+"/actions/CustInfo.action?getMoneyRecordList";
+			  moneyListTable = $('#moneyListTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"bPaginate":false,
+					"bInfo":false,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+								$("#shoukuan_total_txt").html(shoukuan_total+"元");
+								shoukuan_total=0;
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData=getParamDate2(aoData);
+			    },
+			    "sDom": "frt",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+	}
+	function doQuery(){
+		oTable.fnDraw();
+	}
+	function doMoneyListQuery(){
+		moneyListTable.fnDraw();
+	}
+	function getParamDate2(aoData){
+	  aoData.push( { "name": "moneyRecord.require_id", "value": requireId } );
+	  return aoData;
+	}
+	   function openDialog(t,xurl,isModal,w,h,callback){
+		if ( isModal == undefined ) isModal=true;
+		if ( !h ) h=200;
+		if ( !w ) w=400;
+		$( "#dialog" ).dialog({
+			title: t,
+			height: h,
+			width: w,
+			modal: isModal,
+			resizable: false,
+		    beforeClose: function(event, ui) {
+		        try{
+		            document.getElementById("self_iframe").contentWindow.doBeforeClose();
+		            if ( callback ) callback.apply();
+		        }catch(e){
+		        }
+		        return true;
+		    }
+		});
+		document.getElementById("self_iframe").src = xurl;
+    }
+	
+	function  queryMoneyChangeList(){
+	  var iaoColumns= [
+	                           { "sTitle": "单据编号", "mDataProp": "id", "sWidth": "150px","sClass": "center",
+							    "fnRender": function ( oObj ) {
+                                          return "<a href='javasctipt:void(0)' onclick='updateMoneyChange(\""+oObj.aData.id+"\")'>"+oObj.aData.id+"</a>";
+                                     },		
+							   "bUseRendered": false },
+			                   { "sTitle": "申请日期", "mDataProp": "change_date", "sWidth": "150px", "sClass": "center",
+								    "fnRender": function ( oObj ) {
+                                           return  top.getTimeStr(oObj.aData.change_date ,true);
+                                     },
+							  "bUseRendered": false},
+							   { "sTitle": "申请人", "mDataProp": "design_manager", "sWidth": "150px","bUseRendered": false},
+			                  { "sTitle": "产品转工程", "mDataProp": "product_to_project", "sWidth": "150px","sClass": "center",
+							   "fnRender": function ( oObj ) {
+							   if(oObj.aData.product_to_project=="1") return "是";		
+							     return "否";
+                                     },
+							  "bUseRendered": false },
+							  { "sTitle": "工程转产品", "mDataProp": "project_to_product", "sWidth": "150px","sClass": "center",
+                                  "fnRender": function ( oObj ) {
+							   if(oObj.aData.project_to_product=="1") return "是";		
+							     return "否";
+                                    },"bUseRendered": false },
+							   { "sTitle": "状态", "mDataProp": "status", "sWidth": "150px","sClass": "center", 
+							    "fnRender": function ( oObj ) {
+                                           return  top.getCodeName("EXAMINE_STATUS",oObj.aData.status);
+                                     },"bUseRendered": false },
+							  { "sTitle": "操作", "mDataProp": "id", "sWidth": "150px","sClass": "center",
+                                   "fnRender": function ( oObj ) {
+                                         var ht="<a href='javasctipt:void(0)' onclick='updateMoneyChange(\""+oObj.aData.id+"\")'>查看</a>";
+										 ht+="&nbsp;<a href='javasctipt:void(0)' onclick='printMoneyChange(\""+oObj.aData.id+"\")'>打印</a>";
+										 return ht;
+                                     },							  
+									 "bUseRendered": false },
+				 ];
+			   
+			   var surl=top.getUrlBase()+"/actions/CustInfo.action?getMoneyChangeList";
+			   oTable = $('#moneyChangeTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"bPaginate":false,
+					"bInfo":false,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+			
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				     aoData.push( { "name": "moneyChange.require_id", "value": requireId } );
+			    },
+			    "sDom": "frt",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+	}
+	function addMoneyChange(){
+	if(info_id==0){
+	top.showInfoWinWarn("请填写保存基本信息！");
+	return;
+	}
+	var xurl="pages/pro09/custMoneyChangeInfo.html?optType=insert&cust_code="+info_id;
+		top.openSelectDialog("款项变更记录",xurl,800,600,addMoneyChangeInfoCallBack);
+	}
+	function addMoneyChangeInfoCallBack(){
+	   queryMoneyChangeList();
+	}
+	function updateMoneyChange(id){
+		var xurl="pages/pro09/custMoneyChangeInfo.html?optType=update&id="+id;
+		top.openSelectDialog("款项变更记录",xurl,800,600, addMoneyChangeInfoCallBack);
+	}
+	function printMoneyChange(id){
+	    var xurl="pages/pro09/custMoneyChangeInfo.html?optType=print&id="+id;
+		top.openSelectDialog("款项变更记录",xurl,800,600, addMoneyChangeInfoCallBack);
+	}
+	</script>
+ <style>
+		body,td {
+			font-size: 13px;
+		}
+
+		.roomTd {
+			border: 1px;
+			border-style: dotted none none none;
+			border-color: blue;
+			color: #000000;
+			padding-left: 5px;
+		}
+
+		#KinSlideshow {
+			overflow: hidden;
+			width: 500px;
+			height: 450px;
+		}
+
+		.inputBottomLine {
+			border-top: hide;
+			border-left: hide;
+			border-center: hide;
+		}
+		#hall_count,#room_count,#bath_count,#measure_cust_sex,#measure_room_count,#measure_bath_count,#measure_hall_count,#many_members{
+			width: 50px;
+		}
+
+		#function_require,#design_key{
+			width: 65%;
+		}
+
+		#project_addr,#measure_project_addr,#fault_condition,#heater_suggest,#gas_suggest,#partition_position,#members_desc,#switch_position {
+			width: 70%;
+		}
+
+		#struct_area,#usable_area,#planinvest_money,#major_material,#measure_district,#measure_struct_area,#measure_usable_area,#measure_planinvest_money,#measure_major_material  {
+			width: 60px;
+}
+	
+</style>
+	</head>
+	<body width="99%"><br/>
+		<div id="tabs">
+			<ul>
+				<li id="picLi">
+					<a href="#tabs-0"><span>基本信息</span>
+					</a>
+				</li>
+				<li id="picLi1">
+					<a href="#tabs-1"><span>客情分析</span>
+					</a>
+				</li>
+				<li id="picLi2">
+					<a href="#tabs-2"><span>销售策略</span>
+					</a>
+				</li>
+				<li id="picLi7">
+					<a href="#tabs-6"><span>量房信息</span>
+					</a>
+				</li>
+				<li id="picLi3">
+					<a href="#tabs-3"><span>设计方案</span></a>
+				</li>
+				<li id="picLi4">
+					<a href="#tabs-4"><span>回访信息</span>
+					</a>
+				</li>
+				<li id="picLi6">
+					<a href="#tabs-7"><span>报价审核</span>
+					</a>
+				</li>
+				<li id="picLi5">
+					<a href="#tabs-5"><span>合同签订</span>
+					</a>
+				</li>
+				<li id="picLi8">
+					<a href="#tabs-8"><span>收款记录</span>
+					</a>
+				</li>
+				<li id="picLi9">
+					<a href="#tabs-9"><span>款项变更</span>
+					</a>
+				</li>
+			</ul>
+		</div>
+		<div id="tabs-0" width="95%">
+				<B>客户基本信息：</B>
+				<table border="1" cellpadding="3" cellspacing="1" width="99%"
+					align="center" style="background-color: #b9d8f3;">
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center">
+							客户编号
+						</td>
+						<td align="left">
+							<input type="text" id="cust_code">
+						</td>
+						<td width="15%" align="center">
+							客户经理<span style="color:red;">(*)</span>
+						</td>
+						<td align="left" id="tdcust_manager"></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center">
+							客户姓名<span style="color:red;">(*)</span>
+						</td>
+						<td align="left">
+							<input type="text" id="cust_name">
+						</td>
+						<td width="15%" align="center">
+							登记日期<span style="color:red;">(*)</span>
+						</td>
+						<td width="35%" align="left">
+							<input size="12"  type="text" id="register_date"
+								onclick="new Calendar().show(this);" readonly="true"/>
+						</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td align="center">
+							移动电话<span style="color:red;">(*)</span>
+						</td>
+						<td align="left">
+							<input type="text" id="cust_mobile">
+						</td>
+						<td width="15%" align="center">
+							固定电话
+						</td>
+						<td width="15%" align="left">
+							<input type="text" size="12" id="cust_phone">
+						</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center">
+							客戶性別
+						</td>
+						<td align="left" id="tdcust_sex"></td>
+						<td width="15%" align="center">
+							客户类型
+						</td>
+						<td align="left" id="tdcust_type"></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center">
+							客户职业
+						</td>
+						<td align="left">
+							<span style="width:35px" id="span_cust_job"></span>
+							<input type="text" size="12" id="cust_job_else" disabled />
+						</td>
+					<td width="15%" align="center">
+							客户来源<span style="color:red;">(*)</span>
+						</td>
+						<td align="left" colspan="3" >
+							<span id="tdfrom_type" onclick="fromTypeChange()"></span>
+							<span id="spanOtherFromType" style="display:none"><input size="12" id="other_from_type" type="text"/></span>
+						</td>
+					</tr>
+				</table>
+				<br />
+				<B>装修需求：</B>
+				<br />
+				<table border="1" cellpadding="3" cellspacing="1" width="99%"
+					align="center" style="background-color: #b9d8f3;">
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center">
+							工程地址<span style="color:red;">(*)</span>
+						</td>
+						<td align="left" colspan="3">
+							<span id="span_district"></span>&nbsp;&nbsp;<input type="text" id="project_addr">
+						</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center">
+							交房类型
+						</td>
+						<td align="left">
+							<input type="radio" name="handhouse_type"
+								onclick="changeHandhouseType()" checked="true" value="0" />
+							现房
+							<input type="radio" onclick="changeHandhouseType()"
+								name="handhouse_type" value="1" />
+							期房<br/>
+							交房日期<span style="color:red;">(*)</span><input type="text" id="completed_date"
+								onclick="new Calendar().show(this);" disabled readonly="true"/>
+						</td>
+						<td width="15%" align="center">
+							客户状态
+						</td>
+						<td align="left">
+							<span id="span_cust_status"></span>
+							<input type="hidden" id="date_update"/>
+							<input type="hidden" id="date_fail"/>
+						</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center">
+							建筑面积<!--<span style="color:red;">(*)</span>!-->
+						</td>
+						<td align="left" align="left">
+							<input type="text" id="struct_area">
+							M²
+						</td>
+						<td width="15%" align="center">
+							套内面积
+						</td>
+						<td align="left" align="left">
+							<input type="text" id="usable_area">
+							M²
+						</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center">
+							户&nbsp;&nbsp;&nbsp;&nbsp;型
+						</td>
+						<td align="left" width="30%">
+							<input type="text" id="room_count">
+							室
+							<input type="text" id="hall_count">
+							厅
+							<input type="text" id="bath_count">
+							卫
+						</td>
+						<td width="15%" align="center">
+							预计装修时间
+						</td>
+						<td align="left" width="30%">
+							<input type="text" id="planfitment_date"
+								onclick="new Calendar().show(this);" readonly="true"/>
+						</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center">
+							预投工程资金
+						</td>
+						<td align="left">
+							<input type="text" id="planinvest_money" />
+							万元
+						</td>
+						<td width="15%" align="center">
+							预投主材资金
+						</td>
+						<td align="left">
+							<input type="text" id="major_material" />
+							万元
+						</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center">
+							居室类型
+						</td>
+						<td colspan="3" align="left">
+							<span id="span_room_type"></span>
+							<input type="text" id="room_type_else" disabled />
+						</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center">
+							关注点
+						</td>
+						<td colspan="3" align="left">
+							<input type="checkbox" name="focus" value="品牌" />
+							品牌
+							<input type="checkbox" name="focus" value="设计" />
+							设计
+							<input type="checkbox" name="focus" value="施工质量" />
+							施工质量
+							<input type="checkbox" name="focus" value="主材代购" />
+							主材代购
+							<input type="checkbox" name="focus" value="配饰" />
+							配饰
+							<input type="checkbox" name="focus" value="价格" />
+							价格
+							<input type="checkbox" name="focus" value="服务" />
+							服务
+							<input type="checkbox" name="focus" value="管理" />
+							管理
+							<br />
+							<input type="checkbox" name="focus" value="保修" />
+							保修
+							<input type="checkbox" name="focus" value="环保" />
+							环保
+							<input type="checkbox" name="focus" onclick="doOtherFocus()" value="其他" />
+							其他
+							<span id="span_other_focus" style="display:none">
+								<input type="text" size="45" id="other_focus"/>
+							</span>
+						</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center">
+							风格需求
+						</td>
+						<td colspan="3" align="left">
+							<table width="90%">
+								<tr class="tr_data">
+									<td align="left">
+										<input type="checkbox" name="require_style" value="现代前卫•另类" />
+										现代前卫•另类
+									</td>
+									<td align="left">
+										<input type="checkbox" name="require_style" value="现代简约•时尚" />
+										现代简约•时尚
+									</td>
+									<td align="left">
+										<input type="checkbox" name="require_style" value="雅致风格•优雅" />
+										雅致风格•优雅
+									</td>
+									<td align="left">
+										<input type="checkbox" name="require_style" value="新中式•怀旧" />
+										新中式•怀旧
+										<br />
+									</td>
+								</tr>
+								<tr class="tr_data">
+									<td align="left">
+										<input type="checkbox" name="require_style" value="新古典•高雅" />
+										新古典•高雅
+									</td>
+									<td align="left">
+										<input type="checkbox" name="require_style" value="欧式古典•华贵" />
+										欧式古典•华贵
+									</td>
+									<td align="left">
+										<input type="checkbox" name="require_style" value="美式乡村•休闲" />
+										美式乡村•休闲
+									</td>
+									<td align="left">
+										<input type="checkbox" name="require_style" value="地中海•浪漫" />
+										地中海•浪漫
+									</td>
+								</tr>
+								<tr>
+									<td colspan="4" align="left">
+										<input type="checkbox" onclick="doOtherRequireStyle()" name="require_style" value="其他" />
+										其他
+										<span id="span_other_require_style" style="display:none">
+											<input type="text" size="50" id="other_require_style"/>
+										</span>
+										<br />
+									</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+
+					<tr class="tr_data">
+						<td width="15%" align="center">
+							居室功能要求
+						</td>
+						<td align="left" >
+							<textarea style="width:285px" id="function_require"  rows="2" cols="40"></textarea>
+						</td>
+						<td width="15%" align="center">
+							家居设计重点
+						</td>
+						<td align="left"  >
+							<textarea id="design_key" style="width:285px"  rows="2" cols="40"></textarea>
+						</td>
+					</tr>
+				</table>
+				<br />
+				<B>客户咨询信息:</B>
+				<br />
+				<table border="1" cellpadding="3" cellspacing="1" width="99%" align="center" style="background-color: #b9d8f3;" id="addConsultTable">
+					<tr class="tr_data" height="35px">
+						<td width="15%" align="center">
+						设计师
+						</td>
+						<td align="left"><span id="span_designer_code"></span></td>
+						<td align="center" width="20%">
+							意向评估
+						</td>
+						<td align="left" id="tdintention_evaluate" width="20%"></td>
+					</tr>
+
+					<tr class="tr_data" height="35px">
+						<td align="center" width="20%">
+							近期是否量房
+						</td>
+						<td align="left" width="20%">
+							<input type="radio" name="is_measure_house" value="是"
+								checked="true" />
+							是
+							<input type="radio" name="is_measure_house" value="否" />
+							否
+						</td>
+						<td width="15%" align="center">
+						是否参观样板间
+						</td>
+						<td align="left">
+							<input type="radio" name="is_visit_model_house" value="是"
+								checked="true" />
+							是
+							<input type="radio" name="is_visit_model_house" value="否" />
+							否</td>
+					</tr>
+					<tr class="tr_data"  id="tr_interpose_type" height="35px">
+						<td align="center" width="20%">
+							人工干预原因
+						</td>
+						<td align="left" colspan="3"><span id="span_interpose_type"></span></td></tr>
+					<tr class="tr_data"  id="tr_interpose_memo" height="35px">
+						<td width="20%" align="center">
+						人工干预备注
+						</td>
+						<td align="left" colspan="3">
+							<textarea id="interpose_memo" rows="3" cols="80"></textarea>
+						</td>
+					</tr>
+					<tr class="tr_data">
+						<td align="center" width="20%">
+							客情描述
+						</td>
+						<td align="left" colspan="3" >
+							<textarea id="cust_description" style="width:675px" rows="3" cols="80"></textarea>
+						</td>
+					</tr>
+				</table>
+				<br/>
+					<br />
+				<B>顾客认识公司的途径:</B>
+				<br />
+				<table border="1" id="knowWayTable" cellpadding="3" cellspacing="1" width="99%"
+					align="center" style="background-color: #b9d8f3;">
+					<tr class="tr_data" height="25px">
+						<td align="left">
+							报纸
+						</td>
+						<td align="left">
+							电视台
+						</td>
+						<td align="left">
+							网站
+						</td>
+						<td align="left">
+							杂志
+						</td>
+						<td align="left">
+							其他
+						</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td align="left">
+							<input type="checkbox" name="path_way" value="燕赵晚报" />
+							燕赵晚报
+						</td>
+						<td align="left">
+							<input type="checkbox" name="path_way" value="电视台" />
+							电视台
+						</td>
+						<td align="left">
+							<input type="checkbox" name="path_way" value="公司网站" />
+							公司网站
+						</td>
+						<td align="left">
+							<input type="checkbox" name="path_way" value="DM直投" />
+							DM直投
+						</td>
+						<td align="left">
+							<input type="checkbox" name="path_way" value="朋友介绍" />
+							朋友介绍
+						</td>
+					</tr>
+					<tr class="tr_data" align="left" height="25px">
+						<td align="left">
+							<input type="checkbox" name="path_way" value="其他" />
+							其他
+						</td>
+						<td align="left">
+							<input type="checkbox" name="path_way" value="其他" />
+							其他
+						</td>
+						<td align="left">
+							<input type="checkbox" name="path_way" value="新浪网" />
+							新浪网
+						</td>
+						<td align="left">
+							<input type="checkbox" name="path_way" value="其他" />
+							其他
+						</td>
+						<td align="left">
+							<input type="checkbox" name="path_way" value="工长介绍" />
+							工长介绍
+						</td>
+					</tr>
+					<tr class="tr_data" align="left" height="25px">
+						<td align="left">
+							&nbsp;
+						</td>
+						<td align="left">
+							<input type="checkbox" name="path_way" value="搜狐网" />
+							搜狐网
+						</td>
+						<td align="left">
+							&nbsp;
+						</td>
+						<td align="left">
+							<input type="checkbox" name="path_way" value="家装市场" />
+							家装市场
+						</td>
+						<td align="left">
+							<input type="checkbox" name="path_way" value="其他" />
+							其他
+						</td>
+					</tr>
+				</table>
+				<table width="90%" style="margin: 10px;">
+					<tr>
+						<td width="20%"></td>
+						<td width="28%" align="center">
+							<div id="saveCustBtn" class="buttonDivTwo" >
+								<a href="javascript:void(0)" onclick="doSubmit()">保存</a>
+							</div>
+						</td>
+						<td width="28%" align="center">
+							<div class="buttonDivTwo" >
+								<a href="javascript:void(0)" onclick="doCancel()">取消</a>
+							</div>
+						</td>
+						<td width="20%"></td>
+					</tr>
+				</table>
+			</div>
+		<div id="tabs-1">
+				<table border="1" cellpadding="3" cellspacing="1px" width="99%" align="center" style="background-color: #b9d8f3;" >
+					<tr class="tr_data" >
+						<td width="20%" align="center">客户需求与失效分析</td>
+						<td align="left" width="80%" style="padding:0px;border-collapse:collapse;">
+							<table cellpadding="3px" cellspacing="1px" width="100%" align="center" style="background-color: #b9d8f3;">
+								<tr class="tr_data" height="35px">
+										<td width="15%" align="left" colspan="3">
+											<table width="99%">
+												<tr>
+												<td width="33%">
+												 <input type="checkbox" name="is_consume_ability" value="有消费能力"/>有消费能力</br>
+												</td>
+												<td width="33%">
+												 <input type="checkbox" name="is_consume_ability" value="有消费意愿"/>有消费意愿</br>
+												</td>
+												<td width="33%">
+												<input type="checkbox" name="is_consume_ability" value="客户是否缴纳设计费或订金"/>客户是否缴纳设计费或订金</br>
+												</td>
+												</tr>
+											</table>
+										</td>	
+								</tr>
+								<tr class="tr_data" height="35px" style="padding:1px">
+										<td border="0" width="15%" align="left" style="padding:5px;border:0px" colspan="3">
+										客户关注点：
+											<table width="99%">
+												<tr>
+													<td width="33%">
+														<input type="checkbox" name="cust_focus" value="对设计有特殊需求"/>对设计有特殊需求
+													</td>
+													<td width="33%">
+														<input type="checkbox" name="cust_focus" value="对施工质量有特殊需求"/>对施工质量有特殊需求
+													</td>
+													<td width="33%">
+														<input type="checkbox" name="cust_focus" value="对设计师有特殊要求"/>对设计师有特殊要求
+													</td>
+												</tr>
+												<tr>
+													<td width="33%">	
+														<input type="checkbox" name="cust_focus" value="对施工周期有较高要求"/>对施工周期有较高要求
+													</td>
+													<td colspan="2">
+													<input type="checkbox" name="cust_focus" value="对报价有特别在意"/>对报价有特别在意
+													</td>
+												</tr>
+											</table>
+										</td>
+								</tr>
+								<tr class="tr_data" height="35px" style="padding:1px">
+										<td border="0" width="15%" align="left"  colspan="3" style="padding:5px;border:0px">
+										客户有可能丢失的原因是：
+											<table width="99%">
+												<tr>
+													<td width="33%">
+														<input type="checkbox" name="cust_lost_reason" value="不认可设计费"/>不认可设计费  
+													 </td>
+													<td width="33%">
+														<input type="checkbox" name="cust_lost_reason"  value="设计方案不满意"/>设计方案不满意  
+													 </td>
+													<td width="33%">	
+														<input type="checkbox" name="cust_lost_reason" value="设计师个人问题"/>设计师个人问题
+												   </td>
+												</tr>
+												<tr>
+													<td width="33%">
+														<input type="checkbox" name="cust_lost_reason" value="样板间不满意"/>样板间不满意 
+													 </td>
+													<td width="33%">
+														<input type="checkbox" name="cust_lost_reason" value="报价偏高"/>报价偏高 
+													 </td>
+													<td width="33%">
+														<input type="checkbox" name="cust_lost_reason" value="服务不满意"/>服务不满意
+												   </td>
+												</tr>
+												<tr>
+													<td width="33%">
+														<input type="checkbox" name="cust_lost_reason" value="工程周期"/>工程周期 
+													 </td>
+													<td colspan="2">
+													<input type="checkbox" name="cust_lost_reason" value="其他竞争对手"/>其他竞争对手
+												   </td>
+												 </tr>
+												 <tr>
+													<td width="33%" colspan="3">
+														<input type="checkbox" name="cust_lost_reason" onclick="doOtherCustLostReason()" value="其他"/>其他<span id="span_other_cust_lost_reason" style="display:none"><input type="text" id="other_cust_lost_reason"/></span>
+													</td>
+												</tr>
+											</table>
+										</td>
+								</tr>
+								<tr class="tr_data" height="35px">
+										<td border="0" width="15%" align="left"  colspan="3">
+										客户选择我们公司的可能性在：
+												   <input type="checkbox" name="choose_reason" value="设计"/>设计 <input type="checkbox" name="choose_reason"  value="服务"/>服务<input type="checkbox" name="choose_reason"  value="施工样板质量"/>施工样板质量
+												   <input type="checkbox" name="choose_reason"  value="品牌口碑"/>品牌口碑  <input type="checkbox" name="choose_reason"  value="报价"/>报价 <input type="checkbox" name="choose_reason"  value="其它"/>其它
+										</td>
+								</tr>
+								<tr class="tr_data" height="35px">
+										<td width="15%" align="left"  colspan="3">
+										客户对我们公司整体印象是：<span id="span_general1"></span>            
+										</td>
+								</tr>
+								<tr class="tr_data" height="35px">
+										<td width="15%" align="left"  colspan="3">
+										客户对设计师的整体印象是：<span id="span_general2"></span>             
+										</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+					<tr class="tr_data" >
+						<td width="15%" align="center" width="3%">设计思路和平面布置</td>
+						<td align="left" width="45%" style="padding:0px;border-collapse:collapse;">
+							<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+								<tr class="tr_data" height="35px">
+										<td width="15%" align="left" >
+										 <input type="checkbox" name="general3" value="是否确定整体装修风格"/>是否确定整体装修风格
+										</td>
+										<td width="15%" align="left" >
+										 <input type="checkbox" name="general3" value="空间结构划分是否与客户确定"/>空间结构划分是否与客户确定
+										</td>
+										<td width="15%" align="left" >
+										 <input type="checkbox" name="general3" value="客户是否有意愿缴纳设计费"/>客户是否有意愿缴纳设计费
+										</td>
+								</tr>
+								<tr class="tr_data" height="35px">
+										<td width="15%" align="left" >
+										 <input type="checkbox" name="general3" value="通道设置保证有效使用面积"/>通道设置保证有效使用面积
+										</td>
+										<td width="15%" align="left" >
+										 <input type="checkbox" name="general3" value="通风问题解决是否合理"/>通风问题解决是否合理
+										</td>
+										<td width="15%" align="left" >
+										 <input type="checkbox" name="general3" value="采光问题解决是否合理"/>采光问题解决是否合理
+										</td>
+								</tr>
+								<tr class="tr_data" height="35px">
+										<td width="15%" align="left" >
+										 <input type="checkbox" name="general3" value="家具选择与风格是否协调"/>家具选择与风格是否协调
+										</td>
+										<td width="15%" align="left" >
+										 <input type="checkbox" name="general3" value="装修结构与风格是否协调"/>装修结构与风格是否协调
+										</td>
+										<td width="15%" align="left" >
+										 <input type="checkbox" name="general3" value="色彩搭配与风格是否协调"/>色彩搭配与风格是否协调
+										</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+					<tr class="tr_data" >
+						<td width="15%" align="center" width="3%">材料使用和性价比</td>
+						<td border="0" align="left" width="45%" style="padding:0px;border-collapse:collapse;">
+							<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+								<tr class="tr_data" height="35px">
+										<td width="15%" align="left" >
+										 <input type="checkbox" name="general4" value="装修项目设置是否合理"/>装修项目设置是否合理
+										</td>
+										<td width="15%" align="left" >
+										 <input type="checkbox" name="general4" value="材料档次选用是否合理"/>材料档次选用是否合理
+										</td>
+										<td width="15%" align="left" >
+										 <input type="checkbox" name="general4" value="工艺标准与材料档次匹配否"/>工艺标准与材料档次匹配否
+										</td>
+								</tr>
+								<tr class="tr_data" height="35px">
+										<td width="15%" align="left" >
+										 <input type="checkbox" name="general4" value="家具选用与装修档次匹配否"/>家具选用与装修档次匹配否
+										</td>
+										<td width="15%" align="left" >
+										 <input type="checkbox" name="general4" value="适当采用特殊工艺提高档次"/>适当采用特殊工艺提高档次
+										</td>
+										<td width="15%" align="left" >
+										 <input type="checkbox" name="general4" value="选择确定家用电器档次"/>选择确定家用电器档次
+										</td>
+								</tr>
+								<tr class="tr_data" height="35px">
+										<td width="15%" align="left" >
+										 <input type="checkbox" name="general4" value="选择确定洁具档次"/>选择确定洁具档次
+										</td>
+										<td width="15%" align="left" >
+										 <input type="checkbox" name="general4" value="后期软装饰和配饰确定"/>后期软装饰和配饰确定
+										</td>
+										<td width="15%" align="left" >
+										 <input type="checkbox" name="general4" value="必要时是否附效果图"/>必要时是否附效果图
+										</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+					<tr class="tr_data" >
+						<td width="15%" align="center" width="3%">下一步措施及方案</td>
+						<td align="center" border="0" width="45%" >
+							<table style="padding:5px"  border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+								<tr class="tr_data" height="35px">
+										<td width="15%" align="left"  colspan="4">设计师下一步服务措施：<textarea id="des_next_measure" cols="90" rows="2"></textarea></td>
+								</tr>
+								<tr class="tr_data" height="35px">
+										<td width="15%" align="left"  colspan="4">客户经理下一步措施：<textarea id="cusm_next_measure" cols="90" rows="2"></textarea></td>
+								</tr>
+								<tr class="tr_data" height="35px">
+										<td width="15%" align="left"  colspan="4">其它措施：<textarea id="other_measure" cols="90" rows="2"></textarea></td>
+								</tr>
+								<!--
+								<tr class="tr_data" height="35px">
+										<td width="15%" align="left" >设计师：</td>
+										<td align="left" id="tdanalyze_designer"></td>
+										<td width="15%" align="left" >客户经理：</td>
+									<td align="left" id="tdanalyae_cust_manager"></td>
+								</tr>
+								<tr class="tr_data" height="35px">
+										<td width="15%" align="left" >市场部：</td>
+										<td align="left" id="tdmarket_dept"  colspan="3"></td>
+								</tr>!-->
+							</table>
+						</td>
+					</tr>
+				</table>
+				<br/>
+				<B>客户咨询差异性需求分析</B>
+				<br/>
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+					<tr class="tr_data" height="35px">
+						<td width="5%" align="center">序号</td>
+						<td width="25%" align="center">分析项目</td>
+						<td width="70%" align="center">分析目的</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">1</td>
+						<td align="right" style="padding-right:5px">年龄与性格:</td>
+						<td align="left"><textarea id="cy1" cols="80" rows="2"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">2</td>
+						<td align="right" style="padding-right:5px">职业:</td>
+						<td align="left"><textarea id="cy2" cols="80" rows="2"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">3</td>
+						<td align="right" style="padding-right:5px">咨询人（之间）关系:</td>
+						<td align="left"><textarea id="cy3" cols="80" rows="2"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">4</td>
+						<td align="right" style="padding-right:5px">现居住地址:</td>
+						<td align="left"><textarea id="cy4" cols="80" rows="2"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">5</td>
+						<td align="right"style="padding-right:5px">着装:</td>
+						<td align="left"><textarea id="cy5" cols="80" rows="2"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">6</td>
+						<td align="right" style="padding-right:5px">代步工具:</td>
+						<td align="left"><textarea id="cy6" cols="80" rows="2"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">7</td>
+						<td align="right" style="padding-right:5px">装修房屋的用途:</td>
+						<td align="left"><textarea id="cy7" cols="80" rows="2"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">8</td>
+						<td align="right" style="padding-right:5px">个性需求:</td>
+						<td align="left"><textarea id="cy8" cols="80" rows="2"></textarea></td>
+					</tr><tr class="tr_data" height="35px">
+						<td align="center">9</td>
+						<td align="right" style="padding-right:5px">第几次置业:</td>
+						<td align="left"><textarea id="cy9" cols="80" rows="2"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">10</td>
+						<td align="right" style="padding-right:5px">第几次装修:</td>
+						<td align="left"><textarea id="cy10" cols="80" rows="2"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">11</td>
+						<td align="right" style="padding-right:5px">其他品牌的了解:</td>
+						<td align="left"><textarea id="cy11" cols="80" rows="2"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">12</td>
+						<td align="right" style="padding-right:5px">客户的期望值与体验后的落差:</td>
+						<td align="left" ><textarea id="cy12" cols="80" rows="2"></textarea></td>
+					</tr><tr class="tr_data" height="35px">
+						<td align="center">13</td>
+						<td align="right" style="padding-right:5px">客户对设计师的评价:</td>
+						<td align="left"><textarea id="cy13" cols="80" rows="2"></textarea></td>
+					</tr><tr class="tr_data" height="35px">
+						<td align="center">14</td>
+						<td align="right" style="padding-right:5px">决策人:</td>
+						<td align="left"><textarea id="cy14" cols="80" rows="2"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">15</td>
+						<td align="right" style="padding-right:5px">客户是否愿意一站式产品服务:</td>
+						<td align="left"><textarea id="cy15" cols="80" rows="2"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">16</td>
+						<td align="right" style="padding-right:5px">客户是否愿意选择同一品牌的产品:</td>
+						<td align="left"><textarea id="cy16" cols="80" rows="2"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">17</td>
+						<td align="right" style="padding-right:5px">客户愿意定制化装修还是套餐模式:</td>
+						<td align="left"><textarea id="cy17" cols="80" rows="2"></textarea></td>
+					</tr>
+				</table>
+				<br/>
+				<B>客户特殊需求记录表</B>
+				<br/>
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+					<tr class="tr_data" height="35px">
+						<td align="center" colspan="2">特殊要求详细内容</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center" width="15%">合同方面</td>
+						<td align="left"><textarea id="special1" style="width:720" rows="2"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center" >设计方面</td>
+						<td align="left"><textarea id="special2" style="width:720" rows="2"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center" >材料方面</td>
+						<td align="left"><textarea id="special3" style="width:720" rows="2"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center" >工艺方面</td>
+						<td align="left"><textarea id="special4" style="width:720" rows="2"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center" >服务方面</td>
+						<td align="left"><textarea id="special5" style="width:720" rows="2"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center" >其它方面</td>
+						<td align="left"><textarea id="other" style="width:720" rows="2"></textarea></td>
+					</tr>
+				</table>
+				<br/>
+				<table width="90%" style="margin: 10px;">
+					<tr>
+						<td width="98%" align="center">
+							<div id="savecustanalyzeBtn" class="buttonDivTwo">
+								<a href="javascript:void(0)" onclick="addCustAnalyze()">保存</a>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
+		<div id="tabs-2">
+	<B>常规策略</B>
+	<br/>
+	    <table style="display:none" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				<tr class="tr_data" height="35px">
+					<td colspan="3" align="left">短信回访</td>
+				</tr>
+				<tr class="tr_data" height="35px">
+					<td align="center" width="12%">阶段</td>
+					<td align="center">内容</td>
+					<td align="center">状态</td>
+				</tr>
+				<tr class="tr_data" height="45px">
+					<td align="center">客户交纳定金或者设计费</td>
+					<td align="left">亲爱的**您好，很荣幸您能选择我们欧伦达**总监为您提供整体家居设计服务。<br/>通过跟**总监的沟通，您的设计方案将在一周之内为您精心设计出来。<br/>请下周提前安排好时间来公司详谈。祝生活愉快！<br/>&nbsp;</td>
+					<td align="center"><a href="javascript:sendMessage(3,true)">发送</a></td>
+				</tr>
+				<tr class="tr_data" height="45px">
+					<td align="center">签单合同</td>
+					<td align="left">亲爱的**您好，感谢您对我们工作的信任选择我们欧伦达来装修您的新家，<br/>我们一定会按照合同约定和施工管理以及设计服务来全程管控您的施工进度和质量，<br/>为您打造舒适亮丽的心灵港湾！祝工作顺心！<br/>&nbsp;</td>
+					<td align="center"><a href="javascript:sendMessage(4,true)">发送</a></td>
+				</tr>
+				<tr class="tr_data" height="45px">
+					<td align="center">图纸预算未通过</td>
+					<td align="left">尊敬的**您好，非常抱歉我们的工作有所欠缺未能让您满意<br/>对于您今天提出的建议我们一定会在后期工作中加以改善并完善。<br/>您的理想方案将由我们的设计团队共同研究之后，会在后天由**总监为您调整出来，<br/>请您一定要再次腾出时来公司面谈。祝生活愉快！<br/>&nbsp;</td>
+					<td align="center"><a href="javascript:sendMessage(5,true)">发送</a></td>
+				</tr>
+				<tr class="tr_data" height="45px">
+					<td align="center">客户要进行比较竞争对手</td>
+					<td align="left">尊敬的**您好，由于我们工作的不足让您对整个装修还存有疑虑，不管您最终是否选择我们公司，<br/>您首先是要选择一个历史悠久且市场占有率高客户满意度高的正规大公司来做，<br/>因为只有这样您的装修管理和售后会更有保障；<br/>其次要选择一个经验和生活阅历更丰富的设计师比如我们**总监这样的，<br/>因为我们拿您房子作经典，别人可能会拿它当试验品。更重要的一点是装修中80%的问题都是源自设计。<br/>所以好设计和大公司应该是您选择的标准。祝生活愉快！<br/>&nbsp;</td>
+					<td align="center"><a href="javascript:sendMessage(6,true)">发送</a></td>
+				</tr>
+				<tr class="tr_data" height="45px">
+					<td align="center">竞争对手搞营销活动</td>
+					<td align="left">尊敬的**您好，听说您是准备去参加**公司举办的活动是吗？<br/>我建议您不用去，因为他们这次的活动主要是为了积累客户和产品促销为目的的。<br/>像您这么重视方案设计的去了他们没时间跟您谈而且解决不了您的实际问题。<br/>刚好我们的方案也重新给您完善好了，您可以直接来公司再跟我们**总监详商。祝开心！<br/>&nbsp;</td>
+					<td align="center"><a href="javascript:sendMessage(7,true)">发送</a></td>
+				</tr>
+				<tr class="tr_data" height="45px">
+					<td align="center">客户投诉</td>
+					<td align="left">尊敬的**您好，非常抱歉由于我们的服务不周给您带来了困扰，您放心<br/>我们已经协调好相关人员去解决您的问题，相信很快就可以为您解决好！<br/>感谢您这么细心的建议，后期工作中我们一定会避免再出现类似问题的。祝心情愉快！<br/>&nbsp;</td>
+					<td align="center"><a href="javascript:sendMessage(7,true)">发送</a></td>
+				</tr>
+				<tr class="tr_data" height="45px">
+					<td align="center">开工</td>
+					<td align="left">亲爱的**您好，真是可喜可贺，在我们紧张的沟通筹备下<br/>您的新家马上就可以动工了感谢您选择我们相信我们欧伦达。<br/>我们一定不会让您失望的！祝天天开心！<br/>&nbsp;</td>
+					<td align="center"><a href="javascript:sendMessage(7,true)">发送</a></td>
+				</tr>
+		 </table>
+		 <table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+			<tr class="tr_data" height="35px">
+				<td colspan="3" align="left">首次回访</td>
+			</tr>
+			<tr class="tr_data">
+				<td border="0" colspan="3" style="padding:0px;border-collapse:collapse;">	
+					<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+						<tr class="tr_data" height="35px">
+							<td align="center" width="20%">客户意见或建议<span style="color:red;">(*)</span></td>
+							<td align="left" colspan="3"><textarea id="cust_suggest" rows="2" style="width:720"></textarea></td>
+						</tr>
+						<tr class="tr_data" height="35px">
+							<td align="center">客户意向<span style="color:red;">(*)</span></td>
+							<td align="left" id="tdcust_intention"></td>
+							<td align="center">客户满意度<span style="color:red;">(*)</span></td>
+							<td align="center" id="tdcust_sati"></td>
+						</tr>
+						<tr class="tr_data" height="35px">
+							<td align="center">预约二次来店时间<span style="color:red;">(*)</span></td>
+							<td align="left" colspan="3"><input type="text" id="next_come_time" onclick="new Calendar().show(this);" readonly="true"/></td>
+						</tr>
+						<tr class="tr_data" height="35px">
+							<td align="center">预约量房时间</td>
+							<td align="left"><input type="text" id="ssm_measure_date" onclick="new Calendar().show(this);" readonly="true"/></td>
+							<td align="center" >结果达成</td>
+							<td align="left" id="tdresult_status"></td>
+						</tr>
+						<tr class="tr_data" height="35px">
+							<td align="center">销售策略</td>
+							<td align="left" colspan="3"><textarea id="sales_measure" rows="3" style="width:720"></textarea></td>
+						</tr>
+						<tr class="tr_data" height="45px">
+							<td align="center">短信内容</td>
+							<td align="left" colspan="2"><textarea rows="3" style="width:580" id="sms_textarea">尊敬的**您好，我是欧伦达设计馆客户经理小丁。感谢你光临我们店面。跟我们设计师沟通的愉快吧！我们**总监正在加班为您做方案，届时会联系你过来看。真诚期待能为您家装提供优质的服务。祝生活愉快！</textarea></td>
+							<td align="center"><a href="javascript:selectMessage('sms_textarea')">选择模板</a>&nbsp;<a href="javascript:sendMessage(1,true)">发送</a></td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+			<tr class="tr_data">
+				<td colspan="3" width="100%" style='padding:0px;border-collapse:collapse'>
+					<div width="100%" id="callbackMoreDiv">
+					</div>
+				</td>
+			</tr>
+			<tr class="tr_data" height="35px" id="addTrBtn">
+				<td colspan="3" align="right"><a href="javascript:void(0)" onclick="AddMoreCallBack()">添加更多回访信息</a></td>
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td colspan="3" align="left">电话回访结果</td>
+			</tr>
+			<tr class="tr_data">
+				<td colspan="3" style="padding:0px;border-collapse:collapse;">
+						<table border="0" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+							<tr class="tr_data">
+								<td align="center" width="21%">客户经理</td>
+								<td align="left"><textarea id="cusm_callback_info" rows="2" style="width:720"></textarea></td>
+							</tr>
+							<tr class="tr_data">
+								<td align="center">设计师</td>
+								<td align="left"><textarea id="des_callback_info" rows="2" style="width:720"></textarea></td>
+							</tr>
+					</table>
+				</td>
+			</tr>
+	</table>
+	<br/>
+	<B>定制销售策略</B>
+	<br/>
+	<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+		<tr class="tr_data" height="35px">
+			<td align="left"><textarea id="custom_tactics" rows="5" style="width:860"></textarea></td>
+		</tr>
+	</table>
+	<br/>
+	<table width="90%" style="margin: 10px;">
+		<tr>
+			<td width="98%" align="center">
+				<div id="savesalesstrategyBtn" class="buttonDivTwo">
+					<a href="javascript:void(0)" onclick="AddSalesStrategy()">保存</a>
+				</div>
+			</td>
+		</tr>
+	</table>	
+	</div>
+		<div id="tabs-6">
+			<B>基本信息</B><br/>
+			<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">			                              
+				
+					<tr class="tr_data" height="25px">
+						<td align="center" width="15%">量房日期</td>
+						<td align="left" width="35%"><input type="text" id="measure_date" onclick="new Calendar().show(this);" readonly="true" /></td>
+						<td align="center" width="15%">制表人</td>
+						<td align="left" width="35%"><input type="text" id="make_table_man" /></td>
+					</tr>
+					<tr class="tr_data" height="25px" id="hidetr1">
+						<td align="center" width="15%" id="hideDesigner">设计师</td>
+						<td align="left" width="35%"><input type="hidden" id="measure_designer"  /><label id="lab_measure_designer"></label></td>
+						<td align="center">客户姓名</td>
+						<td align="left"><input type="hidden" id="measure_cust_name"  /><label id="lab_measure_cust_name"></label>&nbsp;<input type="hidden" id="measure_cust_sex" /><label id="lab_measure_cust_sex"></label></td>
+					</tr>
+					<tr class="tr_data" height="25px" id="hidetr2">
+						<td align="center">电话</td>
+						<td align="left"><input type="hidden" id="measure_cust_mobile"  /><label id="lab_measure_cust_mobile"></label></td>
+						<td align="center">地址</td>
+						<td align="left" ><input type="hidden" id="measure_district" /><label id="lab_measure_district"></label>&nbsp;<input type="hidden" id="measure_project_addr" /><label id="lab_measure_project_addr"></label></td>
+					</tr>
+					<tr class="tr_data" height="25px" id="hidetr3">
+						<td width="15%" align="center">
+							建筑面积
+						</td>
+						<td align="left" align="left">
+							<input type="hidden" id="measure_struct_area" ><label id="lab_measure_struct_area"></label>
+							M²
+						</td>
+						<td width="15%" align="center">
+							套内面积
+						</td>
+						<td align="left" align="left">
+							<input type="hidden" id="measure_usable_area"><label id="lab_measure_usable_area"></label>
+							M²
+						</td>
+					</tr>
+					<tr class="tr_data" height="25px" id="hidetr4">
+						<td width="15%" align="center">户型</td>
+						<td align="left" width="30%" colspan="3">
+							<input type="hidden" id="measure_room_count"><label id="lab_measure_room_count"></label>
+							室
+							<input type="hidden" id="measure_hall_count"><label id="lab_measure_hall_count"></label>
+							厅
+							<input type="hidden" id="measure_bath_count"><label id="lab_measure_bath_count"></label>
+							卫
+						</td>
+					</tr>
+					<tr class="tr_data" height="25px" id="hidetr5">
+						<td width="15%" align="center">
+							预投资金
+						</td>
+						<td align="left">
+							<input type="hidden" id="measure_planinvest_money" /><label id="lab_measure_planinvest_money"></label>
+							万元
+						</td>
+						<td width="15%" align="center">
+							主材资金
+						</td>
+						<td align="left">
+							<input type="hidden" id="measure_major_material" /><label id="lab_measure_major_material"></label>
+							万元
+						</td>
+					</tr>
+					<tr class="tr_data" height="25px" id="hidetr6">
+						<td align="center">风 格</td>
+						<td align="left" colspan="3"><input type="hidden" id="measure_require_style"/><label id="lab_measure_require_style"></label></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td align="center">量房工具</td>
+						<td align="left" colspan="3"><textarea style="width:740" rows="2" id="measure_tool"></textarea></td>
+					</tr>
+			</table>
+			<br/>
+			<B>观察内容</B><br/>
+			<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">			                              
+					<tr class="tr_data" height="25px">
+						<td align="center" width="15%">房屋原结构</td>
+						<td align="left" colspan="3"><textarea style="width:720" rows="2" id="old_structure"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">是否有缺陷</td>
+						<td align="left" colspan="3"><span id="span_is_fault"></span>
+							<input type="text" id="fault_condition" disabled />
+						</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">暖气是否改动</td>
+						<td align="left" colspan="3"><span id="span_heater_is_change"></span>
+							<input type="text" id="heater_suggest" disabled />
+						</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">煤气是否改动</td>
+						<td align="left" colspan="3"><span id="span_gas_is_change"></span>
+							<input type="text" id="gas_suggest" disabled />
+						</td>
+					</tr>
+			</table>
+			<br/>
+			<B>与客户沟通结果</B><br/>
+			<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">			                              
+				<tr class="tr_data" height="25px">
+					<td align="center" width="15%">隔墙是否需拆除</td>
+					<td align="left" colspan="3"><span id="span_partition_is_remove"></span>&nbsp;
+						隔墙位置<input type="text" id="partition_position"/>
+					</td>
+				</tr>
+				<tr class="tr_data" height="25px">
+					<td align="center" width="15%">是否需要做中央空调</td>
+					<td align="left" width="35%"><span id="span_is_need_airconditioning"></span></td>
+					<td align="center" width="15%">热水器类型</td>
+					<td align="left" width="35%"><span id="span_water_heater_type"></span></td>
+				</tr>
+				<tr class="tr_data" height="25px">
+					<td align="center">家住几口人</td>
+					<td align="left" colspan="3"><input type="text" id="many_members"/>人&nbsp;
+						人口描述<input type="text" id="members_desc"/>
+					</td>
+				</tr>
+				<tr class="tr_data" height="25px">
+					<td align="left" colspan="4">客户是否已买（或准备买）家具类型及尺寸&nbsp;<span id="span_is_buy"></span>
+					<input type="text" id="analyse" size="30"></input>
+					</td>
+				</tr>
+				<tr class="tr_data" height="25px">
+					<td align="center">主要木做材质</td>
+					<td align="left" colspan="3"><textarea style="width:580" rows="2" id="major_wood_material"></textarea></td>
+				</tr>
+			</table>
+			</br/>
+			<B>客户要求</B><br/>
+			<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">			                              
+				<tr class="tr_data" height="25px">
+					<td align="center" width="15%">客厅</td>
+					<td align="left" colspan="3"><textarea style="width:720" rows="2" id="living_room"></textarea></td>
+				</tr>
+				<tr class="tr_data" height="25px">
+					<td align="center" width="15%">餐厅</td>
+					<td align="left" colspan="3"><textarea style="width:720" rows="2" id="dining_room"></textarea></td>
+				</tr>
+				<tr class="tr_data" height="25px">
+					<td align="center" width="15%">厨房</td>
+					<td align="left" colspan="3"><textarea style="width:720" rows="2" id="kitchen"></textarea></td>
+				</tr>
+				<tr class="tr_data" height="25px">
+					<td align="center" width="15%">客卫</td>
+					<td align="left" colspan="3"><textarea style="width:720" rows="2" id="guest_bathroom"></textarea></td>
+				</tr>
+				<tr class="tr_data" height="25px">
+					<td align="center" width="15%">主卫</td>
+					<td align="left" colspan="3"><textarea style="width:720" rows="2" id="main_bathroom"></textarea></td>
+				</tr>
+				<tr class="tr_data" height="25px">
+					<td align="center" width="15%">客卧1</td>
+					<td align="left" colspan="3"><textarea style="width:720" rows="2" id="guest_bedroom1"></textarea></td>
+				</tr>
+				<tr class="tr_data" height="25px">
+					<td align="center" width="15%">客卧2</td>
+					<td align="left" colspan="3"><textarea style="width:720" rows="2" id="guest_bedroom2"></textarea></td>
+				</tr>
+				<tr class="tr_data" height="25px">
+					<td align="center" width="15%">主卧</td>
+					<td align="left" colspan="3"><textarea style="width:720" rows="2" id="main_bedroom"></textarea></td>
+				</tr>
+				<tr class="tr_data" height="25px">
+					<td align="center" width="15%">其它</td>
+					<td align="left" colspan="3"><textarea style="width:720" rows="2" id="measure_other"></textarea></td>
+				</tr>
+			</table>
+			<br/>
+			<B>图纸必须注明的地方</B><br/>
+			<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">			                              
+				<tr class="tr_data" height="25px">
+					<td align="center" width="15%">是否是承重墙</td>
+					<td align="left"><span id="span_is_bearing_wall"></span></td>
+					<td align="center" width="15%">墙的尺寸</td>
+					<td align="left"><input type="text" id="wall_size"/></td>
+				</tr>
+				<tr class="tr_data" height="25px">
+					<td align="center" width="15%">梁的位置</td>
+					<td align="left"><input type="text" id="beam_position"/></td>
+					<td align="center" width="15%">梁高</td>
+					<td align="left"><input type="text" id="beam_height"/></td>
+				</tr>
+				<tr class="tr_data" height="25px">
+					<td align="center" width="15%">门洞高</td>
+					<td align="left"><input type="text" id="door_height"/></td>
+					<td align="center" width="15%">窗洞高</td>
+					<td align="left"><input type="text" id="window_height"/></td>
+				</tr>
+				<tr class="tr_data" height="25px">
+					<td align="center" width="15%">是否有中央空调</td>
+					<td align="left" colspan="3"><span id="span_has_airconditioning"></span>
+					&nbsp;高度<input type="text" id="airconditioning_height" disabled /></td>
+				</tr>
+				<tr class="tr_data" height="25px">
+					<td align="center" width="15%">卫生间坐便孔距</td>
+					<td align="left"><input type="text" id="water_closet"/></td>
+					<td align="center" width="15%">煤气管位置</td>
+					<td align="left"><input type="text" id="gas_pipe_position"/></td>
+				</tr>
+				<tr class="tr_data" height="25px">
+					<td align="center" width="15%">烟道位置</td>
+					<td align="left"><input type="text" id="flue_pipe_position"/></td>
+					<td align="center" width="15%">暖气位置</td>
+					<td align="left"><input type="text" id="heater_position"/></td>
+				</tr>
+				<tr class="tr_data" height="25px">
+					<td align="center" width="15%">开关位置及电路位置</td>
+					<td align="left" colspan="3"><input type="text" id="switch_position"/></td>
+				</tr>
+			</table>
+			<table width="90%" style="margin: 10px;">
+				<tr>
+					<td width="98%" align="center">
+						<div id="savemeasurehouseBtn" class="buttonDivTwo">
+							<a href="javascript:void(0)" onclick="saveMeasureHouse()">保存</a>
+						</div>
+					</td>
+				</tr>
+			</table>	
+		</div>
+		
+		<div id="tabs-3">
+			     <table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				 <tr class="tr_data" height="35px">
+					<td align="right" width="25%">缴纳设计费时间：</td>
+					<td align="left" width="25%"><input type="text" id="designe_money" onclick="new Calendar().show(this);" readonly="true"/></td>
+					<td align="right" width="25%">缴纳设计费金额：</td>
+					<td align="left" width="25%"><input id="design_fee2" type="text"/></td>
+				</tr>
+				<tr class="tr_data" height="35px">	
+					<td align="right" width="25%">出图时间：</td>
+					<td align="left" width="25%"><input type="text" id="update_paper_time" onclick="new Calendar().show(this);" readonly="true"/></td>
+					<td align="right" width="25%">签单周期：</td>
+					<td align="left" width="25%"><input type="text" id="signed_cycle" size="5"/>天</td>
+				</tr>
+				<tr class="tr_data" height="35px">	
+					<td align="right" width="25%">修案日期：</td>
+					<td align="left" width="25%"><input type="text" id="alter_paper_date" onclick="new Calendar().show(this);" readonly="true"/></td>
+					<td align="right" width="25%">终案日期：</td>
+					<td align="left" width="25%"><input type="text" id="finish_paper_date" onclick="new Calendar().show(this);" readonly="true"/></td>
+				</tr>
+				<tr class="tr_data" height="35px">
+					<td align="right">促销申请：</td>
+					<td align="left" colspan="5"><textarea style="width:760px" rows="3" id="promotion_apply"></textarea></td>
+				 </tr>
+				 <tr class="tr_data" height="35px">
+					<td align="right">备注条款：</td>
+					<td align="left" colspan="5"><textarea style="width:760px" rows="3" id="memo"></textarea></td>
+				 </tr>
+				</table><br/>
+			     <table width="100%">
+					<tr>
+					   <td width="15%">方案附件</td>
+					   <td width="85%" align="left">
+						<div id="uploadFile" class="buttonDivTwo">
+							<a href="javascript:uploadFile()">上传</a>
+						</div>
+					  </td></tr>
+			     </table>
+				<table id="filePathList" class="display" cellpadding="0" width="100%" cellspacing="0" border="0" ></table>
+            <br/><br/>
+		    <table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="tab_designPlan_check">
+				    <tr class="tr_data" height="35px">
+						<td align="center" colspan="4">方案审核</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center" width="20%">审核结果：</td>
+						<td align="left" width="30%" id="tdcheck_result"></td>
+						<td align="center" width="20%">图纸是否齐全：</td>
+						<td align="left" id="tdpaper_is_complete" width="30%"></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center" width="20%">审核人：</td>
+						<td align="left" width="30%"><input type="text" id="user_code" disabled /></td>
+						<td align="center" width="20%">审核时间：</td>
+						<td align="left" width="30%"><input type="text" id="check_time"  disabled /></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">审核意见：</td>
+						<td align="left" colspan="3"><textarea style="width:720" rows="4" id="check_opinion"></textarea></td>
+					</tr>
+		   </table>
+		   <br/>
+		   	<table width="90%" style="margin: 10px;">
+					<tr>
+						<td width="98%" align="center">
+							<div id="saveDesignPlanAndResulttBtn" class="buttonDivTwo">
+								<a href="javascript:void(0)" onclick="saveDesignPlanAndResult()">保存</a>
+							</div>
+						</td>
+					</tr>
+				</table>
+		</div>
+		
+		<div id="tabs-4">
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+					<tr class="tr_data" height="35px">
+						<td align="left" colspan="4"><input type="radio" name="callback1" value="电话回访" id="tel" checked="checked"/>电话回访&nbsp;&nbsp;<input type="radio" name="callback1" value="短信回访" id="chit"/>短信回访</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="left" colspan="4"><textarea id="callback_content" rows="2" style="width:875px"></textarea></td>
+					</tr>
+				</table>
+				<table width="90%" style="margin: 10px;">
+					<tr>
+						<td width="98%" align="center">
+							<div id="saveConsultBtn" class="buttonDivTwo">
+								<a href="javascript:void(0)" onclick="addCallback()">保存</a>
+							</div>
+						</td>
+					</tr>
+				</table><br/><br/>
+				<table cellpadding="0" width="100%" cellspacing="0" border="0"
+				class="display" id="dataTable"></table>
+		</div>
+		<div id="tabs-5">
+		        <table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+		            <tr class="tr_data" height="35px">
+						<td align="center" colspan="4">合同签订</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">合同编号</td>
+						<td align="left"><input type="text" id="contract_code"/></td>
+						<td align="center">合同签订时间：</td>
+						<td align="left"><input type="text" id="sign_date" onclick="new Calendar().show(this);" readonly="true" /></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">合同开工日期</td>
+						<td align="left"><input type="text" id="start_date" onclick="new Calendar().show(this);" readonly="true"/></td>
+						<td align="center">合同竣工日期</td>
+						<td align="left"><input type="text" id="end_date" onclick="new Calendar().show(this);" readonly="true"/></td>
+					</tr>
+					
+					<tr class="tr_data" height="35px">
+						<td align="center">工期要求：</td>
+						<td align="left" colspan="3"><textarea id="duration_require" rows="2" cols="98"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">是否委派监理：</td>
+						<td align="left" id="tdis_supervisor"></td>
+						<td align="center">是否外采产品：</td>
+						<td align="left" id="tdis_outsourcing"></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">特殊项目标注：</td>
+						<td align="left" colspan="3"><textarea id="annotation" rows="2" cols="98"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">设计费：</td>
+						<td align="left"><input type="text"  id="design_fee"/></td>
+						<td align="center">优惠金额：</td>
+						<td align="left"><input type="text"  id="offer_money"/></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">工程报价：</td>
+						<td align="left"><input type="text"  id="project_amount"/></td>
+						<td align="center">产品报价：</td>
+						<td align="left"><input type="text"  id="product_amount"/></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">报价中不确定因素：</td>
+						<td align="left" colspan="3"><textarea id="not_sure_factor" rows="2" cols="98"></textarea></td>		
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">非标手续记录：</td>
+						<td align="left" colspan="3"><textarea id="un_stand_recd" rows="2" cols="98"></textarea></td>
+					</tr>
+					<!--
+					<tr class="tr_data" height="35px">
+						<td align="center" colspan="4">工程打款跟进：</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">首期：</td>
+						<td align="left"><input type="text" id="first_pay" /></td>
+						<td align="center">中期：</td>
+						<td align="left"><input type="text"  id="second_pay"/></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">尾期：</td>
+						<td align="left" colspan="3"><input type="text"  id="final_pay"/></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">备注：</td>
+						<td align="left" colspan="3"><textarea id="con_memo" rows="2" cols="83"></textarea></td>
+					</tr>
+					!-->
+			   </table><br/>
+			   	<table width="90%" style="margin: 10px;">
+					<tr>
+						<td width="98%" align="center">
+							<div id="saveContractBtn" class="buttonDivTwo">
+								<a href="javascript:void(0)" onclick="saveContractInfo()">保存</a>
+							</div>
+						</td>
+					</tr>
+				</table>
+			   <br/>
+			    <table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="tab1_contract_check">
+		             <tr class="tr_data" height="35px">
+						<td align="center" width="20%">送审时间</td>
+						<td align="left" width="30%"><input type="text" id="contract_goover_date" onclick="new Calendar().show(this);" readonly="true"/></td>
+						<td align="center" width="20%">审&nbsp;核&nbsp;员</td>
+						<td align="left" width="30%"><input type="text" id="contract_assessor"/></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">审核时限</td>
+						<td align="left"><input type="text" id="contract_time_limit"/>天</td>
+						<td align="center">总的扣分</td>
+						<td align="left"><input type="text" id="contract_deduct_marks" disabled />分</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">审核时间</td>
+						<td align="left" colspan="3"><input type="text" id="contract_check_date" onclick="new Calendar().show(this);" readonly="true"/></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">设计师送审说明</td>
+						<td align="left" colspan="3"><textarea id="contract_goover_explain" cols="97" rows="2"></textarea></td>
+					</tr>
+				</table>
+			<br/>
+			<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="tab2_contract_check">
+		            <tr class="tr_data" height="35px">
+						<td align="left" width="70%">审核项目</td>
+						<td align="center" width="15%">错&nbsp;&nbsp;&nbsp;&nbsp;项</td>
+						<td align="center" width="15%">扣&nbsp;&nbsp;&nbsp;&nbsp;分</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="left">合同附表除保修单、结算单、变更单外未签字确认扣6分</td>
+						<td align="center"><input type="text" size="5" id="contract_pro1_num" onChange="computeScoreCon(1)"/></td>
+						<td align="center"><input type="text" size="5" id="contract_pro1_score" disabled /></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="left">优惠措施未审批或越权审批扣21分</td>
+						<td align="center"><input type="text" size="5" id="contract_pro2_num" onChange="computeScoreCon(2)"/></td>
+						<td align="center"><input type="text" size="5" id="contract_pro2_score" disabled /></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="left">所定工期过短低于或者高于合理工期扣5分</td>
+						<td align="center"><input type="text" size="5" id="contract_pro3_num" onChange="computeScoreCon(3)"/></td>
+						<td align="center"><input type="text" size="5" id="contract_pro3_score" disabled /></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="left">合同工期的填写不符合公司规定扣5分</td>
+						<td align="center"><input type="text" size="5" id="contract_pro4_num" onChange="computeScoreCon(4 )" /></td>
+						<td align="center"><input type="text" size="5" id="contract_pro4_score" disabled /></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="left">补充条款首项无甲方名称扣3分</td>
+						<td align="center"><input type="text" size="5" id="contract_pro5_num" onChange="computeScoreCon(5)"/></td>
+						<td align="center"><input type="text" size="5" id="contract_pro5_score" disabled /></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="left">甲、乙方填写项目填错扣21分</td>
+						<td align="center"><input type="text" size="5" id="contract_pro6_num" onChange="computeScoreCon(6)"/></td>
+						<td align="center"><input type="text" size="5" id="contract_pro6_score" disabled /></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="left">合同金额填写与报价单不一致扣6分</td>
+						<td align="center"><input type="text" size="5" id="contract_pro7_num" onChange="computeScoreCon(7)"/></td>
+						<td align="center"><input type="text" size="5" id="contract_pro7_score" disabled /></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="left">合同、补充条款签字日期不一致扣2分</td>
+						<td align="center"><input type="text" size="5" id="contract_pro8_num" onChange="computeScoreCon(8)"/></td>
+						<td align="center"><input type="text" size="5" id="contract_pro8_score" disabled /></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="left">特殊约定未经公司同意或没有批准扣21分</td>
+						<td align="center"><input type="text" size="5" id="contract_pro9_num" onChange="computeScoreCon(9)"/></td>
+						<td align="center"><input type="text" size="5" id="contract_pro9_score" disabled /></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="left">合同首项上无甲方固定联系地址或联系电话扣5分</td>
+						<td align="center"><input type="text" size="5" id="contract_pro10_num" onChange="computeScoreCon(10)"/></td>
+						<td align="center"><input type="text" size="5" id="contract_pro10_score" disabled /></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="left">总分</td>
+						<td align="left" colspan="3"><input type="text" id="contract_total_score" disabled /></td>
+					</tr>
+				</table>
+				<table width="90%" style="margin: 10px;" id="tab3_contract_check">
+					<tr>
+						<td width="98%" align="center">
+							<div id="saveContractCheckBtn" class="buttonDivTwo">
+								<a href="javascript:void(0)" onclick="saveContractCheck()">保存</a>
+							</div>
+						</td>
+					</tr>
+				</table>
+		</div>
+		
+		<div id="tabs-7">
+			<B>基本信息</B><br/>
+			<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+		            <tr class="tr_data" height="35px">
+						<td align="center" width="20%">送审时间</td>
+						<td align="left" width="30%"><input type="text" id="goover_date" onclick="new Calendar().show(this);" readonly="true"/></td>
+						<td align="center" width="20%">审&nbsp;核&nbsp;员</td>
+						<td align="left" width="30%"><input type="text" id="quote_assessor"/></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">审核时限</td>
+						<td align="left"><input type="text" id="time_limit"/>天</td>
+						<td align="center">总的扣分</td>
+						<td align="left"><input type="text" id="deduct_marks" disabled />分</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">审核时间</td>
+						<td align="left" colspan="3"><input type="text" id="check_date" onclick="new Calendar().show(this);" readonly="true"/></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">设计师送审说明</td>
+						<td align="left" colspan="3"><textarea id="goover_explain" style="width:720" rows="2"></textarea></td>
+					</tr>
+			</table>
+			<br/>
+			<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+		            <tr class="tr_data" height="35px">
+						<td align="left" width="30%">审核项目</td>
+						<td align="center" width="10%">错&nbsp;&nbsp;&nbsp;&nbsp;项</td>
+						<td align="center" width="10%">扣&nbsp;&nbsp;&nbsp;&nbsp;分</td>
+						
+						<td align="left" width="30%">审核项目</td>
+						<td align="center" width="10%">错&nbsp;&nbsp;&nbsp;&nbsp;项</td>
+						<td align="center" width="10%">扣&nbsp;&nbsp;&nbsp;&nbsp;分</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center" colspan="3">报  价   部   分</td>
+						
+						<td align="left">17平面图未注房间、地面材料及主要家电的每处扣0.5分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro30_num" onChange="computeScoreQuo(30,0.5)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro30_score" disabled /></td>
+					</tr>
+						
+					<tr class="tr_data" height="35px">
+						<td align="left">1 报价单缺页每缺一页扣5分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro1_num" onChange="computeScoreQuo(1,5)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro1_score" disabled /></td>
+						
+						<td align="left">18平面图上未按比例绘制或未注明比例的每处扣1分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro32_num" onChange="computeScoreQuo(32,1)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro32_score" disabled /></td>
+					</tr>	
+					<tr class="tr_data" height="35px">
+						<td align="left">2 报价单装订未按序号或装订错误扣1分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro2_num" onChange="computeScoreQuo(2,1)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro2_score" disabled /></td>
+						
+						<td align="left">19原平面拆改图上未标注室内细部尺寸的每处扣0.5分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro33_num" onChange="computeScoreQuo(33,0.5)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro33_score" disabled /></td>
+					</tr>
+						
+						
+					<tr class="tr_data" height="35px">
+						<td align="left">3 报价单总金额与合同总金额不一致扣6分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro3_num" onChange="computeScoreQuo(3,6)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro3_score" disabled /></td>
+						<td align="left">20图纸尺寸标注方向不一致或标注错误的每处扣0.5分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro34_num" onChange="computeScoreQuo(34,0.5)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro34_score" disabled /></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="left">4 漏项及工程量少计超合同额10%~15%扣4分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro4_num" onChange="computeScoreQuo(4,4)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro4_score" disabled /></td>
+						<td align="left">21天花图未注材料名称、标高及细部尺寸的每处扣0.5分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro35_num" onChange="computeScoreQuo(35,0.5)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro35_score" disabled /></td>
+					</tr>	
+					
+					<tr class="tr_data" height="35px">
+						<td align="left">5 漏项及工程量少计超合同额15%~20%扣10分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro5_num" onChange="computeScoreQuo(5,10)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro5_score" disabled /></td>
+					<td align="left">22木做及其他材质的造型部分，未出图的每项扣2分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro36_num" onChange="computeScoreQuo(36,2)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro36_score" disabled /></td>
+					</tr>	
+						
+					<tr class="tr_data" height="35px">
+						<td align="left">6 漏项及工程量少计超合同额20%以上扣21分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro6_num" onChange="computeScoreQuo(6,21)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro6_score" disabled /></td>
+						<td align="left">23立面、装饰详图未注材料做法、必要尺寸的每处扣1分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro37_num" onChange="computeScoreQuo(37,1)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro37_score" disabled /></td>
+					</tr>	
+						
+					<tr class="tr_data" height="35px">
+						<td align="left">7 水工水料、墙地走线、天花走线漏一项扣3分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro7_num" onChange="computeScoreQuo(7,3)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro7_score" disabled /></td>
+						<td align="left">24家具制作缺平、立、剖面图的，每缺一项扣1分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro38_num" onChange="computeScoreQuo(38,1)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro38_score" disabled /></td>
+					</tr>	
+					
+					<tr class="tr_data" height="35px">
+						<td align="left">8 垃圾清运漏项扣10分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro8_num" onChange="computeScoreQuo(8,10)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro8_score" disabled /></td>
+						
+						<td align="left">25电位图插座、开关等图标不合规定的每处扣0.5分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro39_num" onChange="computeScoreQuo(39,0.5)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro39_score" disabled /></td>
+					</tr>	
+					
+					<tr class="tr_data" height="35px">
+						<td align="left">9 补充报价未标注材料及工艺做法扣2分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro9_num" onChange="computeScoreQuo(9,2)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro9_score" disabled /></td>
+						
+						<td align="left">26电位图灯具控制连线标注错误的，每处扣0.5分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro40_num" onChange="computeScoreQuo(40,0.5)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro40_score" disabled /></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="left">10 报价单上无客户姓名扣2分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro10_num" onChange="computeScoreQuo(10,2)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro10_score" disabled /></td>
+						
+						<td align="left">27施工图中未标明灯具图例的，每少一处扣1分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro41_num" onChange="computeScoreQuo(41,1)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro41_score" disabled /></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="left">11电话、地址、开竣工日期与合同不一致每项扣2分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro11_num" onChange="computeScoreQuo(11,2)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro11_score" disabled /></td>
+						<td align="left">28有结构改造项目而未标明前后改动位置的扣5分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro42_num" onChange="computeScoreQuo(42,5)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro42_score" disabled /></td>
+						</tr>
+					<tr class="tr_data" height="35px">
+						<td  align="center"  colspan="3">图纸部分（30—32项为优秀以上级设计师必备）</td>
+						
+						<td align="left">29设计不符合施工规范要求，不具可施工性的每处扣5分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro43_num" onChange="computeScoreQuo(43,5)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro43_score" disabled /></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="left">1 目录、平面、天花、电位、立面图中每缺一项扣10分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro12_num" onChange="computeScoreQuo(12,10)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro12_score" disabled /></td>
+						<td align="left">30设计图纸不符和公司装帧要求的扣2分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro44_num" onChange="computeScoreQuo(44,2)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro44_score" disabled /></td>
+						</tr>	
+					
+					<tr class="tr_data" height="35px">
+						<td align="left">2 报价单上有项目，施工图不全每少一项扣5分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro13_num" onChange="computeScoreQuo(13,5)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro13_score" disabled /></td>
+							<td align="left">31图纸中装饰项目表、表现图缺一项扣7分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro45_num" onChange="computeScoreQuo(45,7)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro45_score" disabled /></td>
+						</tr>	
+					
+					<tr class="tr_data" height="35px">
+						<td align="left">3 未使用公司规定图幅、图框每张图扣5分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro14_num" onChange="computeScoreQuo(14,5)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro14_score" disabled /></td>
+						<td align="left">32装饰工程项目表中内容反映不全的，每缺一项扣1分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro46_num" onChange="computeScoreQuo(46,1)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro46_score" disabled /></td>
+						</tr>	
+				
+					<tr class="tr_data" height="35px">
+						<td align="left">4 全套图纸在签单三日内未交齐扣7分，晚一天扣1分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro15_num" onChange="computeScoreQuo(15,1)"/>天</td>
+						<td align="center"><input type="text" size="5" id="quote_pro15_score"  value="0" /></td>
+						
+						<td  align="center" colspan="3">固 定 扣 分 部 分</td>
+						</tr>
+					<tr class="tr_data" height="35px">
+						<td align="left">5 存档图非原始签字或未用签字笔钢笔签字每处扣1分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro16_num" onChange="computeScoreQuo(16,1)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro16_score" disabled /></td>
+						<td align="left">1 报送公司的合同任何一项上无甲方签字扣21分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro47_num" onChange="computeScoreQuo(47,21)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro47_score" disabled /></td>
+						</tr>	
+					
+					<tr class="tr_data" height="35px">
+						<td align="left">6 图纸未按主次顺序装订或未编号的扣1分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro17_num" onChange="computeScoreQuo(17,1)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro17_score" disabled /></td>
+						<td align="left">2 报送公司的合同任何一项上伪造甲方及审核签字扣21分</td>
+						<td align="center"><input type="text" size="5" id="quote_pro48_num" onChange="computeScoreQuo(48,21)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro48_score" disabled /></td>
+						</tr>	
+					
+					<tr class="tr_data" height="35px">
+						<td align="left">7 使用铅笔绘图或徒手绘图的扣21分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro18_num" onChange="computeScoreQuo(18,21)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro18_score" disabled /></td>
+						<td align="left">3 合同、补充条款、报价单交单不及时扣10分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro49_num" onChange="computeScoreQuo(49,10)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro49_score" disabled /></td>
+						</tr>	
+					
+					<tr class="tr_data" height="35px">
+						<td align="left">8 图纸脏乱、图面不整洁的，每张图扣2分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro19_num" onChange="computeScoreQuo(19,2)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro19_score" disabled  value="0"/></td>
+						
+						<td align="left">4 合同、补充条款、报价单交单不及时超一天扣5分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro50_num" onChange="computeScoreQuo(50,5)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro50_score" disabled /></td>
+						</tr>	
+					
+					<tr class="tr_data" height="35px">
+						<td align="left">9 图纸图面修改、涂抹不得超过三处，多一处扣1分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro21_num" onChange="computeScoreQuo(21,1)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro21_score" disabled /></td>
+						
+						<td align="left">5 合同、补充条款、报价单交底前未交齐扣21分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro51_num" onChange="computeScoreQuo(51,21)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro51_score" disabled /></td>
+						</tr>
+					<tr class="tr_data" height="35px">
+						<td align="left">10 标高、尺寸标注的表示方法未按规定的每处扣0.5分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro22_num" onChange="computeScoreQuo(22,0.5)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro22_score" disabled /></td>
+						<td align="left">6 合同、图纸、报价单丢失其中一项扣21分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro52_num" onChange="computeScoreQuo(52,21)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro52_score" disabled /></td>
+						</tr>
+					<tr class="tr_data" height="35px">
+						<td align="left">11图面各种线条的表示法未按规范规定的每处扣0.5分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro23_num" onChange="computeScoreQuo(23,0.5)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro23_score" disabled /></td>
+						<td align="left">7 设计师现场交底迟到超过5分钟扣10分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro53_num" onChange="computeScoreQuo(53,10)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro53_score" disabled /></td>
+						</tr>	
+					
+					<tr class="tr_data" height="35px">
+						<td align="left">12手写说明性文字未使用仿宋体或方快体的每处扣0.5分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro24_num" onChange="computeScoreQuo(24,0.5)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro24_score" disabled /></td>
+						<td align="left">8设计师现场交底迟到引起客户投诉的扣21分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro54_num" onChange="computeScoreQuo(54,21)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro54_score" disabled /></td>
+						</tr>	
+					
+					<tr class="tr_data" height="35px">
+						<td align="left">13各种电器、洁具、门窗等图标未合规定的每处扣0.5分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro25_num" onChange="computeScoreQuo(25,0.5)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro25_score" disabled /></td>
+						
+						<td align="left">9 审核承办内容意见反馈后，错处重复出现，加倍扣分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro31_num" onChange="computeScoreQuo(31,1)" /></td>
+						<td align="center"><input type="text" size="5" id="quote_pro31_score" disabled value="0" /></td>
+						</tr>
+					<tr class="tr_data" height="35px">
+						<td align="left">14引出线、剖切线、折断线表示法未按规定的每处扣0.5分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro26_num" onChange="computeScoreQuo(26,0.5)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro26_score" disabled /></td>
+						<td align="left">10审核承办内容意见反馈后，错处重复出现超三次扣21分</td>
+						<td align="center"><input type="text" size="5" id="quote_pro20_num" onChange="computeScoreQuo(20,21)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro20_score" disabled /></td>
+					</tr>	
+					
+					<tr class="tr_data" height="35px">
+						<td align="left">15详图索引标志的表示方法未按规范规定的每处扣0.5分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro27_num" onChange="computeScoreQuo(27,0.5)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro27_score" disabled /></td>
+						<td align="left">11合同、报价、补充条款、图纸签名部分未用签字笔或钢笔签字一处扣2分</td>
+						<td align="center"><input type="text" size="5" id="quote_pro29_num" onChange="computeScoreQuo(29,2)"/></td>
+						<td align="center"><input type="text" size="5" id="quote_pro29_score" value="0" /></td>
+					</tr>
+					
+					<tr class="tr_data" height="35px">
+						<td align="left">16图纸目录缺图号、内容及备注的每缺一项扣0.5分。</td>
+						<td align="center"><input type="text" size="5" id="quote_pro28_num" onChange="computeScoreQuo(28,0.5)"/></td>
+						<td colspan="4" align="left"><input type="text" size="5" id="quote_pro28_score" disabled /></td>
+					</tr>
+					
+					<tr class="tr_data" height="35px">
+						<td  style="font-size:25px" height="35px" colspan="6" align="left">总分：<input style="width:40px;height:30px" type="text" id="total_score" disabled /> 分</td>
+						
+						
+					</tr>
+			</table>
+			  <table width="90%" style="margin: 10px;">
+					<tr>
+						<td width="98%" align="center">
+							<div id="saveQuoteCheckBtn" class="buttonDivTwo">
+								<a href="javascript:void(0)" onclick="saveQuoteCheck()">保存</a>
+							</div>
+						</td>
+					</tr>
+				</table>
+		</div>
+		<div id="tabs-8">
+		<div width="100%">
+			<table width="100%" align="center" cellpadding="0" cellspacing="0"
+				border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									&nbsp;交款记录列表&nbsp;
+								</td>
+								<td>
+									<div id="createBtn" class="buttonDivTwo">
+										<a href="javascript:addMoneyRecord()">添加</a>
+									</div>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<table cellpadding="0" width="100%" cellspacing="0" border="0"	class="display" id="moneyListTable"></table>
+		收款统计：共计<span id="shoukuan_total_txt"></span>
+		<!--<table width="100%">
+			<tr>
+				<td>设计费定金</td><td>设计费尾款</td><td>施工定金</td><td>施工前期款</td><td>施工中期款</td>
+				<td>施工结尾款</td><td>项目变更款</td><td>产品定金</td><td>产品尾款</td><td>产品全款</td>
+				<td>产品变更款项</td><td>款项用途变更</td>
+			</tr>
+		<table>
+		!-->
+		</div>
+		</div>
+		<div id="tabs-9">
+		<div width="100%">
+		<table width="100%" align="center" cellpadding="0" cellspacing="0"
+				border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									&nbsp;款项变更列表&nbsp;
+								</td>
+								<td>
+									<div id="createBtn" class="buttonDivTwo">
+										<a href="javascript:addMoneyChange()">添加</a>
+									</div>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<table cellpadding="0" width="100%" cellspacing="0" border="0"	class="display" id="moneyChangeTable"></table>
+		</div>
+		</div>
+<div id="dialog" title="" style="display:none;padding: 0 0 0 0;margin: 0 0 0 0;z-index:10000">
+    <iframe id="self_iframe" src="about:blank" width="100%" height="96%" frameborder="0"></iframe>
+ </div>
+	
+	</body>
+</html>

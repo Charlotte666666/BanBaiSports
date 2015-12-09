@@ -1,0 +1,2742 @@
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet"
+			type="text/css"/>
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css"
+			media="print, projection, screen"/>
+		<link rel="stylesheet" type="text/css" href="../../css/drag-drop-folder-tree.css" />
+		<link rel="stylesheet" type="text/css" href="../../css/context-menu.css"></link>
+		<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/myDtree.js" ></script>
+	<script type="text/javascript" language="javascript" src="../../js/context-menu.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/drag-drop-folder-tree.js" ></script>
+<script type="text/javascript">
+	var oTable=null;
+	var isSaveOK=false;
+	var optType="";
+	var info_id=0;
+	//var projectOrderId="";工程订单号
+	var modelhouse="";
+	var modelhouseid=0;
+	var cust_code="";
+	var require_id='';
+	var productId=0;
+	var product="";
+	var objs="";
+	var orderDetailId=0;
+	var orderdetailList=[];
+	var selectedProduct=[];
+	var Customizetrid=1;
+	var Customizetrnum=0;
+	var controltrid=1;
+	var controltrnum=0;
+	var changetrid=1;
+	var changetrnum=0;
+	var customize="";
+	var old_product="";
+	var customizeid="";
+	var cyclecontrol="";
+	var controlid="";
+	var changeinfo="";
+	var ch_product={};
+	var detailid=0;
+	var minTime=10000000000;
+	var maxTime=0;
+	var constructId=0;
+	var ids="";//采购单信息获取的订单详情号
+	var designerCode="";
+	var productList=[];
+	var typeList=[];
+	var orderInfo={};
+	var orderdetail=[];
+	var tempAmout=0;
+	var productIndex=0;
+	var curProductIndex=0;
+	var total_money=0;
+	//产品订单页面或者产品变更页面
+	var pageMode="";
+	var change_type="";
+	var quoteCount=0;//产品报价详情表行计数器
+	var curQuoteOrder='';//当前显示的报价详情的报价单号
+	var curProductOrder='';//当前显示的产品订单详情的单号
+	var curChangeId='';//当前显示的变更详情的变更单号
+	
+	var productOrderId="";
+    var changeDetail=[];
+	var initTab='';
+   $(document).ready(function() {
+	$( "#tabs ul" ).tabs();
+	initTab=top.getUrlParam(document.URL,"initTab");//初始显示tab
+	if(initTab){
+		$("#tabs ul li:eq("+initTab+") a").trigger("click");
+	}
+	$("#tdchange_status").html(top.getCodeSelectHtml("EXAMINE_STATUS","check_status",false));
+	$("#tdProduct_unit").html(top.getCodeSelectHtml("UNIT","product_unit",false));
+	$("#tdProduct_brand").html(top.getAllSupplierSelect("product_brand",""));
+	 loadProTree();
+     initData();
+	 
+	 if(top.g_isPermit("09_product_customize")){
+	    $("#addBtn").show();
+     }else{
+	    $("#addBtn").hide();
+	 }
+	 if(top.g_isPermit("09_opt_product_quote")){//产品报价权限
+		$("#addProductQuoteBT").show();
+	 }else{
+		$("#addProductQuoteBT").hide();
+	 }
+	  var table = $('#purchaseList').DataTable();
+	  
+	  if(top.g_isPermit("09_product_order_opt")){//产品订单新增权限
+	    $("#addProductOrderBT").show();
+	  }else{
+	    $("#addProductOrderBT").hide();
+	  }
+   });
+   
+   //获取产品变更列表信息
+   function getProductOrdrChangeList(){
+       if(productOrderId!=""){
+	      var aoData=[];
+		  aoData.push({ "name":"productOrderChange.order_id","value":productOrderId});
+		  top.sendAjaxRequest("/actions/ProductOrder.action?getProductOrderChangeList",aoData,getProductOrderChangeListCallBack);
+	   }
+   }
+   
+   //获取产品变更信息回调函数
+   function getProductOrderChangeListCallBack(obj){
+      var ht="<tr class='tr_data' style='background-color: #b9d8f3;'><td>产品订单号</td>><td>变更前金额</td><td>减少金额</td><td>变更日期</td><td>操作人</td><td>审批人</td><td>审批日期</td><td>审批结果</td><td>审批备注</td><td>操作</td></tr>";
+      var detail='<tr class="tr_data" style="background-color: #b9d8f3;"><td>产品名称</td><td>产品类别</td><td>产品型号</td><td>产品品牌</td><td>产品单位</td><td>产品规格</td><td>产品原数量</td><td>更改数量</td><td>产品使用位置</td></tr>';
+	  if(obj.aaData){
+		     var o=obj.aaData;
+	         var detailList=o[0].changeDetail;			 
+			 for(var i=0;i<o.length;i++){
+				 if(i==0){
+					curChangeId=o[i].id;
+					ht+="<tr class='tr_data selected' id='orderChange_"+o[i].id+"' style='cursor:pointer;' onclick=\"showDetail('"+o[i].id+"')\"><td>"+o[i].order_id+"</td><td>"+o[i].old_total+"</td><td>"+o[i].total+"</td><td>"+top.getTimeStr(o[i].opt_time,true)+"</td><td>"+top.getUserNameByCode(o[i].opt_user)+"</td><td>"+top.getUserNameByCode(o[i].check_user)+"</td><td>"+top.getTimeStr(o[i].check_time,true)+"</td><td>"+top.getCodeName("EXAMINE_STATUS",o[i].check_status)+"</td><td>"+o[i].check_suggest+"</td><td> ";
+				 }else{
+				   ht+="<tr class='tr_data select' style='cursor:pointer;' id='orderChange_"+o[i].id+"' onclick=\"showDetail('"+o[i].id+"')\"><td>"+o[i].order_id+"</td><td>"+o[i].old_total+"</td><td>"+o[i].total+"</td><td>"+top.getTimeStr(o[i].opt_time,true)+"</td><td>"+top.getUserNameByCode(o[i].opt_user)+"</td><td>"+top.getUserNameByCode(o[i].check_user)+"</td><td>"+top.getTimeStr(o[i].check_time,true)+"</td><td>"+top.getCodeName("EXAMINE_STATUS",o[i].check_status)+"</td><td>"+o[i].check_suggest+"</td><td> ";
+				 }
+				 if(o[i].check_status=="1"){
+					  ht+="审核已通过</td></tr>";
+				 }else if(o[i].check_status=="2"){
+					  ht+="审核不通过</td></tr>";
+				 }else{
+					  ht+="<a href='javascript:void(0)' onclick='productOrderChangeCheck(\""+o[i].id+"\",\""+o[i].order_id+"\",\""+o[i].total+"\",\""+o[i].old_total+"\",\""+o[i].old_amount+"\",\""+o[i].amount+"\",\""+o[i].old_status+"\",\""+o[i].discount+"\")'>审核</a></td></tr>";
+				 }
+			 }
+	  }else{
+		      ht+="<tr class='tr_data'><td colspan='11'>暂无变更数据</td></tr>";
+	  }
+    //默认产品变更明细列表显示的是第一个产品变更信息的变更明细
+    if(detailList){
+        for(var j=0;j<detailList.length;j++){
+			if(j==0){
+			
+			}
+			 detail+="<tr class='tr_data'><td>"+detailList[j].product_name+"</td><td>"+detailList[j].type_name+"</td><td>"+detailList[j].product_model+"</td><td>"+top.getSupplierNameById(detailList[j].product_brand)+"</td><td>"+top.getCodeName("UNIT",detailList[j].unit)+"</td><td>"+detailList[j].product_standard+"</td><td>"+detailList[j].old_amount+"</td><td>"+detailList[j].new_amount+"</td><td>"+detailList[j].use_position+"</td></tr>";
+		}
+	}else{
+		detail+="<tr class='tr_data'><td colspan='10' align='center'>暂无明细数据</td></tr>";
+	}		
+	$("#orderChangeHistoryTable").html(ht);
+	$("#orderChangeDetailTable").html(detail);
+   }
+   
+   //产品变更明细
+   function showDetail(changeId){
+		 if(curChangeId==changeId||changeId==''){
+			$("#orderChange_"+curChangeId).removeClass("select");
+			$("#orderChange_"+curChangeId).addClass("selected");
+			return;
+		}
+		if(curChangeId!=null&&curChangeId!=''){
+			$("#orderChange_"+curChangeId).removeClass("selected");
+			$("#orderChange_"+curChangeId).addClass("select");
+		}
+		curChangeId=changeId;
+		$("#orderChange_"+curChangeId).removeClass("select");
+		$("#orderChange_"+curChangeId).addClass("selected");
+        var aoData=[];
+		aoData.push({ "name":"productOrderChange.id","value":changeId});
+		top.sendAjaxRequest("/actions/ProductOrder.action?getChangeDetail",aoData,getChangeDetailCallBack);
+   }
+   //产品变更明细回调函数
+   function getChangeDetailCallBack(obj){
+      var detail='<tr class="tr_data" style="background-color: #b9d8f3;"><td>产品名称</td><td>产品类别</td><td>产品型号</td><td>产品品牌</td><td>产品单位</td><td>产品规格</td><td>产品原数量</td><td>更改数量</td><td>产品使用位置</td></tr>';
+      if(obj.status==true){
+	    var detailList=obj.body.changeDetail;
+	    if(detailList){
+			for(var i=0;i<detailList.length;i++){
+				 detail+="<tr class='tr_data'><td>"+detailList[i].product_name+"</td><td>"+detailList[i].type_id+"</td><td>"+detailList[i].product_model+"</td><td>"+detailList[i].product_brand+"</td><td>"+detailList[i].unit+"</td><td>"+detailList[i].product_standard+"</td><td>"+detailList[i].old_amount+"</td><td>"+detailList[i].new_amount+"</td><td>"+detailList[i].use_position+"</td></tr>";
+			}
+		}else{
+			detail+="<tr class='tr_data'><td colspan='10' align='center'>暂无明细数据</td></tr>";
+		}		
+    }else{
+	   detail+="<tr class='tr_data'><td colspan='10' align='center'>暂无明细数据</td></tr>";
+	}
+	$("#orderChangeDetailTable").html(detail);
+   }
+   //获取产品订单列表信息
+   function getProductOrderList(){
+      var aoData=[];
+	  aoData.push( {"name":"orderInfo.require_id","value":require_id} );
+	  aoData.push( {"name":"orderInfo.cust_code","value":cust_code} );
+	  
+	  top.sendAjaxRequest("/actions/ProductOrder.action?getProductOrderList",aoData,getProductOrderListCallback);
+   }
+   
+   //获取产品订单信息回调函数
+   function getProductOrderListCallback(obj){
+      var content="<tr class='tr_data' style='background-color: #b9d8f3;'><td>产品订单号</td><td>申购日期</td><td>申购人</td><td>产品总数</td><td>产品总价</td><td>订单状态</td><td>下单</td><td>到货</td><td>验收</td><td>变更</td><td>折扣申请</td></tr>";
+	  
+	  if(obj.status==true){
+	    if(obj.body){
+		   var o=obj.body.orderList;
+		   if(o){
+		      if(o.length>0){
+				  var firsPproductOrder=o[0].id;
+			      for(var i=0;i<o.length;i++){
+				   if(i!=0){
+				    productOrderId+=","
+				   }
+				   productOrderId+=o[i].id;
+				   content+="<tr class='tr_data' style='cursor:pointer' id='product_order_"+o[i].id+"' class='select' onclick='getProductOrderDetail(\""+o[i].id+"\")'><td>"+o[i].id+"</td><td>"+top.getTimeStr(o[i].order_date,true)+"</td><td>"+top.getUserNameByCode(o[i].operator_user)+"</td><td>"+o[i].product_num+"</td><td>"+o[i].total+"</td><td>"+top.getCodeName("PRO_ORDER_STATUS",o[i].status)+"</td><td>"+o[i].has_order+"</td><td>"+o[i].has_arrival+"</td><td>"+o[i].has_check+"</td>";
+				   if(o[i].product_num==0){
+				      content+="<td></td><td></td></tr>";
+				   }else{
+					   content+="<td><a href='javascript:void(0)' style='color:blue;' onclick='productOrderChange(\""+o[i].id+"\",\""+o[i].status+"\")'>订单变更</a></td>";
+					   if(o[i].is_apply_discount=='0'&&o[i].status=='0'){//未付款
+						content+="<td id='discountApply_"+o[i].id+"'><a style='color:blue;' href='javascript:void(0)' onclick='applyDiscount(\""+o[i].id+"\",\""+o[i].total+"\")'>申请折扣优惠</a></td></tr>";
+					   }else if(o[i].is_apply_discount=='1'){
+						content+="<td>折扣优惠申请中</td></tr>";
+					   }else if(o[i].is_apply_discount=='2'){
+						  content+="<td>折扣优惠通过</td></tr>";
+					   }else if(o[i].is_apply_discount=='3'){
+						  content+="<td>折扣优惠被拒</td></tr>";
+					   }else{
+						content+="<td></td></tr>";
+					   }
+				  }
+				 }
+				 
+			  }else{
+			       content+="<tr class='tr_data'><td colspan='11' align='center'>暂无订单信息</td></tr>";
+			  }
+		   }else{
+		        content+="<tr class='tr_data'><td colspan='11' align='center'>暂无订单信息</td></tr>";
+		   }
+		    //产品变更列表信息
+	       getProductOrdrChangeList();
+		}else{
+		    content+="<tr class='tr_data'><td colspan='11' align='center'>暂无订单信息</td></tr>";
+		}
+	  }else{
+	    top.showInfoWinError("获取订单信息失败!");
+	  }
+      $("#productOrderList").html(content);
+	  getProductOrderDetail(firsPproductOrder);//产品订单明细列表中显示第一个产品订单的明细信息
+   }
+   
+   //根据产品订单号获取产品订单明细信息
+   function getProductOrderDetail(id){
+		if(curProductOrder==id||id==''){
+			return;
+		}
+		if(curProductOrder!=null&&curProductOrder!=''){
+			$("#product_order_"+curProductOrder).removeClass("selected");
+			$("#product_order_"+curProductOrder).addClass("select");
+		}
+		curProductOrder=id;
+		$("#product_order_"+curProductOrder).removeClass("select");
+		$("#product_order_"+curProductOrder).addClass("selected");
+       var aoData=[];
+	   aoData.push( {"name":"orderdetail.order_id","value":curProductOrder} );
+	   top.sendAjaxRequest("/actions/ProductOrder.action?getOrderDetailList1",aoData,getProductOrderDetailCallBack);
+   }
+   //获取产品订单明细回调函数TODOzwj
+   function getProductOrderDetailCallBack(obj){
+      var content="<tr class='tr_data' style='background-color: #b9d8f3;'><td>产品父类</td><td>产品子类</td><td>名称</td><td>品牌</td><td>型号</td><td>规格</td><td>单位</td><td>单价</td><td>折扣</td><td>使用位置</td><td>数量</td><td>产品状态</td></tr>";
+	  var detail=obj.aaData;
+	  var parent_type='';
+	  var typeArray='';
+	 // var type_name='';
+	  var tempHt='';
+	  var countMark=1;
+	  if(detail!=null && detail.length>0){
+		parent_type=detail[0].parent_type;
+		typeArray=(d.getNodePath(detail[0].type_id)).split(">");
+		//tempHt="<tr class='tr_data'><td style='width:300px;'>"+typeArray[1]+"</td><td>"+detail[0].product_name+"</td><td>"+top.getSupplierNameById(detail[0].product_brand)+"</td><td>"+detail[0].product_model+"</td><td>"+detail[0].product_standard+"</td><td>"+top.getCodeName("UNIT",detail[0].unit)+"</td><td>"+detail[0].sale_price+"</td><td>"+detail[0].discount+"</td><td>"+detail[i-1].use_position+"</td><td>"+detail[0].amount+"</td><td>"+top.getCodeName("PRODUCT_DETAIL_STATUS",detail[0].order_status)+"</td></tr>"+tempHt;
+		for(var i=1;i<detail.length;i++){
+		  if(detail[i].parent_type==parent_type){
+			countMark++;
+			typeArray=(d.getNodePath(detail[i-1].type_id)).split(">");
+			if(typeArray.length==2){
+				tempHt="<tr class='tr_data'><td>"+typeArray[1]+"</td><td>"+detail[i-1].product_name+"</td><td>"+top.getSupplierNameById(detail[i-1].product_brand)+"</td><td>"+detail[i-1].product_model+"</td><td>"+detail[i-1].product_standard+"</td><td>"+top.getCodeName("UNIT",detail[i-1].unit)+"</td><td>"+detail[i-1].sale_price+"</td><td>"+detail[i-1].discount+"</td><td>"+detail[i-1].use_position+"</td><td>"+detail[i-1].amount+"</td><td>"+top.getCodeName("PRODUCT_DETAIL_STATUS",detail[i-1].order_status)+"</td></tr>"+tempHt;
+			}
+		  }else{
+			parent_type=detail[i].parent_type;
+			typeArray=(d.getNodePath(detail[i-1].type_id)).split(">");
+		 	if(typeArray.length==2){
+				tempHt="<tr class='tr_data'><td rowspan='"+countMark+"'>"+typeArray[0]+"</td><td>"+typeArray[1]+"</td><td>"+detail[i-1].product_name+"</td><td>"+top.getSupplierNameById(detail[i-1].product_brand)+"</td><td>"+detail[i-1].product_model+"</td><td>"+detail[i-1].product_standard+"</td><td>"+top.getCodeName("UNIT",detail[i-1].unit)+"</td><td>"+detail[i-1].sale_price+"</td><td>"+detail[i-1].discount+"</td><td>"+detail[i-1].use_position+"</td><td>"+detail[i-1].amount+"</td><td>"+top.getCodeName("PRODUCT_DETAIL_STATUS",detail[i-1].order_status)+"</td></tr>"+tempHt;
+				countMark=1;
+				content+=tempHt;
+				tempHt='';
+		  }
+		  //typeArray=(d.getNodePath(detail[i].type_id)).split(">");
+		 }
+		}
+		typeArray=(d.getNodePath(detail[detail.length-1].type_id)).split(">");
+		if(typeArray.length==2){
+			tempHt="<tr class='tr_data'><td rowspan='"+countMark+"'>"+typeArray[0]+"</td><td>"+typeArray[1]+"</td><td>"+detail[detail.length-1].product_name+"</td><td>"+top.getSupplierNameById(detail[detail.length-1].product_brand)+"</td><td>"+detail[detail.length-1].product_model+"</td><td>"+detail[detail.length-1].product_standard+"</td><td>"+top.getCodeName("UNIT",detail[detail.length-1].unit)+"</td><td>"+detail[detail.length-1].sale_price+"</td><td>"+detail[detail.length-1].discount+"</td><td>"+detail[detail.length-1].use_position+"</td><td>"+detail[detail.length-1].amount+"</td><td>"+top.getCodeName("PRODUCT_DETAIL_STATUS",detail[detail.length-1].order_status)+"</td></tr>"+tempHt;
+			content+=tempHt;
+		}
+	}else{
+		content+="<tr class='tr_data'><td colspan='12' align='center'>暂无明细数据</td></tr>"; 
+	  }
+      $("#productOrderDetailList").html(content);
+   }
+   
+   //产品变更后刷新订单列表及产品变更列表
+   function refreshOrderAndChange(){
+      getProductOrderList();
+      getProductOrdrChangeList();
+   }
+   
+   //产品订单变更
+   function productOrderChange(id,status){
+     top.openDialog("产品订单变更","/pages/pro09/productOrderChange.html?id="+id+"&require_id="+require_id,true,1100,600,refreshOrderAndChange);
+     
+   }
+   //产品变更审核
+   function productOrderChangeCheck(id,order_id,total,old_total,old_amount,amount,old_status,discount){
+	  $( "#orderChangeCheckTable" ).dialog({
+      resizable: false,
+      height:200,
+	  width:320,
+      modal: true,
+      buttons: {
+        "确定": function() {
+           var aoData=[];
+		   aoData.push({ "name":"productOrderChange.id","value":id});
+		   aoData.push({ "name":"productOrderChange.order_id","value":order_id});
+		   aoData.push({ "name":"productOrderChange.check_status","value":$("#check_status").val()});
+		   aoData.push({ "name":"productOrderChange.check_suggest","value":$("#check_suggest").val()});
+		   aoData.push({ "name":"productOrderChange.old_amount","value":old_amount});
+		   aoData.push({ "name":"productOrderChange.amount","value":amount});
+		   aoData.push({ "name":"productOrderChange.old_total","value":old_total});
+		   aoData.push({ "name":"productOrderChange.total","value":total});
+		   aoData.push({ "name":"productOrderChange.old_status","value":old_status});
+		   aoData.push({ "name":"productOrderChange.discount","value":discount});
+		   top.sendAjaxRequest("/actions/ProductOrder.action?checkProOrderChange",aoData,productOrderChangeCheckCallBack);
+        },
+        "取消": function() {
+		  $("#orderChangeCheckForm")[0].reset();
+          $( this ).dialog( "close" );
+        }
+      }
+	});
+   }
+   function productOrderChangeCheckCallBack(obj){
+      if(obj.status==true){
+	     $("#orderChangeCheckForm")[0].reset();
+	     $("#orderChangeCheckTable").dialog("close");
+		 //更新产品变更列表信息、产品订单列表信息
+		 refreshOrderAndChange();
+	  }
+   }
+	//初始化
+	function initData(){
+		optType=top.getUrlParam(document.URL,"optType");
+		$("#tdpro_designer").html(top.getUserListByRole('product_designer','pro_designer',true));
+		$("#tdbox_designer").html(top.getUserListByRole('box_designer','box_designer',true));
+		$("#tdproject_manager").html(top.getUserListByRole('project_manager','project_manager',true));
+		$("#tdmodelhouse_project_manager").html(top.getUserListByRole('project_manager','modelhouse_project_manager',true));
+		$("#tdsupervision").html(top.getUserListByRole('engineer_manager','supervision',true));
+		$("#tdengineer_manager").html(top.getUserListByRole('engineer_manager','engineer_manager',true));
+		$("#tdproduct_designer").html(top.getUserListByRole('product_designer','product_designer',true));
+		$("#tddesigner").html( top.getAllDesignerSelect("designer") );
+	    if ( optType=='update' ){
+			info_id=top.getUrlParam(document.URL,"id");
+			require_id=top.getUrlParam(document.URL,"require_id");
+			cust_code=top.getUrlParam(document.URL,"cust_code");
+			//获取所有产品类别
+			getProductType();
+			queryAllsettleDetail();//查询产品结算单详情
+			//若是从客户详细信息页面进入则查询客户信息在页面显示
+			if(cust_code!=null && cust_code!=""){
+			   getCustInfo();
+			   $("#view_order_info_table").hide();
+			   //产品订单列表信息
+	           getProductOrderList();	   
+			}
+			if(info_id!=null&&info_id!=''){
+				$("#li_quote_oder").hide();
+				$("#id").html(info_id);
+				$("#view_id").html(info_id);
+				$("#view_order_info_table").show();
+				$("#productOrderList").hide();
+				$("#li_product_oder a").trigger("click");
+				var aoData=[];
+				aoData.push( { "name": "orderInfo.id", "value": info_id } );
+				top.sendAjaxRequest("/actions/ProductOrder.action?getProductOrderInfoById",aoData,infoCallback);
+			}else if(require_id!=null&&require_id!=''){
+				var aoData=[];
+				aoData.push( { "name": "orderInfo.require_id", "value": require_id } );
+				top.sendAjaxRequest("/actions/ProductOrder.action?getProductOrderInfoByRequireId",aoData,infoCallback);
+				queryProductQuoteOrder();
+			}
+		} else if(optType=='insert'){
+			require_id=top.getUrlParam(document.URL,"require_id");
+			$("#li_quote_oder").hide();
+			$("#li_product_oder a").trigger("click");
+			getProductList();
+		}else{
+			getProductList();
+		}
+    }
+	//若是在客户详细信息页面单击新增时，会将客户编号带过来，然后查询客户的相关信息，更新页面显示
+	function getCustInfo(){
+	    var aoData=[];
+		aoData.push( { "name": "custInfo.code", "value": cust_code } );
+	    top.sendAjaxRequest("/actions/CustInfo.action?getFitmentCustInfo",aoData,getCustInfoCallBack);
+	}
+	function getCustInfoCallBack(obj){
+	   if(obj.status=true){
+	      var o=obj.body;
+	      $("#tabs-1 #view_cust_name").text(o.cust_name);
+		  $("#tabs-1 #require_id").val(o.requireInfo.id);
+		  $("#tabs-1 #view_cust_tel").text(o.cust_mobile);
+		  $("#tabs-1 #view_designerCode").text(top.getUserNameByCode(o.requireInfo.require_manager));
+		  $("#tabs-1 #view_pro_add").text(top.getCodeName("DISTRICT",o.requireInfo.district)+''+o.requireInfo.project_addr);
+		  $("#tabs-1 #cust_name").html(o.cust_name);
+		  $("#tabs-1 #cust_tel").html(o.cust_mobile);
+		  $("#tabs-1 #pro_add").html(top.getCodeName("DISTRICT",o.requireInfo.district)+''+o.requireInfo.project_addr);
+		  $("#tabs-1 #designerCode").html(top.getUserNameByCode(o.requireInfo.require_manager));
+		  designerCode=o.requireInfo.require_manager;
+	   }else{
+	      top.showInfoWinError("获取客户信息失败！");
+	   }
+	}
+	function infoCallback(obj){
+	   try{
+        if ( obj.status == true ){
+		  var o=obj.body;
+		  orderInfo=o;
+			//订单信息
+			if(o){
+			     productOrderId=o.id;
+				 
+                 if(o.cust_code!=''){
+				    cust_code=o.cust_code;
+				    $("#tabs-1 #view_cust_name").text(o.cust_name);
+				    $("#tabs-1 #require_id").val(o.require_id);
+					$("#tabs-1 #view_require_id").val(o.require_id);
+				    $("#tabs-1 #view_cust_tel").text(o.cust_tel);
+				    $("#tabs-1 #view_designerCode").text(top.getUserNameByCode(o.designerCode));
+				    $("#tabs-1 #view_pro_add").text(o.pro_add);
+				    $("#tabs-1 #cust_name").html(o.cust_name);
+				    $("#tabs-1 #cust_tel").html(o.cust_tel);
+				    $("#tabs-1 #pro_add").html(o.pro_add);
+				    $("#tabs-1 #designerCode").html(top.getUserNameByCode(o.designerCode));
+				    designerCode = o.designerCode;
+				 }			
+                
+				$("#order_date").val(top.getTimeStr(o.order_date,true));
+				$("#view_order_date").html(top.getTimeStr(o.order_date,true));
+				if($("#order_date").val()!=""){
+					$("#order_date").attr("disabled",true);
+				}
+				info_id=o.id;
+				require_id=o.require_id;
+				$("#id").html(info_id);
+				$("#view_id").html(info_id);
+				$("#chooseCust").hide();
+				$("#pro_designer").val(o.pro_designer);
+			    $("#view_tdpro_designer").html(top.getUserNameByCode(o.pro_designer));
+				$("#box_designer").val(o.box_designer);
+				$("#view_tdbox_designer").html(top.getUserNameByCode(o.box_designer));
+				$("#project_order_id").html( o.project_order_id);
+				$("#view_project_order_id").html( o.project_order_id);
+				if($("#project_order_id").html()!=""){
+					$("#chooseProject").hide();
+				}
+			}
+			//产品变更列表
+			getProductOrdrChangeList();
+			//初始化产品订单信息
+			getProductList();
+			//产品订制信息
+			getProCustomizeList();
+			}else{
+          top.showInfoWinError("操作失败");
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	//添加产品定制行(old)
+	function addProductCustomize(){ 
+		$("#tr_add_product_title").show();
+		$("#productcustomize tr:eq("+Customizetrnum+")").after("<tr class='tr_data' height='35px' id='customize"+Customizetrid+"'><td><input type='text' size='15' id='product_name"+Customizetrid+"'/></td><td><input type='text' size='15' id='money"+Customizetrid+"'/></td><td><input type='text' size='15' id='customize_date"+Customizetrid+"' onclick='new Calendar().show(this);' readonly='true'/></td><td><input type='text' size='15' id='receive_date"+Customizetrid+"' onclick='new Calendar().show(this);' readonly='true'/></td><td><input type='text' size='15' id='install_date"+Customizetrid+"' onclick='new Calendar().show(this);' readonly='true'/></td><td><input type='text' size='15' id='customize_memo"+Customizetrid+"'/></td><td><a href=\"javascript:void(0)\" onclick='saveProductCustomize("+Customizetrid+")'>保存</a>||<a href=\"javascript:void(0)\" onclick='deleteProductCustomize("+Customizetrid+")'>取消</a></td></tr>");
+		Customizetrnum++;
+		Customizetrid++;
+	}
+	//产品定制添加按钮
+	function addProCustomize(){
+	   $("#product_unit").attr("style","width:60px");
+	   $("#product_brand").attr("style","width:90px");
+	   $(".tr_add_product_title").show();
+	   $("#addBtn a").text("保存");
+	   $("#addBtn").attr("align","right");
+	   $("#addBtn a").attr("onclick","saveProCustomize()");
+	   $("#cancleBtn").show();
+	}
+	//产品定制取消按钮
+	function cancleProCustomize(){
+	   $(".tr_add_product_title").hide();
+	   $("#addBtn a").text("添加");
+	   $("#addBtn").attr("align","center");
+	   $("#addBtn a").attr("onclick","addProCustomize()");
+	   $("#cancleBtn").hide();
+	   $("#productcustomize input").val("");
+	   $("#productcustomize textarea").val("");
+	   $("#type_0 option").remove();
+	}
+	
+	function checkCustomize(){
+	    var message="";
+	    var product_type=$("#type_0").val();
+		var product_name=$("#product_name").val();
+		var product_model=$("#product_model").val();
+		var product_standard=$("#product_standard").val();
+		var product_price=$("#product_price").val();
+		var product_amount=$("#product_amount").val();
+		var price=$("#price").val();
+		
+        if(product_type.length<1){message+="请选择产品类别！<br/>";}
+        if(product_name.length<1){message+="请输入产品名称！<br/>";}
+        if(product_model.length<1){message+="请输入产品型号！<br/>";}
+        if(product_standard.length<1){message+="请输入产品规格！<br/>";}
+        if(product_price.length<1){message+="请输入产品单价！<br/>";}
+		if(product_price.substring(0,1)=="-"){message+="产品单价不能为负值！<br/>";}
+        if(price.length<1){message+="请输入产品成本价！<br/>";}
+		if(price.substring(0,1)=="-"){message+="产品成本价不能为负值！<br/>";}
+        if(product_amount.length<1){message+="请输入产品数量！<br/>";}
+		if(product_amount.substring(0,1)=="-"){message+="产品数量不能为负值！<br/>";}
+        if(!IsFloat(product_price)){message+="产品单价类型错误，请重新输入产品单价！<br/>";}
+        if(!IsFloat(price)){message+="产品成本价类型错误，请重新输入产品成本价！<br/>";}
+        if(!IsFloat(product_amount)){message+="产品数量类型错误，请重新输入产品数量！<br/>";}
+		if($("#customize_memo").val()!="" && $("#customize_memo").val().length>1024){
+		   message+="备注内容过多,会导致存储数据错误，请重新输入！<br/>";
+		}
+	    return message;
+	}
+	
+	//保存产品定制信息
+	function saveProCustomize(){
+	    //检验
+		var msg=checkCustomize();
+		
+		if(msg!=""){
+		  top.showInfoWinWarn(msg);
+		}
+
+		var aoData=[];
+		aoData.push({ "name":"customize.cust_code","value":cust_code});
+		aoData.push({ "name":"customize.require_id","value":require_id});
+		aoData.push({ "name":"customize.order_id","value":info_id});
+		aoData.push({ "name":"customize.product_designer","value":top.getProductDesignerByDesigner(designerCode)});
+		aoData.push({ "name":"customize.product_type","value":$("#type_0").val()});
+		aoData.push({ "name":"customize.product_brand","value":$("#product_brand option:selected").val()});
+		aoData.push({ "name":"customize.product_name","value":$("#product_name").val()});
+		aoData.push({ "name":"customize.product_model","value":$("#product_model").val()});
+		aoData.push({ "name":"customize.product_standard","value":$("#product_standard").val()});
+		aoData.push({ "name":"customize.product_price","value":$("#product_price").val()});
+		aoData.push({ "name":"customize.price","value":$("#price").val()});
+		aoData.push({ "name":"customize.product_amount","value":$("#product_amount").val()});
+		aoData.push({ "name":"customize.product_unit","value":$("#product_unit option:selected").val()});
+		aoData.push({ "name":"customize.customize_memo","value":$("#customize_memo").val()});
+
+        xurl="/actions/ProductOrder.action?saveProductCustomize";
+		if($("#productCustomizeId").val().length>0){
+		   aoData.push({"name":"customize.customize_id","value":$("#productCustomizeId").val()});
+		   xurl="/actions/ProductOrder.action?updateProductCustomize";
+		}
+		top.sendAjaxRequest(xurl,aoData,saveProCustomizeCallBack);
+	}
+	//保存产品定制信息回调函数
+	function saveProCustomizeCallBack(obj){
+	    if(obj.status==true){
+		   cancleProCustomize();
+		   //更新产品订制列表
+		   getProCustomizeList();
+		}else{
+		  top.showInfoWinError("产品订制失败:"+obj.msg);
+		}
+	}
+	//获取产品定制列表信息
+	function getProCustomizeList(){
+	    var aoData=[];
+		aoData.push({ "name":"customize.cust_code","value":cust_code});
+		aoData.push({ "name":"customize.require_id","value":require_id});
+		top.sendAjaxRequest("/actions/ProductOrder.action?getProductCustomizeList",aoData,getProCustomizeListCallBack);
+	}
+	
+	//获取产品定制列表信息回调函数
+	function getProCustomizeListCallBack(obj){
+	    var content='<tr  style="background-color: #b9d8f3;" height="35px"><td align="center">产品类别</td><td align="center">产品品牌</td><td align="center">产品名称</td><td align="center">型号</td><td align="center">规格</td>';
+		content+='<td align="center">单位</td><td align="center">成本价</td><td align="center">单价</td><td align="center">数量</td><td align="center">备注</td><td align="center">状态</td><td align="center">审核人</td><td align="center">审核日期</td><td>订单状态</td><td align="center">操作</td></tr>';
+		try{
+		   var o=obj.aaData;
+		   if(o.length>0){
+		      for(var i=0;i<o.length;i++){
+			     content+="<tr class='tr_data'><td>"+d.getNodePath(o[i].product_type)+"</td><td>"+top.getSupplierNameById(o[i].product_brand)+"</td><td>"+o[i].product_name+"</td><td>"+o[i].product_model+"</td><td>"+o[i].product_standard+"</td><td>"+top.getCodeName("UNIT",o[i].product_unit)+"</td><td>"+o[i].price+"</td><td>"+o[i].product_price+"</td><td>"+o[i].product_amount+"</td><td>"+o[i].customize_memo+"</td><td>"+top.getCodeName("EXAMINE_STATUS",o[i].check_status)+"</td><td>"+top.getUserNameByCode(o[i].check_user)+"</td><td>"+top.getTimeStr(o[i].check_date,true)+"</td><td>"+top.getCodeName("PRODUCT_DETAIL_STATUS",o[i].status)+"</td>";
+				if(o[i].status!=null&&o[i].status=='3'){
+				   content+="<td><a class='edit' style='color:blue;cursor:pointer;' href='javascript:void(0);' onclick='checkProductCustmizeOrder(\""+o[i].customize_id+"\",\""+o[i].cust_code+"\")'>验收</a></td></tr>"
+				}else{
+					 if(o[i].check_status=="0"){//待审核
+					   content+="<td><a class='check' style='color:blue;cursor:pointer;' href='javascript:void(0)' onclick='checkProCustomize(\""+o[i].customize_id+"\",\""+o[i].product_designer+"\",\""+o[i].cust_code+"\",\""+o[i].total+"\")'>审核</a></td></tr>";
+					 }else if(o[i].check_status=="1"){//审核通过
+					   content+="<td></td></tr>";
+					 }else{//未通过
+					   content+="<td><a class='edit' style='color:blue;cursor:pointer;' href='javascript:void(0);' onclick='editProCustomize(\""+o[i].customize_id+"\",\""+o[i].product_type+"\",\""+o[i].product_name+"\",\""+o[i].product_model+"\",\""+o[i].product_standard+"\",\""+o[i].product_unit+"\",\""+o[i].product_price+"\",\""+o[i].product_amount+"\",\""+o[i].customize_memo+"\",\""+o[i].product_brand+"\",\""+o[i].price+"\")'>修改</a></td></tr>"
+					 }
+				}
+			  }
+		   }else{
+		      content+="<tr class='tr_data'><td colspan='15' align='center'>暂无产品订制信息</td></tr>";
+		   }
+		}catch(e){
+		   content+="<tr class='tr_data'><td colspan='15' align='center'>暂无产品订制信息</td></tr>";
+		   top.showInfoWinError(e.message);
+		}
+	   $("#productComizeTableList").html(content);
+	   
+	   if(!top.g_isPermit("09_product_customize_check")){
+	      $(".check").hide();
+	   }else{
+	      $(".check").show();
+	   }
+	   if(!top.g_isPermit("09_product_customize")){
+	      $(".edit").hide();
+	   }else{
+	      $(".edit").show();
+	   }
+	   
+	}
+	
+	//产品定制审核
+	function checkProCustomize(id,product_designer,cust_code,total){
+	     $( "#check_dialog" ).dialog({
+		  resizable: false,
+		  height:150,
+		  buttons: {
+			"通过": function() {
+			    var aoData=[];
+				aoData.push({ "name":"customize.customize_id","value":id});
+				aoData.push({ "name":"customize.check_status","value":"1"});
+				aoData.push({ "name":"customize.product_designer","value":product_designer});
+				aoData.push({ "name":"customize.cust_code","value":cust_code});
+				aoData.push({ "name":"customize.total","value":total});
+				top.sendAjaxRequest("/actions/ProductOrder.action?checkProCustomize",aoData,checkProCustomizeCallBack);
+			},
+			"不通过": function() {
+			    var aoData=[];
+				aoData.push({ "name":"customize.customize_id","value":id});
+				aoData.push({ "name":"customize.check_status","value":"2"});
+				aoData.push({ "name":"customize.product_designer","value":product_designer});
+				aoData.push({ "name":"customize.cust_code","value":cust_code});
+				aoData.push({ "name":"customize.total","value":total});
+				top.sendAjaxRequest("/actions/ProductOrder.action?checkProCustomize",aoData,checkProCustomizeCallBack);
+			}
+		  }
+		});
+	}
+	
+	//产品定制审核回调函数
+	function checkProCustomizeCallBack(obj){
+	    if(obj.status==true){
+		   $("#check_dialog").dialog("close");
+		   //更新产品定制列表信息
+		   getProCustomizeList();
+		}else{
+		  top.showInfoWinError("审核失败！"+obj.msg);
+		}
+	}//定制产品客户验收
+	function checkProductCustmizeOrder(id,cust_code){
+		var aoData=[];
+		aoData.push({ "name":"customize.customize_id","value":id});
+		aoData.push({ "name":"customize.status","value":"4"});
+		aoData.push({ "name":"customize.cust_code","value":cust_code});
+		top.sendAjaxRequest("/actions/ProductOrder.action?checkProductCustmizeOrder",aoData,checkProductCustmizeOrderCallBack);
+	}
+	function checkProductCustmizeOrderCallBack(obj){
+	    if(obj.status==true){
+		 top.showInfoWinOK("验收成功");
+		   //更新产品定制列表信息
+		   getProCustomizeList();
+		}else{
+		  top.showInfoWinError("验收失败！"+obj.msg);
+		}
+	}
+	function editProCustomize(id,type,name,model,standard,unit,price,amount,memo,product_brand,price){
+	   addProCustomize();
+	   $("#productCustomizeId").val(id);
+	   $("#type_0").append("<option value='"+type+"' selected>"+d.getNodePath(type)+"</option>");
+	   $("#product_name").val(name);
+	   $("#product_model").val(model);
+	   $("#product_standard").val(standard);
+	   $("#product_unit").val(unit);
+	   $("#product_price").val(price);
+	   $("#product_amount").val(amount);
+	   $("#customize_memo").val(memo);
+	   $("#price").val(price);
+	   $("#product_brand option").each(function(){
+	      if($(this).val()==product_brand){
+		    $(this).attr("selected","selected");
+		  }
+	   });
+	}
+	
+	//得到原产品
+	function queryCycleControlById(obj){
+		try{
+			var o=obj.body;
+			if(o)
+			{
+				old_product=o.product_name;
+				customizeid=o.customize_id;
+			}
+		}catch(e)
+		{
+			alert(e.message);
+		}
+		
+		$("#cycleControl tr:eq("+controltrnum+")").after("<tr class='tr_data' height='35px' id='control"+controltrid+"'><td><label>"+(controltrnum+1)+"</label></td><td><input type='text' size='15' id='old_product"+controltrid+"' disabled value='"+old_product+"'/></td><td><input type='text' size='15' id='new_product"+controltrid+"'/></td><td><input type='text' size='15' id='money_change"+controltrid+"'></td><td><input type='text' size='15' id='control_memo"+controltrid+"'/></td><td><a href=\"javascript:void(0)\" onclick='saveCycleControl("+controltrid+")'>保存</a>||<a href=\"javascript:void(0)\" onclick='deleteCycleControl("+controltrid+")'>删除</a></td></tr>");
+		controltrnum++;
+		controltrid++;
+	}
+	
+	//保存周期控制信息
+	function saveCycleControl(tid){
+		var aoData=[];
+		
+		aoData.push( { "name": "cyclecontrol.order_id", "value": info_id } );
+		aoData.push( { "name": "cyclecontrol.customize_id", "value": customizeid } );
+		aoData.push( { "name": "cyclecontrol.old_product", "value": $("#old_product"+tid+"").val() } );
+		aoData.push( { "name": "cyclecontrol.new_product", "value": $("#new_product"+tid+"").val() } );
+		aoData.push( { "name": "cyclecontrol.money_change", "value": $("#money_change"+tid+"").val() } );
+		aoData.push( { "name": "cyclecontrol.control_memo", "value": $("#control_memo"+tid+"").val() } );
+		
+		xurl="/actions/ProductOrder.action?saveCycleControl";
+		top.sendAjaxRequest(xurl,aoData,saveCycleControloptCallback);
+		deleteCycleControl(tid);
+	}
+	//调用回调函数---添加周期控制信息
+	function saveCycleControloptCallback(obj){
+		try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+			queryCycleControl();
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	//查询周期控制信息
+	function queryCycleControl(){
+		var aoData=[];
+		aoData.push( { "name": "cyclecontrol.order_id", "value": info_id } );
+		 xurl="/actions/ProductOrder.action?getCycleControlList";
+		top.sendAjaxRequest(xurl,aoData,createCycleControltable);
+	}
+	//生成周期控制信息列表
+	function createCycleControltable(obj){
+		try{
+			cyclecontrol=obj.aaData;
+			var ht="<tr class='tr_data' height='35px' style='background-color: #b9d8f3;'><td>原定产品</td><td>变更产品</td><td>变更时间</td><td width='20%'>款项变化</td><td width='20%'>备注</td><td width='20%'>操作</td></tr>";
+			for(var i=0;i<cyclecontrol.length;i++ )
+			{
+				ht+='<tr class="tr_data" height="35px">';
+				ht+='<td>';
+				ht+=''+cyclecontrol[i].old_product+'';
+				ht+='</td>';
+				ht+='<td>';
+				ht+=''+cyclecontrol[i].new_product+'';
+				ht+='</td>';
+				ht+='<td>';
+				ht+=''+top.getTimeStr(cyclecontrol[i].change_date,true)+'';
+				ht+='</td>';
+				ht+='<td>';
+				ht+=''+cyclecontrol[i].money_change+'';
+				ht+='</td>';
+				ht+='<td>';
+				ht+=''+cyclecontrol[i].control_memo+'';
+				ht+='</td>';
+				ht+='<td>';
+				ht+='<a href=\'javascript:void(0)\' onclick="addChangeInfo('+cyclecontrol[i].control_id+')">'+'添加补款情况'+'</a>';
+				ht+='||';
+				ht+='<a href=\'javascript:void(0)\' onclick="deleteControl('+cyclecontrol[i].control_id+')">'+'删除'+'</a>';
+				ht+='</td>';
+				ht+='</tr>';
+			}
+			
+			$("#CycleControltable").html(ht);
+		}catch(e)
+		{
+			alert(e.message);
+		}
+	}
+	//删除周期控制行
+	function deleteCycleControl(tid){
+		 $("#control"+tid).remove(); 
+		 controltrnum--;
+		 if(controltrnum==0){
+		 $("#tr_product_change_title").hide();
+		 }
+	}
+	//添加产品定制信息
+	function saveProductCustomize(tid){
+		var aoData=[];
+		aoData.push( { "name": "customize.order_id", "value": info_id } );
+		aoData.push( { "name": "customize.product_name", "value": $("#product_name"+tid+"").val()} );
+		aoData.push( { "name": "customize.customize_memo", "value": $("#customize_memo"+tid+"").val()} );
+		aoData.push( { "name": "customize.money", "value": top.g_GetNumValue($("#money"+tid+"").val()) } );
+		
+		aoData.push( { "name": "customize.customize_date", "value": top.toTimestamp($("#customize_date"+tid+"").val())} );
+		aoData.push( { "name": "customize.receive_date", "value": top.toTimestamp($("#receive_date"+tid+"").val())} );
+		aoData.push( { "name": "customize.install_date", "value": top.toTimestamp($("#install_date"+tid+"").val())} );
+		
+	    xurl="/actions/ProductOrder.action?saveProductCustomize";
+		deleteProductCustomize(tid);
+		top.sendAjaxRequest(xurl,aoData,saveProductCustomizeoptCallback);
+	}
+	//查询产品定制信息
+	function queryAllProductCustomize(){
+		var aoData=[];
+		aoData.push( { "name": "customize.order_id", "value": info_id } );
+		 xurl="/actions/ProductOrder.action?getProductCustomizeList";
+		top.sendAjaxRequest(xurl,aoData,createProductCustomizetable);
+	}
+	//生成查询产品定制信息列表
+	function createProductCustomizetable(obj){
+		try{
+			customize=obj.aaData;
+			var ht="<tr class='tr_data' height='35px' style='background-color: #b9d8f3;'><td>产品名称</td><td>款项</td><td>订货时间</td><td>到货时间</td><td>安装时间</td><td>备注</td><td>操作</td></tr>";
+			for(var i=0;i<customize.length;i++ )
+			{
+				ht+='<tr class="tr_data" height="35px">';
+				ht+='<td>';
+				ht+=''+customize[i].product_name+'';
+				ht+='</td>';
+				ht+='<td>';
+				ht+=''+customize[i].money+'';
+				ht+='</td>';
+				ht+='<td>';
+				ht+=''+top.getTimeStr(customize[i].customize_date,true)+'';
+				ht+='</td>';
+				ht+='<td>';
+				ht+=''+top.getTimeStr(customize[i].receive_date,true)+'';
+				ht+='</td>';
+				ht+='<td>';
+				ht+=''+top.getTimeStr(customize[i].install_date,true)+'';
+				ht+='</td>';
+				ht+='<td>';
+				ht+=''+customize[i].customize_memo+'';
+				ht+='</td>';
+				ht+='<td>';
+				ht+='<a href=\'javascript:void(0)\' onclick="addCycleControl('+customize[i].customize_id+')">'+'变更'+'</a>';
+				ht+='||';
+				ht+='<a href=\'javascript:void(0)\' onclick="deleteCustomize('+customize[i].customize_id+')">'+'删除'+'</a>';
+				ht+='</td>';
+
+				ht+='</tr>';
+			}
+			$("#ProductCustomizetable").html(ht);
+		}catch(e)
+		{
+			alert(e.message);
+		}
+	}
+	//删除产品定制信息
+	function deleteCustomize(customize_id){
+		var aoData=[];
+		aoData.push( { "name": "customize.customize_id", "value": customize_id } );
+		xurl="/actions/ProductOrder.action?deleteCustomize";
+		top.sendAjaxRequest(xurl,aoData,saveProductCustomizeoptCallback);
+		
+	}
+
+	//调用回调函数---添加产品定制信息
+	function saveProductCustomizeoptCallback(obj){
+		try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+			queryAllProductCustomize();
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	//选择产品
+	function chooseProduct(){
+		var xurl="/pages/pro09/chooseProduct.html";
+		openDialog("选择产品",xurl,true,800,500,chooseProductCallBack);
+	}
+	//调用回调函数---调用查询产品信息
+   //调用回调函数---调用查询产品信息
+   	function chooseProductCallBack(){
+		try{
+			objs = top.getTempValue();
+			//var aoData=[];
+			var isEmpty=false;
+			var ht='';
+			if ( selectedProduct.length == 0 ) {
+			  isEmpty=true;
+			  ht+='<tr class="tr_data" height="25px"><td width="15%" align="center">名称</td><td width="10%" align="center">品牌</td><td width="10%" align="center">型号</td><td width="10%" align="center">规格</td><td width="5%" align="center">数量</td><td width="10%" align="center">单位</td><td width="10%" align="center">单价</td><td width="10%" align="center">折扣</td><td width="20%" align="center">使用位置</td><td width="10%" align="center">操作</td></tr>';
+			}
+			for ( var i=0;i<objs.length;i++ ) {
+			    ch_product=objs[i];
+				// 判断是否在 selectedProduct 里已经存在，如果存在则自动加1
+				if ( isExistProduct(ch_product) ) {
+				   // TODO
+				   // orderdetailList[orderdetailList.length]=;
+				} else {
+					ht+='<tr id="add_product_'+ch_product.product_id+'"';
+					ht+='class="tr_data"';
+					ht+='height="35px"';
+					ht+='>';
+					ht+='<td>';
+					ht+='<input type="text" size="5" id="product_name_'+ch_product.product_id+'" value="'+ch_product.product_name+'" disabled />';
+					ht+='</td>';
+					ht+='<td>';
+					ht+='<input type="text" size="5" id="product_brand_'+ch_product.product_id+'" value="'+top.getSupplierNameById(ch_product.product_brand)+'" disabled />';
+					ht+='</td>';				 
+					ht+='<td>';
+					ht+='<input type="text" size="5" id="product_model_'+ch_product.product_id+'" value="'+ch_product.product_model+'" disabled />';
+					ht+='</td>';
+					ht+='<td>';
+					ht+='<input type="text" size="5" id="product_standard_'+ch_product.product_id+'" value="'+ch_product.product_standard+'" disabled />';
+					ht+='</td>';
+					ht+='<td>';
+					ht+='<input type="text" size="5" id="amount_'+ch_product.product_id+'" value="1"/>';
+					ht+='</td>';
+					ht+='<td>';
+					ht+='<input type="text" size="5" id="unit_'+ch_product.product_id+'" value="'+top.getCodeName("UNIT",ch_product.unit)+'" disabled />';
+					ht+='</td>';
+					ht+='<td>';
+					ht+='<input type="text" size="5" id="sale_price_'+ch_product.product_id+'" value="'+ch_product.price+'" disabled />';
+					ht+='</td>';
+					ht+='<td>';
+					ht+='<input type="text" size="5" id="discount_'+ch_product.product_id+'" value="'+ch_product.discount+'" disabled />';
+					ht+='</td>';
+					ht+='<td>';
+					ht+='<input type="text" size="5" id="use_position_'+ch_product.product_id+'"/>';
+					ht+='</td>';
+					ht+='<td>';
+					ht+='<a href=\'javascript:void(0)\' onclick="deleteProduct(\''+ch_product.product_id+'\')">删除</a>'
+					ht+='</td>';
+					ht+='</tr>'; 
+				}
+			}
+			
+			if ( !isEmpty ) {
+				$("#productList").append( ht ); 
+			} else {
+			  $("#productList").html( ht );
+			}
+			$("#savaBtn").show();
+		}catch(e){
+			  alert(e.message);
+	    }
+	}
+		
+	function isExistProduct(p){
+	   if ( !selectedProduct ) return false;
+	   for (var i=0;i<selectedProduct.length;i++) {
+	     if ( selectedProduct[i].product_id == p.product_id ) return true; 
+	   }
+	selectedProduct[selectedProduct.length]=p;
+	   return false;
+	}
+	//校验订单基本信息
+	function checkFormDoSubmit(){	
+		var msg="";
+		if ( $("#total_amount").val() != '' && !IsFloat( $("#total_amount").val() )) msg += "[订单总额]应为数字类型<br>";
+		if ( $("#earnest_money").val() != '' && !IsFloat( $("#earnest_money").val() )) msg += "[已收金额]应为数字类型<br>";
+		msg += checkString($("#order_id").val(),true,64,"订单号");
+		msg += checkString($("#cust_code").val(),true,10,"客户编号");
+		msg += checkString($("#order_type").val(),true,20,"订单类型");
+		return msg;
+   }
+   //调用回调函数---添加订单明细信
+   function saveOrderDetailCallBack(obj){
+	try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+			$("#total_money").html("0");
+			productIndex=0;
+			initTypeSelect() ;
+			 $("#productDetailList").hide();
+	         $("#view_productDetailList").show();
+	         $("#saveProBtn").html('编辑');
+	         $("#cancleProBtn").hide();
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+   //删除从选择页面返回来的，而且数据库里还没有的产品记录（明细列表）
+   function deleteProduct(productId){
+	 // 根据 TR id 删除<tr>标签对象
+	 $("#add_product_"+productId).remove();
+	 selectedProduct.length--;
+   }
+ 
+   // 删除数据库里已经存在的销售清单（产品明细）
+   function deleteSaleDetail(typeId,doType){
+		if(doType=='quote'){
+			$("#type_"+typeId).val('');
+			$("#type_"+typeId+"_product_name").val('');
+			$("#tdtype_"+typeId+"_product_brand").html('');
+			$("#type_"+typeId+"_product_model").html('');
+			$("#type_"+typeId+"_product_standard").html('');
+			$("#tdtype_"+typeId+"_unit").html('');
+			$("#type_"+typeId+"_sale_price").html('');
+			$("#type_"+typeId+"_discount").html('');
+			$("#type_"+typeId+"_use_position").val('');
+			$("#type_"+typeId+"_amount").val('');
+			
+		}else{
+			var aoData=[];
+			aoData.push( { "name": "orderdetail.id", "value": $("#type_"+typeId+"_detail_id").val() } );
+			top.sendAjaxRequest("/actions/ProductOrder.action?deleteOrderDatail",aoData,saveOrderDetailCallBack);
+		}
+  }
+   
+	//关闭第二层框
+	function closeDialog(){
+		$( "#dialog" ).dialog( "close" );
+	}
+
+	// 关闭当前页面前，页面框架自动调用的函数
+	function doBeforeClose(){
+     var obj={
+              "isSaveOK":isSaveOK
+            };
+     top.setTempValue(obj);
+   }
+	
+	
+	function saveProOrderInfo(){
+	
+	if($("#saveCustBtn").html()=="保存"){
+	    if($("#project_order_id").html()==""){top.showInfoWinWarn("无工程订单，不能进行生成产品订单！");return false;}
+		var aoData=[];
+		aoData.push( { "name": "orderInfo.id", "value": info_id } );
+		aoData.push( { "name": "orderInfo.require_id", "value": $("#require_id").val() } );
+		aoData.push( { "name": "orderInfo.cust_name", "value": $("#cust_name").html() } );
+		aoData.push( { "name": "orderInfo.designerCode", "value":designerCode } );
+		aoData.push( { "name": "orderInfo.pro_designer", "value": $("#pro_designer").val() } );
+		aoData.push( { "name": "orderInfo.box_designer", "value": $("#box_designer").val() } );
+		aoData.push( { "name": "orderInfo.cust_tel", "value": $("#cust_tel").html() } );
+		aoData.push( { "name": "orderInfo.pro_add", "value": $("#pro_add").html() } );
+		aoData.push( { "name": "orderInfo.order_date", "value": top.toTimestamp($("#order_date").val()) } );
+		aoData.push( { "name": "orderInfo.project_order_id", "value": $("#project_order_id").html() } );
+		aoData.push( { "name": "orderInfo.cust_code", "value":cust_code} );
+		
+		var xurl="/actions/ProductOrder.action?updateProductOrderInfo";
+		if(info_id==0||info_id==""){
+			xurl="/actions/ProductOrder.action?insertProductOrderInfo";
+		}
+		top.sendAjaxRequest(xurl,aoData,optSaveProOrderInfoCallback);
+		}
+		else{
+		
+		 $("#edit_cust_info").show();
+		 if(cust_code!=null && cust_code!=""){
+		    $("#chooseCust").hide();
+		 }
+	     $("#view_cust_info").hide();
+	     $("#saveCustBtn").html('保存');
+	     $("#cancleCustBtn").show();
+		}
+	}
+	function optSaveProOrderInfoCallback(obj){
+		try{
+			if ( obj.status == true ){
+				isSaveOK = true;
+				top.showInfoWinOK("操作成功");
+				if(obj.msg!=""){
+					info_id=obj.msg;
+				}
+				$("#chooseCust").hide();
+				$("#chooseProject").hide();
+				$("#id").html(info_id);
+				$("#view_id").html(info_id);
+				if($("#order_date").val()!=""){
+					$("#order_date").attr("disabled",true);
+				}
+				$("#view_order_date").html($("#order_date").val());
+				$("#view_cust_name").html($("#cust_name").html());
+				$("#view_designerCode").html(top.getUserNameByCode($("#designerCode").html()));
+				$("#view_cust_tel").html($("#cust_tel").html());
+				$("#view_pro_address").html($("#pro_address").html());
+				$("#view_project_order_id").html( $("#project_order_id").html());
+				$("#view_tdpro_designer").html(top.getUserNameByCode($("#pro_designer").val()));
+				$("#view_tdbox_designer").html(top.getUserNameByCode($("#box_designer").val()));
+				$("#saveCustBtn").html("编辑");
+			    $("#edit_cust_info").hide();
+	            $("#view_cust_info").show();
+				$("#cancleCustBtn").hide();
+			}else{
+				isSaveOK = false;
+				top.showInfoWinError("操作失败 "+obj.msg);
+			}
+		   }catch(e){
+			  top.showInfoWinError("处理异常:"+e.message);
+		   }
+	}
+	
+	
+   //删除从选择页面返回来的，而且数据库里还没有的产品记录（明细列表）
+   function deleteProduct(productId){
+	 // 根据 TR id 删除<tr>标签对象
+	 $("#add_product_"+productId).remove();
+	 selectedProduct.length--;
+   }
+   
+	// 保存基本信息
+    function doSubmit(){
+	 var aoData=[];
+	// 检查
+	/**var checkMsg = checkFormDoSubmit();
+	    if ( checkMsg != '' ) {
+	       top.showInfoWinWarn(checkMsg);
+           return ;
+	    } */
+		//订单基本信息信息
+		aoData.push( { "name": "order.order_id", "value": info_id } );
+		aoData.push( { "name": "order.cust_code", "value":cust_code } );
+		aoData.push( { "name": "order.order_type", "value": $("#order_type").val() } );
+		aoData.push( { "name": "order.fitment_designer", "value": $("#fitment_designer").val() } );
+		aoData.push( { "name": "order.engineer_manager", "value": $("#engineer_manager").val() } );
+		aoData.push( { "name": "order.project_manager", "value": $("#project_manager").val() } );
+		aoData.push( { "name": "order.product_designer", "value": $("#product_designer").val() } );
+		aoData.push( { "name": "order.cust_manager", "value": $("#cust_manager").val() } );
+		aoData.push( { "name": "order.pay_money_date", "value": top.toTimestamp($("#pay_money_date").val()) } );
+		aoData.push( { "name": "order.status", "value": $("#status").val() } );
+		aoData.push( { "name": "order.total_amount", "value": top.g_GetNumValue($("#total_amount").val()) } );
+		aoData.push( { "name": "order.earnest_money", "value": top.g_GetNumValue($("#earnest_money").val()) } );
+		
+	var xurl="/actions/ProjectOrder.action?updateOrderInfo";
+	 if ( info_id == 0 ) {
+	    xurl="/actions/ProjectOrder.action?insertOrderInfo";
+	 }
+     top.sendAjaxRequest(xurl,aoData,optCallback);
+   }
+     function cancleSubmit(index){
+     if(index=="cust"){
+	  $("#saveCustBtn").html('编辑');
+	  $("#cancleCustBtn").hide();
+	  $("#edit_cust_info").hide();
+	  $("#view_cust_info").show();
+	 }
+	 else if(index=="product"){
+	  $("#saveProBtn").html('编辑');
+	  $("#cancleProBtn").hide();
+	  $("#productDetailList").hide();
+	  $("#view_productDetailList").show();
+	 }
+	 else if(index=="exam"){
+	  $("#saveExamBtn").html('编辑');
+	  $("#cancleExamBtn").hide();
+	  $("#table_examine").hide();
+	 }
+   }
+	//调用回调函数---订单基本信息
+    function optCallback(obj){
+       try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+			
+			if ( info_id == 0 ) {
+			  info_id=obj.msg;
+			  $("#order_id").val( info_id );
+			}
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+   
+	
+	//弹出二层框
+	function openDialog(t,xurl,isModal,w,h,callback){
+		if ( isModal == undefined ) isModal=true;
+		if ( !h ) h=200;
+		if ( !w ) w=400;
+		$( "#dialog" ).dialog({
+			title: t,
+			height: h,
+			width: w,
+			modal: isModal,
+			resizable: false,
+		    beforeClose: function(event, ui) {
+		        try{
+		            document.getElementById("self_iframe").contentWindow.doBeforeClose();
+		            if ( callback ) callback.apply();
+		        }catch(e){
+		        }
+		        return true;
+		    }
+		});
+		document.getElementById("self_iframe").src = xurl;
+    }
+
+	
+	//选择工程订单
+	function chooseProject(){
+		var xurl="/pages/pro09/chooseProjectOrder.html";
+		openDialog("选择工程订单",xurl,true,900,500,chooseProjectCallBack);
+	}
+	//调用回调函数---调用查询选择方法
+   	function chooseProjectCallBack(){
+		try{
+			var o = top.getTempValue();
+			
+			if(o){
+			    if(o.project_order_id){
+					$("#project_order_id").html(o.project_order_id);
+					cust_code=o.cust_code;
+					require_id=o.require_id;
+					var aoData=[];
+					aoData.push( { "name": "custInfo.code", "value": cust_code } );
+					top.sendAjaxRequest("/actions/CustInfo.action?getFitmentCustInfo",aoData,custDetailCallback);
+				}
+			}
+		}catch(e){}
+   }
+   //选择客户
+	function chooseCust(){
+		var xurl="/pages/pro09/chooseCust.html?cust_code="+cust_code+"&projectOrderId="+projectOrderId;
+		openDialog("选择客户",xurl,true,700,500,chooseCustCallBack);
+	}
+	//调用回调函数---调用查询选择方法
+   	function chooseCustCallBack(){
+		try{
+			var o = top.getTempValue();
+			if(o){
+			    cust_code=o.code; 
+				// 查询需求信息
+				var aoData=[];
+			    aoData.push( { "name": "custInfo.code", "value": cust_code } );
+			    top.sendAjaxRequest("/actions/CustInfo.action?getFitmentCustInfo",aoData,custDetailCallback);
+			}
+		}catch(e){}
+   }
+   //回调函数---返回查询的数据赋值给文本框
+	function custDetailCallback(obj){
+	   try{
+			if ( obj.status == true ){
+				if(info_id==0){
+					createOrderDetail();
+				}
+			  var o=obj.body;
+			  if(o)
+				{
+					$("#cust_name").html(o.cust_name);
+					$("#cust_tel").html(o.cust_mobile);
+					 if ( o.requireInfo ) {
+						$("#require_id").val(o.requireInfo.id);
+						$("#pro_add").html(top.getCodeName("DISTRICT",o.requireInfo.district)+o.requireInfo.project_addr);
+						designerCode=o.requireInfo.require_manager;
+						$("#designerCode").html(top.getUserNameByCode(o.requireInfo.require_manager)); 				
+					}else{
+					  $("#pro_add").html("");
+					  $("#designerCode").html("");
+					}
+				}else{
+					$("#cust_name").html("");
+					$("#cust_tel").html("");
+					$("#pro_add").html("");
+					$("#designerCode").html("");
+				}
+			 
+		    }
+		}catch(e){}
+	}
+	function focuseAmount(value){
+		tempAmout=value;
+	}
+	
+	function changeAmount(typeId){
+	
+	   var price=parseFloat($("#type_"+typeId+"_discount").html())*parseFloat($("#type_"+typeId+"_sale_price").html());
+	   var nowSum=parseInt($("#type_"+typeId+"_amount").val());
+	   var money=parseFloat(price*nowSum)-parseFloat(tempAmout*price);
+	   var totalMoney=parseFloat($("#total_money").html());
+	   totalMoney+=money;
+	   $("#total_money").html(totalMoney);
+	  // countTotal(typeId,price,price,tempAmout,nowSum);
+	}
+//----------------version 2------------------------
+	function getProductList(){
+	   top.sendAjaxRequest("/actions/ProductInfo.action?getAllProductInfoList",null,initProductList); 
+	}
+	//查询产品列表结果
+	function initProductList(obj){
+	     productList=obj.body.productList;
+		 initTypeSelect();
+	}
+	
+	//初始化报价表格
+	function initTypeSelect(){
+	     productIndex=0;
+	    var view_ht = '<tr align="center"><td width="180px">产品类别</td><td width="80px">名称</td><td width="80px">品牌</td><td width="80px">型号</td><td width="80px">规格</td><td width="70px">单位</td><td width="70px">单价</td><td width="80px">折扣</td><td width="100px">使用位置</td><td width="80px">数量</td></tr>';
+		var ht='<tr ><td width="180px">产品类别</td><td width="80px">名称</td><td width="80px">品牌</td><td width="80px">型号</td><td width="80px">规格</td><td width="80px">单位</td><td width="80px">单价</td><td width="80px">折扣</td><td width="100px">使用位置</td><td width="80px">数量</td><td >操作</td></tr>';
+		for(productIndex=0;productIndex<10;productIndex++){
+			ht+="<tr class='tr_data'><td align='left'><select onclick='showDiv("+productIndex+")' id='type_"+productIndex+"' style='width:200px'></select></td><td><select id='type_"+productIndex+"_product_name' onchange='getCertenProduct(this.id)' style='width:200px'></select></td>";
+			ht+='<td  width="80px" id="tdtype_'+productIndex+'_product_brand">&nbsp;</td>';
+			ht+='<td  width="80px" id="type_'+productIndex+'_product_model">&nbsp;</td>';
+			ht+='<td  width="80px" id="type_'+productIndex+'_product_standard">&nbsp;</td>';
+			ht+='<td  width="80px" id="tdtype_'+productIndex+'_unit">&nbsp;</td>';
+			ht+='<td  width="80px" id="type_'+productIndex+'_sale_price" align="right">&nbsp;</td>';
+			ht+='<td  width="80px" id="type_'+productIndex+'_discount"></td>';
+			ht+='<td  width="80px"><input type="text" size="8" padding="0" id="type_'+productIndex+'_use_position"/></td>';
+			ht+='<td  width="80px"><input onFocus="focuseAmount(this.value)" onChange="changeAmount('+productIndex+')"  type="text" size="4" padding="0" id="type_'+productIndex+'_amount" value="0"/></td>';
+			ht+='<td >';
+			ht+='<input type="hidden" id="type_'+productIndex+'_product_id"/>';
+			ht+='<input type="hidden" id="type_'+productIndex+'_product_brand"/>';
+			ht+='<input type="hidden" id="type_'+productIndex+'_unit"/>';
+			ht+='<input type="hidden" id="type_'+productIndex+'_detail_id"/>';
+			ht+='<span id="span_type_'+productIndex+'_optType">';
+			ht+='</span>';
+			ht+='</td>';
+			ht+='</tr>';
+			
+			view_ht+='<tr class="tr_data" height="27px"><td id="view_type_'+productIndex+'"></td><td align="left" id="view_type_'+productIndex+'_product_name"></td>';
+			view_ht+='<td  width="80px" id="view_tdtype_'+productIndex+'_product_brand">&nbsp;</td>';
+			view_ht+='<td  width="80px" id="view_type_'+productIndex+'_product_model">&nbsp;</td>';
+			view_ht+='<td  width="80px" id="view_type_'+productIndex+'_product_standard">&nbsp;</td>';
+			view_ht+='<td  width="70px" id="view_tdtype_'+productIndex+'_unit">&nbsp;</td>';
+			view_ht+='<td  width="70px" id="view_type_'+productIndex+'_sale_price" align="center">&nbsp;</td>';
+			view_ht+='<td  width="80px" id="view_type_'+productIndex+'_discount"></td>';
+			view_ht+='<td  width="80px" id="view_type_'+productIndex+'_use_position"></td>';
+			view_ht+='<td  width="80px" id="view_type_'+productIndex+'_amount"></td>';
+			view_ht+='</tr>';
+				
+		}
+		productIndex--;
+		$("#productDetailList").html(ht);
+		$("#view_productDetailList").html(view_ht);
+		if(info_id!=0){
+			queryAllOrderDetail();
+		}
+	}
+	
+	//某类别下产品名称下拉列表
+	function getProductSelectHtml(typeId,selectName){
+		var pro_name=[];
+		if(productList){
+			for(var i=0;i<productList.length;i++){
+				if(productList[i].type_id==typeId){
+					pro_name.push(productList[i]);
+				}else{
+					/*$("#type_"+indexId+"_product_name").html(getProductNameSelectHtml(pro_name,""));
+					pro_name=[];
+					pro_name.push(productList[i]);
+					type_id=productList[i].type_id;*/
+				}
+			}
+			$("#"+selectName).html(getProductNameSelectHtml(pro_name,""));
+		}
+	}
+	//产品名称下拉列表
+	function getProductNameSelectHtml(objArry,initUserCode){
+		if ( !initUserCode ) initUserCode="";
+		var ht="";
+		if(objArry){
+			ht+="<option value=''></option>";
+			for(var i=0;i<objArry.length;i++){
+			  ht+="<option value='"+objArry[i].product_id+"'";
+			  if ( objArry[i].userCode == initUserCode ) ht+="selected ";
+			  ht+=">"+objArry[i].product_name+"</option>";
+			}
+		}
+		return ht;
+	}
+	function getCertenProduct(sid){
+			proId=($("#"+sid).val());
+			var prePrice=0;
+			var nowPrice=0;
+			var preSum=0;
+			var nowSum=0;
+			curProductIndex=sid.split("_")[1];
+			try{
+				if($("#type_"+curProductIndex+"_discount").html()!=''&&$("#type_"+curProductIndex+"_discount").html()!=null){
+					prePrice=parseFloat($("#type_"+curProductIndex+"_discount").html())*parseFloat($("#type_"+curProductIndex+"_sale_price").html());
+					preSum=parseInt($("#type_"+curProductIndex+"_amount").val());
+				}else{
+					prePrice=0;
+					preSum=0;
+				}
+			}catch(e){
+				prePrice=0;
+				preSum=0;
+			}
+			//当前选择为空
+			if(proId==""||proId==null){
+				$("#tdtype_"+curProductIndex+"_product_brand").html("");
+				$("#type_"+curProductIndex+"_product_model").html("");
+				$("#tdtype_"+curProductIndex+"_unit").html("");
+				$("#type_"+curProductIndex+"_product_standard").html("");
+				$("#type_"+curProductIndex+"_sale_price").html("");
+				$("#type_"+curProductIndex+"_discount").html("");
+				$("#type_"+curProductIndex+"_product_brand").val("");
+				$("#type_"+curProductIndex+"_unit").val("");
+				$("#type_"+curProductIndex+"_product_id").val("");
+				$("#type_"+curProductIndex+"_amount").val("0");
+				$("#type_"+curProductIndex+"_use_position").val("");
+				
+				$("#view_tdtype_"+curProductIndex+"_product_brand").html("");
+				$("#view_type_"+curProductIndex+"_product_model").html("");
+				$("#view_tdtype_"+curProductIndex+"_unit").html("");
+				$("#view_type_"+curProductIndex+"_product_standard").html("");
+				$("#view_type_"+curProductIndex+"_sale_price").html("");
+				$("#view_type_"+curProductIndex+"_discount").html("");
+				$("#view_type_"+curProductIndex+"_product_brand").html("");
+				$("#view_type_"+curProductIndex+"_unit").html("");
+				$("#view_type_"+curProductIndex+"_product_id").html("");
+				$("#view_type_"+curProductIndex+"_amount").html("0");
+				$("#view_type_"+curProductIndex+"_use_position").html("");
+				var money=parseFloat(preSum*prePrice);
+				var totalMoney=parseFloat($("#total_money").html());
+				totalMoney-=parseFloat(money);
+				$("#total_money").html(totalMoney);
+			}else{
+			//判断之前值是否为空
+				//if($("#type_"+curProductIndex+"_discount").html()!=''&&$("#type_"+curProductIndex+"_sale_price").html()!=''){
+				//  prePrice=parseFloat($("#type_"+curProductIndex+"_discount").html())*parseFloat($("#type_"+curProductIndex+"_sale_price").html());
+				 // preSum=parseInt($("#type_"+curProductIndex+"_amount").val());
+				for(var i=0;i<productList.length;i++){
+					if(proId==productList[i].product_id){
+						//typeId=productList[i].type_id;
+						$("#tdtype_"+curProductIndex+"_product_brand").html(top.getSupplierNameById(productList[i].product_brand));
+						$("#type_"+curProductIndex+"_product_model").html(productList[i].product_model);
+						$("#tdtype_"+curProductIndex+"_unit").html(top.getCodeName("UNIT",productList[i].unit));
+						$("#type_"+curProductIndex+"_product_standard").html(productList[i].product_standard);
+						$("#type_"+curProductIndex+"_sale_price").html(productList[i].price);
+						$("#type_"+curProductIndex+"_discount").html(productList[i].discount);
+						$("#type_"+curProductIndex+"_product_brand").val(productList[i].product_brand);
+						$("#type_"+curProductIndex+"_unit").val(productList[i].unit);
+						$("#type_"+curProductIndex+"_product_id").val(productList[i].product_id);
+						
+						$("#view_tdtype_"+curProductIndex+"_product_brand").html(top.getSupplierNameById(productList[i].product_brand));
+						$("#view_type_"+curProductIndex+"_product_model").html(productList[i].product_model);
+						$("#view_tdtype_"+curProductIndex+"_unit").html(top.getCodeName("UNIT",productList[i].unit));
+						$("#view_type_"+curProductIndex+"_product_standard").html(productList[i].product_standard);
+						$("#view_type_"+curProductIndex+"_sale_price").html(productList[i].price);
+						$("#view_type_"+curProductIndex+"_discount").html(productList[i].discount);
+						$("#view_type_"+curProductIndex+"_product_brand").val(productList[i].product_brand);
+						$("#view_type_"+curProductIndex+"_unit").val(productList[i].unit);
+						$("#view_type_"+curProductIndex+"_product_id").val(productList[i].product_id);
+						if($("#type_"+curProductIndex+"_amount").val()==""||$("#type_"+curProductIndex+"_amount").val()=="0")
+						{
+						 $("#type_"+curProductIndex+"_amount").val("1");
+						 $("#view_type_"+curProductIndex+"_amount").html("1");
+						}
+						break;
+					}
+				}//当前选择不为空时操作
+				nowPrice=parseFloat($("#type_"+curProductIndex+"_discount").html())*parseFloat($("#type_"+curProductIndex+"_sale_price").html());
+				nowSum=parseInt($("#type_"+curProductIndex+"_amount").val());
+				var money=parseFloat(nowPrice*nowSum)-parseFloat(preSum*prePrice);
+				var totalMoney=parseFloat($("#total_money").html());
+				totalMoney+=parseFloat(money);
+				$("#total_money").html(totalMoney);
+			}
+	}
+	//增加行
+	function addProdcuctRow(){
+		productIndex++;
+		var ht="";
+		ht+="<tr class='tr_data'><td align='left'><select onclick='showDiv("+productIndex+")' id='type_"+productIndex+"'></select></td><td><select id='type_"+productIndex+"_product_name' onchange='getCertenProduct(this.id)' style='width:200px'></select></td>";
+		ht+='<td  width="80px" id="tdtype_'+productIndex+'_product_brand">&nbsp;</td>';
+		ht+='<td  width="80px" id="type_'+productIndex+'_product_model">&nbsp;</td>';
+		ht+='<td  width="80px" id="type_'+productIndex+'_product_standard">&nbsp;</td>';
+		ht+='<td  width="80px" id="tdtype_'+productIndex+'_unit">&nbsp;</td>';
+		ht+='<td  width="80px" id="type_'+productIndex+'_sale_price" align="right">&nbsp;</td>';
+		ht+='<td  width="80px" id="type_'+productIndex+'_discount"></td>';
+		ht+='<td  width="80px"><input type="text" size="8" padding="0" id="type_'+productIndex+'_use_position"/></td>';
+		ht+='<td  width="80px"><input onFocus="focuseAmount(this.value)" onChange="changeAmount('+productIndex+')"  type="text" size="4" padding="0" id="type_'+productIndex+'_amount"/></td>';
+		ht+='<td >';
+		ht+='<input type="hidden" id="type_'+productIndex+'_product_id">';
+		ht+='<input type="hidden" id="type_'+productIndex+'_product_brand">';
+		ht+='<input type="hidden" id="type_'+productIndex+'_unit">';
+		ht+='<input type="hidden" id="type_'+productIndex+'_detail_id"/>';
+		ht+='<span id="span_type_'+productIndex+'_optType">';
+		ht+='</span>';
+		ht+='</td>';
+		ht+='</tr>';
+		$("#productDetailList").append(ht);
+		var view_ht="";
+		    view_ht+="<tr class='tr_data'><td id='view_type_"+productIndex+"'><td align='left' id='view_type_"+productIndex+"_product_name'></td>";
+			view_ht+='<td  width="80px" id="view_tdtype_'+productIndex+'_product_brand">&nbsp;</td>';
+			view_ht+='<td  width="80px" id="view_type_'+productIndex+'_product_model">&nbsp;</td>';
+			view_ht+='<td  width="80px" id="view_type_'+productIndex+'_product_standard">&nbsp;</td>';
+			view_ht+='<td  width="70px" id="view_tdtype_'+productIndex+'_unit">&nbsp;</td>';
+			view_ht+='<td  width="70px" id="view_type_'+productIndex+'_sale_price" align="right">&nbsp;</td>';
+			view_ht+='<td  width="80px" id="view_type_'+productIndex+'_discount"></td>';
+			view_ht+='<td  width="80px" id="view_type_'+productIndex+'_use_position"></td>';
+			view_ht+='<td  width="80px" id="view_type_'+productIndex+'_amount"></td>';
+			view_ht+='</tr>';
+			$("#view_productDetailList").append(view_ht);
+		
+	}
+	function checkFormDoQuote(productId){
+		var msg="";
+		msg += checkString($("#type_"+productId+"_product_name").val(),true,32,"产品名称");
+		msg += checkString($("#type_"+productId+"_amount").val(),true,5,"数量");
+		if(!IsFloat( $("#type_"+productId+"_amount").val()))msg += "数量应为数字类型<br>";
+		return msg;
+	 }
+	//保存报价
+	function saveOrderDetail(){
+	if($("#saveProBtn").html()=="保存"){
+		var type_ids="";
+		var product_ids="";
+		var product_brands="";
+		var product_names="";
+		var product_models="";
+		var product_standards="";
+		var units="";
+		var use_positions="";
+		var sale_prices="";
+		var discounts="";
+		var amounts="";
+		var typeId="";
+		 
+		for(var i=0;i<productIndex+1;i++){
+				if($("#type_"+i).val()!=null&&$("#type_"+i+"_product_name").val()!=null&&$("#type_"+i+"_product_name").val()!=''){
+					var checkMsg = checkFormDoQuote(i);
+					if ( checkMsg != '' ) {
+						top.showInfoWinWarn(checkMsg);
+						return ;
+					}
+					type_ids+=$("#type_"+i).val()+",";
+					product_ids+=$("#type_"+i+"_product_id").val()+",";
+					product_brands+=$("#type_"+i+"_product_brand").val()+",";
+					product_names+= $("#type_"+i+"_product_name").find("option:selected").text()+",";
+					product_models+=$("#type_"+i+"_product_model").html()+",";
+					product_standards+=$("#type_"+i+"_product_standard").html()+",";
+					units+=$("#type_"+i+"_unit").val()+",";
+					sale_prices+=$("#type_"+i+"_sale_price").html()+",";
+					discounts+=$("#type_"+i+"_discount").html()+",";
+					amounts+=$("#type_"+i+"_amount").val()+",";
+					use_positions+=$("#type_"+i+"_use_position").val()+",";
+				}
+			}
+		if(info_id==0){
+			 top.showInfoWinWarn("请首先保存客户基本信息！");
+			 return;
+			}
+		var aoData=[];
+				aoData.push( { "name": "orderdetail.order_id", "value":info_id } );
+				aoData.push( { "name": "type_idStr", "value": type_ids} );
+				aoData.push( { "name": "product_idStr", "value": product_ids} );
+				aoData.push( { "name": "orderdetail.product_brand", "value":product_brands} );
+				aoData.push( { "name": "orderdetail.product_name", "value": product_names} );
+				aoData.push( { "name": "orderdetail.product_model", "value": product_models } );
+				aoData.push( { "name": "orderdetail.product_standard", "value": product_standards} );
+				aoData.push( { "name": "orderdetail.unit", "value":units } );
+				aoData.push( { "name": "orderdetail.use_position", "value": use_positions} );
+				aoData.push( { "name": "sale_priceStr", "value":sale_prices} );
+				aoData.push( { "name": "discountStr", "value":discounts} );
+				aoData.push( { "name": "amountStr", "value": amounts} );
+				var xurl="/actions/ProductOrder.action?insertOrderDetail";
+				top.sendAjaxRequest(xurl,aoData,saveOrderDetailCallBack);
+				}
+				else{
+				 $("#productDetailList").show();
+	             $("#view_productDetailList").hide();
+	             $("#saveProBtn").html('保存');
+	             $("#cancleProBtn").show();
+	             $("#applyDiscountBtn").show();
+				}
+
+	}
+	
+	//查询所有订单明细中的产品产品信息
+   function queryAllOrderDetail() {
+		var aoData=[];
+		aoData.push( { "name": "orderdetail.order_id", "value": info_id } );
+		top.sendAjaxRequest("/actions/ProductOrder.action?getOrderDetailList1",aoData,getOrderDetailListCallBack);
+   }
+   function getOrderDetailListCallBack(obj){
+   try{
+		 orderdetail=obj.aaData;
+		 var parentType="";
+		 var proSum=0;
+		 var money=0;
+		 var ht="";
+		 curProductIndex=0;
+		 if(orderdetail.length>0){
+			for (var i=0;i<orderdetail.length;i++) {
+				if(i>9){
+					addProdcuctRow();
+				}
+				//模拟选中产品类型节点,nid为类别Id
+				onSelectedNode(orderdetail[i].type_id);
+				//选择产品
+				$("#type_"+curProductIndex+"_product_name").val(orderdetail[i].product_id);
+				
+				$("#view_type_"+curProductIndex+"_product_name").html($("#type_"+curProductIndex+"_product_name").find("option:selected").text());
+				$("#view_type_"+curProductIndex+"_product_name").html(orderdetail[i].product_name);
+				$("#view_tdtype_"+curProductIndex+"_product_brand").html(top.getSupplierNameById(orderdetail[i].product_brand));
+				$("#view_type_"+curProductIndex+"_product_model").html(orderdetail[i].product_model);
+				$("#view_type_"+curProductIndex+"_product_standard").html(orderdetail[i].product_standard);
+				$("#view_tdtype_"+curProductIndex+"_unit").html(top.getCodeName("UNIT",orderdetail[i].unit));
+				$("#view_type_"+curProductIndex+"_sale_price").html(orderdetail[i].sale_price);
+				$("#view_type_"+curProductIndex+"_discount").html(orderdetail[i].discount);
+				
+				$("#view_type_"+curProductIndex+"_amount").html(orderdetail[i].amount);
+				$("#view_type_"+curProductIndex+"_use_position").html(orderdetail[i].use_position);
+				money+=parseInt(orderdetail[i].amount)*orderdetail[i].sale_price*orderdetail[i].discount;
+				ht="";
+				ht+='<a href="javascript:void(0)" onclick="deleteSaleDetail(\''+curProductIndex+'\',\'realDelete\')">删除</a>';
+				$("#span_type_"+curProductIndex+"_optTypppe").html(ht);
+				curProductIndex++;
+			}
+			$("#tdquote_total_money").html(money);
+			$("#total_money").html(money);
+		}
+	}catch(e){
+	}//显示产品变更变更前产品信息
+	getOldProductList();
+	//getOrderChangeHistoryList();
+   }//查询所有订单明细中的产品产品信息
+   
+   function createOrderDetail() {
+		var aoData=[];
+		if(require_id!=''){
+		   aoData.push( { "name": "quote_info.require_id", "value": require_id } );
+		}else if(cust_code!=''){
+		   aoData.push( { "name": "quote_info.cust_code", "value": cust_code } );
+		}else{
+		return ;
+		}
+		top.sendAjaxRequest("/actions/ProductQuote.action?getQuoteDetailPageListByRequireId",aoData,createOrderDetailListCallBack);
+   }
+   
+   function createOrderDetailListCallBack(obj){
+    try{
+		 var orderdetail=obj.body.detailList;
+		 var parentType="";
+		 var proSum=0;
+		 var money=0;
+		 var ht="";
+		 curProductIndex=0;
+		 if(orderdetail.length>0){
+			for (var i=0;i<orderdetail.length;i++) {
+				money+=orderdetail[i].amount*orderdetail[i].sale_price*orderdetail[i].discount;
+				if(curProductIndex>9){
+					addProdcuctRow();
+				}
+				//模拟选中产品类型节点,nid为类别Id
+				onSelectedNode(orderdetail[i].type_id);
+				//选择产品
+				$("#type_"+curProductIndex+"_product_name").val(orderdetail[i].product_id);
+				getCertenProduct("type_"+curProductIndex+"_product_name");
+				$("#type_"+curProductIndex+"_amount").val(orderdetail[i].amount);
+				$("#type_"+curProductIndex+"_use_position").val(orderdetail[i].use_position);
+				$("#type_"+curProductIndex+"_detail_id").val(orderdetail[i].id);
+				ht="";
+				ht+='<a href="javascript:void(0)" onclick="deleteSaleDetail(\''+curProductIndex+'\',\'quote\')">删除</a>';
+				$("#span_type_"+curProductIndex+"_optType").html(ht);
+				curProductIndex++;
+			}
+			$("#total_money").html(money);
+		}
+	} catch(e){
+	}
+   }
+   
+	
+//---------------------------产品类型树生成-----------------------
+    // 加载产品类型数据
+    function loadProTree(){
+    	   top.sendAjaxRequest("/actions/ProductInfo.action?getProductTypeList",[],initProductTypeTree);
+       }
+    // 初始化产品类型树
+    function initProductTypeTree(obj){
+		   var ht="<div width='150px' style='float:right;margin-right:2px;cursor:pointer' onclick='hideDiv()'><img src='../../img/tab_iconrig3.png'/></div>";
+		   d=new dTree('d');
+           d.config.useSelection = true;
+           d.config.folderLinks = true;
+           d.config.useStatusText = false;
+           d.config.useLines = false;
+           currentProId=0;
+
+           if( obj.aaData ){
+        	   for(var i=0;i<obj.aaData.length;i++){
+        		   d.add( obj.aaData[i].type_id,obj.aaData[i].parent_type,obj.aaData[i].type_name );
+        	   }
+           }
+		   
+		   top.setProductTypeTree( d );
+
+           $("#ProTypeTree").html( ht+d.toString() );
+		   $("#ProTypeTree").css("width","180px");
+           treeObj = new JSDragDropTree();
+           treeObj.setTreeId('dhtmlgoodies_tree2');
+           treeObj.setMaximumDepth(20);
+           treeObj.setMessageMaximumDepthReached('已到达最大的层次'); 
+           treeObj.setRenameAllowed(true);
+           treeObj.setDeleteAllowed(true);
+           treeObj.initTree();
+		   treeObj.collapseAll();
+		   treeObj.showHideNode(false,'0');
+		   //展开一级菜单
+          // treeObj.expandAll();
+       }
+    // 选中产品了类型节点后触发函数
+    function onSelectedNode(nid){
+    	 //  if ( currentProId == nid ) return ;
+    	   var name="";
+    	 //  currentProId = nid;
+    	   if ( nid == 0 ) {
+    		   nid="";
+    		   name="";
+    	   }else {
+				name=d.getNodePath(nid);
+		   }
+				//产品变更
+				if(pageMode=="orderChange"){
+					$("#new_type_id").html("<option value='"+nid+"' selected>"+name+"</option>");
+					getProductSelectHtml(nid,"new_product_name");
+					displayCertainProduct(nid);
+					//$("#view_type_"+curProductIndex).html(name);
+				}else{
+
+						$("#type_"+curProductIndex).html("<option value='"+nid+"' selected>"+name+"</option>");
+						getProductSelectHtml(nid,"type_"+curProductIndex+"_product_name");
+						getCertenProduct("type_"+curProductIndex+"_product_name");
+						$("#view_type_"+curProductIndex).html(name);
+
+				}
+				hideDiv();
+				pageMode="";
+		  }
+	   
+	//控制产品类别选择菜单显示
+	function showDiv(typeIndex){
+		curProductIndex=typeIndex;
+	    var y = $("#type_"+typeIndex).offset().top+30;
+		var x = $("#type_"+typeIndex).offset().left+10; 
+		showTypeSelect(x,y);
+	}
+	
+	function showTypeSelect(x,y){
+		$("#ProTypeTree").css("position", "absolute"); 
+		$("#ProTypeTree").css("left",x); 
+		$("#ProTypeTree").css("top", y);
+		$("#ProTypeTree").css("display", "block");
+		$("#ProTypeTree").css("z-index", "1"); 
+		$("#ProTypeTree").show();
+		if($("#0").find('img').first().attr('src')=="../../dhtmlgoodies_plus.gif"){
+			$("#0").find('img').first().trigger("click");
+		}
+	}
+	function hideDiv(){
+		$("#ProTypeTree").hide();
+	}
+	//---------------------------------产品变更--------------------------
+	function displayCertainProduct(id){
+		var proId=$("#"+id).val();
+		for(var i=0;i<productList.length;i++){
+			if(proId==productList[i].product_id){
+				$("#new_product_model").html(productList[i].product_model);
+				$("#new_product_standard").html(productList[i].product_standard);
+				$("#new_sale_price").html(productList[i].price);
+				$("#new_discount").html(productList[i].discount);
+				$("#tdnew_product_brand").html(top.getSupplierNameById(productList[i].product_brand));
+				$("#new_product_brand").val(productList[i].product_brand);
+				$("#new_unit").val(productList[i].unit);
+				$("#tdnew_unit").html(top.getCodeName("UNIT",productList[i].unit));
+				//$("#type_"+curProductIndex+"_product_id").val(productList[i].product_id);
+				break;
+			}
+		}
+	}
+	//显示菜单
+	function showChangTypeSelect(){
+		pageMode="orderChange";
+		var y = $("#new_type_id").offset().top+30;
+		var x = $("#new_type_id").offset().left+10; 
+		showTypeSelect(x,y);
+	}
+	//增加更改行
+	function addOrderChangeTrHtml(){
+		productIndex++;
+		var ht="";
+		ht+="<tr class='tr_data'><td align='left'><select onclick='showDiv("+productIndex+")' id='type_"+productIndex+"'></slect></td><td><select id='type_"+productIndex+"_product_name' onchange='getCertenProduct(this.id)' style='width:200px'></select></td>";
+		ht+='<td  width="80px" id="tdtype_'+productIndex+'_product_brand">&nbsp;</td>';
+		ht+='<td  width="80px" id="type_'+productIndex+'_product_model">&nbsp;</td>';
+		ht+='<td  width="80px" id="type_'+productIndex+'_product_standard">&nbsp;</td>';
+		ht+='<td  width="80px" id="tdtype_'+productIndex+'_unit">&nbsp;</td>';
+		ht+='<td  width="80px" id="type_'+productIndex+'_sale_price" align="right">&nbsp;</td>';
+		ht+='<td  width="80px" id="type_'+productIndex+'_discount"></td>';
+		ht+='<td  width="80px"><input type="text" size="8" padding="0" id="type_'+productIndex+'_use_position"/></td>';
+		ht+='<td  width="80px"><input onFocus="focuseAmount(this.value)" onChange="changeAmount('+productIndex+')"  type="text" size="4" padding="0" id="type_'+productIndex+'_amount"/></td>';
+		ht+='<td >';
+		ht+='<input type="hidden" id="type_'+productIndex+'_product_id">';
+		ht+='<input type="hidden" id="type_'+productIndex+'_product_brand">';
+		ht+='<input type="hidden" id="type_'+productIndex+'_unit">';
+		ht+='<input type="hidden" id="type_'+productIndex+'_detail_id"/>';
+		ht+='<span id="span_type_'+productIndex+'_optType">';
+		ht+='</span>';
+		ht+='</td>';
+		ht+='</tr>';
+		$("#productDetailList").append(ht);
+	}
+	
+	function showChangeDiv(i){
+		change_type=$("#change_type"+i).val();
+		
+		$("#changeDiv").show();
+		//$("#tr_oldProduct_Title").hide();
+		$("#tr_oldProduct").hide(); 
+		$("#tr_newProduct_Title").hide();
+		$("#tr_newProduct").hide();
+
+	//新增
+		if(!$("#change_type"+i).val()){
+			$("#changeDiv").hide();
+			return;
+		}
+		//'01' 新增 '02'取消 '03' 变更
+		if($("#change_type"+i).val()!='01'){
+			var ht="";
+			ht+="<td>变更前产品</td>";
+			ht+="<td> <input type='hidden' value='"+orderdetail[i].product_id+"' id='old_product_id'/>"+orderdetail[i].type_name+"<input type='hidden' value='"+orderdetail[i].type_id+"' id='old_type_id'/><input type='hidden' value='"+orderdetail[i].id+"' id='order_detail_id'/></td>";
+			ht+="<td id='old_product_name'>"+orderdetail[i].product_name+"</td>";
+			ht+="<td><input type='hidden' value='"+orderdetail[i].product_brand+"' id='old_product_brand'/>"+top.getSupplierNameById(orderdetail[i].product_brand)+"</td>";
+			ht+="<td id='old_product_model'>"+orderdetail[i].product_model+"</td>";
+			ht+="<td id='old_product_standard'>"+orderdetail[i].product_standard+"</td>";
+			ht+="<td><input type='hidden' value='"+orderdetail[i].unit+"' id='old_unit'/>"+top.getCodeName("UNIT",orderdetail[i].unit)+"</td>";
+			ht+="<td id='old_sale_price'>"+orderdetail[i].sale_price+"</td>";
+			ht+="<td id='old_discount'>"+orderdetail[i].discount+"</td>";
+			ht+="<td id='old_use_position'>"+orderdetail[i].use_position+"</td>";
+			ht+="<td id='old_amount'>"+orderdetail[i].amount+"</td>";
+		//	ht+="<td id=''>"+top.getCodeSelectHtml("PRO_CHANGE_TYPE","change_"+i,true,"", "showChangeDiv("+i+")", "", "200")+"</td>";
+			//ht+="</tr>";
+			$("#tr_oldProduct").html(ht);
+			
+			//$("#tr_oldProduct_Title").show();
+			$("#tr_oldProduct").show();
+		}
+		if($("#change_type"+i).val()!='02'){
+			$("#tr_newProduct_Title").show();
+			$("#tr_newProduct").show();
+		
+		}
+		
+	if(change_type=='02'){
+	       $("#tr_newProduct_Title").show();
+			top.showConfirm("确定取消订购该产品?",saveOrderChange);
+		}
+	}
+	function getOrderChangeHistoryList(){
+		var iaoColumns= [ 
+                               { "sTitle": "变更类别", "mDataProp": "change_status", "sWidth": "100px","sClass": "center",
+                                      "fnRender": function ( oObj ) {
+                                           return top.getCodeName("PRO_CHANGE_TYPE",oObj.aData.change_type);
+                                      },
+                                "bUseRendered": false},
+							   { "sTitle": "变更前产品名称","mDataProp": "old_product_name","sWidth": "200px", "sClass": "center", "bUseRendered": false },
+							   { "sTitle": "变更后产品名称", "mDataProp": "new_product_name","sWidth": "200px","sClass": "center","bUseRendered": false  },
+                               { "sTitle": "变更时间", "mDataProp": "change_time", "sWidth": "200px","sClass": "center",
+									    "fnRender": function ( oObj ) {
+                                           return top.getTimeStr( oObj.aData.change_time ,true);
+                                      },
+							         "bUseRendered": false },
+                               { "sTitle": "状态", "mDataProp": "change_status", "sWidth": "150px", "sClass": "center",
+									"fnRender": function ( oObj ) {
+                                           return top.getCodeName("PRO_CHANGE_STATUS",oObj.aData.change_status);
+                                      },
+                                      "bUseRendered": false
+							   },
+							   { "sTitle": "操作", "mDataProp": "product_change_id", "sWidth": "150px", "sClass": "center",
+									"fnRender": function ( oObj ) {
+										if(top.g_isPermit("check_product_order_change")){
+                                           return "<a href='javascript:void(0)' onclick=\"openOrderChangeCheck('"+oObj.aData.product_change_id+"')\">审批</a>";
+										}else{
+											 return "<a href='javascript:void(0)' onclick=\"openOrderChangeCheck('"+oObj.aData.product_change_id+"')\">查看</a>";
+										}
+									  },
+                                      "bUseRendered": false
+							   },
+                 ];
+			   
+			  var surl=top.getUrlBase()+"/actions/ProductOrder.action?getProductOrderChangeList";
+
+			   oTable = $('#orderChangeHistoryTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+							aoData.push( { "name": "productOrderChange.order_id", "value":info_id } );
+					},
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+	}
+	function doQuery(){
+		if(oTable!=null){
+			oTable.fnDraw();
+		}
+	}
+	function openOrderChangeCheck(orderChangeId){
+		var xurl="/pages/pro09/orderChangeCheckPage.html?product_change_id="+orderChangeId;
+		if(top.g_isPermit("check_product_order_change")){
+			top.openSelectDialog("产品变更审核",xurl,950,500,openOrderChangeCallBack);
+		}else{
+			top.openSelectDialog("产品变更信息",xurl,950,500,openOrderChangeCallBack);
+		}
+	}
+	function openOrderChangeCallBack(){
+	   // getProductList();
+		getOldProductList();
+		//getOrderChangeHistoryList();
+		
+	}
+	function saveOrderChange(){
+		var aoData=[];
+		//'01'未审核
+		//aoData.push( { "name": "productOrderChange.change_status", "value":"01" } );
+		aoData.push( { "name": "productOrderChange.change_type", "value":change_type } );
+		aoData.push( { "name": "productOrderChange.order_id", "value":info_id } );
+		//旧产品信息
+		if(change_type!="01"){
+			aoData.push( { "name": "productOrderChange.order_detail_id", "value":$("#order_detail_id").val() } );
+			aoData.push( { "name": "productOrderChange.old_product_id", "value":$("#old_product_id").val()} );
+			aoData.push( { "name": "productOrderChange.old_type_id", "value":$("#old_type_id").val()} );
+			aoData.push( { "name": "productOrderChange.old_product_brand", "value":$("#old_product_brand").val()} );
+			aoData.push( { "name": "productOrderChange.old_product_name", "value": $("#old_product_name").html()} );
+			aoData.push( { "name": "productOrderChange.old_product_model", "value": $("#old_product_model").html() } );
+			aoData.push( { "name": "productOrderChange.old_product_standard", "value": $("#old_product_standard").html()} );
+			aoData.push( { "name": "productOrderChange.old_unit", "value":$("#old_unit").val() } );
+			aoData.push( { "name": "productOrderChange.old_use_position", "value": $("#old_use_position").html()} );
+			aoData.push( { "name": "productOrderChange.old_sale_price", "value":$("#old_sale_price").html()} );
+			aoData.push( { "name": "productOrderChange.old_amount", "value":$("#old_amount").html()} );
+			aoData.push( { "name": "productOrderChange.old_discount", "value": $("#old_discount").html()} );
+		}//新产品信息
+		if(change_type!='02'){
+			aoData.push( { "name": "productOrderChange.new_product_id", "value":$("#new_product_name").val()} );
+			aoData.push( { "name": "productOrderChange.new_type_id", "value":$("#new_type_id").val()} );
+			aoData.push( { "name": "productOrderChange.new_product_brand", "value":$("#new_product_brand").val()} );
+			aoData.push( { "name": "productOrderChange.new_product_name", "value": $("#new_product_name").find("option:selected").text()} );
+			aoData.push( { "name": "productOrderChange.new_product_model", "value": $("#new_product_model").html() } );
+			aoData.push( { "name": "productOrderChange.new_product_standard", "value": $("#new_product_standard").html()} );
+			aoData.push( { "name": "productOrderChange.new_unit", "value":$("#new_unit").val() } );
+			aoData.push( { "name": "productOrderChange.new_use_position", "value": $("#new_use_position").val()} );
+			aoData.push( { "name": "productOrderChange.new_sale_price", "value":$("#new_sale_price").html()} );
+			aoData.push( { "name": "productOrderChange.new_amount", "value":$("#new_amount").val()} );
+			aoData.push( { "name": "productOrderChange.new_discount", "value":$("#new_discount").html()} );
+		}
+		var xurl="/actions/ProductOrder.action?insertProductOrderChange";
+		top.sendAjaxRequest(xurl,aoData,optCallBack);		
+	}
+	function optCallBack(obj){
+	try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+			$("#changeDiv").hide();
+			doQuery();
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	//新增产品订单
+	function addProductOrderInfo(){
+		var xurl="pages/pro09/productOrderInfo.html?cust_code="+cust_code+"&require_id="+require_id;
+		top.openDialog("新增产品订单信息",xurl,true,1100,600,addProductOrderInfoCallback);
+	}
+	function addProductOrderInfoCallback(){
+		var obj=top.getTempValue();
+		if(obj.isSaveOK){
+			getProductOrderList();
+		}
+	}
+	//---------------------------------------------------------产品报价----------------------------------------
+	
+	//新增产品报价
+	function addProductQuoteOrder(){
+		var xurl="pages/pro09/productQuoteInfo.html?optType=insert&cust_code="+cust_code+"&require_id="+require_id;
+		top.openDialog("产品报价信息",xurl,true,1100,600,queryProductQuoteOrder);
+	}
+	//查询产品报价历史
+	function queryProductQuoteOrder(){
+		var aoData=[];
+		var xurl="/actions/ProductQuote.action?getQuoteHistoryByRequireId";
+		aoData.push( { "name": "quote_info.require_id", "value":require_id} );
+		top.sendAjaxRequest(xurl,aoData,queryProductQuoteOrderCallBack);
+	}
+	
+	function queryProductQuoteOrderCallBack(obj){
+		var firstProductQuoteId='';
+		var ht="";
+		ht='<tr class="tr_data" style="background-color: #b9d8f3;"><td>产品报价单号</td><td>类型</td>';
+		ht+='<td>产品总数</td><td>产品总价</td>';
+		ht+='<td>报价日期</td><td>报价人</td><td>审批人</td><td>审批结果</td><td>审批日期</td>';
+		ht+='<td>产品报价状态</td><td>操作</td></tr>';
+		list=obj.aaData;
+		if(list&&list.length>0){
+			firstProductQuoteId=list[0].id;
+			for(var i=0;i<list.length;i++){
+				ht+='<tr class="tr_data" style="cursor:pointer" id="curQuoteOrder_'+list[i].id+'" class="select" onclick="queryAllQuoteOrderDetail(\''+list[i].id+'\')">';
+				ht+='<td>'+list[i].id+'</td>';
+				ht+='<td>非定制</td>';
+				ht+='<td>'+list[i].product_num+'</td>';
+				ht+='<td>'+list[i].total+'</td>';
+				ht+='<td>'+top.getTimeStr(list[i].quote_date,true)+'</td>';
+				ht+='<td>'+top.getUserNameByCode(list[i].quote_person)+'</td>';
+				ht+='<td>'+top.getUserNameByCode(list[i].examine_user)+'</td>';
+				ht+='<td id="examine_status1_'+list[i].id+'">'+top.getCodeName("PRODUCT_STATUS",list[i].examine_status)+'</td>';
+				ht+='<td>'+top.getTimeStr(list[i].examine_time,true)+'</td>';
+				ht+='<td id="examine_status2_'+list[i].id+'">'+top.getCodeName("PRODUCT_STATUS",list[i].examine_status)+'</td>';
+				if(list[i].examine_status=='3'){//新建
+					ht+='<td><a id="examine_status_'+list[i].id+'" href="javascript:void(0)" onclick="updateProductStatus(\''+list[i].id+'\')">申请审批</a>';
+					ht+='&nbsp;&nbsp;&nbsp;&nbsp;<a id="examine_status_'+list[i].id+'" href="javascript:void(0)" onclick="alterProductQuote(\''+list[i].id+'\')">修改</a></td>';
+				}else if(list[i].examine_status=='1'){//通过
+					ht+='<td><a class="generateOrder" href="javascript:void(0)"';
+					if(list[i].status=='0'){
+					  ht+='onclick="createProductOrder(\''+list[i].id+'\',\''+list[i].project_order_id+'\',\''+list[i].cust_name+'\',\''+list[i].pro_address+'\',\''+list[i].cust_tel+'\',\''+list[i].pro_designer+'\',\''+list[i].box_designer+'\')">生成产品订单</a></td>';
+					}else{
+					  ht+=' onclick="queryAllQuoteOrderDetail(\''+list[i].id+'\')">查看详情</a></td>';
+					}
+				}else if(list[i].examine_status=='0'&&top.g_isPermit('09_pro_quote_examine')){
+					  ht+='<td><a href="javascript:void(0)" onclick="openQuoteCheckPage(\''+list[i].id+'\')">审批</a></td>';
+				}else{
+					ht+='<td><a href="javascript:void(0)" onclick="queryAllQuoteOrderDetail(\''+list[i].id+'\')">查看详情</a></td>';
+				}
+				ht+='</tr>';
+			}
+			
+		}else{
+			ht+='<tr class="tr_data"><td colspan="14">暂无数据</td></tr>';
+		}
+		$("#productQuoteDetailList").html(ht);
+		queryAllQuoteOrderDetail(firstProductQuoteId);//显示第一个报价单的订单详情列表
+		parent.checkInfoSave();
+		getProductOrderList();
+	}
+	function openQuoteCheckPage(id){
+		var xurl="pages/pro09/productQuoteInfo.html?optType=update&id="+id;
+		top.openDialog("产品报价审核",xurl,true,1100,600,queryProductQuoteOrder);
+	}
+	function alterProductQuote(id){
+		var xurl="pages/pro09/productQuoteInfo.html?optType=update&id="+id;
+		top.openDialog("产品报价修改",xurl,true,1100,600,queryProductQuoteOrder);
+	}
+	//提交审批 发送通知未修改
+	function updateProductStatus(productQouteId){
+		var aoData=[];
+		aoData.push( { "name": "quote_info.id", "value":productQouteId} );
+		aoData.push( { "name": "quote_info.examine_status", "value":'0'} );
+		var xurl="/actions/ProductQuote.action?updateProductStatus";
+		top.sendAjaxRequest(xurl,aoData,updateProductStatusCallBack);
+	}
+	function updateProductStatusCallBack(obj){
+		try{
+			if(obj.status==true){
+				top.showInfoWinOK("操作成功");
+				queryProductQuoteOrder();
+			}else{
+				isSaveOK = false;
+				top.showInfoWinError("操作失败 "+obj.msg);
+			}
+       }catch(e){
+			top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	
+	//生成产品订单 
+	function createProductOrder(quoteOrderId,project_order_id,cust_name,pro_address,cust_tel,pro_designer,box_designer){
+		var aoData=[];
+		var xurl="/actions/ProductQuote.action?createProductOrder";
+		aoData.push( { "name": "quote_detail.order_id", "value":quoteOrderId} );
+		//生成产品订单
+		aoData.push( { "name": "product_order.require_id", "value":require_id} );
+		aoData.push( { "name": "product_order.designerCode", "value":designerCode} );
+		aoData.push( { "name": "product_order.pro_add", "value":pro_address} );
+		aoData.push( { "name": "product_order.cust_code", "value":cust_code} );
+		aoData.push( { "name": "product_order.cust_name", "value":cust_name} );
+		aoData.push( { "name": "product_order.project_order_id", "value":project_order_id} );
+		aoData.push( { "name": "product_order.cust_tel", "value":cust_tel} );
+		aoData.push( { "name": "product_order.pro_designer", "value":pro_designer} );
+		aoData.push( { "name": "product_order.box_designer", "value":box_designer} );
+		
+		top.sendAjaxRequest(xurl,aoData,createProductOrderCallBack);
+	
+	}
+	
+	function createProductOrderCallBack(obj){
+	     if(obj.status==true){
+	     top.showInfoWinOK("生成订单成功！");
+		 $("#generateOrderBtn").hide();
+		 //报价列表刷新
+		 queryProductQuoteOrder();
+		//订单列表更新
+		 getProductOrderList();
+		  }else{
+			 top.showInfoWinError("生成订单失败！");
+		  }
+	}
+	
+	function applyDiscount(id,total){
+		var xurl="pages/pro09/discountApplyInfo.html?optType=insert&order_id="+id+"&pre_price="+total;
+		top.openSelectDialog("申请折扣优惠",xurl,600,300,applyDiscountCallBack);
+	}
+	function applyDiscountCallBack(){
+		var obj= top.getTempValue();
+		if(obj.isSaveOK==true){
+			  $("#discountApply_"+obj.id).html("折扣优惠申请中");
+			  $("#discountApply_"+obj.id).removeAttr("onclick");
+		  }
+	}
+	//查询所有订单明细中的产品产品信息
+   function queryAllQuoteOrderDetail(quote_id) {	
+        if(curQuoteOrder==quote_id||quote_id==''){
+			$("#curQuoteOrder_"+curQuoteOrder).removeClass("select");
+			$("#curQuoteOrder_"+curQuoteOrder).addClass("selected");
+			return;
+		}
+		if(curQuoteOrder!=null&&curQuoteOrder!=''){
+			$("#curQuoteOrder_"+curQuoteOrder).removeClass("selected");
+			$("#curQuoteOrder_"+curQuoteOrder).addClass("select");
+		}
+		curQuoteOrder=quote_id;
+		$("#curQuoteOrder_"+curQuoteOrder).removeClass("select");
+		$("#curQuoteOrder_"+curQuoteOrder).addClass("selected");
+		var aoData=[];
+		aoData.push( { "name": "quote_detail.order_id", "value": curQuoteOrder } );
+		top.sendAjaxRequest("/actions/ProductQuote.action?getQuoteDetailList",aoData,queryAllQuoteOrderDetailCallBack);
+   }
+   function queryAllQuoteOrderDetailCallBack(obj){
+	try{
+		 orderdetail=obj.aaData;
+		 var parentType="";
+		 var proSum=0;
+		 var money=0;
+		 var ht="";
+		 var quoteCount=0;
+		  var orderdetail=obj.aaData;
+		  var parent_type='';
+		  var typeArray='';
+		  var tempHt='';
+		  var rowHt='';
+		  var countMark=1;
+		  
+		 ht='<tr class="tr_data" style="background-color: #b9d8f3;"><td>产品父类</td><td>产品子类</td><td>名称</td>';
+		 ht+='<td>品牌</td><td>型号</td>';
+		 ht+='<td>规格</td><td>单位</td><td>单价</td><td>折扣</td><td>使用位置</td>';
+		 ht+='<td>数量</td></tr>';
+		 
+		  if(orderdetail!=null && orderdetail.length>0){
+			parent_type=orderdetail[0].parent_type;
+			typeArray=(d.getNodePath(orderdetail[0].type_id)).split(">");
+			money+=orderdetail[0].amount*orderdetail[0].sale_price*orderdetail[0].discount;
+			for(var i=1;i<orderdetail.length;i++){
+			    money+=orderdetail[i].amount*orderdetail[i].sale_price*orderdetail[i].discount;
+			   if(orderdetail[i].parent_type==parent_type){
+				countMark++;
+				typeArray=(d.getNodePath(orderdetail[i-1].type_id)).split(">");
+				if(typeArray.length==2){
+					tempHt+="<tr class='tr_data'>"
+					tempHt+="<td>"+typeArray[1]+"</td>";
+					tempHt+="<td align='left' >"+orderdetail[i-1].product_name+"</td>";
+					tempHt+='<td  width="80px" id="quote'+quoteCount+'_product_brand">&nbsp;</td>';
+					tempHt+='<td  width="80px" id="quote'+quoteCount+'_product_model">&nbsp;</td>';
+					tempHt+='<td  width="80px" id="quote'+quoteCount+'_product_standard">&nbsp;</td>';
+					tempHt+='<td  width="70px" id="quote'+quoteCount+'_unit">&nbsp;</td>';
+					tempHt+='<td  width="70px" id="quote'+quoteCount+'_sale_price" align="right">&nbsp;</td>';
+					tempHt+='<td  width="80px" id="quote'+quoteCount+'_discount"></td>';
+					tempHt+='<td  width="80px">'+orderdetail[i-1].use_position+'</td>';
+					tempHt+='<td  width="80px">'+orderdetail[i-1].amount+'</td>';
+					tempHt+='</tr>';
+					quoteCount++;
+				}
+			  }else{
+				parent_type=orderdetail[i].parent_type;
+				typeArray=(d.getNodePath(orderdetail[i-1].type_id)).split(">");
+				if(typeArray.length==2){
+					rowHt+="<tr class='tr_data'>"
+					rowHt+="<td  rowspan='"+countMark+"'>"+typeArray[0]+"</td>";
+					rowHt+="<td>"+typeArray[1]+"</td>";
+					rowHt+="<td align='left' >"+orderdetail[i-1].product_name+"</td>";
+					rowHt+='<td  width="80px" id="quote'+quoteCount+'_product_brand">&nbsp;</td>';
+					rowHt+='<td  width="80px" id="quote'+quoteCount+'_product_model">&nbsp;</td>';
+					rowHt+='<td  width="80px" id="quote'+quoteCount+'_product_standard">&nbsp;</td>';
+					rowHt+='<td  width="70px" id="quote'+quoteCount+'_unit">&nbsp;</td>';
+					rowHt+='<td  width="70px" id="quote'+quoteCount+'_sale_price" align="right">&nbsp;</td>';
+					rowHt+='<td  width="80px" id="quote'+quoteCount+'_discount"></td>';
+					rowHt+='<td  width="80px">'+orderdetail[i-1].use_position+'</td>';
+					rowHt+='<td  width="80px">'+orderdetail[i-1].amount+'</td>';
+					rowHt+='</tr>';
+					countMark=1;
+					tempHt=rowHt+tempHt;
+					rowHt='';
+					ht+=tempHt;
+					tempHt='';
+					quoteCount++;
+					//typeArray=(d.getNodePath(orderdetail[i].type_id)).split(">");
+			  }
+			 }
+			}
+			    typeArray=(d.getNodePath(orderdetail[orderdetail.length-1].type_id)).split(">");
+				if(typeArray.length==2){
+					rowHt+="<tr class='tr_data'>"
+					if(orderdetail[orderdetail.length-1].parent_type==parent_type){
+						countMark++;
+						//rowHt+="<td  rowspan='"+countMark+"'>"+typeArray[0]+"</td>";
+					}
+					rowHt+="<td  rowspan='"+countMark+"'>"+typeArray[0]+"</td>";
+					rowHt+="<td>"+typeArray[1]+"</td>";
+					rowHt+="<td align='left' >"+orderdetail[orderdetail.length-1].product_name+"</td>";
+					rowHt+='<td  width="80px" id="quote'+quoteCount+'_product_brand">&nbsp;</td>';
+					rowHt+='<td  width="80px" id="quote'+quoteCount+'_product_model">&nbsp;</td>';
+					rowHt+='<td  width="80px" id="quote'+quoteCount+'_product_standard">&nbsp;</td>';
+					rowHt+='<td  width="70px" id="quote'+quoteCount+'_unit">&nbsp;</td>';
+					rowHt+='<td  width="70px" id="quote'+quoteCount+'_sale_price" align="right">&nbsp;</td>';
+					rowHt+='<td  width="80px" id="quote'+quoteCount+'_discount"></td>';
+					rowHt+='<td  width="80px">'+orderdetail[orderdetail.length-1].use_position+'</td>';
+					rowHt+='<td  width="80px">'+orderdetail[orderdetail.length-1].amount+'</td>';
+					rowHt+='</tr>';
+					countMark=1;
+					tempHt=rowHt+tempHt;
+					rowHt='';
+					ht+=tempHt;
+					quoteCount++;
+			}
+		}else{
+			ht+="<tr class='tr_data'><td colspan='12' align='center'>暂无明细数据</td></tr>";
+		}
+		 
+		$("#productQuoteDetailInfo").html(ht);
+	    if(orderdetail!=null && orderdetail.length>0){
+			for(var j=0;j<orderdetail.length;j++){
+				getProductInfo(orderdetail[j].product_id,j);
+			}
+		}
+		
+		$("#quote_total_money").html(money);
+		
+	}
+	catch(e){
+		//alert(e.message);
+	}
+   }
+   function getProductInfo(proId,countIindex){
+		if(proId!=null&&proId!=''){
+			for(var i=0;i<productList.length;i++){
+				if(proId==productList[i].product_id){
+					$("#quote"+countIindex+"_product_brand").html(top.getSupplierNameById(productList[i].product_brand));
+					$("#quote"+countIindex+"_product_model").html(productList[i].product_model);
+					$("#quote"+countIindex+"_unit").html(top.getCodeName("UNIT",productList[i].unit));
+					$("#quote"+countIindex+"_product_standard").html(productList[i].product_standard);
+					$("#quote"+countIindex+"_sale_price").html(productList[i].price);
+					$("#quote"+countIindex+"_discount").html(productList[i].discount);
+					break;
+				}
+			}
+		}
+	}
+	//---------------------------------结算----------------------------------
+	//获取产品类型
+   function getProductType(){
+	   top.sendAjaxRequest("/actions/ProductOrder.action?getAllProductType",[],getProductTypeCallback);
+   }
+   function getProductTypeCallback(obj){
+       if(obj.status==true){
+	     typeList=obj.body;
+	   }else{
+	     top.showInfoWinError("操作失败！");
+	   }
+   }
+	    //查询订单结算单中明细中的产品产品信息
+   function queryAllsettleDetail() {
+		var aoData=[];
+		aoData.push( { "name": "orderInfo.require_id", "value": require_id } );
+		top.sendAjaxRequest("/actions/ProductOrder.action?getProdcutSettlementList",aoData,settleDetailCallback);
+   }
+   //调用回调函数---查询结算单详细信息
+   function settleDetailCallback(obj){
+		try{
+		 var settledetail=obj.body;
+		 var len=0;
+		if(settledetail){
+			len=settledetail.length;
+		}
+		var ht='';
+		ht+='<tr class="tr_data" height="25px">';
+		ht+='<td width="12%" align="center">产品类别</td>';
+		ht+='<td width="12%" align="center">名称</td>';
+		ht+='<td width="12%" align="center">预收款项(单位：元)</td>';
+		ht+='<td width="12%" align="center">实际发生款项(单位：元)</td>';
+		ht+='<td width="12%" align="center">退补款项(单位：元)</td>';
+		ht+='</tr>';
+		var should_sum=0;
+		var fact_sum=0;
+		var alter_sum=0;
+		if(settledetail.length>0){
+			for (var i=0;i<settledetail.length;i++) {
+			    ht+='<tr class="tr_data" height="35px">';
+				var type_name="";
+				if(typeList.length>0){
+				  for(var j=0;j<typeList.length;j++){
+				    if(settledetail[i].product_type==typeList[j].typd_id){
+					   type_name=tyleList[j].type_name;
+					   break;
+					}else{
+					  continue;
+					}
+				  }
+				}
+				ht+='<td>'+type_name+'</td>';
+				ht+='<td>'+settledetail[i].product_name+'</td>';
+				if(settledetail[i].should_sum==0){
+					ht+='<td>'+settledetail[i].fact_sum+'</td>';
+					should_sum+=settledetail[i].fact_sum;
+				}else{
+					ht+='<td>'+settledetail[i].should_sum+'</td>';
+					should_sum+=settledetail[i].should_sum;
+				}				
+				ht+='<td>'+settledetail[i].fact_sum+'</td>';
+				fact_sum+=settledetail[i].fact_sum;
+				ht+='<td>'+settledetail[i].alter_sum+'</td>';
+				alter_sum+=settledetail[i].alter_sum;
+				ht+='</tr>'; 
+			}
+			ht+='<tr class="tr_data"><td colspan="2" align="center">合计</td><td>'+should_sum+'</td><td>'+fact_sum+'</td><td>'+alter_sum+'</td></tr>';
+		}else{
+				ht+='<tr ';
+				ht+='class="tr_data"';
+				ht+='height="35px"';
+				ht+='>';
+				ht+='<td colspan="5">';
+				ht+='暂无任何数据';
+				ht+='</td>';
+				ht+'</tr>';
+				}
+				$("#settelmentList").html( ht );
+		}catch(e)
+		{
+			alert(e.message);
+		}
+   }
+	
+	</script>
+<style>
+body,td {
+	font-size: 13px;
+}
+
+.roomTd {
+	border: 1px;
+	border-style: dotted none none none;
+	border-color: blue;
+	color: #000000;
+	padding-left: 5px;
+}
+
+#KinSlideshow {
+	overflow: hidden;
+	width: 500px;
+	height: 450px;
+}
+
+.inputBottomLine {
+	border-top: hide;
+	border-left: hide;
+	border-center: hide;
+}
+#hall_count,#room_count,#bath_count,#amount{
+	width: 50px;
+}
+#product_brand,#product_model,#product_standard,#price,#unit{
+	width: 80px;
+}
+#product_name
+{
+	width: 100px;
+}
+table.attention{
+	border-collapse:collapse;
+	}
+	table.attention td{
+	border:solid 1px black;
+	}
+	
+	.W_btn_round, .W_btn_round_ico, .W_btn_round2 {
+		display: inline-block;
+		border-width: 1px;
+		border-style: solid;
+		overflow: hidden;
+		vertical-align: middle;
+		cursor: pointer;
+		border-radius: 11px;
+		border-color: #d9d9d9;
+		background-color: #f2f2f2;
+		padding:3px 4px 3px 4px;
+		margin-bottom:2px;
+	}
+	.selected{
+	    color:red;
+		cursor:pointer;
+		text-decoration:none;
+		background-color:#BBFFFF;
+	}
+	.select{
+		color:blue;
+		cursor:pointer;
+		text-decoration:none;
+	}
+</style>
+	</head>
+	<body>
+		<div id="tabs" style="margin: 10px 0px 0px 0px;">
+			<ul>
+				<li id="li_quote_oder">
+					<a href="#tabs-0"><span>产品报价</span>
+					</a>
+				</li>
+				<li id="li_product_oder">
+					<a href="#tabs-1"><span>订单信息</span>
+					</a>
+				</li>
+				<li>
+					<a href="#tabs-2"><span>产品定制</span>
+					</a>
+				</li>
+				
+				<li>
+					<a href="#tabs-5"><span>产品结算</span></a>
+				</li>
+				<li>
+					<a href="#tabs-6"><span>变更记录</span></a>
+				</li>
+			</ul>
+		</div>
+		<div id="tabs-0">
+					<table id="addProductQuoteBT" style="display:none">
+						<tr>
+							<td>
+								<div class="buttonDivTwo" >
+									<a href="javascript:addProductQuoteOrder()">新增</a>
+								</div>
+							</td>
+						</tr>
+					</table> 
+					<table border="1" cellpadding="3" cellspacing="1" width="100%"
+						align="center" style="background-color: #b9d8f3;" id="productQuoteDetailList">
+					</table>
+					<br/>
+					<span>报价详情列表</span>
+					<table border="1" cellpadding="3" cellspacing="1" width="100%"
+						align="center" style="background-color: #b9d8f3;" id="productQuoteDetailInfo">
+						<tr height='28px'>
+							<td align="center" width="180px">产品类别</td>
+							<td align="center" width="80px">名称</td>
+							<td align="center" width="80px">品牌</td>
+							<td align="center" width="80px">型号</td>
+							<td align="center" width="80px">规格</td>
+							<td align="center" width="80px">单位</td>
+							<td align="center" width="80px">单价</td>
+							<td align="center" width="80px">折扣</td>
+							<td align="center" width="100px">使用位置</td>
+							<td align="center" width="80px">数量</td>
+						</tr>
+					</table>		
+
+
+					<!--div id="addProductRow"><a href="javascript:addProdcuctRow()">+</a></div-->
+
+					<div><span style="color:red">总计：<span id="quote_total_money">0</span>元</span></div>
+		</div>
+		<div id="tabs-1"> 
+				<table id="addProductOrderBT">
+						<tr>
+							<td>
+								<div class="buttonDivTwo" >
+									<a href="javascript:addProductOrderInfo()">新增</a>
+								</div>
+							</td>
+						</tr>
+					</table> 
+                <B>产品订单列表</B>	
+                <br/>				
+		        <table  id="productOrderList" border="1" cellpadding="3" cellspacing="1" width="100%"  align="center" style="background-color: #b9d8f3;font-size:13px" >
+				  <tr class="tr_data" style="background-color: #b9d8f3;">
+				       <td>产品订单号</td>
+				       <td>申购日期</td>
+				       <td>申购人</td>
+				       <td>产品总数</td>
+				       <td>产品总价</td>
+				       <td>订单状态</td>
+					   <td>下单</td>
+				       <td>到货</td>
+				       <td>验收</td>
+				       <td>变更</td>
+					   <td>操作</td>
+				  </tr>
+				</table>
+				<br/>
+				<B>订单明细<B/>
+				<br/>
+				<table id="productOrderDetailList" border="1" cellpadding="3" cellspacing="1" width="100%"  align="center" style="background-color: #b9d8f3;font-size:13px">
+				  <tr class='tr_data' style='background-color: #b9d8f3;'>
+					  <td>产品类别</td>
+				      <td>产品子类</td>
+					  <td>名称</td>
+					  <td>品牌</td>
+					  <td>型号</td>
+					  <td>规格</td>
+					  <td>单位</td>
+					  <td>单价</td>
+					  <td>折扣</td>
+					  <td>使用位置</td>
+					  <td>数量</td>
+					  <td>产品状态</td>
+				  </tr>
+				  <tr class="tr_data">
+				      <td colspan="12" align="center">暂无明细数据</td>
+				  </tr>
+				</table>
+				<div id="view_order_info_table">
+				<div style="font-weight:bold;">客户基本信息</div>
+				<table id="view_cust_info" border="1" cellpadding="3" cellspacing="1" width="100%"  align="center" style="background-color: #b9d8f3;font-size:13px">
+					<tr class="tr_data">
+						<td width="10%" height="32px">编号</td><td width="15%" align="left"><label type="text" id="view_id" value="系统自动生成"></label></td>
+						<td width="10%" align="center">日期</td><td width="17%" id="view_order_date" align="left"></td>
+						<td width="10%">工程订单编号</td>
+						<td colspan="3">
+							<table>
+								<tr class="tr_data" height="25px">
+									<td><label id="view_project_order_id" ></label></td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+					<tr class="tr_data">	
+						<td height="32px">客户姓名</td>
+						<td>
+							<table>
+								<tr class="tr_data" height="25px">
+									<td><input type="hidden" id="require_id"/><label id="view_cust_name" ></label></td>
+								</tr>
+							</table>
+						</td>
+						<td >设计师姓名</td><td align="left"><label id="view_designerCode"></label></td>
+						<td>产品设计师</td><td width="15%" align="left" id="view_tdpro_designer"></td>
+						<td>柜体设计师</td><td width="15%" align="left" id="view_tdbox_designer"></td>
+					</tr>
+					<tr class="tr_data">
+						<td height="32px">联系方式</td><td align="left"><label id="view_cust_tel"></label></td>
+						<td height="32px">工程地址</td>
+						<td colspan="5" align="left">
+						 <label id="view_pro_add" type="text" size="50"></label>
+						</td>
+					</tr>
+				</table>
+				<br/>
+                    <div style="font-weight:bold;">产品清单</div>
+	            <table border="1" cellpadding="3" cellspacing="1" width="100%"  align="center" style="background-color: #b9d8f3;" id="view_productDetailList">
+				</table>					
+					<div><span style="color:red">总计：<span id="tdquote_total_money">0</span>元</span></div>
+			    </div>
+			</div>
+		<div id="tabs-2">
+		      <input  type="hidden" id="productCustomizeId"/>
+		      <table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+			    <tr class="tr_data" height="35px">
+				  <td align="center">
+					<table border="0" cellpadding="3" cellspacing="1" width="100%" align="center" id="productcustomize" >		
+						<tr class="tr_add_product_title" style="display:none;background-color: #b9d8f3;" height="35px">
+							<td align="center">产品类别</td>
+							<td align="center">产品品牌</td>
+							<td align="center">产品名称</td>
+							<td align="center">型号</td>
+							<td align="center">规格</td>
+							<td align="center">单位</td>
+							<td align="center">成本价</td>
+							<td align="center">单价</td>
+							<td align="center">数量</td>
+							<td align="center">备注</td>
+						</tr>
+						<tr class="tr_data tr_add_product_title" style="display:none" >
+						    <td style="width:100px;"><select onclick="showDiv(0)" id="type_0" style="width:100px;"><option value=""></option></select></td>
+						    <td id="tdProduct_brand"></td>
+						    <td><input type="text" id="product_name" style="30"/></td>
+						    <td><input type="text" id="product_model" size="5"/></td>
+						    <td><input type="text" id="product_standard" size="5"/></td>
+						    <td id="tdProduct_unit" style="width:100px;"></td>
+							<td><input type="text" id="price" size="5" /></td>
+						    <td><input type="text" id="product_price" size="5"/></td>
+						    <td><input type="text" id="product_amount" size="5"/></td>
+						    <td><textarea id="customize_memo" cols="20" rows="3"></textarea></td>
+						</tr>
+						<tr class="tr_data" height="35px">
+							<td colspan="8" align="center">
+								<table width="100%" style="margin: 10px;">
+									<tr>
+										<td width="50%" align="center" id="addBtn">
+											<div class="buttonDivTwo">
+											<a href="javascript:void(0)" onclick="addProCustomize()">添加</a>
+											</div>
+										</td>
+										<td width="50%" align="left" id="cancleBtn" style="display:none;">
+											<div id="cancleProCustomizeBtn" class="buttonDivTwo">
+											<a href="javascript:void(0)" onclick="cancleProCustomize()">取消</a>
+											</div>
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+			     </table>
+			     <div class="dtree" id="ProTypeTree" style="margin:10px;padding:5px;border-width:2px;border-style:solid; border-color:#b9d8f3;background-color:white;display:none"></div>
+			</td>
+			    </tr>
+				<tr>
+				</tr>
+				<tr>
+				  <table id="productComizeTableList" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				       <tr style="background-color: #b9d8f3;" height="35px">
+							<td align="center">产品类别</td>
+							<td align="center">产品名称</td>
+							<td align="center">型号</td>
+							<td align="center">规格</td>
+							<td align="center">单位</td>
+							<td align="center">成本价</td>
+							<td align="center">单价</td>
+							<td align="center">数量</td>
+							<td align="center">备注</td>
+							<td align="center">状态</td>
+							<td align="center">审核人</td>
+							<td align="center">审核日期</td>
+							<td align="center">操作</td>
+					   </tr>
+				  </table>
+				</tr>
+			</table>
+			<div id="check_dialog" title="定制产品审核" style="display:none;">
+			   <img src="../../img/icon-info.gif"/><span style="font-size:18px;color:blue;">该定制产品审核通过吗？</span>
+			</div>
+		</div>
+		<div id="tabs-5">
+			<table width="100%" id="settelmentList" class="attention" style="line-height:20px"> 
+			</table>
+		</div>
+		<div id="tabs-6">
+				<span style="font-weight:bold;">产品变更信息列表</span>
+				<br/><br/>
+				<table border="1" cellpadding="3" cellspacing="1" width="100%"  align="center" style="background-color: #b9d8f3;" id="orderChangeHistoryTable">
+				    <tr class='tr_data' style='background-color: #b9d8f3;'>
+					  <td>产品订单号</td><td>变更总价</td><td>变更后总价</td><td>变更日期</td><td>申请人</td><td>审批人</td><td>审批日期</td><td>审批结果</td><td>审批备注</td>
+					</tr>
+					<tr class="tr_data">
+					  <td colspan="10" align="center">暂无数据</td>
+					</tr>
+				</table>
+				<span style="font-weight:bold;">产品变更明细信息列表</span>
+				<br/><br/>
+				<table border="1" cellpadding="3" cellspacing="1" width="100%"  align="center" style="background-color: #b9d8f3;" id="orderChangeDetailTable">
+				    <tr class='tr_data' style='background-color: #b9d8f3;'>
+					  <td>产品订单号</td><td>产品名称</td><td>产品类别</td><td>产品型号</td><td>产品品牌</td><td>产品单位</td><td>产品规格</td><td>产品原数量</td><td>更改数量</td><td>产品使用位置</td>
+					</tr>
+					<tr class="tr_data">
+					  <td colspan="10" align="center">暂无数据</td>
+					</tr>
+				</table>
+				
+		</div>
+		<div id="orderChangeCheckTable" style="display:none;" title="审核意见">
+		    <form id="orderChangeCheckForm">
+			<table>
+				<tr >
+				  <td width="180px">审核结果</td><td id="tdchange_status"></td>
+				</tr>
+				<tr>
+				  <td width="180px">审核意见</td><td><textarea id="check_suggest" colspan="7"></textarea></td>
+				</tr>
+			</table>
+			</form>
+		</div>
+	</body>
+	</html>

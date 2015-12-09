@@ -1,0 +1,274 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"	src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+  <script type="text/javascript" charset="utf-8">
+		var order_id='';
+		var info_id='';
+		var optType='';
+		var require_id='';
+		var file_path='';
+		
+		$(document).ready(function() {
+				order_id=top.getUrlParam(document.URL,"order_id");
+				optType=top.getUrlParam(document.URL,"optType");
+				require_id=top.getUrlParam(document.URL,"require_id");
+				initPage();
+		});
+		
+		function initPage(){
+			if(optType=='insert'){
+				var now= new Date();
+				info_id=now.getTime();
+				$("#tr_plan_cycle").hide();
+				$("#tr_fact_cycle").hide();
+				$("#tr_status").hide();
+				$("#tdproject_name").html(top.getProcesInfoSelectHtml("project_name","","100px"));
+			}if(optType=='update'||optType=='queryDelay'){
+				info_id=top.getUrlParam(document.URL,"id");
+				getInfoByid();
+			}
+		}
+		
+		function getInfoByid(){
+			var aoData=[];
+			aoData.push( { "name": "constructionstatus.id", "value":info_id} );
+			var xurl="/actions/ProjectOrder.action?getConstructionStatus";
+			top.sendAjaxRequest(xurl,aoData,getInfoByidCallback);
+		}
+		
+		function getInfoByidCallback(obj){
+			if(obj.status==true){
+				var o=obj.body;
+				if(optType=='queryDelay'){
+					$("#main_div").hide();
+					return;
+				}
+				order_id=o.order_id;
+				$("#plan_start_date").val(top.getTimeStr(o.plan_start_date,true));
+				$("#plan_end_date").val(top.getTimeStr(o.plan_end_date,true));
+				$("#tdproject_name").html(top.getProcessNameByCode(o.project_name));
+				$("#plan_start_date").attr("disabled",true);
+				$("#plan_end_date").attr("disabled",true);
+				
+				$("#fact_start_date").val(top.getTimeStr(o.fact_start_date,true));
+				$("#fact_end_date").val(top.getTimeStr(o.fact_end_date,true));
+				
+				if ( o.status == 2 ) {
+				  $("#fact_start_date").attr("disabled",true);
+				  $("#fact_end_date").attr("disabled",true);
+				}
+				$("#tdstatus").html(top.getCodeName("CONSTRUCTIONSTATUS_STATUS",o.status));
+				$("#fact_cycle").val(o.fact_cycle);
+				$("#plan_cycle").val(o.plan_cycle);
+				$("#pro_long_demo").val(o.pro_long_demo);
+				var ht='';
+				if(o.file_path!=''){
+					file_path=o.file_path;
+					var name = fixFilename(file_path);
+					ht='<span><a href="'+top.getUrlBase()+'/download?filePath='+o.file_path+'+"&fileName="'+name+'">'+name+'</a></span>';
+					ht+='&nbsp;&nbsp;<span><a href="javascript:void(0)" id="upFileBt" onclick="uploadWorkRecordFile()">上传</a></span>';
+				}else{
+					ht+='<span><a href="javascript:void(0)" id="upFileBt" onclick="uploadWorkRecordFile()">上传</a></span>';
+				}
+				$("#file_info").html(ht);
+			}
+		}
+		
+		//上传施工记录文件
+		function uploadWorkRecordFile(){
+			var xurl="pages/uploadFile.html?belong_id0="+require_id+"&belong_id="+order_id+"&belong_id2="+info_id+"&belong_type=5";
+			top.openDialog("上传文件",xurl,true,600,230,uploadWorkRecordFileCallBack);
+		}
+		
+		function uploadWorkRecordFileCallBack(){
+			try{
+				var obj = top.getTempValue();
+				if(obj.isSaveOK) {
+					 var name = fixFilename(obj.filePath);
+					 var ht="";
+					 ht+='&nbsp;&nbsp;<a href="'+top.getUrlBase()+'/download?filePath='+obj.filePath+'+"&fileName="'+name+'">'+name+'</a>';
+					 ht+='&nbsp;&nbsp;<span><a href="javascript:void(0)" id="upFileBt" onclick="uploadWorkRecordFile()">上传</a></span>';
+					 $("#file_info").html(ht); 
+					 file_path=obj.filePath;
+				}
+			}catch(e){}
+		}
+		
+		function fixFilename(fp){
+		 if ( !fp ) return "";
+		 var n=fp.indexOf("_");
+		 if ( n != -1 ) {
+		   return fp.substring(n+2);
+		 }
+		 return fp;
+	   }
+	   
+	  function saveProjectChangeInfo(){
+		var aoData=[];
+		var msg =null;
+		msg=checkForm();
+		if(msg!=''){
+			top.showInfoWinWarn(msg);
+			return;
+		}
+		var xurl="";
+		var status="0";
+		var is_delay=0;
+		
+		if ( $("#fact_start_date").val() != '' ) {
+		   status="1";
+		   if ( $("#fact_end_date").val() != '' ) {
+		     status="2";
+		     if ( $("#plan_end_date").val() > $("#fact_end_date").val() ) {
+			   is_delay=1;
+			 }
+		   }
+		}
+		
+		if(optType=='insert'){
+			aoData.push( { "name": "constructionstatus.id", "value":info_id} );
+			aoData.push( { "name": "constructionstatus.order_id", "value":order_id} );
+			aoData.push( { "name": "constructionstatus.is_delay", "value":is_delay} );
+			aoData.push( { "name": "constructionstatus.project_name", "value":$("#project_name").val()} );
+			aoData.push( { "name": "constructionstatus.plan_start_date", "value":top.toTimestamp( $("#plan_start_date").val() )} );
+			aoData.push( { "name": "constructionstatus.plan_end_date", "value":top.toTimestamp( $("#plan_end_date").val() )} );
+			aoData.push( { "name": "constructionstatus.fact_start_date", "value":top.toTimestamp( $("#fact_start_date").val() )} );
+			aoData.push( { "name": "constructionstatus.fact_end_date", "value":top.toTimestamp( $("#fact_end_date").val() )} );
+			aoData.push( { "name": "constructionstatus.apply_delay_date", "value":top.toTimestamp( $("#apply_delay_date").val() )} );
+			aoData.push( { "name": "constructionstatus.plan_cycle", "value": $("#plan_cycle").val() } );
+			aoData.push( { "name": "constructionstatus.fact_cycle", "value": $("#fact_cycle").val() } );
+			aoData.push( { "name": "constructionstatus.pro_long_demo", "value": $("#pro_long_demo").val() } );
+			aoData.push( { "name": "constructionstatus.file_path", "value": file_path } );
+			aoData.push( { "name": "constructionstatus.status", "value": status } );
+			xurl="/actions/ProjectOrder.action?insertConstructionStatus";
+		}else{
+			aoData.push( { "name": "constructionstatus.id", "value":info_id} );
+			aoData.push( { "name": "constructionstatus.order_id", "value":order_id} );
+			//aoData.push( { "name": "constructionstatus.project_name", "value":$("#project_name").val()} );
+			//aoData.push( { "name": "constructionstatus.plan_start_date", "value":top.toTimestamp( $("#plan_start_date").val() )} );
+			//aoData.push( { "name": "constructionstatus.plan_end_date", "value":top.toTimestamp( $("#plan_end_date").val() )} );
+			aoData.push( { "name": "constructionstatus.fact_start_date", "value":top.toTimestamp( $("#fact_start_date").val() )} );
+			aoData.push( { "name": "constructionstatus.fact_end_date", "value":top.toTimestamp( $("#fact_end_date").val() )} );
+			aoData.push( { "name": "constructionstatus.apply_delay_date", "value":top.toTimestamp( $("#apply_delay_date").val() )} );
+			aoData.push( { "name": "constructionstatus.plan_cycle", "value": $("#plan_cycle").val() } );
+			aoData.push( { "name": "constructionstatus.fact_cycle", "value": $("#fact_cycle").val() } );
+			aoData.push( { "name": "constructionstatus.pro_long_demo", "value": $("#pro_long_demo").val() } );
+			aoData.push( { "name": "constructionstatus.file_path", "value": file_path } );
+			aoData.push( { "name": "constructionstatus.status", "value": status } );
+			xurl="/actions/ProjectOrder.action?updateConstructionStatus";
+		}
+		top.showLoadingInfo(true);
+		top.sendAjaxRequest(xurl,aoData,saveConstructionCallback);
+   }
+   
+   function checkForm(){
+       var msg="";
+	   msg+=checkString($("#plan_start_date").val(),true,20,"计划开始日期");
+	   msg+=checkString($("#plan_end_date").val(),true,20,"计划结束日期");
+	   msg+=checkString($("#pro_long_demo").val(),false,512,"说明");
+	   if( msg == '' ){
+	      if ( top.toTimestamp($("#plan_start_date").val()) > top.toTimestamp($("#plan_end_date").val()) )
+		   msg+="计划开始时间应小于计划结束时间<br/>";
+	   }
+	   if ( $("#fact_start_date").val()!="" && (top.toTimestamp($("#fact_start_date").val()) >top.toTimestamp($("#fact_end_date").val()) ) ){
+		  msg+="实际开始时间应小于实际结束时间<br/>";
+	   }
+	   if(optType=='insert'){
+	     msg+=checkString($("#project_name").val(),true,20,"工程阶段");
+	   }
+	   return msg;
+   }
+   
+   //调用回调函数---添加项目施工进度
+	function saveConstructionCallback(obj){
+	   top.showLoadingInfo(false);
+       try{
+		 var ht='';
+         if ( obj.status==true){
+             isSaveOK = true;
+             top.showInfoWinOK("操作成功");
+			 top.closeSelectDialog();
+		  }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+         }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+	    function doBeforeClose(){
+			var obj={
+				  "isSaveOK":isSaveOK
+				};
+			top.setTempValue(obj);
+	   }
+	   
+	   function countDistance(start,end,dis){
+	       if ( $("#"+start).val() == '' ) { $("#"+dis).val("0"); return ;}
+		   if ( $("#"+end).val() == '' ) { $("#"+dis).val("0"); return ;}
+		   var startNum=top.toTimestamp( $("#"+start).val() );
+		   var endNum=top.toTimestamp( $("#"+end).val() );
+		   var d=endNum-startNum;
+		   $("#"+dis).val( d/(24*60*60000) + 1 );
+	   }
+	</script>
+	</head>
+	<body style="margin-top:15px;">
+				<table id="main_div" border="1" cellpadding="3" cellspacing="1" width="90%" align="center" style="margin:0 auto;background-color: #b9d8f3;">
+					<tr class="tr_data" height="30px">
+						<td align="right">工程阶段</td><td align="left" id="tdproject_name"></td>
+					</tr>
+					<tr id="tr_status" class="tr_data" height="30px">
+						<td align="right">工程状态</td><td align="left" id="tdstatus"></td>
+					</tr>
+					<tr class="tr_data" height="30px">
+						<td align="right">计划开始日期</td>
+						<td align="left">
+							<input type="text" id="plan_start_date" onchange="countDistance('plan_start_date','plan_end_date','plan_cycle')" size="10" onclick="top.selectDate(this)" readonly="true"/>
+						</td>
+					</tr>
+					<tr class="tr_data" height="30px">
+						<td align="right">计划完工日期</td><td align="left"><input type="text" id="plan_end_date" onchange="countDistance('plan_start_date','plan_end_date','plan_cycle')" size="10" onclick="top.selectDate(this)" readonly="true"/></td>
+					</tr>
+					<tr id="tr_plan_cycle" class="tr_data" height="30px">
+						<td align="right">计划工期</td><td align="left"><input disabled="true" type="text" id="plan_cycle" size="5"/>天</td>
+					</tr>
+					<tr class="tr_data" height="30px">
+						<td align="right">实际开始日期</td><td align="left"><input type="text" id="fact_start_date" onchange="countDistance('fact_start_date','fact_end_date','fact_cycle')" size="10" onclick="top.selectDate(this)" readonly="true"/></td>
+					</tr>
+					<tr class="tr_data" rowspan="3" height="30px">
+						<td align="right">实际完工日期</td><td align="left"><input type="text" id="fact_end_date" onchange="countDistance('fact_start_date','fact_end_date','fact_cycle')" size="10" onclick="top.selectDate(this)" readonly="true"/></td>
+					</tr>
+					<tr id="tr_fact_cycle" class="tr_data" height="30px">
+						<td align="right">实际工期</td><td align="left"><input disabled="true" type="text" id="fact_cycle" size="5"/>天</td>
+					</tr>
+					<tr class="tr_data" rowspan="3" height="30px">
+						<td align="right">附件</td><td align="left" id="file_info"><a href="javascript:void(0)" id="upFileBt" onclick="uploadWorkRecordFile()">上传</a></td>
+					</tr>
+					<tr class="tr_data" rowspan="3" height="30px">
+						<td align="right">说明</td>
+						<td align="left">
+							<textarea style="width:90%;height:50px" id="pro_long_demo"></textarea>
+						</td>
+					</tr>
+					<tr class="tr_data" height="30px" >
+						<td colspan="2" align="center">
+							<div class="buttonDivTwo">
+								<a href="javascript:saveProjectChangeInfo()">保存</a>
+							</div>
+						</td>
+					</tr>
+				</table>
+	</body>
+</html>

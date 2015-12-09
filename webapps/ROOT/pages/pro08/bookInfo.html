@@ -1,0 +1,139 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var qTypeId="";
+   var isSys="yes";
+   var id="";
+   
+   $(document).ready(function() {
+     initData();
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   function doSubmit(){
+	 var aoData=[];
+	 aoData.push( { "name": "toolBook.book_title", "value": document.getElementById("book_title").value } );
+     aoData.push( { "name": "toolBook.book_context", "value":document.getElementById("book_context").value } );
+	 aoData.push( { "name": "toolBook.type_id", "value":qTypeId} );
+	 if ( optType == 'insertToolBook' ) {
+	  top.sendAjaxRequest("/actions/ToolBook.action?insertToolBook",aoData,optCallback);
+	}else{
+	 aoData.push( { "name": "toolBook.id", "value":id});
+	 top.sendAjaxRequest("/actions/ToolBook.action?updateToolBook",aoData,optCallback);
+	}
+	
+   }
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	      top.showInfoWinOK("操作成功");
+		 top.closeDialog();
+	    }else{
+	    	isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   function initData(){
+	   try{
+		   optType=top.getUrlParam(document.URL,"opt");
+		  
+		  if ( optType == 'insertToolBook' ) {
+		       $("#tr_updateUser").hide();
+			   $("#tr_updateTime").hide();
+			   qTypeId=top.getUrlParam(document.URL,"typeId");
+			   $("#type_name").val(top.getToolBookTypeById(qTypeId));
+		   }
+		   if ( optType == 'updateToolBook' ) {
+		     id=top.getUrlParam(document.URL,"id");
+		     qTypeId=top.getUrlParam(document.URL,"type_id");
+		     var book_title=decodeURI(top.getUrlParam(document.URL,"book_title"));
+		     var book_context=decodeURI(top.getUrlParam(document.URL,"book_context"));
+		     var update_user=decodeURI(top.getUrlParam(document.URL,"update_user"));
+		     var update_time=top.getUrlParam(document.URL,"update_time");
+			 $("#update_time").html(top.getTimeStr(update_time,true));
+			 $("#book_title").val(book_title);
+			 $("#book_context").val(book_context);
+			 $("#update_user").html(update_user );
+			 $("#update_time").html(top.getTimeStr(update_time,true));
+			 $("#type_name").val(top.getToolBookTypeById(qTypeId));
+			
+		   }   
+		}catch(e){}
+   } 
+   function selectBookType(){
+       var xurl="pages/pro08/selectBookNode.html?type=book";
+       top.openSelectDialog("选择工具书类别",xurl,300,450,selectBookCallback);
+   }
+   function selectBookCallback(){
+       try{
+         var obj = top.getTempValue();
+         if ( obj.nodeId == -1 ) return ;
+         if ( obj.nodeId == -2 ) {
+             qTypeId = "";
+             book_title = "";
+         } else {
+             qTypeId = obj.nodeId;
+             book_title = obj.nodeName;
+         }
+         document.getElementById("type_id").value = qTypeId;
+         document.getElementById("type_name").value = book_title;
+       }catch(e){
+       }
+   }
+   
+  </script> 
+</head>
+<body>
+<input type="hidden" id="type_id" value="" />
+<br>
+<table border="1" cellpadding="3" cellspacing="1" width="90%" align="center" style="background-color: #b9d8f3;margin-right:auto;margin-left:auto;" >
+<tr class="tr_data" height="25px">
+	<td width="25%" align="right">工具书标题:</td>
+    <td width="75%" align="left"><input type="text" id="book_title" value="" size="45" /></td>
+</tr>
+<tr class="tr_data" height="25px">
+	<td align="right">类别(<font color="red">*</font>):</td>
+    <td align="left" id="tdtype_id"><input type="text" id="type_name" onclick="selectBookType()"/></td>
+ </tr>
+ <tr class="tr_data" id="tr_updateUser"height="25px">
+	<td align="right">修改人(<font color="red">*</font>):</td>
+    <td align="left" id="update_user"></td>
+	
+ </tr>
+ <tr class="tr_data" id="tr_updateTime"height="25px">
+ <td align="right">修改时间(<font color="red">*</font>):</td>
+   <td align="left" id="update_time"></td>
+ </tr>
+ <tr class="tr_data" height="25px">
+	<td align="right" style=" valign:top">内容:</td>
+    <td colspan="3" align="left"><textarea id="book_context" cols="48" rows="10"></textarea></td>
+ </tr>
+</table>
+<p align="center">
+   <table><tr>
+		    <td><span id="okBtn" class="buttonTwo"><a href="javascript:doSubmit()">提交</a></span></td>
+		    <td><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+   </tr></table>
+</p>
+</body>
+</html>

@@ -1,0 +1,330 @@
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet"
+			type="text/css"/>
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css"
+			media="print, projection, screen"/>
+		<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+	
+<script type="text/javascript">
+	var designerCode="";
+	var productList=[];
+	 var typeList=[];
+	var orderInfo={};
+	var orderdetail=[];
+	var totalMoney=0;
+	
+   $(document).ready(function() {
+	    typeList=opener.getTypeListValue();
+		//productList=opener.getProductListValue();
+		orderInfo=opener.getOrderInfoValue();
+	    orderdetail=opener.getOrderdetailList();
+		QuoteDetailCallback();
+		infoCallback();
+   });
+   //调用回调函数---查询订单详细信息
+   function QuoteDetailCallback(){
+		try{
+		 var ht="";
+		 if(orderdetail.length>0){
+			for (var i=0;i<orderdetail.length;i++) {
+				totalMoney+=orderdetail[i].amount*orderdetail[i].sale_price*orderdetail[i].discount;
+				ht='';
+				ht+="<tr height='28px'><td align='center' >"+ getProductType( orderdetail[i].type_id )+"</td>";
+				ht+="<td  align='center' >"+orderdetail[i].product_name+"</td>";
+				ht+='<td  align="center" width="80px" >'+opener.getCodeName("UNIT",orderdetail[i].unit)+'</td>';
+				ht+='<td  align="center" width="80px" align="right">'+orderdetail[i].sale_price+'</td>';
+				ht+='<td  align="center" width="80px" >'+orderdetail[i].use_position+'</td>';
+				ht+='<td  align="center" width="80px" >'+orderdetail[i].amount+'</td>';
+				ht+='</tr>';
+				$("#productDetailList").append(ht);
+			}
+			$("#total_money").html(totalMoney);
+		 }
+		}catch(e){
+		}
+   }
+   
+   function getProductType(pid){
+       for(var j=0;j<typeList.length;j++){
+			 if(typeList[j].type_id==pid){
+					return typeList[j].type_name;
+			 }
+       }
+       return "";
+   }
+  
+	//关闭第二层框
+	function closeDialog(){
+		$( "#dialog" ).dialog( "close" );
+	}
+	function infoCallback(){
+	   try{
+         var o=orderInfo;
+			//订单信息
+			if(o){	
+				$("#id").html(o.id);
+			    $("#quote_date").html(opener.getTimeStr(o.quote_date));
+				$("#cust_name").html(o.cust_name);
+				$("#chooseCust").hide();
+				$("#designerCode").html(opener.getUserNameByCode(o.designerCode));
+				$("#tdpro_designer").html(opener.getUserNameByCode(o.pro_designer));
+				$("#tdbox_designer").html(opener.getUserNameByCode(o.box_designer));
+				$("#cust_tel").html(o.cust_tel);
+				$("#pro_add").html( o.pro_address);
+				$("#project_order_id").html( o.project_order_id);
+			}
+       }catch(e){
+          //top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+
+	function doPrint(){
+		$("#printBtn").hide();
+		window.print();
+	}
+		
+	</script>
+<style>
+body{
+margin:10px;
+margin-left:20px;
+margin-right:20px;
+}
+body,td {
+	font-size: 13px;
+}
+
+.roomTd {
+	border: 1px;
+	border-style: dotted none none none;
+	border-color: blue;
+	color: #000000;
+	padding-left: 5px;
+}
+
+#KinSlideshow {
+	overflow: hidden;
+	width: 500px;
+	height: 450px;
+}
+
+.inputBottomLine {
+	border-top: hide;
+	border-left: hide;
+	border-center: hide;
+}
+#hall_count,#room_count,#bath_count,#amount{
+	width: 50px;
+}
+#product_brand,#product_model,#product_standard,#price,#unit{
+	width: 70px;
+}
+#product_name
+{
+	width: 100px;
+}
+table.attention{
+	border-collapse:collapse;
+}
+table.attention td{
+	border:solid 1px black;
+}
+</style>
+	</head>
+	<body>	
+	
+		<div id="tabs-0">
+		<center><h2>产品委托购买明细表<h2></center>
+				客户基本信息
+				<table border="1" class="attention" cellpadding="3" cellspacing="1" width="100%" align="center">
+					<tr>
+						<td width="12.5%" height="32px">编号</td><td width="12.5%" align="left"><label type="text" id="id" value="系统自动生成"></label></td>
+						<td width="12.5%" >日期</td><td width="12.5%" align="left"><label type="text" id="quote_date" ></label></td>
+						<td width="12.5%">工程订单编号</td>
+						<td width="37.5%" colspan="3">
+							<label id="project_order_id" ></label>
+								
+						</td>
+					</tr>
+					<tr>	
+						<td width="12.5%" height="32px">客户姓名</td>
+						<td width="12.5%">
+							<label id="cust_name" ></label>	
+						</td>
+						<td width="12.5%">设计师姓名</td><td width="12.5%" align="left"><label id="designerCode"></label></td>
+						<td width="12.5%">产品设计师</td><td width="12.5%" align="left" id="tdpro_designer"></td>
+						<td width="12.5%">柜体设计师</td><td width="12.5%" align="left" id="tdbox_designer"></td>
+					</tr>
+					<tr>
+						<td height="32px">联系方式</td><td align="left"><label id="cust_tel"></label></td>
+						<td height="32px">工程地址</td>
+						<td colspan="5" align="left">
+						 <label id="pro_add" type="text" size="50"></label>
+						</td>
+					</tr>
+				</table>
+				<br/><br/>
+				报价信息
+				<table border="1" cellpadding="3" cellspacing="1" width="100%"
+					align="center" class="attention" id="productDetailList">
+					<tr height='28px'>
+						<td align="center" width="180px">产品类别</td>
+						<td align="center" width="200px">名称</td>
+						<td align="center" width="80px">单位</td>
+						<td align="center" width="80px">单价</td>
+						<td align="center" width="100px">使用位置</td>
+						<td align="center" width="80px">数量</td>
+					</tr>
+				</table>
+				<div><span style="color:red">总计：<span id="total_money"></span>元</span></div>
+				<table class="attention" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" >												
+					<tr>
+						<td width="25%" height="30px">客户确认签字：</td><td  width="25%"></td>
+						<td  width="25%" >设计师签字：</td><td  width="25%"></td>
+					</tr>
+					<tr>
+						<td height="30px">产品设计师签字：</td><td></td>
+						<td>产品部经理审核签字：</td><td></td>
+					</tr>
+				</table>
+		<!--div style="margin-top:20px">
+			1、此订货单客户确认签字并加盖公司公章后生效。	<br/>						
+			2、此协议一式两份，双方各执一份。	<br/>							
+			3、备注里注明预收款项的项目，结算时以实际发生金额为结算金额。	<br/>
+			<div style="font-weight:bold">
+			4、注意事项：<br/>
+			（1）客户需注明是否要求现场验货，不注明则视为委托现场工人验货。　<br/>
+			（2）所有特价销售产品，如款项未按商家要求时间到帐，则无法享受该时间段特价价位。<br/>
+			（3）特价产品，可能存在质量缺陷，所有铺贴及安装后验收均按特价产品质量验收。<br/>
+			（4）橱柜及衣帽柜报价中包含定金600元，成品设计师已测量、出图后，客户提出退款的，定金600元不予退还。<br/>
+			（5）产品订单经客户或设计师签字确认后，一律不予退货<br/>
+			（6）客户签字确认后，视为以上内容客户本人已认真阅读，无任何异议同意执行。	
+			</div>
+			5、产品温馨提示<br/>
+			（1）地板损耗按实际损耗计算面积，正常安装损耗7%左右；特殊户型、造型、损耗为10%左右；地板安装费按实际使用面积收取。
+			<br/>（2）马赛克、墙地砖、石材类损耗按实际损耗计算，当正常铺装时，墙地砖的正常损耗为8%左右；特殊户型、造型、拼花损耗为15%左右。
+			<br/>（3）踢脚线 按实际损耗计算，当正常铺装时，踢脚线的正常损耗为6%左右；特殊户型、造型、损耗为15%左右。
+			<br/>（4）成品门、橱柜、衣帽柜等产品订货日期按签订的成品合同规定日期计算周期。
+			<br/>（5）如果冬季不供暖，应将管里的水放尽，避免散热器及管道冻裂。
+			<br/>（6）天然大理石有自然的裂纹，不属质量问题，粘接和修补是正常加工程序。
+			
+		</div><br/>
+		<table width="100%" style="margin-left:auto;margin-right:auto" class="attention">
+			<tr>
+				<td colspan="5" style="font-size:30px;font-weight:bold" align="center">产品工期温馨提示</td>
+			</tr>
+			<tr>
+				<td colspan="5" align="center">附表</td>
+			</tr>
+			<tr>
+				<td width="10%">序号</td>
+				<td width="15%">主材产品名称</td>	
+				<td width="15%">定购条件</td>
+				<td width="15%">到货周期</td>	
+				<td width="45%">备注</td>
+			</tr>
+			<tr>
+			<td>1</td>
+			<td>开关、插座</td>
+			<td>电工标注好电位，确定开关、插座的数量</td>
+			<td>5-15天</td>
+			<td>因此时电工已经将开关、插座预留好了，油工结束之后就可以安装</td>
+			</tr>
+			<tr>
+			<td>2</td>
+			<td>地板</td>
+			<td>客户签订《产品委托购买明细表》，且工地开工之后</td>
+			<td>15-25天</td>
+			<td>因地板的订货周期比较长，建议提前定购，地板铺贴在工程完工之后方可进行</td>
+			</tr>
+			<tr>
+			<td>3</td>
+			<td>墙地砖</td>
+			<td>客户签订《产品委托购买明细表》，且工地开工之后</td>
+			<td>7-20天</td>
+			<td>在工程中期进行铺贴，但是墙地砖的订货周期比较长，因此建议提前定购</td>
+			</tr>
+			<tr>
+			<td>4</td>
+			<td>橱柜</td>
+			<td>厨房瓷砖铺贴完毕，柜体设计师和客户共同确定橱柜方案之后</td>
+			<td>45-70天</td>
+			<td>在开工时要进行水电路的改造，因此橱柜应该提前预订，以便标水电位(橱柜的到货周期从签定橱柜合同的第二天开始计算)</td>
+			</tr>
+			<tr>
+			<td>5</td>
+			<td>成品门</td>
+			<td>门洞口基层处理完毕，安装工测量</td>
+			<td>45-70天</td>
+			<td>因成品门的定购周期比较长，因此在开工前定购以便可以和工程周期同步进行(成品门的到货周期从签定成品门合同的第二天开始计算)</td>
+			</tr>
+			<tr>
+			<td>6</td>
+			<td>洁具</td>
+			<td>客户签订《产品委托购买明细表》，且工地开工之后</td>
+			<td>15-20天</td>
+			<td>在开工时要进行水电路的改造，提前定购洁具，以便标水电位，确定座便以及水盆等的位置</td>
+			</tr>
+			<tr>
+			<td>7</td>
+			<td>灯具</td>
+			<td>工地水电位标注完毕之后</td>
+			<td>7-20天</td>
+			<td>因不同的灯具顶座的高度不同，涉及到客厅卧室的吊顶高度，建议提前定购</td>
+			</tr>
+			<tr>
+			<td>8</td>
+			<td>石材</td>
+			<td>客户签订《产品委托购买明细表》，且工地开工之后</td>
+			<td>7-15天</td>
+			<td>在铺贴墙地砖时涉及到过口石的铺贴，油工之前要铺贴窗台面，建议提前定购</td>
+			</tr>
+			<tr>
+			<td>9</td>
+			<td>吊顶</td>
+			<td>需在厨、卫墙砖铺贴完毕之后</td>
+			<td>7-15天</td>
+			<td>在铺贴墙砖之后就可以铺吊顶，因现在普便选用集成吊顶，选用集成吊顶灯，涉及到电路的走线，应提前确定吊顶的类型</td>
+			</tr>
+			<tr>
+			<td>10</td>
+			<td>暖气</td>
+			<td>客户签订《产品委托购买明细表》</td>
+			<td>15-30天</td>
+			<td>因涉及到水电改造，请提前定购暖气，以便开工时可以及时的进行隐蔽工程的进行</td>
+			</tr>
+			<tr><td colspan="5" style="color:red">注：乙方不承担以上各项因不可抗力因素造成的各种损失。</tr>
+			<tr><td colspan="5" >请您仔细阅读，阅读完毕后签字确认</tr>
+		</table>
+		<table width="70%" style="margin-left:auto;margin-right:auto" class="attention">
+			<tr>
+				<td  width="25%">甲方确认签字</td>
+				<td  width="25%"></td>
+				<td  width="25%">乙方设计师签字</td>
+				<td  width="25%"></td>
+			</tr>
+		</table-->
+		</div>			
+<!--打印!-->				
+	<div width="100%" id="printBtn" style="margin_top:10px;font-size:20px;position:absolute;right:10px;top:5px"><center><a style="text-decoration: none"href="javascript:doPrint()"><span>[ 打印 ]</span></a></center></div>
+  </div>
+ </body>
+</html>
+
+		

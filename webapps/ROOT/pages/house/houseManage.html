@@ -1,0 +1,276 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+ 
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+		    var tempStr="";
+			var currentDeleteId="";
+			var hasDeleteHouseRight=false;
+			
+			$(document).ready(function() {
+			   $( "#tdStatus" ).html( top.getCodeSelectHtml("HOUSE_STATUS","q_status",true,'0') );
+			   $( "#tdBelongArea" ).html( top.getCodeSelectHtml("HOUSE_BELONG","q_belongArea",true) );
+			   $( "#tdHouseStyle" ).html( top.getCodeSelectHtml("HOUSE_STYLE","q_numBedRoom",true) );
+			   $( "#tdHouseType" ).html( top.getCodeSelectHtml("HOUSE_TYPE","q_type",true) );
+			   $( "#tdProperty_right" ).html( top.getCodeSelectHtml("PROPERTY_TYPE","q_property_right",true) );
+			   $( "#tdorientation" ).html( top.getCodeSelectHtml("HOUSE_ORIENTATION","q_orientation",true) );
+			   $( "#tdfitment" ).html( top.getCodeSelectHtml("HOUSE_FITMENT","q_fitment",true) );
+			   $( "#tdessence" ).html( top.getCodeSelectHtml("HOUSE_ESSENCE","q_essence",true) );
+			   $( "#tdstructure" ).html( top.getCodeSelectHtml("HOUSE_STRUCTURE","q_structure",true) );
+	
+			   if ( !top.g_isPermit("house_addHouse") ) {
+				 $("#createBtn").hide();
+			   }
+			   if ( !top.g_isPermit("house_export") ) {
+				 $("#exportBtn").hide();
+			   }
+			   
+			   hasDeleteHouseRight=top.g_isPermit("house_deleteHouse");
+			   var iaoColumns= [
+			                   { "sTitle": "房源编号", "mDataProp": "id", "sWidth": "10%","sClass": "center",
+							       "fnRender": function ( oObj ) {
+                                        var ht ='';
+                                        if ( hasDeleteHouseRight ) {
+                                          ht+='<img src="../../img/delete.gif" onclick="deleteHouse('+oObj.aData.id+')"/>&nbsp;';
+										}
+										ht+='<a href=\'javascript:void(0)\' onclick="updateHouse(\''+oObj.aData.id+'\')" >'+oObj.aData.id+"</a>" ;
+										return ht;
+                                   },
+								   "bUseRendered": false
+							   },
+			                   { "sTitle": "小区", "mDataProp": "belong_area", "sWidth": "10%","sClass": "center",
+                                      "fnRender": function ( oObj ) {
+                                           return top.getCodeName( "HOUSE_BELONG", oObj.aData.belong_area );
+                                      },
+                                      "bUseRendered": false 
+                               },
+			                   { "sTitle": "门牌号", "mDataProp": "house_number", "sWidth": "20%","bUseRendered": false},
+							   { "sTitle": "楼层", "mDataProp": "floor", "sWidth": "10%","sClass": "center","bUseRendered": false},
+							   { "sTitle": "面积", "mDataProp": "farea", "sWidth": "10%","sClass": "center","bUseRendered": false},
+							   { "sTitle": "房屋类型", "mDataProp": "house_type", "sWidth": "10%","sClass": "center",
+                                      "fnRender": function ( oObj ) {
+                                           return top.getCodeName( "HOUSE_TYPE", oObj.aData.house_type );
+                                      },
+                                      "bUseRendered": false 
+                               },
+                               { "sTitle": "户型", "mDataProp": "num_bedroom", "sWidth": "10%", "sClass": "center",
+                                   "fnRender": function ( oObj ) {
+                                        return top.getCodeName( "HOUSE_STYLE", oObj.aData.num_bedroom );
+                                   },
+                                   "bUseRendered": false  
+                               },
+							   { "sTitle": "装修", "mDataProp": "fitment", "sWidth": "10%", "sClass": "center",
+                                   "fnRender": function ( oObj ) {
+                                        return top.getCodeName( "HOUSE_FITMENT", oObj.aData.fitment );
+                                   },
+                                   "bUseRendered": false  
+                               },
+							   { "sTitle": "房源状态", "mDataProp": "status", "sWidth": "10%", "sClass": "center",
+                                   "fnRender": function ( oObj ) {
+                                        return top.getCodeName( "HOUSE_STATUS", oObj.aData.status );
+                                   },
+                                   "bUseRendered": false  
+                               }
+               ];
+			   
+			   var surl=top.getUrlBase()+"/actions/HouseMain.action?getTblHouseInfoList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+					aoData=getParamDate(aoData);
+			    },
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			} );
+			function deleteHouse(did){
+			    currentDeleteId=did;
+			    top.showConfirm("您确定要删除选中的记录吗？", doDeleteHouse);
+			}
+			
+			function doDeleteHouse(){
+				var aoData=[];
+                aoData.push( { "name": "house.id", "value": currentDeleteId } );
+                top.sendAjaxRequest("/actions/HouseMain.action?deleteTblHouseInfo",aoData,optCallback);
+			}
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+			function addHouse(){
+				var xurl="pages/house/houseInfo.html?opt=insert&category=0";
+				top.openDialog("添加内部出租房源信息",xurl,true,1200,650,saveCallBack);
+			}
+			
+			function updateHouse(id){
+				var xurl="pages/house/houseInfo.html?opt=update&category=0&id="+id;
+				top.openDialog("内部出租房源信息",xurl,true,1200,650,saveCallBack);
+			}
+
+			function saveCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				}
+			}
+			
+			function optCallback(obj){
+			       try{
+			        if ( obj.status == true ){
+			          top.showInfoWin("操作成功");
+			          doQuery();
+			        }else{
+			          top.showInfoWin("操作失败 "+obj.msg);
+			        }
+			       }catch(e){
+			          top.showInfoWin("处理异常:"+e.message);
+			       }
+		  }
+		  
+		  function getParamDate(aoData){
+		            var num = "";
+					aoData.push( { "name": "house.house_type", "value": $("#q_type").val() } );
+					aoData.push( { "name": "house.owner_id", "value": -1 } );
+					aoData.push( { "name": "house.category", "value": 0 } );
+					aoData.push( { "name": "price1", "value": -1 } );
+					aoData.push( { "name": "price2", "value": -1 } );
+
+					num = $("#q_floor1").val();
+					if ( num == '' ) num ="-1";
+					aoData.push( { "name": "floor1", "value":num } );
+					
+					num = $("#q_floor2").val();
+					if ( num == '' ) num ="-1";
+					aoData.push( { "name": "floor2", "value":num } );
+					
+					num = $("#q_farea1").val();
+					if ( num == '' ) num ="-1";
+					aoData.push( { "name": "farea1", "value":num } );
+					
+					num = $("#q_farea2").val();
+					if ( num == '' ) num ="-1";
+					aoData.push( { "name": "farea2", "value":num } );
+					
+					aoData.push( { "name": "time3", "value": $("#q_time3").val() } );
+					aoData.push( { "name": "time4", "value": $("#q_time4").val() } );
+					
+					aoData.push( { "name": "house.house_number", "value":$("#q_house_number").val() } );
+					aoData.push( { "name": "house.belong_area", "value":$("#q_belongArea").val() } );
+					num = $("#q_numBedRoom").val();
+					if ( num == '' ) num ="-1";
+					aoData.push( { "name": "house.num_bedroom", "value": num } );
+					
+					aoData.push( { "name": "house.id", "value": top.g_GetNumValue($("#q_house_id").val(), -1) } );
+					aoData.push( { "name": "house.status", "value": $("#q_status").val() } );
+					aoData.push( { "name": "house.fitment", "value": $("#q_fitment").val() } );
+					
+					return aoData;
+		  }
+		  
+		  function exportData(){
+		    var aoData=[];
+		    top.showLoadingInfo(true);
+            top.sendAjaxRequest("/actions/HouseMain.action?exportRentHouseList",getParamDate(aoData),callBackExportData);
+		  }
+		  
+		   function callBackExportData(obj){
+			 top.showLoadingInfo(false);
+			 try{
+				if ( obj.status == true ){
+				   var downUrl=top.getUrlBase()+"/download?filePath="+obj.msg+"&fileName=出租房源数据.xls";
+				   document.location.href=downUrl;
+				}else{
+				   top.showInfoWinError("操作失败 "+obj.msg);
+				}
+			 }catch(e){
+				top.showInfoWinError("处理异常:"+e.message);
+			 }
+		 }
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+	        <div style='border: 2px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="150px">&nbsp;内部出租房源查询&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			     <tr class="tr_data">
+				  <td>房源状态:</td><td align="left" id="tdStatus"></td>
+				  <td>户型:</td><td align="left" id="tdHouseStyle"></td>
+			      <td>小区:</td><td align="left" id="tdBelongArea"></td>
+				  <td>门牌号:</td><td align="left"><input type="text" id="q_house_number" value="" size="15" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+			     </tr>
+				 <tr class="tr_data">
+				  <td>房屋类型:</td><td align="left" id="tdHouseType"></td>
+				  <td>楼层:</td><td align="left"><input type="text" id="q_floor1" value="" size="4" />-<input type="text" id="q_floor2" value="" size="4" />层</td>
+				  <td>装修:</td><td align="left" id="tdfitment" colspan="3"></td>
+				</tr>
+			    <tr class="tr_data">
+				  <td>房源编号:</td><td align="left"><input type="text" id="q_house_id" value="" size="15" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+				  <td>面积:</td><td align="left"><input type="text" id="q_farea1" value="" size="4" />-<input type="text" id="q_farea2" value="" size="4" />平米</td>
+				  <td>登记时间:</td><td align="left" colspan="3">
+				    <input type="text" id="q_time3" value="" onclick="new Calendar().show(this);" size="8" />-<input type="text" id="q_time4" value="" onclick="new Calendar().show(this);" size="8" />
+				  </td>
+			     </tr>
+			 </table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				    <td>&nbsp;查询结果列表&nbsp;</td>
+					<td><div id="createBtn" class="buttonDivTwo"><a href="javascript:addHouse()">添加</a></div></td>
+					<td><div id="exportBtn" class="buttonDivTwo"><a href="javascript:exportData()">导出</a></div></td>
+			       </tr></table></td>
+			  </tr>
+			</table>
+	        <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

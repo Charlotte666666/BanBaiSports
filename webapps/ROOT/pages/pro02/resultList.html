@@ -1,0 +1,118 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery.ui.all.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			$(document).ready(function() {
+			   $( "#tdCategory" ).html( top.getCodeSelectHtml("CATAGORY","q_category",true) );
+			   $( "#tdStatus" ).html( top.getCodeSelectHtml("STATUS","q_status",true) );
+			   var iaoColumns= [
+			                   { "sTitle": "服务器", "mDataProp": "belong", "sWidth": "10%","sClass": "left","bUseRendered": false},
+                               { "sTitle": "类型", "mDataProp": "category", "sWidth": "10%","sClass": "left",
+                                      "fnRender": function ( oObj ) {
+                                           return top.getCodeName( "CATAGORY", oObj.aData.category );
+                                      },
+                                      "bUseRendered": false
+                               },
+							   { "sTitle": "名称", "mDataProp": "name", "sWidth": "10%","sClass": "left","bSortable":false,"bUseRendered": false},
+							   { "sTitle": "路径", "mDataProp": "path", "sWidth": "20%","sClass": "left","bSortable":false,"bUseRendered": false},
+							   { "sTitle": "检查值", "mDataProp": "value", "sWidth": "10%","sClass": "left","bSortable":false,"bUseRendered": false},
+							   { "sTitle": "警告阈值", "mDataProp": "warning", "sWidth": "10%","sClass": "left","bSortable":false,"bUseRendered": false},
+							   { "sTitle": "异常阈值", "mDataProp": "critical", "sWidth": "10%","sClass": "left","bSortable":false,"bUseRendered": false},
+                               { "sTitle": "时间", "mDataProp": "time", "sWidth": "15%","sClass": "center",
+                            	   "fnRender": function ( oObj ) {
+                                      return top.getTimeStr( oObj.aData.time );
+                                   },
+                                   "bUseRendered": false
+                               },
+                               { "sTitle": "状态", "mDataProp": "status", "sWidth": "10%", "sClass": "center",
+                                   "fnRender": function ( oObj ) {
+                                        return top.getCodeName( "STATUS", oObj.aData.status );
+                                   },
+                                   "bUseRendered": false  
+                               }
+               ];
+ 
+			   var surl=top.getUrlBase()+"/actions/ProSystem.action?getCheckResultList";
+
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					    
+			            aoData.push( { "name": "check.belong", "value":$("#q_belong").val() } );
+						aoData.push( { "name": "check.category", "value":$("#q_category").val() } );
+						aoData.push( { "name": "check.status", "value":$("#q_status").val() } );
+						aoData.push( { "name": "time1", "value":$("#q_time1").val() } );
+						aoData.push( { "name": "time2", "value":$("#q_time2").val() } );
+			      },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumns
+				} );
+
+			} );
+
+			function doQuery(){
+				oTable.fnDraw();
+			}
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+	     	  <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0" >
+			     <tr id="queryArea">
+				  <td align="right" width="5%">服务器:</td><td align="left" width="10%">
+				    <select id="q_belong">
+					  <option value=""></option>
+					  <option value="RDB_IBM">RDB_IBM</option>
+					  <option value="RDB_HP">RDB_HP</option>
+					  <option value="RDB_SYS">RDB_SYS</option>
+					</select>
+				  </td>
+				  <td align="right" width="5%">类型:</td><td align="left" width="10%" id="tdCategory"></td>
+			      <td align="right" width="10%">检查时间从:</td><td align="left" width="10%"><input type="text" id="q_time1" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" /></td>
+			      <td align="right" width="10%">检查时间到:</td><td align="left" width="10%"><input type="text" id="q_time2" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" /></td>
+			      <td align="right" width="10%">状态:</td><td align="left" width="10%" id="tdStatus"></td>
+				  <td align="center" width="20%"><span id="createBtn" class="buttonTwo"><a href="javascript:doQuery()">查询</a></span></td>
+			     </tr>
+			   </table>
+	           <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

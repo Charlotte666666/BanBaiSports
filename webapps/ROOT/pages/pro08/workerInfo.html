@@ -1,0 +1,189 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css" media="print, projection, screen">
+<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script src="../../js/ui.tabs.js" type="text/javascript"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+  <script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var infoId="";
+   $(document).ready(function() {
+		$( "#tdworker_type" ).html( top.getCodeSelectHtml("WORKER_TYPE","worker_type", false) );	
+		$( "#tdworker_sex" ).html( top.getCodeSelectHtml("SEX","worker_sex", false) );
+		$( "#tdstatus" ).html( top.getCodeSelectHtml("WORKER_STATUS","status", false) );
+		$( "#tdpolitical_status" ).html( top.getCodeSelectHtml("POLITICAL_STATUS","political_status", false) );
+		$( "#tdeducation" ).html( top.getCodeSelectHtml("EDUCATION","education", false) );
+		
+		optType=top.getUrlParam(document.URL,"optType");
+		infoId=top.getUrlParam(document.URL,"infoId");
+	   
+		if ( optType == 'insert' ) {
+		 $("#tr_update_time").hide();
+		 $("#tr_lhgz").hide();
+	    } else {
+	     $("#b2").html("<a href=\"javascript:doCancel()\">取消</a>");
+		  var aoData=[];
+		  aoData.push( { "name": "workGroupInfo.code", "value": infoId} );
+		  var xurl=top.getUrlBase()+"/actions/ProMonitor.action?getWorkGroupInfoById";
+		 top.sendAjaxRequest(xurl,aoData,readyCallback);
+	   }
+   } );
+  
+function readyCallback(obj){
+    var obj=obj.body.workGroupInfo;
+		if ( obj ) {
+		$("#code").val( obj.code );
+		 $("#code").attr("disabled",true);
+	    $("#tdworker_type").val(top.getCodeName(obj.number_code) );
+	    $("#worker_name").val( obj.worker_name );
+	    $("#tdworker_sex").html(top.getCodeSelectHtml( "SEX","worker_sex",true,obj.worker_sex));
+        $("#worker_birth").val( top.getTimeStr(obj.worker_birth,true) );
+		$("#tel").val( obj.tel );
+	    $("#company").val( obj.company );
+	    $("#post").val( obj.post );
+        $("#start_date").val( top.getTimeStr(obj.start_date,true) );
+        $("#end_date").val( top.getTimeStr(obj.end_date,true) );
+		$("#tdstatus").html(top.getCodeSelectHtml( "WORKER_STATUS","status",true, obj.status));
+		$("#tdeducation").html(top.getCodeSelectHtml( "EDUCATION","education",true, obj.education));
+		$("#work_resume").val( obj.work_resume );
+		$("#tdpolitical_status").html(top.getCodeSelectHtml( "POLITICAL_STATUS","political_status",true, obj.political_status));
+		$("#specialty").val( obj.specialty );
+		$("#gradu_school").val( obj.gradu_school );
+   }
+   }
+
+   function saveWorkerInfo(){
+	 var aoData=[];
+
+		aoData.push( { "name": "workGroupInfo.code", "value": $("#code").val() } );
+
+		aoData.push( { "name": "workGroupInfo.worker_type", "value": $("#worker_type").val() } );
+		aoData.push( { "name": "workGroupInfo.worker_name", "value": $("#worker_name").val() } );
+		aoData.push( { "name": "workGroupInfo.worker_sex", "value": $("#worker_sex").val() } );
+		aoData.push( { "name": "workGroupInfo.worker_birth", "value": top.toTimestamp($("#worker_birth").val()) } );
+		aoData.push( { "name": "workGroupInfo.tel", "value": $("#tel").val() } );
+		aoData.push( { "name": "workGroupInfo.company", "value": $("#company").val() } );
+		aoData.push( { "name": "workGroupInfo.post", "value": $("#post").val() } );
+		aoData.push( { "name": "workGroupInfo.education", "value": $("#education").val() } );
+		aoData.push( { "name": "workGroupInfo.gradu_school", "value": $("#gradu_school").val() } );
+		aoData.push( { "name": "workGroupInfo.specialty", "value": $("#specialty").val() } );
+		aoData.push( { "name": "workGroupInfo.political_status", "value": $("#political_status").val() } );
+		aoData.push( { "name": "workGroupInfo.work_resume", "value": $("#work_resume").val() } );
+		aoData.push( { "name": "workGroupInfo.status", "value": $("#status").val() } );
+		aoData.push( { "name": "workGroupInfo.start_date", "value":top.toTimestamp($("#start_date").val()) } );
+		aoData.push( { "name": "workGroupInfo.end_date", "value": top.toTimestamp($("#end_date").val()) } );
+		if(optType == 'insert' )
+		{
+		var xurl="/actions/ProMonitor.action?insertWorkGroupInfo";
+		}
+		else
+		{
+		var xurl="/actions/ProMonitor.action?updateWorkGroupInfo";
+		}
+		top.sendAjaxRequest(xurl,aoData,saveOptCallback);
+	}
+	function saveOptCallback(obj){
+		  try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功！");
+		 top.closeDialog();
+	    }else{
+	     isSaveOK = false;
+	     top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		 top.showInfoWinError("处理异常:"+e.message);
+	   }
+	}
+	
+	 function doCancel(){
+		top.closeDialog();
+	}
+ </script> 
+</head>
+<body style="margin:10px">
+<input type="hidden" id="undertake_unit_id" value="" />
+<input type="hidden" id="delegate_unit_id" value="" />
+<br/>
+
+<div id="tabs-0">
+<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+ <tr class="tr_data">
+    <td width="20%" align="right">工作人员编号:</td>
+    <td width="30%" align="left" ><input type="text" class="baseInfo" id="code" value="" /></td>
+	<td width="20%"  align="right">姓名:</td>
+    <td width="30%"  align="left" ><input type="text" class="baseInfo" id="worker_name" value="" /></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">性别:</td>
+    <td align="left" id="tdworker_sex"></td>
+	<td align="right">出生日期:</td>
+    <td align="left"><span id="defendant_id_txt"></span><input type="text" class="baseInfo" id="worker_birth" onclick="new Calendar().show(this);" value="" size="20" /></td>
+</tr>
+
+ <tr class="tr_data">
+    <td align="right">类型:</td>
+    <td align="left" id="tdworker_type"></td>
+	 <td align="right">状态:</td>
+    <td align="left" id="tdstatus"></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">工作开始日期:</td>
+    <td align="left" id="tdsex"><span id="defendant_id_txt"></span><input type="text" class="baseInfo" id="start_date" onclick="new Calendar().show(this);" value="" size="20" /></td></td>
+	<td align="right">工作结束日期:</td>
+    <td align="left"><span id="defendant_id_txt"></span><input type="text" class="baseInfo" id="end_date" onclick="new Calendar().show(this);" value="" size="20" /></td>
+</tr>
+ <tr class="tr_data">
+    <td align="right">电话:</td>
+    <td align="left" id="tdcriminal_type"><span id="defendant_name_txt"></span><input type="text" class="baseInfo" id="tel" value="" size="10" /></td>
+	<td align="right">政治面貌:</td>
+    <td align="left" id="tdpolitical_status"></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">文化程度:</td>
+    <td align="left" id="tdeducation"></td>
+	<td align="right">毕业院校:</td>
+    <td align="left"><input type="text" id="gradu_school"/></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">专业:</td>
+    <td align="left"  colspan="3"><input type="text" class="baseInfo" id="specialty" value="" size="10" /></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">工作单位:</td>
+    <td align="left" colspan="3"><span id="domicile_place_txt"></span><input type="text" id="company"></input></td>
+    
+ </tr>
+  <tr class="tr_data">
+    <td align="right">职位:</td>
+    <td align="left" colspan="3"><span id="domicile_place_txt"></span><input type="text" id="post"></input></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">工作简历</td>
+    <td align="left" colspan="3"><span id="addr_txt"></span><textarea class="baseInfo" id="work_resume" cols="60" rows="2" ></textarea></td>
+ </tr>
+ 
+</table>
+<p align="center" id="optBtnArea">
+   <table><tr>
+		    <td id="okBtn" colspan="2"><span  class="buttonTwo"><a href="javascript:saveWorkerInfo()">提交</a></span></td>
+		    <td id="cancelBtn"><span  class="buttonTwo"><a href="javascript:doCancel()">取消</a></span></td>
+	 </tr></table>
+</p>
+</div>
+
+</div>
+
+
+</body>
+</html>

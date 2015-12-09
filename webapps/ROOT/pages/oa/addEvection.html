@@ -1,0 +1,284 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>addEvection.html</title>
+
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	
+	<script type="text/javascript" src="../../js/checkForm.js"></script>
+	<script type="text/javascript">
+	    var optType="";
+		var user="";
+		var dept="";
+		var info_id=0;
+		var currentApprovalStage="";
+		var currentApprovalStatus="0";
+		var nowUser=null;
+		var date="";
+	    $(document).ready(function(){
+		   nowUser=top.getCurrentUser();
+		   date=new Date();
+		   optType=top.getUrlParam(document.URL,"optType");
+		   if(optType=="insert"){
+			   user=top.getUrlParam(document.URL,"user");
+			   dept=top.getUrlParam(document.URL,"dept");
+			   $("#tdemployee_name").html(top.getUserNameByCode(user));
+			   $("#tddept").html(top.getDeptPath(dept));
+			   $("#approvalrecord").hide();
+		   }else if( optType=="update" || optType=="query" || optType=="approval"){
+		      var aoData=[];
+			  info_id=top.getUrlParam(document.URL,"id");
+			  aoData.push( { "name":"info.id","value":info_id } );
+		      top.sendAjaxRequest("/actions/Evection.action?getEvectionById",aoData,getEvectionInfoCallback);
+		   }
+		
+		});
+		
+		function getEvectionInfoCallback(obj){
+		   if(obj.status==true){
+		      if(obj.body){
+			    var o=obj.body;
+				user=o.employee_code;
+				dept=o.dept;
+				$("#tdemployee_name").html(top.getUserNameByCode(o.employee_code));
+				$("#tddept").html(top.getDeptPath(o.dept));
+				$("#status").val(o.status);
+				if(optType=="update"){
+				  $("#evection_date").val(top.getTimeStr(o.evection_date,true));
+				  $("#days").val(o.days);
+				  $("#back_date").val(top.getTimeStr(o.back_date,true));
+				  $("#evection_memo").val(o.memo);
+				  $("#evection_reason").val(o.evection_reason);
+				  $("#evection_addr").val(o.evection_addr);
+				  $("#lead_head").val(o.lead_head);
+				}else{
+				  $("#tdevection_date").html(top.getTimeStr(o.evection_date,true));
+				  $("#tddays").html(o.days+"天");
+				  $("#tdback_date").html(top.getTimeStr(o.back_date,true));
+				  $("#tdevection_memo").html(o.memo);
+				  $("#tdevection_reason").html(o.evection_reason);
+				  $("#tdevection_addr").html(o.evection_addr);
+				  $("#tdlead_head").html(o.lead_head);
+				  $("#buttonTR").hide();
+				}
+			  }
+		   }
+		   getApprovalInfo();
+		}
+		
+		function getApprovalInfo(){
+		   var aoData=[];
+		   aoData.push( { "name":"info.apply_id","value":info_id} );
+		   top.sendAjaxRequest("/actions/ApprovalRecord.action?getApprovalRecordListByApplyId",aoData,getApprovalInfoCallback);
+		}
+		
+		function getApprovalInfoCallback(obj){
+		   var ht='<tr class="tr_data" id="approvalhead"><td align="center" style="font-weight:bold;" width="20%">审核阶段</td><td align="center" style="font-weight:bold;" width="20%">审核状态</td><td align="center" width="20%" style="font-weight:bold;">审核意见</td><td align="center" style="font-weight:bold;" width="20%">审核人</td><td align="center" style="font-weight:bold;" width="20%">审核时间</td></tr>';
+		   if(obj.status==true){
+		     var o=obj.body;
+			 if(o.length>0){
+			    for(var i=0;i<o.length;i++){
+				   if(i==o.length-1){
+				      currentApprovalStage=o[i].approval_stage;
+					  currentApprovalStatus=o[i].approval_status;
+				      if(!(o[i].approval_stage=="7" && o[i].approval_status=="1") && optType=="approval" && $("#status").val()!="3"){
+					         switch(currentApprovalStage){
+								case "0":
+									if(top.g_isPermit("oa_dept_check")){
+									  ht+='<tr class="tr_data"><td><input id="id" type="hidden" value="'+o[i].id+'"/><input id="approval_stage" type="hidden" value="'+o[i].approval_stage+'"/>'+top.getCodeName("APPROVAL_STAGE",o[i].approval_stage)+'</td><td>'+top.getCodeSelectHtml("APPROVAL_STATUS","approval_status",false)+'</td><td><textarea id="approval_opinion" style="width:100%;" rows="2" cols="8"/></textarea></td><td><input id="approver" type="hidden" value="'+nowUser.userCode+'"/>'+nowUser.userName+'</td><td><input id="approval_time" type="hidden" value="'+date.getTime()+'"/>'+top.getTimeStr(date.getTime(),true)+'</td></tr>';
+									}else{
+									  ht+='<tr class="tr_data"><td><input id="id" type="hidden" value="'+o[i].id+'"/><input id="approval_stage" type="hidden" value="'+o[i].approval_stage+'"/>'+top.getCodeName("APPROVAL_STAGE",o[i].approval_stage)+'</td><td>'+top.getCodeName("APPROVAL_STATUS",o[i].approval_status)+'</td><td></td><td>'+nowUser.userName+'</td><td>'+top.getTimeStr(date.getTime(),true)+'</td></tr>';
+									}
+									break;
+								case "7":
+								   if(top.g_isPermit("oa_presidents_office_check")){
+									ht+='<tr class="tr_data"><td><input id="id" type="hidden" value="'+o[i].id+'"/><input id="approval_stage" type="hidden" value="'+o[i].approval_stage+'"/>'+top.getCodeName("APPROVAL_STAGE",o[i].approval_stage)+'</td><td>'+top.getCodeSelectHtml("APPROVAL_STATUS","approval_status",false)+'</td><td><textarea id="approval_opinion" style="width:100%;" rows="2" cols="8"/></textarea></td><td><input id="approver" type="hidden" value="'+nowUser.userCode+'"/>'+nowUser.userName+'</td><td><input id="approval_time" type="hidden" value="'+date.getTime()+'"/>'+top.getTimeStr(date.getTime(),true)+'</td></tr>';
+									}else{
+									   ht+='<tr class="tr_data"><td><input id="id" type="hidden" value="'+o[i].id+'"/><input id="approval_stage" type="hidden" value="'+o[i].approval_stage+'"/>'+top.getCodeName("APPROVAL_STAGE",o[i].approval_stage)+'</td><td>'+top.getCodeName("APPROVAL_STATUS",o[i].approval_status)+'</td><td></td><td>'+nowUser.userName+'</td><td>'+top.getTimeStr(date.getTime(),true)+'</td></tr>';
+									}
+									break;
+								default: 
+								    ht+='<tr class="tr_data"><td><input id="id" type="hidden" value="'+o[i].id+'"/><input id="approval_stage" type="hidden" value="'+o[i].approval_stage+'"/>'+top.getCodeName("APPROVAL_STAGE",o[i].approval_stage)+'</td><td>'+top.getCodeName("APPROVAL_STATUS",o[i].approval_status)+'</td><td></td><td>'+nowUser.userName+'</td><td>'+top.getTimeStr(date.getTime(),true)+'</td></tr>';
+								   break;
+							  }
+					  }else{
+					     ht+='<tr class="tr_data"><td>'+top.getCodeName("APPROVAL_STAGE",o[i].approval_stage)+'</td><td>'+top.getCodeName("APPROVAL_STATUS",o[i].approval_status)+'</td><td>'+o[i].approval_opinion+'</td><td>'+top.getUserNameByCode(o[i].approver)+'</td><td>'+top.getTimeStr(o[i].approval_time,true)+'</td></tr>';
+					  }
+				   }else{
+				       ht+='<tr class="tr_data"><td>'+top.getCodeName("APPROVAL_STAGE",o[i].approval_stage)+'</td><td>'+top.getCodeName("APPROVAL_STATUS",o[i].approval_status)+'</td><td>'+o[i].approval_opinion+'</td><td>'+top.getUserNameByCode(o[i].approver)+'</td><td>'+top.getTimeStr(o[i].approval_time,true)+'</td></tr>';
+				   } 
+
+				}
+				ht+='<tr class="tr_data nowapproval" style="display:none;"><td colspan="5" align="center"><div class="buttonDivTwo"><a href="javascript:void(0)" onclick="saveApproval()">保存</a></div></td></tr>';
+			 }
+		   }else{
+		     top.showInfoWinError("操作失败！");
+		   }
+		   $("#approvalrecordTable").html(ht);
+		   if(optType=="approval"){
+		      switch(currentApprovalStage){
+				case "0":
+					if(top.g_isPermit("oa_dept_check")){
+					  $(".nowapproval").show();
+					}else{
+					  $(".nowapproval").hide();
+					}
+					break;
+				case "7":
+				   if(top.g_isPermit("oa_presidents_office_check")){
+					  $(".nowapproval").show();
+					}else{
+					  $(".nowapproval").hide();
+					}
+					break;
+				default: 
+				   $(".nowapproval").hide();
+				   break;
+			   }
+			  if(currentApprovalStage=="7" && currentApprovalStatus=="1"){
+			    $(".nowapproval").hide();
+			  }
+		   }
+		   if($("#status").val()=="3"){
+		      $(".nowapproval").hide();
+		   }
+		}
+		
+       function checkMsg(){
+	     var message="";
+		   if($("#evection_date").val()==""){
+		      message+="请输入出差日期<br/>";
+		   }
+		   if($("#back_date").val()==""){
+		      message+="请输入回来日期<br/>"
+		   }
+		   if($("#days").val()==""){
+		      message+="请输入天数<br/>";
+		   }
+		   if($("#days").val()!="" && !IsNumber($("#days").val())){
+		      message+="天数为数字类型<br/>";
+		   }
+		   message+=checkString($("#evection_reason").val(),false,256,"出差事由");
+		   message+=checkString($("#evection_memo").val(),false,256,"需配合事项");
+		 return message;
+	   }
+	   
+	   function doSubmit(){
+	     var msg=checkMsg();
+		 if(msg!=""){
+		    top.showInfoWinWarn(msg);return;
+		 }
+		 var aoData=[];
+		 aoData.push( { "name":"info.employee_code","value":user } );
+		 aoData.push( { "name":"info.employee_name","value":top.getUserNameByCode(user)} );
+		 aoData.push( { "name":"info.dept","value":dept } );
+		 aoData.push( { "name":"info.evection_date","value":top.toTimestamp($("#evection_date").val()) } );
+		 aoData.push( { "name":"info.back_date","value":top.toTimestamp($("#back_date").val()) } );
+		 aoData.push( { "name":"info.evection_addr","value":$("#evection_addr").val() } );
+		 aoData.push( { "name":"info.memo","value":$("#evection_memo").val() } );
+		 aoData.push( { "name":"info.evection_reason","value":$("#evection_reason").val() } );
+		 aoData.push( { "name":"info.lead_head","value":$("#lead_head").val() } );
+		 aoData.push( { "name":"info.days","value":$("#days").val() } );
+		 aoData.push( { "name":"info.status","value":"1" } );
+		 
+		 var xurl="/actions/Evection.action?insertEvection";
+		 if(info_id!=0){
+		    aoData.push( { "name":"info.id","value":info_id } );
+			xurl="/actions/Evection.action?updateEvection";
+		 }
+	    
+		top.sendAjaxRequest(xurl,aoData,doSubmitCallback);
+	   }
+	   
+	   function doSubmitCallback(obj){
+	      if(obj.status==true){
+		    top.showInfoWinOK("操作成功！");
+			top.closeDialog();
+		  }else{
+		    top.showInfoWinError("操作失败！");
+		  }
+	   }
+	   
+	   //保存出差申请审核信息
+		function saveApproval(){
+		   if($("#approver").val()==""){
+		     top.showInfoWinWarn("请填写审核人!");return;
+		   }
+		   if($("#approval_time").val()==""){
+		     top.showInfoWinWarn("请填写审核时间!");return;
+		   }
+		   var aoData=[];
+		   aoData.push( { "name":"info.id","value":$("#id").val() } );
+		   aoData.push( { "name":"info.apply_id","value":info_id } );
+		   aoData.push( { "name":"info.approval_stage","value":$("#approval_stage").val() } );
+		   aoData.push( { "name":"info.approval_status","value":$("#approval_status").val() } );
+		   aoData.push( { "name":"info.approval_opinion","value":$("#approval_opinion").val() } );
+		   aoData.push( { "name":"info.approver","value":$("#approver").val() } );
+		   aoData.push( { "name":"info.approval_time","value":$("#approval_time").val() } );
+		   aoData.push( { "name":"info.approval_type","value":"4" });
+		   
+		   if($("#approval_status").val()=="2"){
+		      $("#status").val("3");
+		   }
+		   
+		   top.sendAjaxRequest("/actions/ApprovalRecord.action?updateApprovalRecord",aoData,saveApprovalCallback);
+		} 
+		
+		function saveApprovalCallback(obj){
+		   if(obj.status==true){
+		     top.showInfoWinOK("操作成功！"); 
+			 getApprovalInfo();
+		   }else{
+		     top.showInfoWinError("操作失败！");
+		   }
+		}
+	   
+	   function doBeforeClose(){
+	   }
+	   
+	   function cancle(){
+	      top.closeDialog();
+	   }
+	</script>
+  </head>
+  
+  <body>
+    <div style="margin:8px;">
+	   <input id="status" type="hidden"/>
+	   <table width="100%" border="1" cellpadding="3" cellspacing="1" style="background-color: #b9d8f3;">
+         <tr class="tr_data" height="30px">
+            <td align="right" style="font-weight:bold;">姓名</td><td align="left"><label id="tdemployee_name"></label></td>
+			<td align="right" style="font-weight:bold;">部门</td><td align="left"><label id="tddept"></label></td>
+         </tr>
+         <tr class="tr_data" height="30px">
+            <td align="right" style="font-weight:bold;">出差时间</td><td align="left" id="tdevection_date"><input id="evection_date" type="text" size="10" onclick="top.selectDate(this)"/></td>
+            <td align="right" style="font-weight:bold;">所需天数</td><td align="left" id="tddays"><input id="days" type="text" size="15" />天</td>
+         </tr>
+		 <tr class="tr_data" height="30px">
+		    <td align="right" style="font-weight:bold;">回来时间</td><td align="left" id="tdback_date"><input id="back_date" type="text" size="10" onclick="top.selectDate(this)"/></td>
+		    <td align="right" style="font-weight:bold;">出差地点</td><td align="left" id="tdevection_addr"><input id="evection_addr" type="text" size="15" /></td>
+		 </tr>
+		 <tr class="tr_data" height="30px">
+		    <td align="right" style="font-weight:bold;">带队负责人</td><td colspan="3" align="left" id="tdlead_head"><input id="lead_head" type="text" size="15" /></td>
+		 </tr>
+		 <tr class="tr_data" height="30px">
+            <td align="right" style="font-weight:bold;">出差事由</td><td colspan="3" align="left" id="tdevection_reason"><textarea id="evection_reason" cols="3" rowspan="5" type="text" style="width:100%;"></textarea></td>
+         </tr>
+		 <tr class="tr_data" height="30px">
+		    <td align="right" style="font-weight:bold;">需配合事项</td><td colspan="3" align="left" id="tdevection_memo"><textarea id="evection_memo" cols="3" rowspan="5" type="text" style="width:100%;"></textarea></td>
+		 </tr>
+		 <tr class="tr_data" height="50px"  id="approvalrecord">
+			<td colspan="4">
+				<table width="100%" id="approvalrecordTable"></table>
+			</td>
+		</tr>
+		 <tr class="tr_data" height="30px" id="buttonTR">
+		    <td colspan="2" align="right"><div class="buttonDivTwo"><a href="javascript:void(0)" onclick="doSubmit()">提交</a></div></td>
+		    <td colspan="2" align="left"><div class="buttonDivTwo"><a href="javascript:void(0)" onclick="cancle()">取消</a></div></td>
+		 </tr>
+	   </table>
+	</div>
+  </body>
+</html>

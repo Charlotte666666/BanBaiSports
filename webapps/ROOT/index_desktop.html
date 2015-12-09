@@ -1,0 +1,162 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+<title>集成系统</title>
+
+    <link rel="stylesheet" type="text/css" href="resources/css/ext-all.css" />
+    <link rel="stylesheet" type="text/css" href="desktop/css/desktop.css" />
+    <link rel="stylesheet" type="text/css" href="css/redmond/jquery.ui.all.css">
+    <script type="text/javascript" src="js/jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.8.16.custom.min.js"></script>
+    <!-- GC -->
+ 	<!-- LIBS -->
+ 	<script type="text/javascript" src="adapter/ext/ext-base.js"></script>
+ 	<!-- ENDLIBS -->
+
+    <script type="text/javascript" src="desktop/js/ext-all.js"></script>
+
+    <!-- DESKTOP -->
+    <script type="text/javascript" src="desktop/js/StartMenu.js"></script>
+    <script type="text/javascript" src="desktop/js/TaskBar.js"></script>
+    <script type="text/javascript" src="desktop/js/Desktop.js"></script>
+    <script type="text/javascript" src="desktop/js/App.js"></script>
+    <script type="text/javascript" src="desktop/js/Module.js"></script>
+    <script type="text/javascript" src="desktop/main.js"></script>
+<style>
+	.column { width: 300px; float: left; padding-bottom: 10px; }
+	.portlet { margin: 0 1em 1em 0; }
+	.portlet-header { margin: 0.3em; padding-bottom: 4px; padding-left: 0.2em; }
+	.portlet-header .ui-icon { float: right; }
+	.portlet-content { padding: 0.4em; }
+	.ui-sortable-placeholder { border: 1px dotted black; visibility: visible !important; height: 50px !important; }
+	.ui-sortable-placeholder * { visibility: hidden; }
+</style>
+<script type="text/javascript">
+  jQuery(document).ready(function() {
+        adjustPosition();
+        $( ".column" ).sortable({
+			connectWith: ".column"
+		});
+
+		$( ".portlet" ).addClass( "ui-widget ui-widget-content ui-helper-clearfix ui-corner-all" )
+			.find( ".portlet-header" )
+				.addClass( "ui-widget-header ui-corner-all" )
+				.prepend( "<span class='ui-icon ui-icon-minusthick'></span>")
+				.end()
+			.find( ".portlet-content" );
+
+		$( ".portlet-header .ui-icon" ).click(function() {
+			$( this ).toggleClass( "ui-icon-minusthick" ).toggleClass( "ui-icon-plusthick" );
+			$( this ).parents( ".portlet:first" ).find( ".portlet-content" ).toggle();
+		});
+
+		$( ".column" ).disableSelection();
+	    window.onresize = function(){ adjustPosition(); };
+  });
+  
+  function adjustPosition(){
+    var wh=$(window).height();
+	var ww=$(window).width();
+	$('#protal').css({"height":(wh-20)+"px","width":(ww-100)+"px"});
+	$('.column').css("width",((ww / 3 - 120)+"px"));
+  }
+</script>
+	  
+	
+</head>
+<body scroll="no">
+
+<div id="x-desktop">
+    <dl id="x-shortcuts">
+        <dt id="grid-win-shortcut" class="grid-win-shortcut">
+            <a href="javascript:void(0)"><img src="desktop/images/s.gif" />
+            <div>邮件</div></a>
+        </dt>
+        <dt id="acc-win-shortcut">
+            <a href="javascript:void(0)"><img src="desktop/images/s.gif" />
+            <div>通讯录</div></a>
+        </dt>
+    </dl>
+	
+	<div id="protal" style="width:600px;height:500px;position:absolute;top:10px;left:85px;">
+		<div class="column">
+			<div class="portlet">
+				<div class="portlet-header">中心发文</div>
+				<div class="portlet-content">
+				   国家气象信息中心关于做好2013年...<br>
+				   国家气象信息中心关于切实加强宣...<br>
+				   国家气象信息中心关于印发《国家...<br>
+				   国家气象信息中心关于开展2013年...<br>
+			       关于印发《国家气象信息中心2013...<br>
+				   关于印发《国家气象信息中心2013...<br>
+				   关于印发《国家气象信息中心2013...<br>
+				</div>
+			</div>
+			<div class="portlet">
+				<div class="portlet-header">处发文</div>
+				<div class="portlet-content">
+				   关于2013年信息中心职工体检安排...<br>
+				   关于确认赵琦等4人专业技术职务...<br>
+				   关于资料服务室科级机构调整的通...<br>
+				   关于黄珣和韩同欣两位同志职务任...<br>
+				   关于确认陈东辉等6人专业技术职...<br>
+				   关于2013年正研级专业技术职务任...<br>
+				</div>
+			</div>
+		</div>
+		<div class="column">
+			<div class="portlet">
+				<div class="portlet-header">待办事务</div>
+				<div class="portlet-content">
+				   待办事务1<br>
+				   待办事务2<br>
+				   待办事务3<br>
+				   待办事务4<br>
+				   待办事务5<br>
+				   待办事务6<br>
+				</div>
+			</div>
+			<div class="portlet">
+				<div class="portlet-header">常用操作</div>
+				<div class="portlet-content">
+				   常用操作1<br>
+				   常用操作2<br>
+				   常用操作3<br>
+				   常用操作4<br>
+				   常用操作5<br>
+				   常用操作6<br>
+				</div>
+			</div>
+		</div>
+		<div class="column">
+			<div class="portlet">
+				<div class="portlet-header">办公室</div>
+				<div class="portlet-content">
+				   2013年3月中心各单位发布信息情况及...[9]<br>
+				   2013年3月信息中心接待参观情况[2]<br>
+				    国家气象信息中心开展323世界气象日...[39]<br>
+					俄罗斯水文气象与环境监测局局长弗罗...[18]<br>
+				</div>
+			</div>
+			<div class="portlet">
+				<div class="portlet-header">人事处</div>
+				<div class="portlet-content">
+				  以人为本 认真做好职工体检工作[41]<br>
+				  关于2013年信息中心职工体检安排的通...[37]<br>
+				  转发北京地区2013年度专业技术人员计...[67]<br>
+				  正研申报材料审前公示[115]<br>
+				</div>
+			</div>
+		</div>
+     </div>
+	
+</div>
+
+<div id="ux-taskbar">
+	<div id="ux-taskbar-start"></div>
+	<div id="ux-taskbuttons-panel"></div>
+	<div class="x-clear"></div>
+</div>
+
+</body>
+</html>

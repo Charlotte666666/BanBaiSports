@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+    <meta charset="utf-8">
+    <head>
+        <title>羽球达人</title>
+        <meta content="yes" name="apple-mobile-web-app-capable">
+        <meta name="format-detection" content="telephone=no"/>
+        <meta name="viewport" content="width=device-width,height=device-height,inital-scale=1.0,maximum-scale=1.0,user-scalable=no;">
+
+        <link rel="stylesheet" media="screen" href="css/base.css" />
+        <link rel="stylesheet" media="screen" href="css/color.css" />
+        <link rel="stylesheet" media="screen" href="css/layout.css" />
+        <link rel="stylesheet" media="screen" href="css/typography.css" />
+
+        <link rel="stylesheet" href="../css/themes/default/jquery.mobile-1.4.5.min.css">
+        <script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/jquery.mobile-1.4.5.min.js"></script>
+    </head>
+    <style>
+        header {
+            background-color: #18b4ed;
+            padding: 12px 25px;
+            position: fixed;
+            width:100%;
+            z-index:99;
+        }
+        input::-webkit-input-placeholder { 
+            text-align: center; 
+            background: url(img/search.png); 
+            background-repeat: no-repeat;
+            background-position: left;
+            background-size: 20px 20px;
+        }
+        input::-moz-placeholder {
+            text-align: center;
+            background: url(img/search.png); 
+            background-repeat: no-repeat;
+            background-position: left;
+            background-size: 20px 20px;
+        }
+        input::-ms-input-placeholder{
+            text-align: center;
+            background: url(img/search.png); 
+            background-repeat: no-repeat;
+            background-position: left;
+            background-size: 20px 20px;
+        }   
+        .competition {
+            background-color: white;
+            border-radius: 2%;
+            box-shadow: 5px 5px 5px #cccccc;
+        }    
+        .competition tr {height:30px;}
+        .competitionDate {color: #18b4ed;}
+        #pulldown {
+            text-align: center;
+            vertical-align: middle;
+            color: #fff;
+            position: fixed;
+            z-index: 99;
+            right: 15px;
+            top:55px;
+            width:120px;
+            height: 50px;
+            background: url(img/pulldownframework_01.png);
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: 120px 50px;
+        }
+    </style>
+    <script>
+        $(document).ready(function(){
+            $("#createNewCompetition").click(function(){
+                var target = $("#pulldown");
+                if(target.hasClass("hidden")){
+                    target.removeClass("hidden");
+                } else {
+                    target.addClass("hidden");
+                }
+            });
+        });
+    </script>
+    <body>
+        <header>
+            <table width="100%" class="tc">
+                <tr>
+                    <td width="40px" class="tl"><img src="img/goback.png" width="12px" height="24px" /></td>
+                    <td class="f1d3" style="color: white">小型比赛</td>
+                    <td id="createNewCompetition" width="40px" class="tr pr50"><img src="img/plus.png" width="22px" height="22px" /></td>
+                </tr>
+            </table>
+        </header>
+        <div id="pulldown" class="hidden">
+            <!--<img src="img/pulldownframework_01.png" width="120px" height="50px" />--><br />创建比赛
+        </div>
+        <div id="search" class="mt50 pt5 pl15 pr15">
+            <form>
+                <input placeholder="搜索" />  
+            </form>
+        </div>
+        <div class="competition mb10">
+            <div class="tc pt10 pb10 competitionDate f1d1" style="border-bottom: 1px solid #cccccc;">2015-2-11 09:00-11:00</div>
+            <div>
+                <table class="pt10 pb10 pl20 pr20" width="100%">
+                    <tr>
+                        <td rowspan=3><img src="img/headimg.png" width="80px" height="80px" style="border-radius:50%" /></td>
+                        <td width="10px" rowspan=3></td>
+                        <td class="f1d1">首届清华大学校友羽毛球联谊赛</td>
+                    </tr>
+                    <tr>
+                        <td><img src="img/calendar.png" width="12px" height="16px" />&nbsp;&nbsp;赛制：两队PK赛</td>
+                    </tr>
+                    <tr>
+                        <td><img src="img/location_01.png" width="12px" height="16px" />&nbsp;&nbsp;地点：清华大学体育馆</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="competition mb10">
+            <div class="tc pt10 pb10 competitionDate f1d1" style="border-bottom: 1px solid #cccccc;">2015-2-11 09:00-11:00</div>
+            <div>
+                <table class="pt10 pb10 pl20 pr20" width="100%">
+                    <tr>
+                        <td rowspan=3><img src="img/headimg.png" width="80px" height="80px" style="border-radius:50%" /></td>
+                        <td width="10px" rowspan=3></td>
+                        <td class="f1d1">首届清华大学校友羽毛球联谊赛</td>
+                    </tr>
+                    <tr>
+                        <td><img src="img/calendar.png" width="12px" height="16px" />&nbsp;&nbsp;赛制：两队PK赛</td>
+                    </tr>
+                    <tr>
+                        <td><img src="img/location_01.png" width="12px" height="16px" />&nbsp;&nbsp;地点：清华大学体育馆</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="competition mb10">
+            <div class="tc pt10 pb10 competitionDate f1d1" style="border-bottom: 1px solid #cccccc;">2015-2-11 09:00-11:00</div>
+            <div>
+                <table class="pt10 pb10 pl20 pr20" width="100%">
+                    <tr>
+                        <td rowspan=3><img src="img/headimg.png" width="80px" height="80px" style="border-radius:50%" /></td>
+                        <td width="10px" rowspan=3></td>
+                        <td class="f1d1">首届清华大学校友羽毛球联谊赛</td>
+                    </tr>
+                    <tr>
+                        <td><img src="img/calendar.png" width="12px" height="16px" />&nbsp;&nbsp;赛制：两队PK赛</td>
+                    </tr>
+                    <tr>
+                        <td><img src="img/location_01.png" width="12px" height="16px" />&nbsp;&nbsp;地点：清华大学体育馆</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </body>
+</html>

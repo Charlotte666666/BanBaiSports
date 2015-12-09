@@ -1,0 +1,132 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css"/>
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var houseId=0;
+   var roomId=0;
+   
+   $(document).ready(function() {
+     initData();
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   function doSubmit(){
+	 var aoData=[];
+	 var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+     aoData.push( { "name": "room.house_id", "value": houseId } );
+	 aoData.push( { "name": "room.farea", "value": $("#farea").val() } );
+     aoData.push( { "name": "room.room_type", "value": $("#room_type").val() } );
+     aoData.push( { "name": "room.room_name", "value": $("#room_name").val() } );
+	 aoData.push( { "name": "room.price", "value": $("#price").val() } );
+	 aoData.push( { "name": "room.memo", "value": $("#memo").val() } );
+	 
+	 var xurl="/actions/HouseMain.action?insertTblHouseRoom";
+	 if ( optType == 'update' ) {
+	    aoData.push( { "name": "room.id", "value": roomId } );
+	    xurl="/actions/HouseMain.action?updateTblHouseRoom";
+	 }
+	 
+	 top.sendAjaxRequest(xurl,aoData,optCallback);
+   }
+   
+   function checkForm(){
+     var msg = "";
+     var temp = "";
+	 temp = document.getElementById("price").value
+	 if ( temp == '' ) {
+	   msg += "请输入房租价格<br>";
+	 } else if ( !IsFloat( temp ) ) {
+	   msg += "请输入数字类型的房租价格";
+	 }
+	 
+	 temp = document.getElementById("farea").value
+	 if ( temp == '' ) {
+	   msg += "请输入房间面积<br>";
+	 } else if ( !IsFloat( temp ) ) {
+	   msg += "请输入数字类型的房间面积";
+	 }
+     return msg;
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	        isSaveOK = true;
+			top.showInfoWinOK("操作成功");
+			parent.closeSubDialog();
+	    }else{
+	    	isSaveOK = false;
+	        top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+   function initData(){
+	   try{
+		   optType=top.getUrlParam(document.URL,"opt");
+		   houseId=top.getUrlParam(document.URL,"houseId");
+		   roomId=top.getUrlParam(document.URL,"roomId");
+		   $( "#tdRoomType" ).html( top.getCodeSelectHtml("HOUSE_ROOM_TYPE","room_type",false) );
+		   if ( optType == 'update' ) {
+		     var o=parent.getRoomInfo( roomId );
+			 if ( o != null ) {
+			    $("#room_type").val(o.room_type);
+				$("#farea").val(o.farea);
+				$("#price").val(o.price);
+				$("#room_name").val(o.room_name);
+				$("#memo").val(o.memo);
+			 }
+		   }
+	   }catch(e){
+	   }
+   }
+  </script>
+</head>
+<body>
+<br>
+<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+   <tr class="tr_data">
+    <td width="40%">房间类型</td>
+    <td width="60%" align="left" id="tdRoomType"></td>
+   </tr>
+   <tr class="tr_data">
+    <td>房间面积</td>
+    <td align="left"><input type="text" id="farea" value="" size="8" />平米</td>
+   </tr>
+   <tr class="tr_data">
+    <td>房租</td>
+    <td align="left"><input type="text" id="price" value="" size="8" />元/月</td>
+   </tr>
+   <tr class="tr_data">
+    <td>房间标题</td>
+    <td align="left"><input type="text" id="room_name" value="" size="8" /></td>
+   </tr>
+   <tr class="tr_data">
+    <td>房间备注</td>
+    <td align="left"><textarea id="memo" cols="30" rows="3"></textarea></td>
+   </tr>
+</table>
+   <table width="100%"><tr>
+		    <td width="100%" align="center"><span class="buttonTwo"><a href="javascript:doSubmit()">提交</a></span></td>
+  </tr></table>
+</body>
+</html>

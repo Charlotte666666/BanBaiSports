@@ -1,0 +1,169 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css"/>
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+  <script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var info_id=0;
+   var optType="";
+   
+   $(document).ready(function() {
+     initData();
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+              "isSaveOK":isSaveOK
+            };
+     top.setTempValue(obj);
+   }
+   
+   function doSubmit(){
+     var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+     var aoData=[];
+aoData.push( { "name": "custBuy.id", "value": info_id } );
+aoData.push( { "name": "custBuy.cust_name", "value": $("#cust_name").val() } );
+aoData.push( { "name": "custBuy.cust_status", "value": $("#cust_status").val() } );
+aoData.push( { "name": "custBuy.cust_tel", "value": $("#cust_tel").val() } );
+aoData.push( { "name": "custBuy.belong_area", "value": $("#belong_area").val() } );
+aoData.push( { "name": "custBuy.essence", "value": $("#essence").val() } );
+aoData.push( { "name": "custBuy.house_type", "value": $("#house_type").val() } );
+aoData.push( { "name": "custBuy.property_right", "value": $("#property_right").val() } );
+aoData.push( { "name": "custBuy.orientation", "value": $("#orientation").val() } );
+aoData.push( { "name": "custBuy.fitment", "value": $("#fitment").val() } );
+aoData.push( { "name": "custBuy.memo", "value": $("#memo").val() } );
+aoData.push( { "name": "custBuy.struct_farea1", "value": top.g_GetNumValue($("#struct_farea1").val()) } );
+aoData.push( { "name": "custBuy.struct_farea2", "value": top.g_GetNumValue($("#struct_farea2").val(),999999) } );
+aoData.push( { "name": "custBuy.price1", "value": top.g_GetNumValue($("#price1").val()) } );
+aoData.push( { "name": "custBuy.price2", "value": top.g_GetNumValue($("#price2").val(),999999) } );
+aoData.push( { "name": "custBuy.num_bedroom", "value": top.g_GetNumValue($("#num_bedroom").val()) } );
+aoData.push( { "name": "custBuy.num_livingroom", "value": top.g_GetNumValue($("#num_livingroom").val()) } );
+aoData.push( { "name": "custBuy.num_restroom", "value": top.g_GetNumValue($("#num_restroom").val()) } );
+aoData.push( { "name": "custBuy.balcony", "value": top.g_GetNumValue($("#balcony").val()) } );
+	 
+	 var xurl="/actions/HouseCust.action?updateTblCustBuy";
+	 if ( info_id == 0 ) {
+	   xurl="/actions/HouseCust.action?insertTblCustBuy";
+	 }
+     top.sendAjaxRequest(xurl,aoData,optCallback);
+   }
+   
+   function checkForm(){
+     var msg = "";
+	 msg += checkString($("#cust_name").val(),true,10,"客户姓名");
+	 msg += checkString($("#cust_tel").val(),true,20,"联系电话");
+     return msg;
+   }
+   
+   function optCallback(obj){
+       try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+			top.closeDialog();
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+   
+   function initData(){
+       optType=top.getUrlParam(document.URL,"optType");
+	   $( "#code_status" ).html( top.getCodeSelectHtml("CUST_STATUS","cust_status",true,'0') );
+	   $( "#code_belong_area" ).html( top.getCodeSelectHtml("HOUSE_BELONG","belong_area",true) );
+	   $( "#code_fitment" ).html( top.getCodeSelectHtml("HOUSE_FITMENT", "fitment", true ) );
+	   $( "#code_house_type" ).html( top.getCodeSelectHtml("HOUSE_TYPE", "house_type", true ) );
+	   $( "#code_essence" ).html( top.getCodeSelectHtml("HOUSE_ESSENCE", "essence", true ) );
+	   $( "#code_structure" ).html( top.getCodeSelectHtml("HOUSE_STRUCTURE", "structure", true ) );
+	   $( "#code_property_right" ).html( top.getCodeSelectHtml("PROPERTY_TYPE", "property_right", true ) );
+	   $( "#code_orientation" ).html( top.getCodeSelectHtml("HOUSE_ORIENTATION", "orientation", true ) );
+	   if ( optType=='update' ) {
+	     info_id=top.getUrlParam(document.URL,"id");
+		 $("#cust_id").val( info_id );
+		 var aoData=[];
+         aoData.push( { "name": "custBuy.id", "value": info_id } );
+		 top.sendAjaxRequest("/actions/HouseCust.action?getTblCustBuy",aoData,infoCallback);
+	   } else {
+	     $("#tr_update_time").hide();
+	   }
+    }
+	
+	function infoCallback(obj){
+	   try{
+        if ( obj.status == true ){
+		  var o=obj.body;
+$("#cust_name").val(o.cust_name);
+$("#cust_status").val(o.cust_status);
+$("#cust_tel").val(o.cust_tel);
+$("#belong_area").val(o.belong_area);
+$("#essence").val(o.essence);
+$("#house_type").val(o.house_type);
+$("#property_right").val(o.property_right);
+$("#orientation").val(o.orientation);
+$("#fitment").val(o.fitment);
+$("#memo").val(o.memo);
+$("#struct_farea1").val( o.struct_farea1);
+$("#struct_farea2").val( (o.struct_farea2==999999)?"":o.struct_farea2 );
+$("#price1").val( o.price1);
+$("#price2").val( (o.price2==999999)?"":o.price2 );
+$("#num_bedroom").val( o.num_bedroom);
+$("#num_livingroom").val( o.num_livingroom);
+$("#num_restroom").val( o.num_restroom);
+$("#balcony").val( o.balcony);
+$("#cust_id").val( o.id );
+$("#td_update_time").html( top.getTimeStr( o.update_time ) );
+
+		}else{
+          top.showInfoWinError("操作失败");
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+  </script> 
+</head>
+<body>
+<br>
+<table border="1" cellpadding="1" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+    <tr class="tr_data"><td align="right">客户编号：</td><td align="left"><input type="text" size="10" id="cust_id" value="系统自动生成" disabled="true"></input></td></tr>
+	<tr class="tr_data"><td align="right">客户状态：</td><td align="left" id="code_status"></td></tr>
+	<tr class="tr_data"><td align="right">客户姓名：</td><td align="left"><input type="text" size="10" id="cust_name" value=""></input></td></tr>
+	<tr class="tr_data"><td align="right">联系电话：</td><td align="left"><input type="text" size="10" id="cust_tel" value=""></input></td></tr>
+	<tr class="tr_data"><td align="right">意向小区：</td><td align="left" id="code_belong_area"></td></tr>
+	<tr class="tr_data"><td align="right">房屋性质：</td><td align="left" id="code_essence"></td></tr>
+	<tr class="tr_data"><td align="right">房屋类型：</td><td align="left" id="code_house_type"></td></tr>
+	<tr class="tr_data"><td align="right">产权：</td><td align="left" id="code_property_right"></td></tr>
+	<tr class="tr_data"><td align="right">朝向：</td><td align="left" id="code_orientation"></td></tr>
+	<tr class="tr_data"><td align="right">装修：</td><td align="left" id="code_fitment"></td></tr>
+	<tr class="tr_data"><td align="right">户型：</td><td align="left">
+	  <input type="text" size="6" id="num_bedroom" value=""></input>室<input type="text" size="6" id="num_livingroom" value=""></input>厅
+	  <input type="text" size="6" id="num_restroom" value=""></input>卫<input type="text" size="6" id="balcony" value=""></input>阳台
+	</td></tr>
+	<tr class="tr_data"><td align="right">面积：</td><td align="left"><input type="text" size="10" id="struct_farea1" value=""></input>-<input type="text" size="10" id="struct_farea2" value=""></input>平方米</td></tr>
+	<tr class="tr_data"><td align="right">预算：</td><td align="left"><input type="text" size="10" id="price1" value=""></input>-<input type="text" size="10" id="price2" value=""></input>万</td></tr>
+	<tr id="tr_update_time" class="tr_data"><td align="right">更新时间：</td><td align="left" id="td_update_time"></td></tr>
+    <tr class="tr_data">
+       <td align="right">备注：</td><td align="left"><textarea id="memo" cols="50" rows="5"></textarea></td>
+    </tr>
+</table>
+<br/>
+<p align="center">
+   <table><tr>
+            <td><span class="buttonTwo"><a href="javascript:doSubmit()">提交</a></span></td>
+   </tr></table>
+</p>
+</body>
+</html>

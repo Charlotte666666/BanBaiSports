@@ -1,0 +1,444 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>积分图表分析</title>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css"	href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"	src="../../js/Calendar3.js"></script>
+       <script type="text/javascript" src="../../js/echart/echarts.js"></script>
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var record_source=[];
+			var source_name=[];
+			var date="";
+			var currentMonthList=[];
+			var lastMonthList=[];
+			var user=top.getCurrentUser();
+			var n=0;
+			var m=0;
+			var data1=[];
+			var data2=[];
+			require.config({
+				paths: {
+					echarts: '../../js/echart'
+				}
+            });
+			
+			$(document).ready(function() {
+			   date=new Date();
+			   var year=date.getFullYear();
+			   var month=date.getMonth()+1;
+			   var d=year+"-";
+			   if(month<10){
+			     d+="0"+month+"-";
+			   }else{
+			     d+=month+"-";
+			   }
+			   var last_day=getlastday(year,month);
+			   $("#time1").val(d+"01");
+			   $("#time2").val(d+last_day);
+			   $("#tdrecord_source").html(top.getCodeSelectHtml("RECORD_SOURCE","record_source",false));
+			   $("#record_source option").each(function(){
+			     record_source.push($(this).val());
+				 source_name.push(top.getCodeName("RECORD_SOURCE",$(this).val()));
+			   });
+			   
+			   getIntegrationSummaryList(0);
+			   
+			   getIntegrationChartData(0);
+			   
+			} );
+	
+    //获取每月的最后一天	
+	function getlastday(year,month){   	
+	 var new_year = year;    //取当前地年份      
+	 var new_month = month++;//取下一个月地第一天，方便计算（最后一天不固定）      
+	 if(month>12)            //如果当前大于12月，则年份转到下一年      
+	 {      
+	  new_month -=12;        //月份减      
+	  new_year++;            //年份增      
+	 }      
+	 var new_date = new Date(new_year,new_month,1);                //取当年当月中地第一天     
+	 return (new Date(new_date.getTime()-1000*60*60*24)).getDate();//获取当月最后一天日期     
+	}      
+		
+  function getLastMonthYestday(d){  
+     var daysInMonth = new Array([0],[31],[28],[31],[30],[31],[30],[31],[31],[30],[31],[30],[31]);  
+     var strYear = d.getFullYear();    
+     var strDay = d.getDate();    
+     var strMonth = d.getMonth()+1;  
+     if(strYear%4 == 0 && strYear%100 != 0){  
+        daysInMonth[2] = 29;  
+     }  
+     if(strMonth - 1 == 0)  
+     {  
+        strYear -= 1;  
+        strMonth = 12;  
+     }  
+     else  
+     {  
+        strMonth -= 1;  
+     }  
+     strDay = daysInMonth[strMonth] >= strDay ? strDay : daysInMonth[strMonth];  
+     if(strMonth<10)    
+     {    
+        strMonth="0"+strMonth;    
+     }  
+     if(strDay<10)    
+     {    
+        strDay="0"+strDay;    
+     }  
+     datastr = strYear+"-"+strMonth+"-"+strDay;  
+     return datastr;  
+  }
+
+  function getIntegrationSummaryList(num){
+      n=num;
+      var aoData=[];
+	  aoData.push( {"name":"item.employee_code","value":user.userCode } );
+	  aoData.push( {"name":"item.dept","value":user.deptId } );
+	  aoData.push( {"name":"item.employee_name","value":user.userName } );
+	  aoData.push( {"name":"isPersonal","value":"personal" } );
+	  if(n==0){
+	    aoData.push( {"name":"time1","value":$("#time1").val() } );
+	    aoData.push( {"name":"time2","value":$("#time2").val() } );
+	  }
+	  if(n==1){
+	    var time=new Date(getLastMonthYestday(new Date($("#time1").val())));
+		var year=time.getFullYear();
+		var month=time.getMonth()+1;
+		var d=year+"-";
+
+		if(month<10){
+			d+="0"+month+"-";
+		}else{
+			d+=month+"-";
+		}
+		var last_day=getlastday(year,month);
+		aoData.push( { "name":"time1","value":d+"01" } );
+	    aoData.push( { "name":"time2","value":d+last_day } );
+	  }
+	  
+	  top.sendAjaxRequest("/actions/IntegrationItem.action?getIntegrationSummaryList",aoData,getIntegrationSummmaryListCallback);
+  }
+  
+  function getIntegrationSummmaryListCallback(obj){
+    var ht="";
+    if(n==0){
+	  ht="<tr><td colspan='3' align='center' style='font-weight:bold;'>本月</td></tr>";
+	}
+	if(n==1){
+	  ht="<tr><td colspan='3' align='center' style='font-weight:bold;'>上月</td></tr>";
+	}
+    ht+="<tr class='tr_data' height='25'><td algin='center'>分数</td><td algin='center'>分公司排名</td><td algin='center'>总公司排名</td></tr>";
+	if(obj.body){
+	    var o=obj.body;
+	    ht+="<tr class='tr_data' height='25'><td algin='center'>"+o.score+"</td><td algin='center'>"+o.filiale_rank+"</td><td algin='center'>"+o.all_rank+"</td></tr>";
+	  }else{
+	    ht+="<tr class='tr_data' height='25'><td colspan='3' align='center'>无</td></tr>";
+	}
+	if(n==0){
+	  $("#currentIntegrationList").html(ht);
+	  getIntegrationSummaryList(1);
+	}
+	if(n==1){
+	  $("#lastIntegrationList").html(ht);
+	}
+  }
+  
+  function getIntegrationChartData(type){
+    m=type;
+    var aoData=[];
+	aoData.push( { "name":"item.employee_code","value":user.userCode } );
+	aoData.push( { "name":"item.employee_name","value":user.userName } );
+	aoData.push( { "name":"item.dept","value":user.deptId } );
+	if(m==0){
+	    aoData.push( { "name":"time1","value":$("#time1").val() } );
+	    aoData.push( { "name":"time2","value":$("#time2").val() } );
+	}
+	if(m==1){
+	    var time=new Date(getLastMonthYestday(new Date($("#time1").val())));
+		var year=time.getFullYear();
+		var month=time.getMonth()+1;
+		var d=year+"-";
+		if(month<10){
+			d+="0"+month+"-";
+		}else{
+			d+=month+"-";
+		}
+		var last_day=getlastday(year,month);
+		aoData.push( { "name":"time1","value":d+"01" } );
+	    aoData.push( { "name":"time2","value":d+last_day } );
+	}
+	
+	top.sendAjaxRequest("/actions/IntegrationItem.action?getIntegrationChartData",aoData,getDataCallback);
+  }
+  
+  function getDataCallback(obj){
+    //清除数据
+	if(m==0){
+	  data1=[];
+	}
+	if(m==1){
+	  data2=[];
+	}
+	for(var i=0;i<record_source.length;i++){
+        if(obj.status==true){
+	        if(obj.body.length>0){
+	           var o=obj.body;
+		       var score=0;
+			   for(var j=0;j<o.length;j++){
+			     if(record_source[i]==o[j].record_source){
+			      score=o[j].score;
+			     }
+			   }
+			  var item={
+				  "value":score,
+				  "name":top.getCodeName("RECORD_SOURCE",record_source[i])
+			  };
+			  if(m==0){
+			    data1.push(item);
+			  }
+			  if(m==1){
+			    data2.push(item);
+			  }
+			 
+		 }else{
+		   var item={
+				  "value":0,
+				  "name":top.getCodeName("RECORD_SOURCE",record_source[i])
+			  };
+			if(m==0){
+			  data1.push(item);
+            }
+			if(m==1){
+			  data2.push(item);
+			}
+		    
+		 }
+	   }else{
+	     top.showInfoWinError("操作失败！");
+	   }
+	 }
+	if(m==0){
+	   drawChart1();
+	   getIntegrationChartData(1);
+	}
+	if(m==1){
+	   drawChart2();
+	}
+  }
+
+	
+  function doQuery(){ 
+    getIntegrationSummaryList(0);
+	getIntegrationChartData(0);
+  }  
+			
+  function drawChart1(){
+	require(
+            [
+			    'echarts',
+                'echarts/chart/pie',
+            ],
+    function (ec) {
+		var myChart = ec.init(document.getElementById('currentIntegrationChart'));
+		var option = {
+			title : {
+				text: "本月积分分析",
+				x:'center'
+			},
+			tooltip : {
+				trigger: 'item',
+				formatter: "{a} <br/>{b} : {c} ({d}%)"
+			},
+			legend: {
+				orient : 'vertical',
+				x : 'left',
+				data:source_name
+			},
+			toolbox: {
+				show : true,
+				feature : {
+					mark : {show: true},
+					dataView : {show: true, readOnly: false},
+					magicType : {
+						show: true, 
+						type: ['pie', 'funnel'],
+						option: {
+							funnel: {
+								x: '25%',
+								width: '50%',
+								funnelAlign: 'left',
+								max: 1548
+							}
+						}
+					},
+					restore : {show: true},
+					saveAsImage : {show: true}
+				}
+			},
+			calculable : true,
+			series : [
+				{
+					name:'积分来源',
+					type:'pie',
+					radius : '55%',
+					center: ['50%', '60%'],
+					data:data1
+				}
+			]
+		};
+                    
+    
+	myChart.setOption(option, true);
+   });
+  }
+  
+  function drawChart2(){
+	require(
+            [
+			    'echarts',
+                'echarts/chart/pie',
+            ],
+    function (ec) {
+		var myChart = ec.init(document.getElementById('lastIntegrationChart'));
+		var option = {
+			title : {
+				text: "上月积分分析",
+				x:'center'
+			},
+			tooltip : {
+				trigger: 'item',
+				formatter: "{a} <br/>{b} : {c} ({d}%)"
+			},
+			legend: {
+				orient : 'vertical',
+				x : 'left',
+				data:source_name
+			},
+			toolbox: {
+				show : true,
+				feature : {
+					mark : {show: true},
+					dataView : {show: true, readOnly: false},
+					magicType : {
+						show: true, 
+						type: ['pie', 'funnel'],
+						option: {
+							funnel: {
+								x: '25%',
+								width: '50%',
+								funnelAlign: 'left',
+								max: 1548
+							}
+						}
+					},
+					restore : {show: true},
+					saveAsImage : {show: true}
+				}
+			},
+			calculable : true,
+			series : [
+				{
+					name:'积分来源',
+					type:'pie',
+					radius : '55%',
+					center: ['50%', '60%'],
+					data:data2
+				}
+			]
+		};
+                    
+    
+	myChart.setOption(option, true);
+   });
+  }
+			
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+		    <label id="tdrecord_source" style="display:none;"></label>
+			<div style='border: 1px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="110px">
+							&nbsp;积分分析&nbsp;
+						</td>
+						<td align="right">
+							<div class="buttonDivTwo">
+								<a href="javascript:doQuery()">查询</a>
+							</div>
+						</td>
+						<td width="2px">
+							&nbsp;
+						</td>
+					</tr>
+				</table>
+				<table width="100%" align="center" cellpadding="1px"
+					cellspacing="1px" border="0">
+					<tr class="tr_data">
+						<td align="right">
+							日期:
+						</td>
+						<td align="left">
+							<input type="text" id="time1"  onclick="top.selectDate(this);"  size="10" />--<input type="text" id="time2"  onclick="top.selectDate(this);"  size="10" />
+						</td>
+					</tr>
+				</table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0"
+				border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									&nbsp;查询结果&nbsp;
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<table width="100%">
+			   <tr>
+			     <td width="50%" valign="top" align="center">
+				    <table id="currentIntegrationList" width="100%" border="1" cellpadding="3" cellspacing="1" style="background-color: #b9d8f3;">
+					  
+					</table>
+				 </td>
+				 <td width="50%" valign="top" align="center">
+				    <table id="lastIntegrationList" width="100%" border="1" cellpadding="3" cellspacing="1" style="background-color: #b9d8f3;">
+					   
+					</table>
+				 </td>
+			   </tr>
+			   <tr>
+			     <td width="100%" valign="top" colspan='2'>
+				    <div id="currentIntegrationChart" style="height:500px;width:1000px">
+					   
+				
+					   
+					</div>
+				 </td>
+			   </tr>
+			   <tr>
+			     <td width="100%" valign="top" colspan='2'>
+				    <div id="lastIntegrationChart" style="height:500px;width:1000px">
+					   
+				
+					   
+					</div>
+				 </td>
+			   </tr>
+			</table>
+		</div>
+	</body>
+</html>

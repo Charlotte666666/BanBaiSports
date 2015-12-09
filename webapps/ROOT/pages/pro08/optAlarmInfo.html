@@ -1,0 +1,116 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<link rel="stylesheet" type="text/css" href="common.css">
+<script src="../../js/jquery-1.7.2.min.js"></script>
+<script src="../../js/ui/jquery.ui.core.js"></script>
+<script src="../../js/ui/jquery.ui.widget.js"></script>
+<script src="../../js/ui/jquery.ui.dialog.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+
+<script type="text/javascript">
+   var isSaveOK=false;
+   var userCode="";
+   var alarmType=0;
+   var id_value="";
+   var alarmTime=0;
+   
+   $(document).ready(function() {
+     initData();
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   function doSaveSubmit(s){
+	 var aoData=[];
+	 var isWrong=top.getRadioValue( document.getElementsByName("is_wrong") );
+	 aoData.push( { "name": "info.alarm_type", "value": (isWrong=="1"?"99":alarmType) } );
+	 aoData.push( { "name": "info.memo", "value": $("#memo").val()} );
+	 aoData.push( { "name": "info.is_show", "value":s} );
+	 aoData.push( { "name": "info.id", "value": id_value } );
+	 top.sendAjaxRequest("/actions/ProMonitor.action?updateProAlarmInfo",aoData,optCallback);
+   }
+ 
+   function checkForm(){
+     var msg = "";
+	 msg += checkString($("#memo").val(),true,1024,"备注");
+     return msg;
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功！");
+		 top.closeDialog();
+	    }else{
+	     isSaveOK = false;
+	     top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		 top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   function initData(){
+	   try{
+		   id_value = top.getUrlParam(document.URL,"id");
+		   userCode=top.getUrlParam(document.URL,"userCode");
+		   alarmTime=top.getUrlParam(document.URL,"alarmTime");
+  	       alarmType=top.getUrlParam(document.URL,"alarmType");
+		   $("#user_code").html( userCode );
+		   $("#alarm_time").html( top.getTimeStr(alarmTime, false ) );
+		   $("#alarm_type").html( top.getCodeName( "ALARM_TYPE", alarmType ) );
+	   }catch(e){
+		   top.showInfoWinError(e.message);
+	   }
+   }
+  
+  </script> 
+</head>
+<body>
+<br/>
+		<table border="1" cellpadding="3" cellspacing="1" width="100%" height="70%" align="center" style="background-color: #b9d8f3;">
+				<tr class="tr_data">
+					<td>人员编号:</td>
+					<td align='left' id="user_code"></td>
+				</tr>
+				<tr class="tr_data">
+					<td>报警时间:</td>
+					<td align="left" id="alarm_time"></td>
+				</tr>
+				<tr class="tr_data">
+					<td>报警类型:</td>
+					<td align="left" id="alarm_type"></td>
+				</tr>
+				<tr class="tr_data">
+					<td>备注:</td>
+					<td align='left'><textarea id="memo" cols="70" rows="5"></textarea></td>
+				</tr>
+				<tr class="tr_data">
+					<td>是否忽略:</td>
+					<td align='left'><label for="r1"><input name="is_wrong" type="radio" value="1" id="r1">是</label>&nbsp;&nbsp;&nbsp;&nbsp;<label for="r2"><input name="is_wrong" type="radio" checked value="0" id="r2">否</label></td>				
+				</tr>
+		</table>
+		<br/><br/>
+		<p align="center">
+		<table><tr>
+				<!--td><div class="buttonDivSix"><a href="javascript:doSaveSubmit(1)">保存</a></div></td-->
+				<td><div class="buttonDivSix"><a href="javascript:doSaveSubmit(0)">保存并不再提醒</a></div></td>
+				<td><div class="buttonDivSix"><a href="javascript:doCancel()">取消</a></div></td>
+		</tr></table>
+</p>
+<br/>
+
+</body>
+</html>

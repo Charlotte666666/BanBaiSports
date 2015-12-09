@@ -1,0 +1,685 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link type="text/css" rel="stylesheet" href="../../css/layout-default-latest.css" />
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery.layout-latest.min.js" ></script>
+	<script type="text/javascript" src="../../js/SimpleMap.js"></script>
+	<script type="text/javascript" src="../../js/checkForm.js"></script>
+	<script type="text/javascript" src="search.js" ></script>
+<script type="text/javascript">
+var oTable=null;
+var myLayout;
+var currentTypeId="";// 当前商品列表检索的分类
+var currentTypeId1="";// 当前第一分类ID
+var currentTypeId2="";// 当前第二分类ID
+var currentTypeId3="";// 当前第一三分类ID
+var createTypeLevel=1;
+var lev1Size=0;
+var lev2Size=0;
+var lev3Size=0;
+var typeArr=[];
+var currentOptTypeId="";
+var goodsArr=[];//商品列表
+var cartGoodsMap=new SimpleMap();//购物车商品
+
+function GoodsObj(){
+   this.goods_id=0;
+   this.type1=-1;
+   this.type2=-1;
+   this.type3=-1;
+   this.amount=0;
+   this.price=0;
+   this.goodsName="";
+}
+
+$(document).ready( function() {
+	myLayout = $('body').layout({
+			closable:					true
+		,	resizable:					true
+		,	slidable:					true
+		,	livePaneResizing:			true
+		,	north__initClosed:	true
+		,	north__size:			    0
+		,	north__resizable:			false
+		,	north__slidable:			false
+		,	north__togglerLength_closed: '100%'
+		,   north__spacing_open:        0
+		,	north__spacing_closed:		0
+		,	south__initClosed:	true
+		,	south__size:				0
+		,	south__resizable:			false
+		,	south__spacing_open:		0
+		,	south__spacing_closed:		0
+		,	east__initClosed:	false
+		,	east__size:					530
+		,	east__resizable:			true
+		,	east__spacing_open:		    0
+		,	east__spacing_closed:		0
+		,	east__minSize:				0
+		,	east__maxSize:				0 
+		,	center__minWidth:			100
+		,	west__size:					346
+		,	west__resizable:			true
+		,	west__minSize:				250
+		,	west__maxSize:				467 
+		,	west__animatePaneSizing:	false
+		,	west__fxSpeed_size:			"fast"
+		,	west__fxSpeed_open:			1000
+		,	west__fxSettings_open:		{ easing: "easeOutBounce" }
+		,	west__fxName_close:			"none"
+		,	west__showOverflowOnHover:	true
+		,	stateManagement__enabled:	false
+		,	showDebugMessages:			false
+		});
+ 
+    var iaoColumns= [
+       { "sTitle": "商品名称", "mDataProp": "goods_id", "sWidth": "70%",
+          "fnRender": function ( oObj ) {
+		       goodsArr[goodsArr.length]=oObj.aData;
+               return '<span id="span_'+oObj.aData.goods_id+'" >'+oObj.aData.name+'</span>';
+          },
+          "bUseRendered": false
+        },
+        { "sTitle": "单位", "mDataProp": "unit", "sWidth": "15%","sClass": "center","bSortable":false,
+		  "fnRender": function ( oObj ) {
+               return top.getCodeName( "ERP_GOODS_UNIT", oObj.aData.unit );
+          },
+          "bUseRendered": false
+		},
+		{ "sTitle": "规格", "mDataProp": "specification", "sWidth": "15%","sClass": "center","bSortable":false,"bUseRendered": false},
+    ];
+
+    var surl=top.getUrlBase()+"/actions/ProGoods.action?getGoodsList";
+	oTable = $('#goodsTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"sScrollY": ($(window).height()-100)+"px",
+                    "bScrollCollapse": true,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+								initGoodsTrAction();
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					  goodsArr=[];
+	                  aoData.push( { "name": "info.type1_id", "value": (currentTypeId1==''?-1:currentTypeId1) } );
+	                  aoData.push( { "name": "info.type2_id", "value": (currentTypeId2==''?-1:currentTypeId2) } );
+					  aoData.push( { "name": "info.type3_id", "value": (currentTypeId3==''?-1:currentTypeId3) } );
+					  aoData.push( { "name": "info.status", "value": -1 } );
+  			        },
+			        "sDom": "frtp",
+				    "aoColumns": iaoColumns
+	} );
+	
+	initTypeList();
+	$("#goodsCartListDiv").height( $(window).height() - 260 );
+	var cu=top.getCurrentUser();
+	if ( cu ) {
+	    $("#purchaser").val( cu.userCode );
+		$("#purchaserName").val( cu.userName );
+	}
+});
+
+function initGoodsTrAction(){
+    var r=null;
+    for (var i=0;i<goodsArr.length;i++){
+	    r=$("#span_"+goodsArr[i].goods_id).parent().parent();
+	    r.attr("goodsId",goodsArr[i].goods_id);
+		r.attr("goodsName",goodsArr[i].name);
+		r.attr("type1",goodsArr[i].type1_id);
+		r.attr("type2",goodsArr[i].type2_id);
+		r.attr("type3",goodsArr[i].type3_id);
+		r.attr("specification",goodsArr[i].specification);
+		r.attr("unit",goodsArr[i].unit);
+	    r.click( function() {
+            addGoodsToCart($(this).attr("goodsId"),$(this).attr("goodsName"),$(this).attr("unit"),$(this).attr("specification")
+			 ,$(this).attr("type1"),$(this).attr("type2"),$(this).attr("type3"));
+        });
+	}
+}
+
+function doSelectedGoods(o){
+    if ( o ) {
+	  addGoodsToCart( o.goods_id, o.name, o.unit, o.specification, o.type1_id, o.type2_id, o.type3_id );
+	}
+}
+
+function addGoodsToCart(gId,gName,gUnit,gSpecification,type1,type2,type3){
+    if ( document.getElementById("goodsCartTR_"+gId) ) {
+	  changeGoodsCount(1,gId);
+	  return ;
+	}
+	var ht='<tr id="goodsCartTR_'+gId+'"><td width="35%" align="left" class="goodsCartTd">';
+	ht+='<img src="../../img/delete.gif" title="从列表里移除" style="padding-top:2px;cursor:pointer" onclick="deleteGoodsFromCart('+gId+')"/>&nbsp;'+gName+'</td>';
+	ht+='<td width="11%" align="left" class="goodsCartTd">'+top.getCodeName( "ERP_GOODS_UNIT", gUnit )+'</td>';
+	ht+='<td width="12%" align="left" class="goodsCartTd">'+gSpecification+'</td>';
+	ht+='<td width="12%" align="left" class="goodsCartTd"><input type="text" id="goodsCartPrice_'+gId+'" onblur="doInputGoodsPrice('+gId+')" size="3" value="" /></td>';
+	ht+='<td width="30%" align="center" class="goodsCartTd">';
+	ht+='<img src="../../img/btn_last.gif" style="padding-top:5px;cursor:pointer" onclick="changeGoodsCount(-1,'+gId+')"/>';
+	ht+='<input type="text" onblur="doInputGoodsCount('+gId+')" id="goodsCartCount_'+gId+'" value="1" style="width:50px;"/>';
+	ht+='<img src="../../img/btn_next.gif" style="padding-top:5px;cursor:pointer" onclick="changeGoodsCount(1,'+gId+')"/>';
+	ht+='</td></tr>';
+	var o=new GoodsObj();
+	o.goods_id=gId;
+    o.type1=type1;
+    o.type2=type2;
+    o.type3=type3;
+    o.amount=1;
+    o.price=0;
+	o.goodsName=gName;
+	o.unit=gUnit;
+	o.specification=(gSpecification=='')?" ":gSpecification;
+	cartGoodsMap.put(gId, o);
+	$("#goodsCartList").append( ht );
+	computCartTotal();
+}
+
+function doInputGoodsCount(goodsId){
+    if ( !IsFloat( $("#goodsCartCount_"+goodsId).val() ) ) {
+	  $("#goodsCartCount_"+goodsId).val(1);
+	}
+	if ( Number($("#goodsCartCount_"+goodsId).val()) <= 0 ) {
+	  $("#goodsCartCount_"+goodsId).val(1);
+	}
+    var newCount = Number( $("#goodsCartCount_"+goodsId).val() );
+	$("#goodsCartCount_"+goodsId).val( newCount );
+	var o=cartGoodsMap.get(goodsId);
+	if ( o ) {
+	  o.amount = newCount;
+	  cartGoodsMap.put(goodsId, o);
+	}
+	computCartTotal();
+}
+
+function doInputGoodsPrice(goodsId){
+   if ( !IsFloat( $("#goodsCartPrice_"+goodsId).val() ) ) {
+	  $("#goodsCartPrice_"+goodsId).val(0);
+	}
+    var newPrice = Number( $("#goodsCartPrice_"+goodsId).val() );
+	var o=cartGoodsMap.get(goodsId);
+	if ( o ) {
+	  o.price = newPrice;
+	  cartGoodsMap.put(goodsId, o);
+	}
+	computCartTotal();
+}
+
+function changeGoodsCount(a,goodsId){
+    var newCount = Number( $("#goodsCartCount_"+goodsId).val() ) + a;
+	if ( newCount > 0 ) {
+	    $("#goodsCartCount_"+goodsId).val( newCount );
+		var o=cartGoodsMap.get(goodsId);
+		if ( o ) {
+		  o.amount = newCount;
+		  cartGoodsMap.put(goodsId, o);
+		}
+		computCartTotal();
+	}
+}
+
+function deleteGoodsFromCart(goodsId){
+    $("#goodsCartTR_"+goodsId).remove();
+    cartGoodsMap.remove(goodsId);
+	computCartTotal();
+}
+//计算合计
+function computCartTotal(){
+    var keys=cartGoodsMap.keySet();
+	var o=null;
+	var total=0;
+	for(var i=0;i<keys.length;i++ ){
+		o = cartGoodsMap.get(keys[i]);
+		total+=Number(o.amount)*Number(o.price);
+	}
+	$("#cartTotal").val( total );
+}
+
+function initTypeList(){
+    typeArr = top.getCacheGoodsType();
+    var ht1='';
+	var ht2='';
+	var ht3='';
+	lev1Size=0;
+    lev2Size=0;
+    lev3Size=0;
+	for (var i=0;i<typeArr.length;i++) {
+	    if ( typeArr[i].type_level == 1 ) {
+		  ht1+='<li class="goodsTypeLable" typeLevel="1" id="'+typeArr[i].type_id+'">'+typeArr[i].name+'</li>';
+		  lev1Size++;
+		} else if ( typeArr[i].type_level == 2 && (typeArr[i].parent_id == currentTypeId1 || currentTypeId1=='') ) {
+		  lev2Size++;
+		  if ( currentTypeId1=='' && lev2Size > 12 ) continue;
+		  ht2+='<li class="goodsTypeLable" typeLevel="2" id="'+typeArr[i].type_id+'">'+typeArr[i].name+'</li>';
+		} else if ( typeArr[i].type_level == 3 && (typeArr[i].parent_id == currentTypeId2 || currentTypeId2=='') 
+		          && ( currentTypeId1 == '' || typeArr[i].pp_id == currentTypeId1 ) ){
+		  lev3Size++;
+		  if ( currentTypeId2=='' && lev3Size > 12 ) continue;
+		  ht3+='<li class="goodsTypeLable" typeLevel="3" id="'+typeArr[i].type_id+'">'+typeArr[i].name+'</li>';
+		}
+	}
+	
+	$( "#sortable1" ).html( ht1 );
+	$( "#sortable2" ).html( ht2 );
+	$( "#sortable3" ).html( ht3 );
+	
+	$( "#sortable1" ).sortable({
+	     stop: function( event, ui ) {
+		    sortTypes( document.getElementById("sortable1").childNodes );
+		 }
+    });
+	$( "#sortable2" ).sortable({
+	     stop: function( event, ui ) {
+		    sortTypes( document.getElementById("sortable2").childNodes );
+		 }
+    });
+	$( "#sortable3" ).sortable({
+	     stop: function( event, ui ) {
+		    sortTypes( document.getElementById("sortable3").childNodes );
+		 }
+   });
+	
+	addEffect();
+}
+
+function reDrawType(lev){
+    var ht2='';
+	var ht3='';
+	if ( lev == 2 ) lev2Size=0;
+    if ( lev == 3 ) lev3Size=0;
+	var s3=0;
+	for (var i=0;i<typeArr.length;i++) {
+	    if ( lev == 2 && typeArr[i].type_level == 2 && typeArr[i].parent_id == currentTypeId1 ) {
+		  lev2Size++;
+		  ht2+='<li class="goodsTypeLable" typeLevel="2" id="'+typeArr[i].type_id+'">'+typeArr[i].name+'</li>';
+		} else if ( lev == 2 && typeArr[i].type_level == 3 && typeArr[i].pp_id == currentTypeId1 && currentTypeId2 == '' ) {
+		  s3++;
+		  if ( s3 > 20 ) continue;
+		  ht3+='<li class="goodsTypeLable" typeLevel="3" id="'+typeArr[i].type_id+'">'+typeArr[i].name+'</li>';
+		} else if ( lev == 3 && typeArr[i].type_level == 3 && typeArr[i].parent_id == currentTypeId2 ){
+		  lev3Size++;
+		  ht3+='<li class="goodsTypeLable" typeLevel="3" id="'+typeArr[i].type_id+'">'+typeArr[i].name+'</li>';
+		}
+	}
+	if ( lev == 2 ) {
+	  $( "#sortable2" ).html( ht2 );
+	  $( "#sortable2" ).sortable({
+	     stop: function( event, ui ) {
+		    sortTypes( document.getElementById("sortable2").childNodes );
+		 }
+	  });
+	}
+	$( "#sortable3" ).html( ht3 );
+	$( "#sortable3" ).sortable({
+	     stop: function( event, ui ) {
+		    sortTypes( document.getElementById("sortable3").childNodes );
+		 }
+	  });
+	addEffect();
+}
+
+function sortTypes(nodes){
+    try{
+	  var ids="";
+	  for ( var i=0;i<nodes.length;i++ ) {
+	    ids+=nodes[i].id+",";
+	  }
+	  var aoData=[];
+	  aoData.push( { "name": "ids", "value": ids } );
+	  top.sendAjaxRequest("/actions/ProGoods.action?orderGoodsTypes",aoData,null);
+	}catch(e){
+	}
+}
+
+function addEffect(){
+    $(".goodsTypeLable").mouseover(function(){
+	    if ( currentTypeId1 == $(this).attr("id") || currentTypeId2 == $(this).attr("id") || currentTypeId3 == $(this).attr("id") ) return ;
+        $(this).css("color","#FF8000");
+    });
+	$(".goodsTypeLable").mouseout(function(){
+        if ( currentTypeId1 == $(this).attr("id") || currentTypeId2 == $(this).attr("id") || currentTypeId3 == $(this).attr("id") ) return ;
+		$(this).css("color", "blue");
+    });
+	$(".goodsTypeLable").click(function(){
+	    if ( currentTypeId == $(this).attr("id") ) return ;
+		if ( $(this).attr("typeLevel") == 1 ) {
+		  $("#"+currentTypeId1).css("color", "blue");
+		  currentTypeId1 = $(this).attr("id");
+		  $("#"+currentTypeId2).css("color", "blue");
+		  currentTypeId2 = "";
+		  $("#"+currentTypeId3).css("color", "blue");
+		  currentTypeId3 = "";
+		  reDrawType(2);
+		} else if ( $(this).attr("typeLevel") == 2  ) {
+		  $("#"+currentTypeId2).css("color", "blue");
+		  currentTypeId2 = $(this).attr("id");
+		  $("#"+currentTypeId3).css("color", "blue");
+		  currentTypeId3 = "";
+  	      var o = top.getTypeById(currentTypeId2);
+		  if ( o != null ) {
+		    if ( currentTypeId1 != o.parent_id ) {
+		     currentTypeId1 = o.parent_id;
+			 reDrawType(1);
+		     reDrawType(2);
+			}
+		  }
+		  reDrawType(3);
+		} else {
+		  $("#"+currentTypeId3).css("color", "blue");
+		  currentTypeId3 = $(this).attr("id");
+		  if ( !currentTypeId3 ) currentTypeId3="";
+	      var o = top.getTypeById(currentTypeId3);
+		  if ( o != null ) {
+		     if ( currentTypeId2 != o.parent_id || currentTypeId1 != o.pp_id ) {
+		      currentTypeId1 = o.pp_id;
+			  currentTypeId2 = o.parent_id;
+			  reDrawType(1);
+			  reDrawType(2);
+			  reDrawType(3);
+		     }
+		  }
+		}
+		currentTypeId = $(this).attr("id");
+		$(this).css("color", "red");
+		doQuery();
+    });
+	$("#"+currentTypeId1).css("color", "red");
+	$("#"+currentTypeId2).css("color", "red");
+	$("#"+currentTypeId3).css("color", "red");
+}
+
+function doQuery(){
+	oTable.fnDraw();
+}
+
+function doSelectRadio(rid){
+   document.getElementById(rid).checked = true;
+}
+
+function saveSaleRecord(){
+    var keys=cartGoodsMap.keySet();
+    var o=null;
+	var detailStr="";
+	var names="";
+	var t="";
+	var checkStr="";
+	var providerId=$("#provider").val();
+	checkStr+=checkString($("#provider").val(),true,32,"供应商");
+	checkStr+=checkString($("#purchaser").val(),true,32,"采购员");
+	checkStr+=checkString($("#memo").val(),false,500,"备注");
+	
+	if ( keys.length == 0 ) {
+	    checkStr+="请选择进货商品<br>";
+	}
+
+    for(var i=0;i<keys.length;i++ ){
+		o=cartGoodsMap.get(keys[i]);
+		t=o.goodsName.replace(new RegExp("#","gm"), "");
+		detailStr+=o.goods_id+","+o.type1+","+o.type2+","+o.type3+","+o.amount+","+o.price+","+providerId+","+t+","+o.unit+","+o.specification+"#";
+		names+=t+",";
+		if ( $("#goodsCartPrice_"+o.goods_id).val() == '' ) {
+		   checkStr+="请输入商品["+t+"]的进货价<br>";
+		}
+    }
+	
+	if ( checkStr != '' ) {
+	    top.showInfoWinWarn(checkStr);
+        return ;
+	}
+	
+	if ( detailStr == '' ) {
+	    return ;
+	} else {
+	    names=names.substring(0,names.length-1);
+	}
+	var offT=$("#offTotal").val();
+	if ( offT == '' ) {
+	  offT=0;
+	} else if ( !IsFloat(offT) ) {
+	  offT=0;
+	}
+	var aoData=[];
+	aoData.push( { "name": "purchaseOrder.total", "value": $("#cartTotal").val() } );
+	aoData.push( { "name": "purchaseOrder.purchaser", "value": $("#purchaser").val() } );
+	aoData.push( { "name": "purchaseOrder.provider_id", "value": providerId } );
+	aoData.push( { "name": "purchaseOrder.provider_name", "value": $("#providerName").val() } );
+    aoData.push( { "name": "purchaseOrder.goodsNames", "value": top.ellipsis(500,names) } );
+	aoData.push( { "name": "purchaseOrder.memo", "value": $("#memo").val() } );
+	aoData.push( { "name": "ids", "value": detailStr } );
+	top.showLoadingInfo(true);
+	top.sendAjaxRequest("/actions/ProGoods.action?insertPurchaseOrder",aoData,optSaveSaleRecordCallback);
+}
+
+function optSaveSaleRecordCallback(obj){
+    top.showLoadingInfo(false);
+    try{
+      if ( obj.status == true ){
+         top.showInfoWinOK("提交成功",true);
+		 cancelSaleRecord();
+      }else{
+         top.showInfoWinError("提交失败");
+      }
+    }catch(e){
+      top.showInfoWinError("处理异常:"+e.message);
+    }
+}
+
+function cancelSaleRecord(){
+    var keys=cartGoodsMap.keySet();
+    for(var i=0;i<keys.length;i++ ){
+		$("#goodsCartTR_"+keys[i]).remove();
+    }
+    cartGoodsMap.clear();
+	$("#cartTotal").val("0");
+	$("#memo").val("");
+}
+
+function selectUser(){
+    var xurl="pages/organization/selectOneUser.html";
+	top.openSelectDialog("选择用户",xurl,830,600,doSelectedUser);
+}
+
+function doSelectedUser(){
+	var userObj = top.getTempValue();
+	if ( !userObj ) return ;
+	try{
+	 $("#purchaser").val(userObj.userCode);
+	 $("#purchaserName").val(userObj.userName);
+	}catch(e){
+	}
+}
+
+function selectProvider(){
+    var xurl="pages/erp/selectProvider.html";
+	top.openSelectDialog("选择供应商",xurl,830,600,doSelectedProvider);
+}
+
+function doSelectedProvider(){
+	var o = top.getTempValue();
+	if ( !o ) return ;
+	try{
+	 $("#provider").val( o.provider );
+	 $("#providerName").val( o.providerName );
+	}catch(e){
+	}
+}
+</script>
+<style>
+  body {
+	background-color:#C7EDCC;
+  }
+  .sortable { list-style-type: none; margin: 0; padding: 0; width: 100%; }
+  #sortable1 li { margin: 2px 2px 2px 2px; float: left; width: 100px; height: 24px; font-size:19px; color:blue; text-align: center; cursor:pointer }
+  #sortable2 li { margin: 2px 2px 2px 2px; float: left; width: 100px; height: 24px; font-size:19px; color:blue;text-align: center; cursor:pointer}
+  #sortable3 li { margin: 2px 2px 2px 2px; float: left; width: 100px; height: 24px; font-size:19px; color:blue;text-align: center; cursor:pointer}
+  .goodsTypeLable{
+    margin: 1px;
+	padding: 1px;
+	background-color : #F3F3F3;
+	border: 1px solid #89A1B9;
+	-moz-border-radius: 12px;
+	-webkit-border-radius: 12px;
+	border-radius: 12px;
+  }
+  .dataTables_info {
+	padding: 7px 2px 1px 1px;
+	width: 33%;
+	float: left;
+  }
+#goodsTable tbody tr.even:hover, #goodsTable tbody tr.even td.highlighted {
+	background-color: #ECFFB3;
+}
+
+#goodsTable tbody tr.odd:hover, #goodsTable tbody tr.odd td.highlighted {
+	background-color: #E6FF99;
+}
+
+#goodsTable tr.even:hover {
+	background-color: #ECFFB3;
+}
+
+#goodsTable tr.odd:hover {
+	background-color: #E6FF99;
+}
+
+.goodsCartTd{
+  border:1px;
+  border-style:dotted none none none;
+  border-color: blue;
+  font-size:14px;
+  color:#000000;
+  padding-left:5px;
+}
+#search_suggestType {
+      position: absolute;
+      background-color: #FFFFFF; 
+      text-align: left; 
+	  width:180px;
+      border: 1px solid #000000;
+	  overflow:auto;
+	  display:none;
+}
+#search_suggestGoods{
+      position: absolute;
+      background-color: #FFFFFF; 
+      text-align: left; 
+	  width:260px;
+      border: 1px solid #000000;
+	  overflow:auto;
+	  display:none;
+	  z-index:999;
+}
+</style>
+</head>
+<body>
+<div class="ui-layout-north" style="padding:0px;"></div>
+ 
+<div class="ui-layout-west" style="padding:3px;background-color:#C7EDCC;">
+ <div style="100%;height:100%;overflow:auto;">
+  <table width="100%;height:100%;">
+  <tr><td>
+    <input type="text" id="searchTypeTxt" onclick="searchTxtClick()" onblur="searchTxtBlur();searchTypeSuggest(event);" 
+	  onkeyup="searchTypeSuggest(event);" value="输入分类名称的拼音缩写" size="21" />
+	<br><span id="search_suggestType"></span>
+  </td></tr>
+  <tr><td style="background-color:#99D1D3;padding:5px">
+   <font color="#000000" size="2px">第一级商品分类</font>
+   <br>
+    <ul id="sortable1" class="sortable"></ul>
+  </td></tr>
+  <tr><td style="background-color:#99D1D3;padding:5px">
+  <font color="#000000" size="2px">第二级商品分类</font>
+  <br>
+    <ul id="sortable2" class="sortable"></ul>
+  </td></tr>
+  <tr><td style="background-color:#99D1D3;padding:5px">
+  <font color="#000000" size="2px">第三级商品分类</font>
+  <br>
+    <ul id="sortable3" class="sortable"></ul>
+   </td></tr>
+  </table>
+ </div>
+</div>
+
+<div class="ui-layout-south"></div>
+
+<div class="ui-layout-east" style="padding:0px;background-color:#C7EDCC;">
+   <table cellpadding="0" width="100%" cellspacing="0" border="0">
+    <tr>
+	 <td width="35%" align="center" style="border:2px;border-style:none none double none;border-color: blue;"><font color="#000000" size="3px"><b>商品名称</b></font></td>
+	 <td width="11%" align="left" style="border:2px;border-style:none none double none;border-color: blue;"><font color="#000000" size="3px"><b>单位</b></font></td>
+	 <td width="12%" align="left" style="border:2px;border-style:none none double none;border-color: blue;"><font color="#000000" size="3px"><b>规格</b></font></td>
+	 <td width="12%" align="left" style="border:2px;border-style:none none double none;border-color: blue;"><font color="#000000" size="3px"><b>采购价</b></font></td>
+	 <td width="30%" align="center" style="border:2px;border-style:none none double none;border-color: blue;"><font color="#000000" size="3px"><b>数量</b></font></td>
+	</tr>
+   </table>
+   <div id="goodsCartListDiv" style="overflow:auto;width:100%;height:400px;background-color:#ffffff;">
+      <table id="goodsCartList" cellpadding="0" width="100%" cellspacing="0" border="0"></table>
+   </div>
+   <div style="overflow:auto;width:100%;">
+      <table cellpadding="5px" width="100%" cellspacing="5px" border="0">
+	    <tr>
+		  <td width="15%" align="right"><font color="#000000" size="3px"><b>合计</b></font></td>
+		  <td width="35%"><input type="text" disabled="true" id="cartTotal" value="0" size="10" />元</td>
+		  <td width="15%" align="right"><font color="#000000" size="3px"><b>采购员</b></font></td>
+		  <td width="35%"><input type="hidden" id="purchaser" value="" />
+		  <input type="text" id="purchaserName" value="" size="10" style="cursor:pointer" onclick="selectUser()"/></td>
+		</tr>
+		<tr>
+		  <td width="15%" align="right"><font color="#000000" size="3px"><b>供应商</b></font></td>
+		  <td width="85%" colspan="3"><input type="hidden" id="provider" value="" />
+		  <input type="text" id="providerName" value="" style="width:320px;cursor:pointer" onclick="selectProvider()"/></td>
+		</tr>
+		<tr>
+		  <td width="15%" valign="top" align="right"><font color="#000000" size="3px"><b>备注</b></font></td>
+		  <td width="85%" colspan="3"><textarea id="memo" rows="4" style="width:320px" ></textarea></td>
+		</tr>
+		<tr>
+		  <td align="right" colspan="2" align="center"><span class="buttonTwo"><a href="javascript:saveSaleRecord()">提交</a></span></td></td>
+		  <td align="center" colspan="2" align="center"><span class="buttonTwo"><a href="javascript:cancelSaleRecord()">取消</a></span></td></td>
+		</tr>
+	  </table>
+   </div>
+</div>
+
+<div class="ui-layout-center" style="padding:3px 0px 0px 0px;background-color:#C7EDCC;">
+   <table cellpadding="0" width="100%" cellspacing="0" border="0">
+    <tr>
+	 <td width="100%" align="left">
+     <input type="text" id="searchGoodsTxt" onclick="searchGoodsTxtClick()" onblur="searchGoodsTxtBlur();searchGoodsSuggest(event);" 
+	   onkeyup="searchGoodsSuggest(event);" value="输入商品名称的拼音缩写或条形编码" size="32" />
+	 <br><span id="search_suggestGoods"></span>
+	 </td>
+	</tr>
+   </table>
+   <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="goodsTable"></table>
+</div>
+</body>
+</html> 

@@ -1,0 +1,133 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css" media="print, projection, screen">
+<script src="../../js/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+<script type="text/javascript" src="js/correctionInfo.js"></script>
+<script type="text/javascript">
+ 
+   var isCreated=false;
+   var optType="";
+   var infoId="";
+   var notice={};
+   $(document).ready(function() {
+		optType=top.getUrlParam(document.URL,"optType");
+		 $( "#tdbstatus" ).html( top.getCodeSelectHtml("NOTICE_STATUS","notice_status",true));
+		 if( optType == 'insert'){
+		 $("#tr_publisher").hide();
+		 }
+		 else if( optType == 'update'){
+		 infoId=top.getUrlParam(document.URL,"infoId");
+	    queryNoticeInfo();
+		 }
+   } );
+   
+   function queryNoticeInfo(){
+		var aoData=[];
+		aoData.push( { "name": "notice.id", "value":infoId} );
+		top.sendAjaxRequest("/actions/ProNotice.action?getNoticeInfoById",aoData,noticeInfoCallback);
+   }
+   function noticeInfoCallback(obj){
+    try{
+	     if ( obj.status == true ) {
+		  $("#tr_publisher").show();
+		   var o=obj.body;
+		   $("#notice_title").val(o.proNoticeInfo.notice_title );
+	       $("#notice_content").val(o.proNoticeInfo.notice_content);
+	       $( "#tdbstatus" ).html( top.getCodeSelectHtml("NOTICE_STATUS","notice_status",true,o.proNoticeInfo.status));
+	       $("#publisher").html(o.proNoticeInfo.publisher);
+           $("#publish_time").val( top.getTimeStr(o.proNoticeInfo.publish_time,true)) ;
+		   }
+		 else{
+          top.showInfoWinError("操作失败");
+         }
+	   }catch(e){
+	   }
+   }
+   function saveBaseInfo(){
+	 var aoData=[];
+
+     var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 } 
+	     
+	     aoData.push( { "name": "notice.notice_title", "value": $("#notice_title").val() } );
+         aoData.push( { "name": "notice.notice_content", "value": $("#notice_content").val() } );
+		 aoData.push( { "name": "notice.publish_time", "value": top.toTimestamp($("#publish_time").val()) } );
+		 aoData.push( { "name": "notice.status", "value": $("#notice_status").val() } );
+
+	 if ( optType == 'insert' ) {
+	    var xurl="/actions/ProNotice.action?insertProNoticeInfo";
+	 }
+	 else if( optType == 'update'){
+	  var xurl="/actions/ProNotice.action?updateProNoticeInfo";
+	  aoData.push( { "name": "notice.id", "value":infoId} );
+	 }
+	   top.sendAjaxRequest(xurl,aoData,optCallback);
+   }
+   
+   function checkForm(){
+     var msg = "";
+	 if ( optType == 'insert' ) {
+	     msg += checkString($("#notice_title").val(),true,128,"标题");
+		 msg += checkString($("#notice_content").val(),true,2048,"内容");
+		 msg += checkString($("#notice_status").val(),true,10,"状态");
+		 msg += checkString($("#publish_time").val(),true,10,"发布时间");
+	 }
+     return msg;
+   }
+
+    function doBeforeClose(){
+     var obj={
+    		  "isCreated":isCreated
+    		};
+           top.setTempValue(obj);
+   }
+   
+    function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	        isCreated = true;
+	        top.showInfoWinOK("操作成功");
+		    top.closeDialog();
+	    }else{
+	    	isCreated = false;
+	        top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		    top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+
+  </script> 
+</head>
+<body>
+<div width="100%">
+		    <div style='border: 2px solid #89A1B9;margin:5px;margin-top:25px'>
+  <table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				<tr class="tr_data"><td>标题</td><td align="left"><input type="text" id="notice_title" value="" size="80" /></td></tr>
+				<tr class="tr_data"><td>发布时间</td><td align="left"><input type="text" id="publish_time" value="" onclick="new Calendar().show(this);" style="width:100px" size="17" /></td></tr>
+			    <tr class="tr_data"><td>内容</td><td align="left"><textarea cols="75" rows="8" id="notice_content"></textarea></td></tr>
+				<tr id ="tr_publisher" class="tr_data"><td>发布人</td><td align="left"><label id="publisher"></label></td></tr>
+				<tr class="tr_data"><td>状态</td><td class="tbody_td" align="left" id="tdbstatus"></td></tr>
+			
+				
+		</table>
+		<p align="center" id="optBtnArea">
+		   <table><tr>
+					<td><span id="okBtn" class="buttonTwo"><a href="javascript:saveBaseInfo()">提交</a></span></td>
+					<td><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">取消</a></span></td>
+		   </tr></table>
+		</p>
+		</div>
+</body>
+</html>

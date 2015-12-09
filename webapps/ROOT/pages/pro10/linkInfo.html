@@ -1,0 +1,121 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+  <script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var infoId=0;
+   
+   $(document).ready(function() {
+     $( "#tdstatus" ).html( top.getCodeSelectHtml("LINK_STATUS","status",false) );
+     initData();
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+     };
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   
+   function doSubmit(){
+	 var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+	 var aoData=[];
+	      aoData.push( { "name": "link.link_id", "value": infoId } );
+		  aoData.push( { "name": "link.link_title", "value": $("#link_title").val() } );
+		  aoData.push( { "name": "link.publish_date", "value": top.toTimestamp($("#publish_date").val()) } );
+		  aoData.push( { "name": "link.xurl", "value": $("#xurl").val() } );
+		  aoData.push( { "name": "link.status", "value": $("#status").val() } );
+		  var xurl="/actions/CmaTable.action?insertUrlLink";
+		  if ( optType=='update' ) {
+		    xurl="/actions/CmaTable.action?updateUrlLink";
+		  }
+		  top.sendAjaxRequest(xurl,aoData,optCallback);
+   }
+   
+   function checkForm(){
+     var msg = "";
+	 msg += checkString($("#publish_date").val(),true,15,"发布日期");
+	 msg += checkString($("#link_title").val(),true,128,"标题");
+	 msg += checkString($("#xurl").val(),true,128,"URL");
+     return msg;
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功！");
+		 top.closeDialog();
+	    }else{
+	     isSaveOK = false;
+	     top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		 top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+   function initData(){
+	   try{
+	        var today=new Date();
+			var y = today.getFullYear();
+			var m = today.getMonth() + 1;
+			var d = today.getDate();
+			$("#publish_date").val( y+"-"+top.getTwoNumberStr(m)+"-"+top.getTwoNumberStr(d) );
+	   
+		   optType=top.getUrlParam(document.URL,"optType");
+		   if ( optType=='update' ) {
+		     var o = top.getTempValue();
+			 infoId=o.link_id;
+			 $("#link_title").val( o.link_title );
+			 $("#xurl").val( o.xurl );
+			 $("#status").val( o.status );
+		   }
+	   }catch(e){
+		   top.showInfoWinError(e.message);
+	   }
+   }
+  </script> 
+</head>
+<body>
+<br>
+<table width="100%" border="0" padding="0" spacing="0">
+ <tr>
+    <td align="right">发布日期:</td>
+    <td align="left"><input type='text' id='publish_date' value='' onclick='new Calendar().show(this);' style='width:100px'></input></td>
+ </tr>
+ <tr>
+    <td align="right">标题:</td>
+    <td align="left"><textarea id="link_title" cols="45" rows="3" ></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">URL:</td>
+    <td align="left"><textarea id="xurl" cols="45" rows="4" ></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">状态:</td>
+    <td align="left" id="tdstatus"></td>
+ </tr>
+</table>
+<p align="center">
+   <table><tr>
+		    <td><div class="buttonDivSix"><a href="javascript:doSubmit()">提交</a></div></td>
+		    <td><div class="buttonDivSix"><a href="javascript:doCancel()">取消</a></div></td>
+   </tr></table>
+</p>
+</body>
+</html>

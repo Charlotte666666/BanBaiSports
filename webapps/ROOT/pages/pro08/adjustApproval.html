@@ -1,0 +1,203 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+		    var optType="";
+			var objs=[];
+		
+			$(document).ready(function() {
+			   optType=top.getUrlParam(document.URL,"optType");
+			   
+			   $( "#tdcorrect_type" ).html( top.getCodeSelectHtml("CORRECT_TYPE","q_correct_type",true,null,null,"全部") );
+			   $( "#tdstatus" ).html( top.getCodeSelectHtml("CORRECT_STATUS","q_status", true,null,null,"全部") );
+			   $( "#tdsex" ).html( top.getCodeSelectHtml("SEX","q_sex", true,null,null,"全部") );
+			   $( "#tdpolitical_status" ).html( top.getCodeSelectHtml("POLITICAL_STATUS","q_political_status", true,null,null,"全部") );
+			   
+			   var htTemp="";
+			   var iaoColumns= [
+                               { "sTitle": "编号", "mDataProp": "user_code", "sWidth": "10%","sClass": "left", 
+							      "fnRender": function ( oObj ) {
+                                           return '<a href=\'javascript:void(0)\' onclick="updateInfo(\''+oObj.aData.user_code+'\')" >'+oObj.aData.user_code+"</a>";
+                                  },
+							      "bUseRendered": false},
+							   { "sTitle": "姓名", "mDataProp": "user_name", "sWidth": "10%", "bUseRendered": false  }, 
+							   { "sTitle": "矫正级别", "mDataProp": "correct_type", "sWidth": "10%", 
+							      "fnRender": function ( oObj ) {
+                                        return top.getCodeName( "CORRECT_TYPE", oObj.aData.correct_type );
+                                   },	
+									"bUseRendered": false },
+							   { "sTitle": "矫正状态", "mDataProp": "status", "sWidth": "10%", 
+							      "fnRender": function ( oObj ) {
+                                        return top.getCodeName( "CORRECT_STATUS", oObj.aData.status );
+                                   },
+							      "bUseRendered": false },
+							   { "sTitle": "性别", "mDataProp": "sex", "sWidth": "5%",
+									"fnRender": function ( oObj ) {
+											return top.getCodeName( "SEX", oObj.aData.sex );
+									   },
+							   "bUseRendered": false },
+							   { "sTitle": "矫正开始日期","mDataProp": "start_date","sWidth": "10%", "sClass": "center",
+                            	  "fnRender": function ( oObj ) {
+                                       return top.getTimeStr( oObj.aData.start_date, true );
+                                  },
+                                  "bUseRendered": false 
+                               },
+							   { "sTitle": "矫正结束日期","mDataProp": "end_date","sWidth": "10%", "sClass": "center",
+                            	  "fnRender": function ( oObj ) {
+                                       return top.getTimeStr( oObj.aData.end_date, true );
+                                  },
+                                  "bUseRendered": false 
+                               }			  
+               ];
+
+			   var surl=top.getUrlBase()+"/actions/ProCorrection.action?getProCorrectionInfoList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"aaSorting": [[ 6, "desc" ]],
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     var temp="";
+					     aoData.push( { "name": "time1", "value": $("#q_time1").val() } );
+						 aoData.push( { "name": "time2", "value": $("#q_time2").val() } );
+						 aoData.push( { "name": "info.user_name", "value": $("#q_user_name").val() } );
+						 aoData.push( { "name": "info.user_code", "value": $("#q_user_code").val() } );
+						 temp = $("#q_political_status").val();
+						 if ( temp == '' ) temp = -1;
+						 aoData.push( { "name": "info.political_status", "value": temp } );
+						 temp = $("#q_sex").val();
+						 if ( temp == '' ) temp = -1;
+						 aoData.push( { "name": "info.sex", "value": temp } );
+						 temp = $("#q_status").val();
+						 if ( temp == '' ) temp = -1;
+						 aoData.push( { "name": "info.status", "value": temp } );
+						 temp = $("#q_correct_type").val();
+						 if ( temp == '' ) temp = -1;
+						 aoData.push( { "name": "info.correct_type", "value": temp } );
+						 aoData.push( { "name": "info.nation", "value": -1 } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+			} );
+		
+			function doQuery(){
+			    objs=[];
+				oTable.fnDraw();
+			}
+			
+			function getObj(infoId){
+			   for ( var i=0;i<objs.length;i++ ) {
+			     if ( objs[i].id == infoId ) return objs[i];
+			   }
+			   return null;
+			}
+
+			function addUser(){
+				var xurl="pages/pro08/adjustApprovalInfo.html";
+				top.openDialog("添加人员"+top.getDialogButtonHtml("保存",1,'img/save.bmp'),xurl,true,1100,620,saveCallBack);
+			}
+			
+			function updateInfo(infoId){
+				var xurl="pages/pro08/adjustApprovalInfo.html?optType=update&infoId="+infoId;
+				top.openDialog("服刑人员信息"+top.getDialogButtonHtml("保存",1,'img/save.bmp'),xurl,true,1100,620,saveCallBack);
+			}
+
+			function saveCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				  
+				}
+			}
+			
+			function optCallback(obj){
+			       try{
+			        if ( obj.status == true ){
+			          top.showInfoWinOK("操作成功");
+			          doQuery();
+			        }else{
+			          top.showInfoWinError("操作失败 "+obj.msg);
+			        }
+			       }catch(e){
+			          top.showInfoWinError("处理异常:"+e.message);
+			       }
+		  }
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+		    <div style='border: 2px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="110px">&nbsp;管理级别调整&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+				  <td align="right">人员编号:</td><td align="left"><input type="text" id="q_user_code" value="" style="width:120px" onkeydown="if(event.keyCode==13) doQuery();" /></td>		      
+			      <td align="right" width="10%">姓名:</td><td align="left" width="15%"><input type="text" id="q_user_name" value="" style="width:120px" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+				  <td align="right">矫正结束日期:</td><td align="left" ><input type="text" id="q_time2" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" /></td>
+				  <td align="right">矫正开始日期:</td><td align="left" ><input type="text" id="q_time1" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" /></td>				  
+			     </tr>
+				 <tr class="tr_data">
+				  <td align="right">性别:</td><td align="left" id="tdsex"></td>
+				  <td align="right" >政治面貌:</td><td align="left" id="tdpolitical_status"></td>
+				  <td align="right" width="10%">矫正级别:</td><td align="left" width="15%" id="tdcorrect_type"></td>
+				  <td align="right" width="10%">矫正状态:</td><td align="left" width="15%" id="tdstatus"></td>				  
+				 </tr>
+			 </table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				    <td>&nbsp;查询结果列表&nbsp;</td>
+			       </tr></table></td>
+			  </tr>
+			</table>
+	        <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+ 
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+		    var optType="";
+			var tempStr="";
+			var currentDeleteCode="";
+			var currentSelectCode="";
+			
+			$(document).ready(function() {
+			     $( "#tdtype" ).html( top.getCodeSelectHtml("HOSPITAL_DEPT_TYPE","parent_code",true,null,null,"全部") );
+                 loadList();
+            });
+   
+             function loadList(){   
+			   var iaoColumns= [
+                               { "sTitle": "编码", "mDataProp": "code", "sWidth": "10%",
+                                      "fnRender": function ( oObj ) {
+									    if ( oObj.aData.code == '' ) {
+                                           return '<input type="text" style="width:100%" id="code_'+oObj.aData.code+'" value="'+oObj.aData.code+'" />' ;
+										} else {
+										   return oObj.aData.code;
+										}
+                                      },
+                                      "bUseRendered": false
+                               },
+							   { "sTitle": "科室名称", "mDataProp": "title", "sWidth": "40%",
+                                      "fnRender": function ( oObj ) {
+                                         return '<input type="text" style="width:100%" id="title_'+oObj.aData.code+'" value="'+oObj.aData.title+'" />' ;
+                                      },
+                                      "bUseRendered": false
+                               },
+							   { "sTitle": "科室分类", "mDataProp": "parent_code", "sWidth": "20%",
+                                      "fnRender": function ( oObj ) {
+									     return top.getCodeSelectHtml("HOSPITAL_DEPT_TYPE","parent_code_"+oObj.aData.code,true,oObj.aData.parent_code);
+                                      },
+                                      "bUseRendered": false
+                               },
+							   { "sTitle": "操作", "mDataProp": "code", "sWidth": "30%","bSortable":false,
+									"fnRender": function ( oObj ) {
+									   tempStr = '<span align="center" style="cursor:pointer;" onclick="saveInfo(\''+oObj.aData.code+'\')"><img src="../../img/save.bmp" />&nbsp;保存</span>';
+									   if ( oObj.aData.code != '' ) {
+									     tempStr+='&nbsp;<span align="center" style="cursor:pointer;" onclick="deleteInfo(\''+oObj.aData.code+'\')"><img src="../../img/delete.gif" />&nbsp;删除</span>';
+									   }
+									   return tempStr;
+									},
+									"bUseRendered": false
+							   }
+							  ];
+			   
+			  var surl=top.getUrlBase()+"/actions/BaseInfo.action?getHospitalDeptList";
+
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					   aoData.push( { "name": "hospitalDept.code", "value": $("#code").val() } );
+					   aoData.push( { "name": "hospitalDept.parent_code", "value": $("#parent_code").val() } );
+					   aoData.push( { "name": "optType", "value": "addRow" } );
+					},
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			}
+
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			//删除
+			function deleteInfo(code){
+			    currentDeleteCode=code;
+				top.showConfirm("您确定要删除选中的记录吗？", doDelete);
+			}
+			
+ function doDelete(){
+    var aoData=[];
+	aoData.push( { "name": "hospitalDept.code", "value": currentDeleteCode } );
+	var xurl="/actions/BaseInfo.action?deleteHospitalDept";
+    top.sendAjaxRequest(xurl,aoData,optCallback);
+ }
+			
+ function saveInfo(code){
+    var aoData=[];
+	if ( code == '' ) {
+	  aoData.push( { "name": "hospitalDept.code", "value": $("#code_"+code).val() } );
+	} else {
+	  aoData.push( { "name": "hospitalDept.code", "value": code } );
+	}
+	aoData.push( { "name": "hospitalDept.title", "value": $("#title_"+code).val() } );
+	aoData.push( { "name": "hospitalDept.parent_code", "value": $("#parent_code_"+code).val() } );
+
+	var xurl="/actions/BaseInfo.action?updateHospitalDept";
+	if ( code == '' ) {
+	  xurl="/actions/BaseInfo.action?insertHospitalDept";
+	}
+    top.sendAjaxRequest(xurl,aoData,optCallback);
+ }
+
+        function optCallback(obj){
+         try{
+			if ( obj.status == true ){
+				top.showInfoWinOK("操作成功");
+				doQuery();
+			}else{
+				top.showInfoWinError("操作失败 "+obj.msg);
+			}
+		   }catch(e){
+			  top.showInfoWinError("处理异常:"+e.message);
+		   }
+	    }
+
+	</script>
+	</head>
+	<body>
+		<input type="hidden" id="type_id" value="-1" />
+		   <div style='border: 1px solid #89A1B9;'>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			       <td align="left">科室信息管理</td>
+				   <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				   </td>
+			  </tr>
+			</table>
+			<table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+				  <td align="right" width="20%">编码:</td><td align="left" width="30%"><input type="text" id="code" value="" /></td>
+				  <td align="right" width="20%">科室分类:</td><td align="left" width="30%" id="tdtype" ></td>
+			     </tr>
+			 </table>
+			</div>
+	       <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+	</body>
+</html>

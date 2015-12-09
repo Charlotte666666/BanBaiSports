@@ -1,0 +1,148 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css" media="print, projection, screen">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<style type="text/css">
+		  .withBorder{
+		    border:3px solid #000;/*黑色1像素粗边框*/
+		  }
+		  .widthBorder td{
+		    border:none;/*这个是单元格，不给他要边框*/
+		  }
+		</style>
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var qDeptId="";
+			var qDeptName="";
+			
+			$(document).ready(function() {
+			 getBUPersonalDiagram();
+			 
+			 });
+			 
+			function getBUPersonalDiagram(){
+			  top.sendAjaxRequest("/actions/PersonalManage.action?getBUPersonalDiagram",[],getBUPersonalDiagramCallback);
+			}
+			
+			function getBUPersonalDiagramCallback(obj){
+			   var jt="<table width='40%' border='0' cellspacing='0' cellpadding='0' style='border:1px #000000 solid;'>";
+			   var ht="<table width='100%'>";
+			   ht+="<tr>";
+			   ht+="<td id='head' valign='top' onclick='getPersonalDiagram(\"1\")'></td>";
+			   var head="<table width='40%' border='0' cellspacing='0' cellpadding='0' style='border:1px #000000 solid;'>";
+			   var on_duty_member=0;
+			   var estab_member=0;
+			   var allowable_value=0;
+			   if(obj.status==true){
+			     var o=obj.body;
+				 for(var i=0;i<o.length;i++){
+				    if(o[i].dept_type=="headquarters"){
+					    head+="<tr><td>";
+                        head+="<a href='javascript:void(0)' style='text-decoration:none;cursor:pointer;' onclick='getPersonalDiagram(\"0\",\""+o[i].dept_id+"\")'>"+top.getDeptPath(o[i].dept_id)+"</a>";
+                        head+="</td></tr>";
+                        head+="<tr><td>";						
+                        head+="总人数："+o[i].on_duty_member;	
+                        head+="</td></tr>";	
+						head+="<tr><td>";
+                        head+="岗位编制人数："+o[i].establish_member;	
+                        head+="</td></tr>";
+						head+="<tr><td>";
+						//head+="现超缺编人数："+o[i].current_exceed_lack_member;
+                        head+="允许超过编制人数："+o[i].allowable_value;	
+                        head+="</td></tr>";
+						head+="</table>";
+                        on_duty_member=on_duty_member+o[i].on_duty_member;
+                        estab_member=estab_member+o[i].establish_member;
+                        allowable_value=allowable_value+o[i].allowable_value;						
+					}else if(o[i].dept_type=="group"){
+					    var dept_name=top.getDeptPath(o[i].dept_id).split(">>");
+					    on_duty_member=on_duty_member+o[i].on_duty_member;
+                        estab_member=estab_member+o[i].establish_member;
+                        allowable_value=allowable_value+o[i].allowable_value;	
+					    ht+="<td valign='top'>";
+						ht+="<table width='40%'>";
+						ht+="<tr><td style='border-left:1px #000000 solid; border-right:1px #000000 solid;border-top:1px #000000 solid;'>";
+                        ht+="<a href='javascript:void(0)' style='text-decoration:none;cursor:pointer;' onclick='getPersonalDiagram(\"0\",\""+o[i].dept_id+"\")'>"+dept_name[1]+"</a>";
+						ht+="</td></tr>";
+                        ht+="<tr><td style='border-left:1px #000000 solid; border-right:1px #000000 solid;'>";						
+                        ht+="总人数："+o[i].on_duty_member;	
+                        ht+="</td></tr>";	
+						ht+="<tr><td style='border-left:1px #000000 solid; border-right:1px #000000 solid;'>";
+                        ht+="岗位编制人数："+o[i].establish_member;	
+                        ht+="</td></tr>";
+						ht+="<tr><td style='border-left:1px #000000 solid; border-right:1px #000000 solid;border-bottom:1px #000000 solid'>";
+                        //ht+="现超缺编人数："+o[i].current_exceed_lack_member;
+					    ht+="允许超过编制人数："+o[i].allowable_value;	
+                        ht+="</td></tr>";	
+						for(var j=0;j<o.length;j++){
+						  if(o[j].dept_type=="filiale" && o[j].parent_id==o[i].dept_id){
+						    var sub_dept_name=top.getDeptPath(o[j].dept_id).split(">>");
+						    ht+="<tr><td>";
+							ht+="<table width='100%' border='0' cellspacing='0' cellpadding='0' style='border:1px #000000 solid;'>";
+							ht+="<tr><td>";
+							ht+="<a href='javascript:void(0)' style='text-decoration:none;cursor:pointer;' onclick='getPersonalDiagram(\"0\",\""+o[j].dept_id+"\")'>"+sub_dept_name[1]+"</a>";
+                            ht+="</td></tr>";
+                            ht+="<tr><td>"							
+							ht+="总人数："+o[j].on_duty_member;	
+							ht+="</td></tr>";	
+							ht+="<tr><td>";
+							ht+="岗位编制人数："+o[j].establish_member;	
+							ht+="</td></tr>";
+							ht+="<tr><td>";
+							ht+="允许超过编制人数："+o[j].allowable_value;	
+							ht+="</td></tr>";
+							ht+="</table>";
+							ht+="</td></tr>";
+						  }
+						}
+						ht+="</table>";
+						ht+="</td>";
+					}
+				 }
+			   }else{
+			      top.showInfoWinError("操作失败！");
+			   }
+			   ht+="</tr>";
+			   ht+="</table>";
+			   jt+="<tr><td align='center'>";
+			   jt+="集团";
+			   jt+="</td></tr>";
+			   jt+="<tr><td align='center'>";
+			   jt+="总人数:"+on_duty_member;
+			   jt+="</td></tr>";
+			   jt+="<tr><td align='center'>";
+			   jt+="岗位编制人数:"+estab_member;
+			   jt+="</td></tr>";
+			   jt+="<tr><td align='center'>";
+			   jt+="允许超过编制人数:"+allowable_value;
+			   jt+="</td></tr>";
+			   jt+="</table>";
+			   $("#personalFrameDiagram").html("<center>"+jt+"<br>"+ht+"</center>");
+			   $("#head").html(head);
+			}
+			
+
+			
+			function getPersonalDiagram(head_filiale,dept_id){
+			  top.openDialog("分公司人事日报","pages/oa/personalDaily.html?head_filiale="+head_filiale+"&dept="+dept_id,true,1200,600,null);
+			}
+
+			
+
+		</script>
+	</head>
+	<body style="font-size:6px;overflow:scroll;">
+		<div width="100%">
+			<div id="personalFrameDiagram">		  
+			</div>
+		</div>
+	</body>
+</html>

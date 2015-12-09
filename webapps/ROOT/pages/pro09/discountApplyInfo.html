@@ -1,0 +1,275 @@
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/fileuploader.css">
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css"/>
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css"
+			media="print, projection, screen">
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+		<script type="text/javascript">
+		
+   var uploader = null;
+   var uploadFileNames=[];
+   var currentFileName="";
+   var file_path="";
+   var belong_type="";
+   var optType="";
+   var applyId=0;
+  // var pay_id='';//支付id
+   var order_id='';//订单id
+   var pre_price=0;//申请前价格
+   $(document).ready(function() {
+		initData();
+	});
+	function initData(){
+		optType=top.getUrlParam(document.URL,"optType");
+		if(optType=='insert'){
+			order_id=top.getUrlParam(document.URL,"order_id");
+			pre_price=top.getUrlParam(document.URL,"pre_price")
+			$("#edit_apply_info").show();
+			$("#pre_price").html(pre_price);
+			$("#money_total").html(pre_price);
+			return;
+		}else if(optType=='check'){
+			applyId=top.getUrlParam(document.URL,"id");
+		}else if(optType=='select'){
+			applyId=top.getUrlParam(document.URL,"id");
+		}
+		$("#view_apply_info").show();
+		var aoData=[];
+		aoData.push( { "name": "discountApplyInfo.apply_id", "value":applyId } );
+		top.sendAjaxRequest("/actions/DailyManage.action?getDiscountApplyInfoById",aoData,queryApplyInfoCallback);
+	}
+	
+	function queryApplyInfoCallback(obj){
+	try{
+		if(obj.status==true){
+			var o=obj.body;
+			if( o ){
+				order_id=o.order_id;
+				$("#apply_person").html(o.apply_person);
+				$("#apply_time").html(top.getTimeStr(o.apply_time,true));
+				$("#view_pre_price").html(o.pre_price);
+				pre_price=o.pre_price;
+				$("#view_discount").html(o.discount);
+				$("#view_money_total").html(o.discount*o.pre_price/100);
+				$("#view_apply_content").html(o.apply_content);
+				//审核未通过
+				if(o.check_status=='0'&&top.g_isPermit("09_daliy_discount_apply")){
+					$("#eidt_check_info").show();
+				}else if(o.check_status!='0'){
+					$("#view_check_status").html(top.getCodeName("EXAMINE_STATUS",o.check_status));
+					$("#check_user").html(top.getUserNameByCode(o.check_user));
+					$("#view_check_suggest").html(o.check_suggest);
+					$("#check_time").html(top.getTimeStr(o.check_time,true));
+					$("#view_check_info").show();
+				}
+			}
+		}
+	}catch(e){
+	}
+		
+	}
+	//更新申请信息
+	 function updateApplyInfo(){
+		var aoData=[];
+		aoData.push( { "name": "discountApplyInfo.apply_id", "value": applyId} );
+		aoData.push( { "name": "discountApplyInfo.discount", "value": $("#discount").val()} );
+		aoData.push( { "name": "discountApplyInfo.apply_content", "value": $("#apply_content").val()} );
+		var xurl="/actions/DailyManage.action?updateDiscountApplyInfo";
+		top.sendAjaxRequest(xurl,aoData,optCallbackSaveApplyInfo);
+		
+   }
+	// 保存申请信息
+    function saveApplyInfo(){
+		var aoData=[];
+		aoData.push( { "name": "discountApplyInfo.order_id", "value": order_id} );
+		aoData.push( { "name": "discountApplyInfo.pre_price", "value": pre_price} );
+		aoData.push( { "name": "discountApplyInfo.discount", "value": $("#discount").val()} );
+		aoData.push( { "name": "discountApplyInfo.apply_content", "value": $("#apply_content").val()} );
+		var xurl="/actions/DailyManage.action?insertDiscountApplyInfo";
+		top.sendAjaxRequest(xurl,aoData,optCallbackSaveApplyInfo);
+		
+   }
+   // 操作回调函数--提交申请信息
+	function optCallbackSaveApplyInfo(obj){
+			try{
+				if ( obj.status == true ){
+					applyId=obj.msg;
+					isSaveOK = true;
+					top.showInfoWinOK("操作成功");
+					top.closeSelectDialog();
+			}else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+			}
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	//申请审核
+	function checkResult(checkStatus){
+		var aoData=[];
+		aoData.push( { "name": "discountApplyInfo.check_status", "value": checkStatus } );
+		
+		aoData.push( { "name": "discountApplyInfo.apply_id", "value": applyId } );
+		aoData.push( { "name": "discountApplyInfo.order_id", "value": order_id } );
+		aoData.push( { "name": "discountApplyInfo.discount", "value": $("#view_discount").html() } );
+		aoData.push( { "name": "discountApplyInfo.check_suggest", "value": $("#check_suggest").val() } );
+		
+		aoData.push( { "name": "discountApplyInfo.pre_price", "value": pre_price } );
+		aoData.push( { "name": "discountApplyInfo.apply_person", "value": $("#apply_person").html() } );
+		var xurl="/actions/DailyManage.action?checkDiscountApplyInfo";
+		top.sendAjaxRequest(xurl,aoData,optCallbackCheckInfo);
+	}
+		
+	// 操作回调函数--添加审批
+	function optCallbackCheckInfo(obj){
+			try{
+				if ( obj.status == true ){
+					isSaveOK = true;
+					top.showInfoWinOK("操作成功!");
+					top.closeDialog();
+			}else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+			}
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	function cumput(){
+		var msg='';
+		if ( $("#discount").val() != '' && !IsFloat( $("#discount").val() )){		
+			msg = "[申请折扣]应为数字类型<br>";
+		}else if($("#discount").val()>100||$("#discount").val()<1){
+			msg = "[申请折扣]应为介于1~100之间<br>";
+		}
+		if( msg != ''){
+			$("#discount").val('100');
+			$("#money_total").html(pre_price);
+			top.showInfoWinWarn(msg);
+			return;
+		}
+		$("#money_total").html(pre_price*$("#discount").val()/100);
+	}
+ 
+   // 关闭当前页面前，页面框架自动调用的函数
+   function doBeforeClose(){
+     var obj={
+              "isSaveOK":isSaveOK,
+			  "id":order_id
+            };
+     top.setTempValue(obj);
+   }
+	</script>
+	</head>
+	<body>
+		<div id="edit_apply_info" style="display:none;margin-left:auto;margin-right:auto;">
+			<span style="margin-left:10px;padding:5px;margin-top:5px">申请信息</span>
+				<!--<span style="text-align:left;padding:9px;margin-left:5px;background-color:#79BAEC;border-radius:11px">申请信息</span>!-->
+				<table border="1" cellpadding="0" cellspacing="1" width="90%" align="center" style="background-color: #79BAEC;margin:0 auto;margin-top:8px" id="completeStatus">
+					<tr class="tr_data" height="35px">
+						<td width="20%" class="table_property_title">申请前价格</td>
+						<td width="30%" align="left"><label id="pre_price"></label></td>
+						<td width="20%" class="table_property_title">申请折扣</td>
+						<td width="30%" align="left" ><input id="discount" onchange="cumput()" style="width:50px" value="100"></input>%</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+					<td width="20%" class="table_property_title">折扣后价格</td>
+						<td width="80%" align="left" colspan="3"><label id="money_total"></label></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td width="20%" class="table_property_title">申请备注</td>
+						<td width="80%" align="left" colspan="3"><textarea id="apply_content" style="width:99%" rows="5"></textarea></td>
+					</tr>
+					<tr class="tr_data">
+						<td align="center" colspan="4">
+							<div class="buttonDivTwo">
+								<a href="javascript:void(0)" onclick="saveApplyInfo()">提交</a>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div id="view_apply_info" style="display:none;margin:0 auto">
+				<span style="margin-left:10px;padding:5px;margin-top:5px">申请信息</span>
+				<table border="1" cellpadding="0" cellspacing="1" width="90%" align="center" style="background-color: #79BAEC;margin:0 auto;margin-top:8px;margin-bottom:8px" id="completeStatus">
+					<tr class="tr_data" height="35px">
+						<td width="20%" class="table_property_title">申请人</td>
+						<td width="30%" align="left"><label id="apply_person"></label></td>
+						<td width="20%" class="table_property_title">申请时间</td>
+						<td width="30%" align="left" ><label id="apply_time"></label></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td width="20%" class="table_property_title">申请前价格</td>
+						<td width="30%" align="left"><label id="view_pre_price"></label></td>
+						<td width="20%" class="table_property_title">申请折扣</td>
+						<td width="30%" align="left"><label id="view_discount"></label> %</td>
+						</tr>
+					<tr class="tr_data" height="35px" id="tr_apply_person">
+					<td width="20%" class="table_property_title">折扣后价格</td>
+						<td width="80%" align="left" colspan="3"><label id="view_money_total"></label></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td width="20%" class="table_property_title">申请备注</td>
+						<td width="80%" align="left" colspan="3" id="view_apply_content" style="width:650px;height:100px"></td>
+					</tr>
+				</table>
+			</div>
+			<div id="eidt_check_info" style="display:none;margin:0 auto">
+				<span style="margin-left:10px;padding:5px;margin-top:5px">审批信息</span>
+				<table border="1" cellpadding="0" cellspacing="1" width="90%" align="center" style="background-color: #79BAEC;margin:0 auto;margin-top:8px" id="completeStatus">
+				<tr class="tr_data" height="35px" id="tr_check_content">
+					<td width="30%" class="table_property_title">审批意见</td>
+					<td width="70%" align="left" colspan="3"><textarea id="check_suggest" style="width:650px" rows="5"></textarea></td>
+				</tr>
+				<tr class="tr_data" height="35px">
+					<td colspan="4" >
+						<table width="99%">
+							<tr>
+								<td align="center">
+									<div id="checkSuccBtn" class="buttonDivTwo">
+										<a href="javascript:void(0)" onclick="checkResult(1)">通过</a>
+									</div>
+								</td>
+								<td align="left" style="padding-left:20px">
+									<div id="checkFiledBtn" class="buttonDivTwo">
+										<a href="javascript:void(0)" onclick="checkResult(2)">不通过</a>
+									</div>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+		</div>
+			<div id="view_check_info" style="display:none;margin:0 auto">
+				<span style="margin-left:10px;padding:5px;margin-top:5px">审批信息</span>
+				<table border="1" cellpadding="0" cellspacing="1" width="90%" align="center" style="background-color:#79BAEC;margin:0 auto;margin-top:8px" id="completeStatus">
+					<tr class="tr_data" height="35px" id="tr_checkInfo">
+						<td class="table_property_title">审批结果</td>
+						<td align="left" colspan="3"><label id="view_check_status"></label></td>
+					</tr>
+					<tr class="tr_data" height="35px" id="tr_checkInfo">
+						<td class="table_property_title">审批人</td>
+						<td align="left"><label id="check_user"></label></td>
+						<td class="table_property_title">审批时间</td>
+						<td align="left"><label id="check_time"></label></td>
+					</tr>
+					<tr class="tr_data" height="35px" id="tr_check_content">
+						<td width="30%" class="table_property_title">审批意见</td>
+						<td width="70%" align="left" colspan="3" id="view_check_suggest"></td>
+					</tr>
+				
+			</table>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,172 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <link rel="stylesheet" type="text/css" href="../../css/redmond/jquery.ui.all.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var infoId="";
+   var gcstatus=0;
+   var gorderCode="";
+   var OSS_BASE="http://bookdoctor.oss-cn-beijing.aliyuncs.com/";
+    
+   $(document).ready(function() {
+     initData();
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   function toSubmit(cstatus){
+	 var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+	 gcstatus = cstatus;
+	 if ( cstatus == 1 ) {
+	   top.showConfirm("您确定要审核通过并生成退款单吗？", doSubmit);
+	 } else {
+	   top.showConfirm("您确定要审核不通过吗？", doSubmit);
+	 }
+   }
+   
+   function doSubmit(){
+     var xurl="/actions/Member.action?updateAppealInfo";
+     var aoData=[];
+     aoData.push( { "name": "appealInfo.id", "value": infoId } );
+	 aoData.push( { "name": "appealInfo.deal_desc", "value": $("#input_deal_desc").val() } );
+     aoData.push( { "name": "appealInfo.order_code", "value": gorderCode } );
+     aoData.push( { "name": "appealInfo.status", "value": gcstatus } );
+	 top.sendAjaxRequest(xurl,aoData,optCallback);
+   }
+   
+   function checkForm(){
+     var msg = "";
+	 if ( $("#input_deal_desc").val() == '' ) {
+	   msg="请输入处理情况";
+	 }
+     return msg;
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      isSaveOK = true;
+	      top.showInfoWinOK("操作成功");
+		  top.closeDialog();
+	    }else{
+	      isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   function initData(){
+	   try{
+		   infoId=top.getUrlParam(document.URL,"infoId");
+			 var aoData=[];
+		     aoData.push( { "name": "appealInfo.id", "value": infoId } );
+		     top.sendAjaxRequest("/actions/Member.action?getAppealInfoById",aoData,userInfoCallback);
+	   }catch(e){
+		   top.showInfoWinError(e.message);
+	   }
+   }
+   
+   function userInfoCallback(obj){
+       try{
+        if ( obj.status == true ){
+          var user=obj.body;
+          $("#user_name").html(user.user_name);
+		  $("#cell_phone").html( user.cell_phone );
+          $( "#tdStatus" ).html( top.getCodeName("CHECK_STATUS",user.status) );
+		  $( "#deal_user" ).html( user.deal_user );
+		  $( "#order_code" ).html( user.order_code );
+		  gorderCode=user.order_code;
+		  $( "#deal_desc" ).html( user.deal_desc );
+		  $( "#create_time" ).html(  top.getTimeStr( user.create_time ) );
+		  $( "#deal_time" ).html(  top.getTimeStr( user.deal_time ) );
+		  $( "#appeal_desc" ).html( user.appeal_desc );
+		  if ( user.status != 0 ) {
+		     $("#tr_deal_user").show();
+			 $("#tr_deal_time").show();
+			 $("#tr_deal_desc").show();
+		  } else {
+		     $("#optBtns").show();
+			 $("#tr_input_deal_desc").show();
+		  }
+        }else{
+          top.showInfoWinError("操作失败");
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+  </script> 
+</head>
+<body style="overflow:hidden;">
+<br>
+<table width="100%" border="0" padding="0" spacing="0">
+ <tr class="tr_data">
+    <td align="right">姓名:</td>
+    <td align="left"><span id="user_name" ></span></td>
+ </tr>
+ <tr class="tr_data">
+    <td width="30%" align="right">手机号码:</td>
+    <td width="70%" align="left"><span id="cell_phone" ></span></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">诊单编号:</td>
+    <td align="left" ><span id="order_code" ></span></td>
+ </tr>
+  <tr class="tr_data">
+    <td align="right">申诉时间:</td>
+    <td align="left" id="create_time"></td>
+ </tr>
+  <tr class="tr_data">
+    <td align="right">申诉原因:</td>
+    <td align="left" id="appeal_desc"></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">申诉状态:</td>
+    <td align="left" id="tdStatus"></td>
+ </tr>
+ <tr id="tr_deal_user" class="tr_data" style="display:none">
+    <td align="right">处理人:</td>
+    <td align="left" id="deal_user"></td>
+ </tr>
+ <tr id="tr_deal_time" class="tr_data" style="display:none">
+    <td align="right">处理时间:</td>
+    <td align="left" id="deal_time"></td>
+ </tr>
+  <tr id="tr_deal_desc" class="tr_data" style="display:none">
+    <td align="right">处理情况:</td>
+    <td align="left" id="deal_desc"></td>
+ </tr>
+ <tr id="tr_input_deal_desc" class="tr_data" style="display:none">
+    <td align="right">处理情况:</td>
+    <td align="left">
+	  <textarea id="input_deal_desc" rows="4" cols="40"></textarea>
+	</td>
+ </tr>
+</table><br/><br/>
+<p align="center" id="optBtns" style="display:none">
+   <table width="100%"><tr>
+		    <td width="50%" align="center"><input type="button" onclick="javascript:toSubmit(1)" value="审核通过并生成退款单" ></input></td>
+		    <td width="50%" align="center"><input type="button" onclick="javascript:toSubmit(2)" value="审核不通过" ></input></td>
+   </tr></table>
+</p>
+</body>
+</html>

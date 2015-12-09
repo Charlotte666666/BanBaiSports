@@ -1,0 +1,190 @@
+<!DOCTYPE HTML>
+<html>
+ <head>
+ <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+ <link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+ <link rel="stylesheet" type="text/css" href="../../css/redmond/jquery.ui.all.css">
+ <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+ <link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+ <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+ <script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+ <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+
+ <script type="text/javascript" charset="utf-8">
+  var oTable=null;
+  var gopt_type = "out";
+  var currentDeleteCode="";
+  
+  $(document).ready(function() {
+			   $( "#tdStatus" ).html( top.getCodeSelectHtml("USE_STATUS","q_status",true) );
+			   $( "#gopt_server_td" ).html( top.getRunServerCodeSelectHtml("qopt_server") );
+			   var tempStr = "";
+			   var iaoColumns= [
+			                   { "sTitle": "表名", "mDataProp": "table_name", "sWidth": "20%","sClass": "left","bSortable":false,
+                                      "fnRender": function ( oObj ) {
+										   tempStr = '<img src="../../img/delete.gif" onclick="deleteConfig('+oObj.aData.code+')" />&nbsp;<a href=\'javascript:void(0)\' onclick="updateMetaConfig(\''+oObj.aData.code+'\',\'';
+										   tempStr += oObj.aData.table_name+'\',\''+oObj.aData.db_codes+'\','+oObj.aData.status+',';
+										   tempStr += oObj.aData.month+','+oObj.aData.day+','+oObj.aData.hour+',';
+										   tempStr += oObj.aData.minute+',\''+oObj.aData.file_path+'\',';
+										   tempStr += oObj.aData.replace_month+','+oObj.aData.replace_day+','+oObj.aData.replace_hour+',\'';
+										   tempStr += oObj.aData.opt_sql+'\',\''+oObj.aData.col_sizes+'\',\''+oObj.aData.opt_server+'\',\''+oObj.aData.task_title+'\'';
+										   tempStr += ')" >';
+										   tempStr += oObj.aData.table_name+"</a>";
+                                           return tempStr;
+                                      },
+                                      "bUseRendered": false 
+                               },
+                               { "sTitle": "标题", "mDataProp": "task_title", "sWidth": "30%","sClass": "left","bSortable":false},
+                               { "sTitle": "数据库", "mDataProp": "db_codes", "sWidth": "15%","sClass": "center","bSortable":false,"bUseRendered": false},
+                               { "sTitle": "状态", "mDataProp": "status", "sWidth": "10%", "sClass": "center","bSortable":false,
+                                   "fnRender": function ( oObj ) {
+                                        return top.getCodeName( "USE_STATUS", oObj.aData.status );
+                                   },
+                                   "bUseRendered": false  
+                               }
+               ];
+ 
+			   var surl=top.getUrlBase()+"/actions/Metadata.action?getMetaConfigList";
+
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					    var dbcode = $("#q_db_codes").val();
+						if ( !dbcode ) dbcode = '';
+						var sta=$("#q_status").val();
+	                    if ( sta == undefined || sta == '' ) sta = '-1';
+			            aoData.push( { "name": "metaConfig.table_name", "value":$("#q_table_name").val() } );
+						aoData.push( { "name": "metaConfig.db_codes", "value": dbcode } );
+						aoData.push( { "name": "metaConfig.status", "value": sta } );
+						aoData.push( { "name": "metaConfig.opt_type", "value": gopt_type } );
+						aoData.push( { "name": "metaConfig.opt_server", "value": $("#qopt_server").val() } );
+			      },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumns
+				} );
+                top.sendAjaxRequest("/actions/Metadata.action?getMetaDBList",[],optGetDBListCallback);
+  } );
+
+  function doQuery(){
+	oTable.fnDraw();
+  }
+  
+  function deleteConfig(code){
+    currentDeleteCode=code;
+    top.showConfirm("您确定要删除选中的策略配置吗？", doDeleteConfig);
+  }
+  
+  function doDeleteConfig(){
+	  var aoData=[];
+      aoData.push( { "name": "metaConfig.code", "value": currentDeleteCode } );
+      top.sendAjaxRequest("/actions/Metadata.action?deleteMetaConfig",aoData,optCallback);
+  }
+			
+  function addMetaConfig(){
+	var xurl="pages/metadata/metaConfigInfo.html?opt=create&opt_type="+gopt_type;
+	top.openDialog("添加数据导出配置",xurl,true,600,550,saveCallBack);
+  }
+			
+  function updateMetaConfig(code,table_name,db_codes,status,month,day,hour,minute,file_path,replace_month,replace_day,replace_hour,opt_sql,col_sizes,opt_server,task_title){
+	var xurl="pages/metadata/metaConfigInfo.html?opt=update&code="+code+"&table_name="+table_name+"&db_codes="+db_codes+"&status="+status;
+	xurl+="&month="+month+"&day="+day+"&hour="+hour+"&minute="+minute+"&file_path="+file_path+"&opt_sql="+opt_sql+"&col_sizes="+col_sizes;
+	xurl+="&replace_month="+replace_month+"&replace_day="+replace_day+"&replace_hour="+replace_hour+"&opt_type="+gopt_type+"&opt_server="+opt_server+"&task_title="+task_title;
+	top.openDialog("修改数据导出配置",xurl,true,600,550,saveCallBack);
+  }
+			
+  function saveCallBack(){
+	try{
+		var obj = top.getTempValue();
+		if(obj.isSaveOK) doQuery();
+	}catch(e){
+	}
+  }
+			
+  function optCallback(obj){
+		try{
+			if ( obj.status == true ){
+			   top.showInfoWin("操作成功");
+			   doQuery();
+			}else{
+			   top.showInfoWin("操作失败 "+obj.msg);
+			}
+		}catch(e){
+		    top.showInfoWin("处理异常:"+e.message);
+		}
+  }
+		  
+  function optGetDBListCallback(obj){
+     try{
+	   var str="<select id='q_db_codes'><option value=''></option>";
+	   var temp = "";
+	   for ( var i=0;i<obj.aaData.length;i++ ) {
+	     temp = obj.aaData[i].code;
+		 str += "<option value='"+temp+"'>"+temp+"</option>";
+	   }
+	   str+="</select>";
+	   $( "#q_db_codesTD" ).html( str );
+	 }catch(e){}
+   }
+ </script>
+ </head>
+ <body>
+		<div width="100%">
+			 <div style='border: 2px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="110px">&nbsp;导出配置&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0" >
+			     <tr class="tr_data">
+			      <td align="right" width="15%">启用策略的服务器:</td><td align="left" width="10%" id="gopt_server_td"></td>
+				  <td align="right" width="10%">数据库:</td><td align="left" width="15%" id="q_db_codesTD"></td>
+				  <td align="right" width="10%">表名:</td><td align="left" width="20%"><input type="text" id="q_table_name" value="" size="20" onkeydown="if(event.keyCode==13) doQuery();"/></td>
+			      <td align="right" width="10%">状态:</td><td align="left" width="15%" id="tdStatus"></td>
+				 </tr>
+			 </table>
+			 </div>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				    <td>&nbsp;查询结果列表&nbsp;</td>
+					<td><div id="createBtn" class="buttonDivTwo"><a href="javascript:addMetaConfig()">添加</a></div></td>
+			       </tr></table></td>
+			  </tr>
+			</table>
+	         <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

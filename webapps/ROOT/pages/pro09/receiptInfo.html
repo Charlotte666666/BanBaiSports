@@ -1,0 +1,269 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css"
+			href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+		<script type="text/javascript" charset="utf-8">
+			var record_id='';
+			$(document).ready(function() {
+					record_id=top.getUrlParam(document.URL,"id");
+					getMoneyRecordObj();
+			} );
+			function getMoneyRecordObj(){
+				var aoData=[];
+				aoData.push({"name":"moneyRcd.record_id","value":record_id});
+				top.sendAjaxRequest("/actions/Payment.action?getCustMoneyRcdById",aoData,getMoneyRecordObjCallBack);
+			}
+			function getMoneyRecordObjCallBack(obj){
+				try{
+					if(obj.status==true){
+						moneyRecord=obj.body;
+						setTimeStr(moneyRecord.money_time);
+						setMoney(moneyRecord.money_total);
+						$("#cust_name").html(moneyRecord.cust_name);
+						var opt_user=moneyRecord.money_user;
+						if(!opt_user||opt_user==''){
+							opt_user=top.getCurrentUser().userName;
+						}
+						$("#money_user").html(opt_user);
+						$("#receipt_man").html(opt_user);
+						$("#record_id").html(moneyRecord.record_id);
+						$("#demo").html(moneyRecord.demo);
+						$("#money_name").html(top.getCodeName("MONEYNAME",moneyRecord.money_name));
+					}else{
+						 top.showInfoWin("操作失败 "+obj.msg);
+					}
+				}catch(e){
+				}
+			}
+			function setTimeStr(dateStr){
+				try{
+					var dObj=new Date();
+					if(dateStr==null||dateStr=='') {
+						dObj.setTime(dateStr);
+					}
+					var day=dObj.getDate();
+					var mouth=parseInt(dObj.getMonth())+parseInt(1);
+					var year=dObj.getFullYear();
+					$("#money_time").html(year+" 年 "+mouth+" 月 "+day+" 日");
+				}catch(e){
+				}
+			}
+			function setMoney(money){
+				if(money<0)money=-money;
+				if(!IsNumber(money))return;
+				$("#lowerMoney").html(money);
+				var isZero=0;
+				var sw=0;
+				var w=0;
+				var q=0;
+				var b=0;
+				var s=0;
+				var y=0;
+				var j=0;
+				var f=0;
+				if(money>=100000){
+					sw=parseInt(money/100000)%10;
+				}
+				if(money>=10000){
+					w=parseInt(money/10000)%10;
+				}
+				if(money>=1000){
+					q=parseInt(money/1000)%10;
+				}
+				if(money>=100){
+					b=parseInt(money/100)%10;
+				}
+				if(money>=10){
+					s=parseInt(money/10)%10;
+				}
+				if(money>=0){
+					y=parseInt(money)%10;
+				}
+				j=parseInt(money*10)%10;
+				f=parseInt(money*100)%10;
+				if(!sw){
+					sw='';
+				}else if(sw!=0){
+					isZero=1;
+				}
+				if((!w||w==0)){
+					if(isZero==1){
+						w=0;
+					}else{
+						w='';
+					}
+				}else if(w!=0){
+					isZero=1;
+				}
+				if((!q)||q==0){
+					if(isZero==1){
+						q=0;
+					}else{
+						q='';
+					}
+				}else if(q!=0){
+					isZero=1;
+				}
+				if((!b)||b==0){
+					if(isZero==1){
+						b=0;
+					}else{
+						b='';
+					}
+				}else if(b!=0){
+					isZero=1;
+				}
+				if((!s)||s==0){
+					if(isZero==1){
+						s=0;
+					}else{
+						s='';
+					}
+				}else if(s!=0){
+					isZero=1;
+				}
+				if((!y)||y==0){
+					if(isZero==1){
+						y=0;
+					}else{
+						y='';
+					}
+				}else if(y!=0){
+					isZero=1;
+				}
+				if((!j)||j==0){
+					if(isZero==1){
+						j=0;
+					}else{
+						j='';
+					}
+				}
+				if((!f)||f==0){
+					if(isZero==1){
+						f=0;
+					}else{
+						f='';
+					}
+				}
+				setMoneyValue(sw,w,q,b,s,y,j,f);
+			}
+			function getNumText(number){
+				if((!IsNumber(number))||number>9||number<1) {
+					return '零';
+				}
+				switch(number){
+					case 1: return "壹";
+					case 2: return "贰";
+					case 3: return "叁";
+					case 4: return "肆";
+					case 5: return "伍";
+					case 6: return "陆";
+					case 7: return "柒";
+					case 8: return "捌";
+					case 9: return "玖";
+					default:return '零';
+				}
+			}
+			function setMoneyValue(sw,w,q,b,s,y,j,f){
+				$("#sw").html(sw);
+				$("#w").html(w);
+				$("#q").html(q);
+				$("#b").html(b);
+				$("#s").html(s);
+				$("#y").html(y);
+				$("#j").html(j);
+				$("#f").html(f);
+				//金额大写
+				$("#usw").html(getNumText(sw));
+				$("#uw").html(getNumText(w));
+				$("#uq").html(getNumText(q));
+				$("#ub").html(getNumText(b));
+				$("#us").html(getNumText(s));
+				$("#uy").html(getNumText(y));
+				$("#uj").html(getNumText(j));
+				$("#uf").html(getNumText(f));
+			}
+			function doPrint(){
+				$("#printBtn").hide();
+				window.print();
+			}
+		</script>
+		<style>
+			#moneyUpper label{padding-left:5px;padding-right:5px;font-weight:bold}
+			table.receipt_td{
+				border-collapse:collapse;
+				border-top:0px;
+			}
+			table.receipt_td td{
+				border:solid 1px black;
+			}
+			tr.noBoder td{
+				border:0px;
+			}
+		</style>
+	</head>
+	<body style='margin:10px;'>
+		<table class="receipt_td" style="width:90%;margin:0 auto">
+			<tr  class="noBoder"><td colspan="15" style="border:0px;text-align:center;font-weight:bold">家居收款收据</td></tr>
+			<tr class="noBoder">
+				<td align="right">客户名称：</td><td colspan="2" align="left" style="text-align:left" id="cust_name"></td>
+				<td>开票日期:</td><td align="left" colspan="8" id="money_time"></td>
+				<td>收据号:</td><td colspan="2" align="left" id="record_id"></td>
+			</tr>
+			<tr>
+				<td rowspan="2" align="center" colspan="4">服务项目</td>
+				<td colspan="8" align="center">金额</td>
+				<td colspan="3" align="center" rowspan="2">备注</td>
+			</tr>
+			<tr>
+				<td>十</td>
+				<td>万</td>
+				<td>千</td>
+				<td>百</td>
+				<td>拾</td>
+				<td>元</td>
+				<td>角</td>
+				<td>分</td>
+			</tr>
+			<tr style="height:30px">
+				<td colspan="4" id="money_name"></td>
+				<td id="sw"></td>
+				<td id="w"></td>
+				<td id="q"></td>
+				<td id="b"></td>
+				<td id="s"></td>
+				<td id="y"></td>
+				<td id="j"></td>
+				<td id="f"></td>
+				<td id="demo" colspan="3"></td>
+			</tr>
+			<tr style="height:30px">
+				<td colspan="15" id="moneyUpper">合计金额（大写）
+				<label id="usw"></label>拾<label id="uw"></label>万<label id="uq"></label>千<label id="ub"></label>百<label id="us"></label>拾
+				<label id="uy"></label>元<label id="uj"></label>角<label id="uf"></label>分 <label style="margin:2px"></label>￥<label id="lowerMoney"></label></td>
+			</tr>
+			<tr class="noBoder">
+			<td align="right">开票人</td><td colspan="10"  style="text-align:left" id="receipt_man"></td>
+			<td align="right">收款人</td><td colspan="3" style="text-align:left" id="money_user"></td>
+			</tr>
+		</table>
+	<!--打印!-->				
+	<div width="100%" id="printBtn" style="margin_top:10px;font-size:20px;position:absolute;right:10px;top:5px"><center><a style="text-decoration: none"href="javascript:doPrint()"><span>[ 打印 ]</span></a></center></div>
+ 
+	</body>
+</html>

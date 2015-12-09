@@ -1,0 +1,194 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+ 
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var codelist=[];
+			var currentSelectedUserCode="";
+			$(document).ready(function() {
+			   $( "#tdStatus" ).html( top.getCodeSelectHtml("USER_STATUS","q_status",true) );
+			   var iaoColumns= [
+                               { "sTitle": "帐号", "mDataProp": "userCode", "sWidth": "30%",
+                                      "fnRender": function ( oObj ) {
+                                           return oObj.aData.userCode;
+                                      },
+                                      "bUseRendered": false
+                               },
+                               { "sTitle": "姓名", "mDataProp": "userName", "sWidth": "30%","sClass": "center",
+                                      "fnRender": function ( oObj ) {
+                                           return '<a href=\'javascript:void(0)\' onclick="onSelectUser(\''+oObj.aData.userCode+'\',\''+oObj.aData.userName+'\')" >'+oObj.aData.userName+"</a>" ;
+                                      },
+                                      "bUseRendered": false 
+                               },
+                               { "sTitle": "部门", "mDataProp": "deptId", "sWidth": "40%",
+                            	   "fnRender": function ( oObj ) {
+                                      return top.getDeptPath( oObj.aData.deptId );
+                                   },
+                                   "bUseRendered": false
+                               }
+               ];
+		   
+			   var surl=top.getUrlBase()+"/actions/User.action?getUserList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+						   var status=$("#q_status").val();
+						   if ( !status || status == '' ) status="-1";
+			               aoData.push( { "name": "user.userCode", "value":$("#q_usercode").val() } );
+	                       aoData.push( { "name": "user.userName", "value":$("#q_username").val() } );
+	                      aoData.push( { "name": "user.status", "value":status } );
+			      },
+			    "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumns
+				} );
+				codelist=top.getCodeListByType("META_OPT_SERVER");
+				var str='';
+				for (var i=0;i<codelist.length;i++) {
+				  str+='<br/><input type="checkbox" name="runServerCode" value="'+codelist[i].code+'" id="runServer_'+codelist[i].code+'"></input>&nbsp;'+codelist[i].name;
+				}
+				$("#runServerTd").html(str);
+			} );
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+			function optCallback(obj){
+			       try{
+			        if ( obj.status == true ){
+			          top.showInfoWinOK("操作成功");
+			        }else{
+			          top.showInfoWinError("操作失败 "+obj.msg);
+			        }
+			       }catch(e){
+			          top.showInfoWinError("处理异常:"+e.message);
+			       }
+		  }
+		   
+			function onSelectUser(userCode,userName){
+			    $("#selectedUserName").html("【"+userName+"】");
+				currentSelectedUserCode=userCode;
+				var url = "/actions/Metadata.action?getRunServerListByUser";
+				var aoData=[];
+                aoData.push( { "name": "userCode", "value": userCode } );
+	            top.sendAjaxRequest(url, aoData, getUserServerListCallback);
+			}
+			
+			function getUserServerListCallback(obj){
+			   try{
+				if ( obj.status == true ){
+				  for (var i=0;i<codelist.length;i++) {
+				    if ( obj.msg.indexOf(","+codelist[i].code) != -1 ) {
+					  $("#runServer_"+codelist[i].code).attr("checked", true);
+					} else {
+					  $("#runServer_"+codelist[i].code).attr("checked", false);
+					}
+				  }
+				}else{
+				  top.showInfoWinError("处理异常:"+e.message);
+				}
+			   }catch(e){
+				  top.showInfoWinError("处理异常:"+e.message);
+			   }
+			}
+			
+			function saveList(){
+			    if ( currentSelectedUserCode == '' ) {
+				   top.showInfoWinWarn("请先选择一个用户");
+				  return ;
+				}
+			    var url = "/actions/Metadata.action?insertRunserverUser";
+				var aoData=[];
+                aoData.push( { "name": "userCode", "value": currentSelectedUserCode } );
+				aoData.push( { "name": "servers", "value": top.getAllCheckedValue( document.getElementsByName('runServerCode') ) } );
+	            top.sendAjaxRequest(url, aoData, optCallback);
+			}
+		</script>
+	</head>
+	<body>
+		<div width="100%;">
+		  <table width="100%"><tr>
+		    <td width="70%"  valign="top">
+		     <div  id="queryArea" style='border: 1px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="110px">&nbsp;用户查询&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0" >
+			   <tr class="tr_data">
+			      <td align="right" width="15%">帐号:</td><td align="left" width="15%"><input type="text" id="q_usercode" value="" size="10" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+			      <td align="right" width="15%">姓名:</td><td align="left" width="15%"><input type="text" id="q_username" value="" size="10" onkeydown="if(event.keyCode==13) doQuery();"/></td>
+			      <td align="right" width="15%">状态:</td><td align="left" width="25%" id="tdStatus"></td>
+			   </tr>
+			 </table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left">
+				   &nbsp;</td>
+			  </tr>
+			</table>
+	        <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		   </td>
+		   <td width="30%" valign="top">
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="260px">&nbsp;用户<span id="selectedUserName"></span>可执行的服务器&nbsp;</td>
+				  <td align="right">
+				     &nbsp;
+				  </td>
+				  <td width="2px"><div class="buttonDivTwo"><a href="javascript:saveList()">保存</a></div></td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="5px" cellspacing="0" border="0" >
+			   <tr>
+			       <td id="runServerTd">&nbsp;</td>
+			   </tr>
+			 </table>
+		   </td>
+		   </tr>
+		   </table>
+		</div>
+	</body>
+</html>

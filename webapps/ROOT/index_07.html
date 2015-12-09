@@ -1,0 +1,239 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>县级预报预警业务平台省级数据环境监视</title>
+<link href="css/comm.css" rel="stylesheet" type="text/css" />
+<link href="css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<script type="text/javascript" src="js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="js/SimpleMap.js"></script>
+<script type="text/javascript" src="js/helpyouworkeasy-core.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript" language="JavaScript1.2" src="js/Calendar3.js"></script>
+
+<script type="text/javascript">
+var objs = [];
+var interPlayAlert=0;
+var isNeedAlarm=false;
+
+jQuery(document).ready(function() {
+    g_systemVersion="v1.0.0";
+    initGlobalData(false);
+	top.sendAjaxRequest("/actions/Pro07.action?getCurrentTime",[],callbackInitDate);
+ });
+ 
+ function callbackInitDate(obj){
+    try{
+	    if ( obj.status == true ){
+	        var timeStamp = obj.body;
+		    var today=new Date();
+			today.setTime( Number(timeStamp)-8*60*60*1000 );
+			var y = today.getFullYear();
+			var m = today.getMonth() + 1;
+			var d = today.getDate();
+			var h = today.getHours();
+			$("#q_date").val( y+"-"+getTwoNumberStr(m)+"-"+getTwoNumberStr(d) );
+			$("#span_hour").html( get24HourSelectHtml("q_hour",false,h) );
+			doQuery();
+	    }else{
+	    }
+	}catch(e){
+	}
+ }
+ 
+ function doQuery(){
+    var date=$("#q_date").val();
+	var hour=$("#q_hour").val();
+    if ( date == '' ) {
+	   top.showInfoWinWarn("请输入查询日期");
+	   return ;
+	}
+    var aoData=[];
+    aoData.push( { "name": "date", "value": date } );
+	aoData.push( { "name": "hour", "value": hour } );
+	top.sendAjaxRequest("/actions/Pro07.action?getDataList",aoData,infoCallback);
+ }
+ 
+ function infoCallback(obj){
+    try{
+	  clearInterval( interPlayAlert );
+	  isNeedAlarm=false;
+	  objs=obj.body;
+	  if ( obj.status == false || objs.length == 0 ) {
+	    $("#dataList").html( "<tr bgcolor='#E5F4F9'><td align='center'><font color='blue'>没有数据</font></td></tr>" );
+		return ;
+	  }
+	  var ht='';
+	  var received=0;
+	  var receivable=0;
+	  var miss=0;
+	  var row=0;
+	  
+	  for (var i=0;i<objs.length;i++) {
+	      received=objs[i].received;
+	      receivable=objs[i].receivable;
+		  miss=receivable-received;
+		  if ( objs[i].subAll > 0 ) {
+		      if ( objs[i].subIndex == 0 ) {
+			   ht+='<tr ';
+			   ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+			   ht+=' ><td bgcolor="#CEDAE8" style="border-width: 0px 1px 1px 0;border-style: none dotted dotted none;border-color: #89A1B9" width="160px" align="center">'+objs[i].parentTitle+'</td><td colspan="4" width="640px"><table cellpadding="0" cellspacing="0" border="0" width="640px"><tr>';
+			  } else {
+			   ht+='<tr ';
+			   ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+			   ht+='>';
+			  }
+			  ht+='<td width="160px" bgcolor="#CEDAE8" style="border-width: 0px 0px 1px 0;border-style: none none dotted none;border-color: #89A1B9" height="32px" align="center">'+objs[i].title+'</td>';
+			  ht+='<td width="160px" height="32px" align="center"><b>'+received+'</b></td>';
+			  ht+='<td width="160px" height="32px" align="center"><b>'+receivable+'</b></td>';
+			  ht+='<td width="160px" height="32px" align="left">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+			  if ( miss > 0 && objs[i].alarm == 1 ) {
+			    ht+='<img src="img/icon-warning.gif" />&nbsp;';
+				isNeedAlarm=true;
+			  }
+			  if ( miss >= 0 ) {
+			    ht+=miss;
+			  }
+			  ht+='</td>';
+			  if ( objs[i].subIndex == objs[i].subAll - 1 ) {
+			   ht+='</tr></table></td></tr>';
+			  } else {
+			   ht+='</tr>';
+			  }
+		  } else {
+			  ht+='<tr ';
+			  ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+			  ht+='><td colspan="5" border="0" width="800px"><table cellpadding="0" cellspacing="0" border="0" ><tr border="0">';
+			  ht+='<td bgcolor="#CEDAE8" style="border-width: 0px 0px 1px 0;border-style: none none dotted none;border-color: #89A1B9" width="320px" align="center">'+objs[i].title+'</td>';
+			  ht+='<td width="160px" height="32px" align="center"><b>'+received+'</b></td>';
+			  ht+='<td width="160px" height="32px" align="center"><b>'+receivable+'</b></td>';
+			  ht+='<td width="160px" height="32px" align="left">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+			  if ( miss > 0 && objs[i].alarm == 1 ) {
+			    ht+='<img src="img/icon-warning.gif" />&nbsp;';
+				isNeedAlarm=true;
+			  }
+			  if ( miss >= 0 ) {
+			    ht+=miss;
+			  }
+			  ht+='</td></tr></table></td></tr>';
+		  }
+		  if ( row == 1 ) {
+			 row=0;
+		  } else {
+		     row=1;
+		  }
+	  }
+	  $("#dataList").html( ht );
+	  
+	  
+	  if ( isNeedAlarm ) {
+		 interPlayAlert = setInterval("playAlert()", 4000 );
+	  }
+	}catch(e){}
+ }
+
+ //////////////////////////////////////////////////////////
+/**
+ * 初始化项目个性化全局缓存数据
+ */
+function proInitGlobalData(){
+	
+}
+
+function lastHour(){
+  var str=$("#q_date").val();
+  var d=new Date();
+  d.setFullYear( Number(str.substring(0,4)) );
+  d.setMonth( Number(str.substring(5,7)) - 1 );
+  d.setDate( Number(str.substring(8,10)) );
+  d.setHours( Number( $("#q_hour").val() ) );
+  d.setMinutes(0);
+  d.setSeconds(0);
+  d.setTime( d.getTime() - 60*60000 );
+  
+  var y = d.getFullYear();
+  var m = d.getMonth() + 1;
+  var day = d.getDate();
+  var h = d.getHours();
+  
+  $("#q_date").val( y+"-"+getTwoNumberStr(m)+"-"+getTwoNumberStr(day) );
+  $("#q_hour").val( h );
+  doQuery();
+}
+
+function currentHour(){
+  top.sendAjaxRequest("/actions/Pro07.action?getCurrentTime",[],callbackInitDate);
+}
+
+function playAlert(){
+	  try{
+	    if ( !isNeedAlarm ) return ;
+	    if ( document.getElementById("isPlayAlert").checked ) {
+		  Player.controls.play();
+		}
+	  }catch(e){}
+ }
+ 
+</script>
+</head>
+
+<body style="width:100%;background-color : #F3F3F3;">
+<center>
+<div style="margin: 10px;padding: 10px;width:860px;background-color : #ffffff;	border: 2px solid #89A1B9;-moz-border-radius: 12px;-webkit-border-radius: 12px;border-radius: 12px;overflow: auto;">
+<p>
+<table width="810px"><tr>
+<td align="center" valign="middle"><font size="6"><b>县级预报预警业务平台省级数据环境监视系统</b></font>
+</td>
+</tr>
+</p><br/>
+<table cellpadding="0" width="800px" cellspacing="0" border="0">
+ <tr bgcolor="#E1F2EC">
+  <td width="15%" align="center">
+   <SCRIPT type="text/javascript">    
+		if(-1 != navigator.userAgent.indexOf("MSIE")) {    
+			document.write(' <OBJECT id="Player"');    
+			document.write(' classid="clsid:6BF52A52-394A-11d3-B153-00C04F79FAA6"');    
+			document.write(' width=0 height=0 > <param name="URL" value="pages/pro02/res/ringin.wav" /> <param name="AutoStart" value="false" /> </OBJECT>');    
+		}
+	    else {
+			document.write(' <OBJECT id="Player"');    
+			document.write(' type="application/x-ms-wmp"');    
+			document.write(' autostart="false" src= "pages/pro02/res/ringin.wav" width=0 height=0> </OBJECT>');    
+		}
+     </SCRIPT>    
+     <input type="checkbox" id="isPlayAlert" checked value="1" />鸣音报警
+  </td>
+  <td width="20%" align="center"><div class="buttonDivSix"><a href="javascript:lastHour()">前一小时</a></div></td>
+  <td width="20%" align="center"><div class="buttonDivSix"><a href="javascript:currentHour()">当前小时</a></div></td>
+  <td width="35%" align="center">
+   时间(世界时)：<input type="text" id="q_date" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" />&nbsp;
+   <span id="span_hour"></span>时
+  </td>
+  <td width="10%" align="center"><div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div></td>
+ </tr>
+</table>
+<table cellpadding="0" width="800px" cellspacing="2px" border="1">
+ <tr bgcolor="#CEDAE8">
+  <td width="320px" align="center">资料类型</td>
+  <td width="160px" align="center">实收</td>
+  <td width="160px" align="center">应收</td>
+  <td width="160px" align="center">缺收</td>
+ </tr>
+</table>
+<table id="dataList" width="800px" cellpadding="0" cellspacing="0" border="1" style="border-color:blue"></table>
+<table cellpadding="0" width="800px" cellspacing="2px" border="1">
+ <tr bgcolor="#CEDAE8">
+  <td width="320px" align="center">资料类型</td>
+  <td width="160px" align="center">实收</td>
+  <td width="160px" align="center">应收</td>
+  <td width="160px" align="center">缺收</td>
+ </tr>
+</table>
+</div>
+</center><br/>
+<div style="text-align:center"><font color="black">&nbsp;Copyright © 2013 国家气象信息中心 版权所有</font></div>
+<br/>
+<script type="text/javascript" >writeCommonDiv();</script>
+
+</body>
+</html>

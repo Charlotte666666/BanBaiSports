@@ -1,0 +1,365 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css"
+			href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var queryCtlMark=0;//查询条件显示收缩标志变量
+			var target_id="";
+			$(document).ready(function() {
+			$("#tdtarget_type").html( top.getCodeSelectHtml("TARGET_TYPE","target_type",true) );
+			 var iaoColumns= [
+			               { "sTitle": "年份", "mDataProp": "year", "sWidth": "6%","sClass": "center", "bSortable":false,
+						         "fnRender": function(oObj){
+						            if(oObj.aData.year==''){
+									    return get6YearSelectHtml('year_'+oObj.aDagta.target_id,false,'','');
+									}else{
+									    return get6YearSelectHtml('year_'+oObj.aData.target_id,false,oObj.aData.year,'');
+									}
+						          },
+							  "bUseRendered": false},
+			                { "sTitle": "目标类型", "mDataProp": "target_type", "sWidth": "6%", "sClass": "center","bSortable":false,
+								"fnRender": function ( oObj ) {
+								          if(oObj.aData.target_type==''){
+										    return top.getCodeSelectHtml("TARGET_TYPE",'target_type_'+oObj.aData.target_id,true,'','','','80');
+										  }else{
+										    return top.getCodeSelectHtml("TARGET_TYPE",'target_type_'+oObj.aData.target_id,true,oObj.aData.target_type,'','',80);
+										  }
+                                     },
+							"bUseRendered": false},
+                            { "sTitle": "一月", "mDataProp": "january", "sWidth": "6%", "sClass": "center","bSortable":false,
+							     "fnRender":function(oObj){
+									  return "<input id='january_"+oObj.aData.target_id+"' size='4' value='"+oObj.aData.january+"'/>";
+							     },
+							"bUseRendered": false},
+							{ "sTitle": "二月", "mDataProp": "february", "sWidth": "6%", "sClass": "center","bSortable":false,
+							     "fnRender":function(oObj){
+									  return "<input id='february_"+oObj.aData.target_id+"' size='4' value='"+oObj.aData.february+"'/>";
+							     },
+							"bUseRendered": false},
+							{ "sTitle": "三月", "mDataProp": "march", "sWidth": "6%", "sClass": "center","bSortable":false,
+							     "fnRender":function(oObj){
+									  return "<input id='march_"+oObj.aData.target_id+"' size='4' value='"+oObj.aData.march+"'/>";
+							     },
+							"bUseRendered": false},
+							{ "sTitle": "四月", "mDataProp": "april", "sWidth": "6%", "sClass": "center","bSortable":false,
+							     "fnRender":function(oObj){
+									  return "<input id='april_"+oObj.aData.target_id+"' size='4' value='"+oObj.aData.april+"'/>";
+							     },
+							"bUseRendered": false},
+							{ "sTitle": "五月", "mDataProp": "may", "sWidth": "6%", "sClass": "center","bSortable":false,
+							     "fnRender":function(oObj){
+									  return "<input id='may_"+oObj.aData.target_id+"' size='4' value='"+oObj.aData.may+"'/>";
+							     },
+							"bUseRendered": false},
+							{ "sTitle": "六月", "mDataProp": "june", "sWidth": "6%", "sClass": "center","bSortable":false,
+							     "fnRender":function(oObj){
+									  return "<input id='june_"+oObj.aData.target_id+"' size='4' value='"+oObj.aData.june+"'/>";
+							     },
+							"bUseRendered": false},
+							{ "sTitle": "七月", "mDataProp": "july", "sWidth": "6%", "sClass": "center","bSortable":false,
+							     "fnRender":function(oObj){
+									  return "<input id='july_"+oObj.aData.target_id+"' size='4' value='"+oObj.aData.july+"'/>";
+							     },
+							"bUseRendered": false},
+							{ "sTitle": "八月", "mDataProp": "august", "sWidth": "6%", "sClass": "center","bSortable":false,
+							     "fnRender":function(oObj){
+									  return "<input id='august_"+oObj.aData.target_id+"' size='4' value='"+oObj.aData.august+"'/>";
+							     },
+							"bUseRendered": false},
+							{ "sTitle": "九月", "mDataProp": "september", "sWidth": "6%", "sClass": "center","bSortable":false,
+							     "fnRender":function(oObj){
+									  return "<input id='september_"+oObj.aData.target_id+"' size='4' value='"+oObj.aData.september+"'/>";
+							     },
+							"bUseRendered": false},
+							{ "sTitle": "十月", "mDataProp": "october", "sWidth": "6%", "sClass": "center","bSortable":false,
+							     "fnRender":function(oObj){
+									  return "<input id='october_"+oObj.aData.target_id+"' size='4' value='"+oObj.aData.october+"'/>";
+							     },
+							"bUseRendered": false},
+							{ "sTitle": "十一月", "mDataProp": "november", "sWidth": "6%", "sClass": "center","bSortable":false,
+							     "fnRender":function(oObj){
+									  return "<input id='november_"+oObj.aData.target_id+"' size='4' value='"+oObj.aData.november+"'/>";
+							     },
+							"bUseRendered": false},
+							{ "sTitle": "十二月", "mDataProp": "december", "sWidth": "6%", "sClass": "center","bSortable":false,
+							     "fnRender":function(oObj){
+									  return "<input id='december_"+oObj.aData.target_id+"' size='4' value='"+oObj.aData.december+"'/>";
+							     },
+							"bUseRendered": false},
+							{ "sTitle": "操作", "mDataProp": "fill_user", "sWidth": "6%","sClass": "center","bSortable":false,
+								"fnRender": function ( oObj ) {
+								          var isCreate=oObj.aData.target_id==''?true:false;
+										  var ht='<img src="../../img/save.bmp" style="cursor:pointer;" onclick="updateInfo(\''+oObj.aData.target_id+'\','+isCreate+')" />';
+										  if(oObj.aData.target_id!=''){
+										    ht+='&nbsp;<img src="../../img/delete.gif" style="cursor:pointer;" onclick="deleteInfo(\''+oObj.aData.target_id+'\',\''+oObj.aData.target_type+'\',\''+oObj.aData.year+'\')" />';
+										  }
+                                          return ht;
+                                     },
+									"bUseRendered": false 
+							}
+               ];			
+			   var surl=top.getUrlBase()+"/actions/Interview.action?getTargetMonthList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData=getParamDate(aoData);
+			    },
+			    "sDom": "frt",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+			function addInfo(){
+				var xurl="pages/pro09/yearTargetInfo.html?optType=insert";
+				top.openDialog("业绩总产值信息",xurl,true,900,600,saveCallBack);
+			}
+			
+			function checkInfo(id){
+			   var message="";
+			   if($("#january_"+id).val()!='' && $("#january_"+id).val()!='0' && !IsNumber($("#january_"+id).val())){
+			       message+="一月业绩目标产值类型错误,请重新输入！";
+			   }
+			   if($("#february_"+id).val()!=''&&  $("#february_"+id).val()!='0' && !IsNumber($("#february_"+id).val())){
+			       message+="二月业绩目标产值类型错误,请重新输入！";
+			   }
+			   if($("#march_"+id).val()!='' && $("#march_"+id).val()!='0' && !IsNumber($("#march_"+id).val())){
+			       message+="三月业绩目标产值类型错误,请重新输入！";
+			   }
+			   if($("#april_"+id).val()!='' && $("#april_"+id).val()!='0' && !IsNumber($("#april_"+id).val())){
+			       message+="四月业绩目标产值类型错误,请重新输入！";
+			   }
+			   if($("#may_"+id).val()!='' && $("#may_"+id).val()!='0' && !IsNumber($("#may_"+id).val())){
+			       message+="五月业绩目标产值类型错误,请重新输入！";
+			   }
+			   if($("#june_"+id).val()!='' && $("#june_"+id).val()!='0' && !IsNumber($("#june_"+id).val())){
+			       message+="六月业绩目标产值类型错误,请重新输入！";
+			   }
+			   if($("#july_"+id).val()!='' && $("#july_"+id).val()!='0' && !IsNumber($("#july_"+id).val())){
+			       message+="七月业绩目标产值类型错误,请重新输入！";
+			   }
+			   if($("#august_"+id).val()!='' && $("#august_"+id).val()!='0' && !IsNumber($("#august_"+id).val())){
+			       message+="八月业绩目标产值类型错误,请重新输入！";
+			   }
+			   if($("#september_"+id).val()!='' && $("#september_"+id).val()!='0' && !IsNumber($("#september_"+id).val())){
+			       message+="九月业绩目标产值类型错误,请重新输入！";
+			   }
+			   if($("#october_"+id).val()!='' && $("#october_"+id).val()!='0' && !IsNumber($("#october_"+id).val())){
+			       message+="十月业绩目标产值类型错误,请重新输入！";
+			   }
+			   if($("#november_"+id).val()!='' && $("#november_"+id).val()!='0' && !IsNumber($("#november_"+id).val())){
+			       message+="十一月业绩目标产值类型错误,请重新输入！";
+			   }
+			   if($("#december_"+id).val()!='' && $("#december_"+id).val()!='0' && !IsNumber($("#december_"+id).val())){
+			       message+="十二月业绩目标产值类型错误,请重新输入！";
+			   }
+			   return message;
+			}
+			
+			function updateInfo(id,optType){
+				//var xurl="pages/pro09/yearTargetInfo.html?optType="+optType+"&id="+id;
+				//top.openDialog("业绩总产值信息",xurl,true,900,600,saveCallBack);
+				var msg=checkInfo(id);
+				if(msg!=""){
+				  top.showInfoWinWarn(msg);return;
+				}
+				var aoData=[];
+				aoData.push( { "name":"targetMonth.year","value":$("#year_"+id).val()} );
+				aoData.push( { "name":"targetMonth.target_type","value":$("#target_type_"+id).val()} );
+				aoData.push( { "name":"targetMonth.january","value":$("#january_"+id).val()} );
+				aoData.push( { "name":"targetMonth.february","value":$("#february_"+id).val()} );
+				aoData.push( { "name":"targetMonth.march","value":$("#march_"+id).val()} );
+				aoData.push( { "name":"targetMonth.april","value":$("#april_"+id).val()} );
+				aoData.push( { "name":"targetMonth.may","value":$("#may_"+id).val()} );
+				aoData.push( { "name":"targetMonth.june","value":$("#june_"+id).val()} );
+				aoData.push( { "name":"targetMonth.july","value":$("#july_"+id).val()} );
+				aoData.push( { "name":"targetMonth.august","value":$("#august_"+id).val()} );
+				aoData.push( { "name":"targetMonth.september","value":$("#september_"+id).val()} );
+				aoData.push( { "name":"targetMonth.october","value":$("#october_"+id).val()} );
+				aoData.push( { "name":"targetMonth.november","value":$("#november_"+id).val()} );
+				aoData.push( { "name":"targetMonth.december","value":$("#december_"+id).val()} );
+				var year_total_target=parseInt($("#january_"+id).val())+parseInt($("#february_"+id).val())+parseInt($("#march_"+id).val())+parseInt($("#april_"+id).val())+parseInt($("#may_"+id).val())+parseInt($("#june_"+id).val())+parseInt($("#july_"+id).val())+parseInt($("#august_"+id).val())+parseInt($("#september_"+id).val())+parseInt($("#october_"+id).val())+parseInt($("#november_"+id).val())+parseInt($("#december_"+id).val());
+				aoData.push( { "name":"targetMonth.year_total_target","value": year_total_target} );
+				aoData.push( { "name":"targetMonth.target_id","value":id} );
+				top.sendAjaxRequest("/actions/Interview.action?"+(optType?"saveTargetMonth":"updateTargetMonth"),aoData,optCallback);
+			}
+
+			function saveCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				}
+			}
+			
+			function optCallback(obj){
+			       try{
+			        if ( obj.status == true ){
+			          top.showInfoWinOK("操作成功");
+			          doQuery();
+			        }else{
+			          top.showInfoWin("操作失败 "+obj.msg);
+			        }
+			       }catch(e){
+			          top.showInfoWin("处理异常:"+e.message);
+			       }
+		  }
+		  
+		function deleteInfo(id,type,year){
+		   target_id=id;
+		   top.showConfirm("您确定要删除【"+year+"年"+top.getCodeName("TARGET_TYPE",type)+"】的业绩目标值信息吗？", doDeleteInfo);
+		}
+		
+		function doDeleteInfo(){
+		   var aoData=[];
+		   aoData.push( {"name":"targetMonth.target_id","value":target_id} );
+		   top.sendAjaxRequest("/actions/Interview.action?deleteTargetMonth",aoData,doDeleteInfoCallback);
+		}
+		
+		function doDeleteInfoCallback(obj){
+		   if(obj.status==true){
+		      top.showInfoWinOK("操作成功！");
+			  doQuery();
+		   }else{
+		      top.showInfoWinError("操作失败--》"+obj.msg);
+		   }
+		}
+
+		function getParamDate(aoData){
+			aoData.push( { "name": "targetMonth.year", "value": -1} );
+			aoData.push( { "name": "targetMonth.target_type", "value": ''} );//$("#target_type").val()
+			return aoData;
+		}
+			//查询条件的展开与收缩
+		function dwOup(){
+				if(queryCtlMark==0){//展开
+					$("#queryCtlIcon").attr("src","../../img/icons/arrow-up.gif"); 
+					$("#queryTab").slideToggle();
+					queryCtlMark=1;
+				}else{//收缩
+					$("#queryCtlIcon").attr("src","../../img/icons/arrow-down.gif"); 
+					$("#queryTab").slideToggle();
+					queryCtlMark=0;
+				}
+		}
+		/**
+	 * 返回最近6年年份下拉选项
+	 */
+	function get6YearSelectHtml(name,hasEmpty,initValue, onchangeFn){
+		if ( !initValue ) initValue = -1;
+		var ht="<select id='"+name+"'>";
+		if ( onchangeFn ) ht="<select id='"+name+"' onchange='"+onchangeFn+"'>";
+		if ( hasEmpty ) {
+			ht+="<option value=''>&nbsp;&nbsp;</option>";
+		}
+		var d=new Date();
+		var year = Number( d.getFullYear() );
+		var toYear=Number(year+1);
+		 ht+="<option value='"+ toYear +"' ";
+		 if ( toYear == initValue ) ht+=" selected ";
+		 ht+=">"+toYear+"</option>";  
+		for(var i=year;i>year-5;i-- ){
+		   ht+="<option value='"+ i +"' ";
+		   if ( i == initValue ) ht+=" selected ";
+		   ht+=">"+i+"</option>";
+		}
+		ht+="</select>";
+		return ht;
+	}
+		</script>
+	</head>
+	<body>
+	
+		<div width="100%">
+			<!--<div style='border: 1px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="150px">
+							&nbsp;查询业绩总产值计划&nbsp;
+						</td>
+						<td align="right">
+							<div class="buttonDivTwo">
+								<a href="javascript:doQuery()">查询</a>
+							</div>
+						</td>
+						<td width="2px">
+							&nbsp;
+						</td>
+						<td width="2px">
+							<span><image id="queryCtlIcon" src="../../img/icons/arrow-down.gif" alt="展开" onclick="javascript:dwOup();"/></span>
+						</td>
+					</tr>
+				</table>
+				<table  id="queryTab"  style="display:none" width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0">
+					<tr class="tr_data">
+						<td width="50%" align="right">目标类型</td>
+						<td align="left">&nbsp;<span id="tdtarget_type"></span></td>
+					</tr>
+				</table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0"
+				border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									&nbsp;查询结果列表&nbsp;
+								</td>
+								<td>
+									<div id="createBtn" class="buttonDivTwo">
+										<a href="javascript:addInfo()">添加</a>
+									</div>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>!-->
+			<table cellpadding="0" width="100%" cellspacing="0" border="0"
+				class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

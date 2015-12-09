@@ -1,0 +1,318 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css" media="print, projection, screen">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+
+		<style type="text/css">
+		  .withBorder{
+		    border:3px solid #000;/*黑色1像素粗边框*/
+		  }
+		  .widthBorder td{
+		    border:none;/*这个是单元格，不给他要边框*/
+		  }
+		
+		</style>
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var qDeptId="";
+			var qDeptName="";
+			var head_filiale=1;
+			var dept="";
+			
+			$(document).ready(function() {
+			 head_filiale=top.getUrlParam(document.URL,"head_filiale");
+			 dept=top.getUrlParam(document.URL,"dept");
+			 $("#tabs ul").tabs();
+			 getPersonalDiagram();
+			 //top.sendAjaxRequest("/actions/PersonalManage.action?getAllFilialeDept",[],getAllFilialeDeptCallback);
+			 var iaoColumns= [
+			                { "sTitle": "姓名", "mDataProp": "userName", "sWidth": "30%","sClass": "left",
+							       "fnRender":function(oObj){
+								     return "<a href='javascript:void(0)' onclick='queryUserInfo(\""+oObj.aData.userCode+"\")'>"+oObj.aData.userName+"</a>";
+								   },
+								   "bUseRendered": false
+							},
+                            { "sTitle": "部门", "mDataProp": "deptId", "sWidth": "25%", "sClass": "center",
+							  "fnRender": function (oObj){
+							    return top.getDeptPath( oObj.aData.deptId )
+							  },
+							  "bUseRendered": false
+							},
+							{ "sTitle": "职称", "mDataProp": "job_title", "sWidth": "15%","sClass": "center",
+							        "fnRender": function ( oObj ) {
+										return top.getCodeName( "SYS_POSITION", oObj.aData.job_title );                                      
+                                  },
+								   "bUseRendered": false
+							},
+							{ "sTitle": "职级", "mDataProp": "job_level", "sWidth": "15%","sClass": "center",
+							        "fnRender": function ( oObj ) {
+									    if(oObj.aData.job_level!=null && oObj.aData.job_level!="null" && oObj.aData.job_level!=""){
+										  return top.getJobLevelNameByCode(oObj.aData.job_level,oObj.aData.job_title);
+										}
+										return "";                                      
+                                  },
+								   "bUseRendered": false
+							},
+							{ "sTitle": "性别", "mDataProp": "sex", "sWidth": "15%","sClass": "center",
+							      "fnRender": function ( oObj ) {
+										return top.getCodeName( "SEX", oObj.aData.sex );                                      
+                                  },
+								   "bUseRendered": false
+							},
+							{ "sTitle": "职位状态", "mDataProp": "position_status", "sWidth": "15%","sClass": "center",
+							      "fnRender": function ( oObj ) {
+										return top.getCodeName( "POSITION_STATUS", oObj.aData.position_status );                                      
+                                  },
+								   "bUseRendered": false
+							},
+							{ "sTitle": "邮箱", "mDataProp": "email","sWidth": "15%" },
+                            { "sTitle": "移动电话", "mDataProp": "mobilePhone","sWidth": "10%" }
+               ];			
+			   var surl=top.getUrlBase()+"/actions/PersonalManage.action?getUserList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData=getParamDate(aoData);
+			    },
+			    "sDom": "frt",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function getAllFilialeDeptCallback(obj){
+			   var ht="<select id='dept' style='width:120px;'>";
+			   ht+="<option value='headquarter'>总部</option>";
+			   if(obj.status==true){
+			      if(obj.body.length>0){
+				    var o=obj.body;
+				    for(var i=0;i<o.length;i++){
+					  ht+="<option value='"+o[i].deptId+"'>"+o[i].name+"</option>";
+					}
+				  }
+			   }else{
+			     top.showInfoWinError("操作失败！");
+			   }
+			   ht+="</select>";
+			   $("#tddept").html(ht);
+			   getPersonalDiagram();
+			   oTable.fnDraw();
+			}
+			
+			function getPersonalDiagram(){
+			  var aoData=[];
+			  if(head_filiale=="0"){
+			    aoData.push( { "name":"dept.deptId","value":dept } );
+			  }
+			  aoData.push( { "name":"head_filiale","value":head_filiale} );
+			  top.showLoadingInfo(true);
+			  top.sendAjaxRequest("/actions/PersonalManage.action?getPersonalFrameDiagram",aoData,getPersonalDiagramCallback);
+			}
+			
+			function getPersonalDiagramCallback(obj){
+			   top.showLoadingInfo(false);
+			   var ht="<table width='100%'>";
+			   if(obj.status==true){
+			     var dept=obj.body.nowdept;
+				 var subdept=obj.body.subDept;
+				 var length=1;
+				 if(subdept){
+				    length=subdept.length;
+				 }
+				 if(dept){
+				    var nowDept=dept.dept;
+					qDeptId=nowDept.deptId;
+					var deptUser=dept.deptUser;
+					ht+="<tr><td>&nbsp;</td><td align='center'  colspan='"+(Number(length)*2+length-3)+"'>";
+					ht+="<table style='width:100%'><tr>";
+					ht+="<td colspan='2' align='center' style='border:solid 2px #000'>"+nowDept.name+"</td>";
+					ht+="</tr>";
+					ht+="<tr><td >在职:"+obj.body.on_duty_member+"</td><td>试用:"+obj.body.on_probation_member+"</td></tr>";
+					
+					if(deptUser.length>0){
+					  ht+="<tr><td style='border:solid 2px #000;' colspan='2'><table style='width:100%;'>";
+					  for(var i=0;i<deptUser.length;i++){
+					      ht+="<tr>";
+						  ht+="<td align='center' style='width:50%;'>";
+						  if(deptUser[i].job_level!=null && deptUser[i].job_level!="null" && deptUser[i].job_level!=""){
+						    ht+=top.getJobLevelNameByCode(deptUser[i].job_level,deptUser[i].job_title);
+						  }
+						  if(deptUser[i].job_title){
+						    ht+=top.getCodeName("SYS_POSITION",deptUser[i].job_title);
+						  }else{
+						    ht+="&nbsp;&nbsp;";
+						  }
+						  ht+="</td>";
+						  ht+="<td align='center' style='width:50%;'><a href='javascript:void(0)' style='text-decoration:none;cursor:pointer;";
+						  if(deptUser[i].position_status=="2"){
+						    ht+="color:red;";
+						  }else if(deptUser[i].position_status=="0"){
+						    ht+="color:green;";
+						  }
+						  ht+="' onclick='getUserDetail(\""+deptUser[i].userCode+"\")'>"+deptUser[i].userName+"</a></td>";
+						  ht+="</tr>";
+					   }
+					  ht+="</table></td></tr>";
+					}
+					
+					ht+="</table>";
+					ht+="</td><td>&nbsp;</td></tr>";
+					
+				 }
+				 if(subdept.length>0){
+				   ht+="<tr>";
+				   for(var j=0;j<subdept.length;j++){
+				      var s_d=subdept[j].dept;
+				      var s_u=subdept[j].deptUser;
+				      ht+="<td  colspan='2' valign='top' style='width:12%;' algin='center'>";
+					  ht+="<table style='width:100%;' align='center'><tr><td  colspan='2' align='center' style='width:100%;border:solid 2px #000;'>";
+					  ht+=s_d.name+"</td></tr>";
+					  ht+="<tr><td>在职:"+subdept[j].on_duty_member+"</td><td>试用:"+subdept[j].on_probation_member+"</td></tr>";
+					  ht+="<tr><td style='border:solid 2px #000;' colspan='2'><table style='width:100%;'>";
+					  if(s_u.length>0){
+					    for(var k=0;k<s_u.length;k++){
+						  ht+="<tr>";
+						  ht+="<td align='center' style='width:50%;'>";
+						  if(s_u[k].job_level!=null && s_u[k].job_level!="null" && s_u[k].job_level!=""){
+						    ht+=top.getJobLevelNameByCode(s_u[k].job_level,s_u[k].job_title);
+						  }
+						  if(s_u[k].job_title){
+						    ht+=top.getCodeName("SYS_POSITION",s_u[k].job_title);
+						  }else{
+						    ht+="&nbsp;";
+						  }
+						  ht+="</td>";
+						  ht+="<td align='center' style='width:50%;'><a href='javascript:void(0)' style='text-decoration:none;cursor:pointer;";
+						  if(s_u[k].position_status=="2"){
+						    ht+="color:red;";
+						  }else if(s_u[k].position_status=="0"){
+						    ht+="color:green;";
+						  }
+						  
+						  ht+="' onclick='getUserDetail(\""+s_u[k].userCode+"\")'>"+s_u[k].userName+"</a></td>";
+						  ht+="</tr>";
+					   }
+					  }else{
+					     ht+="<tr><td align='center' style='width:50%'>&nbsp;</td><td align='center' style='width:50%'>&nbsp;</td></tr>";
+					  }
+					  ht+="</table></td></tr>";
+					  ht+="</table></td>";
+					  if(j!=subdept.length-1){
+					    ht+="<td style='width:1%'>&nbsp;</td>";
+					  }
+				   }
+				   ht+="</tr>";
+				 }
+				 ht+="</table>";
+				 $("#personalFrameDiagram").html(ht);
+			   }else{
+			     top.showInfoWinError("操作失败！");
+			   }
+			   oTable.fnDraw();
+			}
+			
+			function doQuery(){
+			    getPersonalDiagram();
+				oTable.fnDraw();
+			}
+			
+
+		    function getParamDate(aoData){
+			    if(head_filiale=="0"){
+				  aoData.push( { "name":"dept.deptId","value":dept } );
+				}else{
+				  aoData.push( { "name": "dept.deptId", "value":qDeptId } );
+				}
+				aoData.push( { "name":"head_filiale","value":head_filiale } );
+				return aoData;
+			}
+			
+			function queryUserInfo(userCode){
+			  top.openDialog("查看用户信息","pages/organization/oaUserInfo.html?opt=queryUser&userCode="+userCode,true,1150,600,null);
+			}
+			
+			function getUserDetail(userCode){
+			  top.openSelectDialog("员工信息","pages/oa/staffDetailInfo.html?user="+userCode,1150,600,null);
+			}
+
+
+		</script>
+	</head>
+	<body style="font-size:6px;">
+		<div width="100%">
+			<!--<div style='border: 1px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="150px">
+							&nbsp;
+							人事日报&nbsp;
+						</td>
+						<td width="2px">
+							&nbsp;
+						</td>
+					</tr>
+				</table>
+				<table width="100%" align="center" cellpadding="1px" id="queryTab" cellspacing="1px" border="0">
+					<tr class="tr_data">
+					    <td align="right" width="45%">部门:</td>
+						<td align="left" width="45%" id="tddept">
+						  
+						</td>
+						<td align="center" width="10%">
+						   <div class="buttonDivTwo">
+								<a href="javascript:doQuery()">查询</a>
+						   </div>
+						</td>
+					</tr>
+				</table>
+			</div>-->
+			<div id="tabs" style="margin-top:4px;">
+			    <ul>
+				   <li><a href="#personalFrameDiagram"><span>人员框架图</span></a></li>
+				   <li><a href="#personalList"><span>人员列表</span></a></li>
+				</ul>
+			</div>
+			<div id="personalFrameDiagram">
+			</div>
+			<div id="personalList">
+			<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+			</div>
+		</div>
+	</body>
+</html>

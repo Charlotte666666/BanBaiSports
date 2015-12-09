@@ -1,0 +1,236 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>积分图表分析</title>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css"	href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"	src="../../js/Calendar3.js"></script>
+       <script type="text/javascript" src="../../js/echart/echarts.js"></script>
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var IntegrationList=[];
+			var record_source=[];
+			var source_name=[];
+			var deptList=[];
+			var deptName=[];
+			var filiale_name='';
+			var data=[];
+			require.config({
+				paths: {
+					echarts: '../../js/echart'
+				}
+            });
+			$(document).ready(function() {
+			   top.sendAjaxRequest("/actions/PersonalManage.action?getHeadDept",[],getHeadDeptCallback);
+			   $("#tdrecord_source").html(top.getCodeSelectHtml("RECORD_SOURCE","record_source",false));
+			   $("#record_source option").each(function(){
+			     record_source.push($(this).val());
+			   });
+			   //getFilialeList(); 
+			} );
+  function getHeadDeptCallback(obj){
+	var ht="<select id='filiale' style='width:120px;'>";
+	if(obj.status==true){
+		if(obj.body){
+			var o=obj.body;
+			ht+="<option value='"+o.deptId+"'>"+o.name+"</option>";
+		}
+	}
+	ht+="</select>";
+	$("#tdfiliale").html(ht);
+	top.sendAjaxRequest("/actions/PersonalManage.action?getAllFilialeDept",[],getAllFilialeDeptCallback);
+  }
+  
+  function getAllFilialeDeptCallback(obj){
+	if(obj.status==true){
+		if(obj.body.length>0){
+			var o=obj.body;
+			for(var i=0;i<o.length;i++){
+				$("#filiale").append("<option value='"+o[i].deptId+"'>"+o[i].name+"</option>");
+			}
+		}
+	}else{
+		top.showInfoWinError("操作失败！");
+	}
+	if($("#filiale option").length>0){
+	   getSubDept();
+	   doQuery();
+	}
+  }
+			
+  function getSubDept(){
+    var aoData=[]; 
+    aoData.push( { "name":"item.dept","value":$("#filiale").val()} );
+	top.sendAjaxRequest("/actions/IntegrationItem.action?getSubDept",aoData,getSubDeptCallback);
+  }
+  
+  function getSubDeptCallback(obj){
+    if(obj.status==true){
+	   deptList=obj.body;
+	}
+  }
+	
+  function doQuery(){
+      var aoData=[];
+	  aoData.push( {"name":"item.filiale","value":$("#filiale").val()} );
+	  aoData.push( {"name":"item.reward_points","value":$("#reward_points").val()} );
+	  aoData.push( {"name":"time1","value":$("#time1").val()} );
+	  aoData.push( {"name":"time2","value":$("#time2").val()} );
+	  top.sendAjaxRequest("/actions/IntegrationItem.action?getIntegrationAnalyze",aoData,doQueryCallBack);
+  }
+
+  function doQueryCallBack(obj){
+      //清除数组中的数据
+       deptName=[];
+	   data=[];
+	   source_name=[];
+       if(obj.status==true){
+	     integrationList=obj.body;
+	   }
+	   
+	  var score=new Array(record_source.length); 
+	  for(var j=0;j<record_source.length;j++){
+	     score[j]=new Array();
+		 source_name.push(top.getCodeName("RECORD_SOURCE",record_source[j]));
+	     for(var i=0;i<deptList.length;i++){
+		   if(j==0){
+	         deptName.push(deptList[i].name);
+		   }
+		   var num=0;
+		   for(var k=0;k<integrationList.length;k++){
+		      if(record_source[j]==integrationList[k].record_source && deptList[i].deptId==integrationList[k].dept){
+			    num=integrationList[k].score;
+			  }
+		   }
+		   score[j].push(num);
+		}
+		var obj={
+		   "name":source_name[j],
+		   "type":"bar",
+		   "varWidth":20,
+		   "data":score[j]
+		};
+		data.push(obj);
+	  } 
+	  
+	  drawChart();
+  }  
+			
+  function drawChart(){
+	require(
+            [
+			    'echarts',
+                'echarts/chart/bar',
+            ],
+    function (ec) {
+		var myChart = ec.init(document.getElementById('chartDiv'));
+		var option = {
+			tooltip : {
+				trigger: 'axis',
+				axisPointer : {            // 坐标轴指示器，坐标轴触发有效
+					type : 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+				}
+			},
+			legend: {
+				data:source_name
+			},
+			toolbox: {
+				show : true,
+				orient: 'vertical',
+				x: 'right',
+				y: 'center',
+				feature : {
+					mark : {show: true},
+					dataView : {show: true, readOnly: false},
+					magicType : {show: true, type: ['line', 'bar', 'stack', 'tiled']},
+					restore : {show: true},
+					saveAsImage : {show: true}
+				}
+			},
+			calculable : true,
+			xAxis : [
+				{
+					type : 'category',
+					data : deptName
+				}
+			],
+			yAxis : [
+				{
+					type : 'value'
+				}
+			],
+			series : data
+};
+    
+	myChart.setOption(option, true);
+   });
+  }
+			
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+		    <label id="tdrecord_source" style="display:none;"></label>
+			<div style='border: 1px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="110px">
+							&nbsp;积分分析&nbsp;
+						</td>
+						<td align="right">
+							<div class="buttonDivTwo">
+								<a href="javascript:doQuery()">查询</a>
+							</div>
+						</td>
+						<td width="2px">
+							&nbsp;
+						</td>
+					</tr>
+				</table>
+				<table width="100%" align="center" cellpadding="1px"
+					cellspacing="1px" border="0">
+					<tr class="tr_data">
+						<td align="right">
+							分公司：
+						</td>
+						<td id="tdfiliale" align="left"></td>
+						<td align="right">奖扣分</td>
+						<td align="left">
+						   <select id="reward_points" style="width:80px;">
+						      <option value="1">奖分</option>
+						      <option value="0">扣分</option>
+						   </select>
+						</td>
+						<td align="right">
+							日期:
+						</td>
+						<td align="left">
+							<input type="text" id="time1" value="" onclick="top.selectDate(this);"  size="10" />
+							至 <input type="text" id="time2" value="" onclick="top.selectDate(this);"  size="10" />
+						</td>
+					</tr>
+				</table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0"
+				border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									&nbsp;查询结果&nbsp;
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<div id="chartDiv" style="height:500px;width:1000px"></div>
+		</div>
+	</body>
+</html>

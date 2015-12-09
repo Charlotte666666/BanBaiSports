@@ -1,0 +1,210 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title></title>
+<link href="../../css/comm.css" rel="stylesheet" type="text/css" />
+<link href="../../css/commBg.css" rel="stylesheet" type="text/css" />
+<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="../../js/SimpleMap.js"></script>
+<script type="text/javascript" src="../../js/helpyouworkeasy-core.js"></script>
+<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+<script type="text/javascript">
+var currentTime=0;
+var data_type="rev_num";
+var ds=[];
+
+jQuery(document).ready(function() {
+	var today=new Date();
+	today.setTime( today.getTime() - 9*60*60000 );
+	
+    var y = today.getFullYear();
+    var m = today.getMonth() + 1;
+    var d = today.getDate();
+    var h = today.getHours();
+
+	$("#q_date").val( y+"-"+getTwoNumberStr(m)+"-"+getTwoNumberStr(d) );
+	$("#span_hour").html( get24HourSelectHtml("q_hour",false,h,"doQuery()") );
+	$("#span_ele_code").html( top.getEleSelectHtml("ele_code","doQuery()") );
+	
+	var n=0;
+	var colNum=0;
+	var ht="";
+	var rowHt="";
+	for (var i=648;i>0;i--) {
+	  if ( colNum == 0 ) {
+	    ht+='<tr>';
+	  }
+      rowHt='<td style="margin:0;padding:0;" align="center" width="48px" id="td'+i+'"><font color="blue"><b>&nbsp;&nbsp;&nbsp;&nbsp;</b></font></td>'+rowHt;
+	  colNum++;
+	  if ( colNum == 36 ) {
+	   ht+=rowHt;
+	   ht+='</tr>';
+	   rowHt="";
+	   colNum=0;
+	  }
+	}
+	
+	$("#dataTable").html( ht );
+	
+	doQuery();
+	
+	currentTime=today.getTime();
+	$("#nextHourBtn").hide();
+ });
+ 
+function toHour(ah){
+  var str=$("#q_date").val();
+  var d=new Date();
+  d.setFullYear( Number(str.substring(0,4)) );
+  d.setMonth( Number(str.substring(5,7)) - 1 );
+  d.setDate( Number(str.substring(8,10)) );
+  d.setHours( Number( $("#q_hour").val() ) );
+  d.setMinutes(0);
+  d.setSeconds(0);
+  d.setMilliseconds(0);
+  d.setTime( d.getTime() + Number(ah)*60*60000 );
+  
+  var y = d.getFullYear();
+  var m = d.getMonth() + 1;
+  var day = d.getDate();
+  var h = d.getHours();
+  
+  $("#q_date").val( y+"-"+getTwoNumberStr(m)+"-"+getTwoNumberStr(day) );
+  $("#q_hour").val( h );
+  doQuery();
+  
+  if ( currentTime <= d.getTime() ) {
+    $("#nextHourBtn").hide();
+  } else {
+    $("#nextHourBtn").show();
+  }
+}
+
+function currentHour(){
+  var today=new Date();
+  var y = today.getFullYear();
+  var m = today.getMonth() + 1;
+  var d = today.getDate();
+  var h = today.getHours();
+  $("#q_date").val( y+"-"+getTwoNumberStr(m)+"-"+getTwoNumberStr(d) );
+  $("#q_hour").val( getTwoNumberStr( h ) );
+  doQuery();
+  $("#nextHourBtn").hide();
+}
+
+ function doQuery(){
+    try{
+	  var dateStr=$("#q_date").val();
+	  var hour= $("#q_hour").val();
+	  if ( hour < 10 ) hour="0"+hour;
+	  
+	  var aoData=[];
+	  var d=new Date(2013,1,1);
+		  d.setFullYear( Number(dateStr.substring(0,4)) );
+		  d.setMonth( Number(dateStr.substring(5,7)) - 1 );
+		  d.setDate( Number(dateStr.substring(8,10)) );
+		  d.setHours( Number(hour) );
+		  d.setMinutes(0);
+		  d.setSeconds(0);
+		  d.setMilliseconds(0);
+		  
+   if ( currentTime <= d.getTime() ) {
+    $("#nextHourBtn").hide();
+   } else {
+    $("#nextHourBtn").show();
+   }
+
+	  var year= d.getFullYear();
+	  var month= d.getMonth() + 1;
+	  var day= d.getDate();
+	  hour= d.getHours();
+	  if ( month<10 ) month="0"+month;
+	  if ( day <10 ) day="0"+day;
+	  if ( hour < 10 ) hour="0"+hour;
+	  
+	  aoData.push( { "name": "eleData.year", "value": year } );
+	  aoData.push( { "name": "eleData.month", "value": month } );
+	  aoData.push( { "name": "eleData.day", "value": day } );
+	  aoData.push( { "name": "eleData.hour", "value": hour } );
+	  aoData.push( { "name": "eleData.ele_code", "value": $("#ele_code").val() } );
+	  
+	  top.sendAjaxRequest("/actions/CmaTable.action?getEleDataList",aoData,callbackGetEleDataList);
+	}catch(e){
+	}
+ }
+ 
+ function callbackGetEleDataList(obj){
+    try{
+	  ds=obj.aaData;
+	  setData();
+	}catch(e){
+	}
+ }
+ 
+ function setData(){
+       for (var i=648;i>0;i--) {
+	     $("#td"+i).html( '<font color="blue"><b>&nbsp;&nbsp;&nbsp;&nbsp;</b></font></td>');
+	   }
+
+       if ( ds ) {
+	    data_type=top.getRadioValue( document.getElementsByName("data_type") );
+	    var v=0;
+	    for ( var i=0;i<ds.length;i++ ) {
+		  if ( data_type == 'rev_num' ) {
+		    v=ds[i].rev_num;
+		  } else if ( data_type == 'no_lack' ) {
+		    v=ds[i].no_lack;
+		  } else if ( data_type == 'err_num' ) {
+		    v=ds[i].err_num;
+		  } else if ( data_type == 'right_num' ) {
+		    v=ds[i].right_num;
+		  } else if ( data_type == 'susp_num' ) {
+		    v=ds[i].susp_num;
+		  }
+		  if ( v != 0 ) {
+		    $("#td"+ds[i].zone_sign).html( "<font color='blue'><b>" + v+"</b></font>");
+		  } else {
+		    $("#td"+ds[i].zone_sign).html( '<font color="blue"><b>&nbsp;&nbsp;&nbsp;&nbsp;</b></font></td>');
+		  }
+		}
+	  }
+ }
+ function onDateSelectChanged(o){
+    try{
+	   doQuery();
+	}catch(e){}
+ }
+</script>
+</head>
+
+<body style="width:100%;background-color : #F3F3F3;">
+<center>
+<div style="margin: 10px;padding: 10px;width:1305px;background-color : #ffffff;	border: 2px solid #89A1B9;-moz-border-radius: 12px;-webkit-border-radius: 12px;border-radius: 12px;overflow: auto;">
+<table cellpadding="0px" width="1305px" cellspacing="0px" border="0">
+ <tr><td colspan="4" align="center" ><font size="4"><b>全球地面资料质量实时评估地图</b></font></td></tr>
+ <tr bgcolor="#E1F2EC">
+  <td width="40%" align="center">
+   时间(世界时)：<input type="text" id="q_date" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" /><span id="span_hour"></span>时&nbsp;&nbsp;
+   <span id="span_ele_code"></span>
+   </td>
+   <td width="35%" align="left">
+   <input type="radio" checked name="data_type" value="rev_num" onclick="setData()"/>实到站数
+   &nbsp;<input type="radio" name="data_type" value="no_lack" onclick="setData()"/>非缺测站数
+   &nbsp;<input type="radio" name="data_type" value="right_num" onclick="setData()"/>正确站数
+   &nbsp;<input type="radio" name="data_type" value="err_num" onclick="setData()"/>错误站数
+   &nbsp;<input type="radio" name="data_type" value="susp_num" onclick="setData()"/>可疑站数
+  </td>
+  <td width="5%" align="center"><a href="javascript:toHour(-1)"><img src="../../img/go-lt-on.gif"></img></a></td>
+  <td width="10%" align="center"><div class="buttonDivSix"><a href="javascript:currentHour()">当前小时</a></div></td>
+  <td width="5%" align="center"><a id="nextHourBtn" href="javascript:toHour(1)"><img src="../../img/go-rt-on.gif"></img></a></td>
+ </tr>
+</table>
+<table id="dataTable" cellpadding="0" width="1296px" height="648px" border="0" style="margin:0;padding:0;background-image:url('images/world80.jpg');background-repeat: no-repeat;">
+</table>
+</div>
+</center>
+</body>
+</html>

@@ -1,0 +1,259 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css"
+			href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var queryCtlMark=0;//查询条件显示收缩标志变量
+			
+			$(document).ready(function() {
+			$( "#tdstatus" ).html( top.getCodeSelectHtml("ORDER_STATUS","status",true) );
+			$( "#tdcust_manager" ).html( top.getUserListByRole('custManager','cust_manager',true));
+			$( "#spanpro_addr" ).html( top.getCodeSelectHtml('DISTRICT','pro_addr',true));
+			 var iaoColumns= [
+			                { "sTitle": "工程订单号", "mDataProp": "project_order_id", "sWidth": "8%","sClass": "center",
+							        "fnRender": function ( oObj ) {
+                                        return '<a href=\'javascript:void(0)\' onclick="updateInfo(\''+oObj.aData.project_order_id+'\',\''+oObj.aData.cust_code+'\')" >'+oObj.aData.project_order_id+'</a>';
+										
+                                  },
+								   "bUseRendered": false
+							},
+			           
+                            { "sTitle": "客户姓名", "mDataProp": "cust_name", "sWidth": "8%", "sClass": "center","bUseRendered": false},
+							{ "sTitle": "地址", "mDataProp": "pro_addr", "sWidth": "8%", "sClass": "center","bUseRendered": false   },
+							{ "sTitle": "楼盘名称", "mDataProp": "building_name", "sWidth": "8%", "sClass": "center",
+							    "fnRender":function(oObj){
+							        return top.getCodeName("DISTRICT",oObj.aData.building_name);
+							    },
+							   "bUseRendered": false},
+							{ "sTitle": "开工日期", "mDataProp": "project_fact_begin_date", "sWidth": "8%", "sClass": "center",
+							"fnRender": function ( oObj ) {
+                                          return top.getTimeStr(oObj.aData.project_fact_begin_date,true);
+                                     },
+									 "bUseRendered": false},
+							{ "sTitle": "竣工日期", "mDataProp": "project_fact_finish_date", "sWidth": "8%","sClass": "center",
+								"fnRender": function ( oObj ) {
+                                          return top.getTimeStr(oObj.aData.project_fact_finish_date,true);
+                                     },
+									"bUseRendered": false 
+							},
+							{ "sTitle": "工程状态", "mDataProp": "status", "sWidth": "8%","sClass": "center",
+								"fnRender": function ( oObj ) {
+                                          return top.getCodeName("PROJECT_STATUS",oObj.aData.status);
+                                     },
+									"bUseRendered": false 
+							},
+							{ "sTitle": "提醒", "mDataProp": "project_fact_finish_date", "sWidth": "8%","sClass": "center",
+								"fnRender": function ( oObj ) {
+                                          if( oObj.aData.project_fact_finish_date){
+										      var dis=countDistance( top.getCurrentDate(),oObj.aData.project_fact_finish_date);
+											  if(dis<0){
+											    return "<span style='color:green'>【已完工】</span>";
+											  }
+											  return "剩余完工天数【<span style='color:red'>"+dis+"</span>】天";
+										  }else{
+										    return "<span style='color:blue'>【还未开工】</span>";
+										  }
+                                     },
+									"bUseRendered": false 
+							},
+							{ "sTitle": "客户投诉", "mDataProp": "complain_num", "sWidth": "8%","sClass": "center",
+								"fnRender": function ( oObj ) {
+								          if(oObj.aData.complain_num==0){
+										     return "0条";
+										  }else{
+                                             return "<a style='cursor:point;text-decoration:none;' href='javascript:void(0)' onclick='openCustTusou(\""+oObj.aData.cust_code+"\",\""+oObj.aData.cust_name+"\")'>"+oObj.aData.complain_num+"条</a>";
+										  }
+                                     },
+									"bUseRendered": false 
+							},
+							{ "sTitle": "扣分", "mDataProp": "require_id", "sWidth": "8%","sClass": "center",
+							   "fnRender":function(){
+							       return "";
+							    },
+								"bUseRendered": false 
+							}
+							
+			   
+               ];			
+			   var surl=top.getUrlBase()+"/actions/ProjectOrder.action?getOrderQuery";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData=getParamDate(aoData);
+			    },
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+			function updateInfo(id,cust_code){
+				top.openCustDetailPage(cust_code,"3-0","update","客户详细信息");
+			}
+
+		    function getParamDate(aoData){
+			     	aoData.push( { "name": "projectOrder.cust_code", "value":$("#cust_code").val() } );
+					aoData.push( { "name": "projectOrder.cust_name", "value":$("#cust_name").val() } );
+					aoData.push( { "name": "projectOrder.pro_addr", "value":top.getCodeName("DISTRICT",$("#pro_addr").val())+$("#addr").val() } );
+					aoData.push( { "name": "projectOrder.cust_manager", "value":$("#cust_manager").val() } );
+					aoData.push( { "name": "projectOrder.require_id", "value": 0 } );
+					if(top.getUserRole().indexOf("admin")==-1){
+					   aoData.push( { "name": "projectOrder.project_manager","value":top.getCurrentUser().userCode } );
+					}
+					aoData.push( { "name": "projectOrder.time1","value":$("#time1").val() } );
+					aoData.push( { "name": "projectOrder.time2","value":$("#time2").val() } );
+					aoData.push( { "name": "projectOrder.time3","value":$("#time3").val() } );
+					aoData.push( { "name": "projectOrder.time4","value":$("#time4").val() } );
+				return aoData;
+			}
+		 //查询条件的展开与收缩
+		 function dwOup(){
+		   if(queryCtlMark==0){//展开
+			 $("#queryCtlIcon").attr("src","../../img/icons/arrow-up.gif"); 
+			 $("#queryTab").slideToggle();
+			 queryCtlMark=1;
+		   }else{//收缩
+			 $("#queryCtlIcon").attr("src","../../img/icons/arrow-down.gif"); 
+			 $("#queryTab").slideToggle();
+			 queryCtlMark=0;
+		   }
+		 }
+		 
+		 //工程提醒信息
+	    function countDistance(start,end){
+		   var startNum=top.toTimestamp(start);
+		   var endTime=top.getTimeStr(end,true);
+		   var d=top.toTimestamp(endTime)-startNum; 
+		   return  d/(24*60*60000) + 1;
+	    }
+		
+		function openCustTusou(cust_code,cust_name){
+		   top.toSysTab("客户投诉管理","pages/pro09/custTousu.html?cust_code="+cust_code+"&cust_name="+cust_name);
+		}
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+			<div style='border: 1px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="150px">
+							&nbsp;
+							工程信息&nbsp;
+						</td>
+						<td align="right">
+							&nbsp;
+						</td>
+						<td align="right">
+							<span><image id="queryCtlIcon" src="../../img/icons/arrow-down.gif" alt="展开" onclick="javascript:dwOup();"/></span>
+						</td>
+						<td width="2px">
+							&nbsp;
+						</td>
+					</tr>
+				</table>
+				<table width="100%" align="center" cellpadding="1px" id="queryTab" style="display:none"
+					cellspacing="1px" border="0">
+					<tr class="tr_data">
+						<td align="right">
+							客户编号
+						</td>
+						<td align="left">
+							<input type="text" id="cust_code" value="" size="15" onkeydown="if(event.keyCode==13) doQuery();" />
+						</td>
+						<td align="right">
+							工程地址
+						</td>
+						<td align="left">
+							<span id="spanpro_addr"></span><input id="addr" type="text"  size="15" onkeydown="if(event.keyCode==13) doQuery();"/>
+						</td>
+						<td align="right">计划开工日期：</td>
+						<td align="left"><input type="text" id="time1" size="14" onclick="top.selectDate(this)" readonly="true"/>~<input type="text" id="time2" size="15" onclick="top.selectDate(this)" readonly="true"/></td>
+						<td>&nbsp;</td>
+						</td>
+					</tr>
+					<tr class="tr_data">
+					    <td align="right">
+							客户姓名
+						</td>
+						<td align="left">
+							<input type="text" id="cust_name" value="" size="15" onkeydown="if(event.keyCode==13) doQuery();" />
+						</td>
+						<td align="right">
+							客户经理
+						</td>
+						<td align="left" id="tdcust_manager">
+						<td align="right">计划竣工日期：</td>
+						<td align="left"><input type="text" id="time3" size="14" onclick="top.selectDate(this)" readonly="true"/>~<input type="text" id="time4" size="15" onclick="top.selectDate(this)" readonly="true"/></td>
+						
+						<td colspan="2" align="center">
+						   <div class="buttonDivTwo">
+								<a href="javascript:doQuery()">查询</a>
+						   </div>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0"
+				border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									&nbsp;查询结果列表&nbsp;
+								</td>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

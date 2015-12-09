@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.helpyouworkeasy.persistence.OnlineHelpMapper">
+  <insert id="insertOnlineHelp" parameterType="OnlineHelp">
+    INSERT INTO tbl_online_help (question_desc,questioner,answer_to_question,status,answerer,id,question_time,answer_time,unit_code,unit_name)
+    VALUES (#{question_desc}, #{questioner}, #{answer_to_question}, #{status}, #{answerer}, #{id}, #{question_time}, #{answer_time},#{unit_code},#{unit_name})
+  </insert>
+
+  <update id="updateOnlineHelp" parameterType="OnlineHelp">
+    update tbl_online_help set 
+    answer_to_question=#{answer_to_question},status=#{status},answerer=#{answerer},answer_time=#{answer_time}
+    where id=#{id}
+  </update>
+
+  <select id="getOnlineHelpListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_online_help where 1=1 
+    <if test="o.question_desc != '' and o.question_desc != null" >
+      and question_desc like '%${o.question_desc}%'
+    </if>
+    <if test="o.unit_code !='' and o.unit_code != null">
+      and unit_code=#{o.unit_code}
+    </if>
+    <if test="o.unit_name != '' and o.unit_name != null">
+      and unit_name like '%${o.unit_name}%'
+    </if>
+    <if test="time1 != -1" >
+      and question_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=question_time
+    </if>
+  </select>
+
+  <select id="getOnlineHelpPageList" parameterType="map" resultType="OnlineHelp">
+    select 
+    question_desc,questioner,answer_to_question,status,answerer,id,question_time,answer_time,unit_code,unit_name
+    from tbl_online_help where 1=1 
+   <if test="o.question_desc != '' and o.question_desc != null" >
+      and question_desc like '%${o.question_desc}%'
+    </if>
+     <if test="o.unit_code !='' and o.unit_code != null">
+      and unit_code=#{o.unit_code}
+    </if>
+    <if test="o.unit_name != '' and o.unit_name != null">
+      and unit_name like '%${o.unit_name}%'
+    </if>
+    <if test="time1 != -1" >
+      and question_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=question_time
+    </if>
+  </select>
+
+  <select id="getOnlineHelpByQuestioner" parameterType="map" resultType="OnlineHelp">
+    select *
+    from tbl_online_help
+    where questioner=#{questioner}
+  </select>
+
+  <select id="getOnlineHelpByQuestion" parameterType="map" resultType="OnlineHelp">
+    select *
+    from tbl_online_help
+    where 1=1
+    <if test="id!=0">
+       and id=#{id}
+    </if>
+    <if test="status!=null and status!=''">
+       and status=#{status}
+    </if>
+    <if test="question_desc!=null and question_desc!=''">
+       and question_desc=#{question_desc}
+    </if>
+  </select>
+</mapper>

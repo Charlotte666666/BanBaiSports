@@ -1,0 +1,83 @@
+<html>
+	<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+
+  <script type="text/javascript">
+   var stationCode="";
+   var dataStr="";
+   var interId = 0;
+   var q_v04001="";
+   var q_v04002="";
+   var q_v04003="";
+   var q_v04004="";
+   
+   $(document).ready(function() {
+
+       stationCode=top.getUrlParam(document.URL,"stationCode");
+       q_v04001=top.getUrlParam(document.URL,"q_v04001");
+       q_v04002=top.getUrlParam(document.URL,"q_v04002");
+       q_v04003=top.getUrlParam(document.URL,"q_v04003");
+       q_v04004=top.getUrlParam(document.URL,"q_v04004");
+       var q_c_code=top.getUrlParam(document.URL,"q_c_code");
+       var aoData=[];
+		   aoData.push( { "name": "stationIds", "value":stationCode } );
+		   aoData.push( { "name": "v04001", "value": q_v04001 } );
+           aoData.push( { "name": "v04002", "value": q_v04002 } );
+	       aoData.push( { "name": "v04003", "value": q_v04003 } );
+	       aoData.push( { "name": "v04004", "value": q_v04004 } );
+	       aoData.push( { "name": "q_c_code", "value": q_c_code } );
+		   top.sendAjaxRequest("/actions/ProCma.action?getStationDetail",aoData,callBackStationDetail);
+   } );
+   
+   function callBackStationDetail(obj){
+       try{
+        if ( obj.status == true ){
+          dataStr = obj.msg;
+          s = obj.body;
+          var ht="省名:"+top.getCodeName( "PROVINCE", s.NAT)+"&nbsp;&nbsp;台站号:"+top.getCode2ASII(s.V0)+"&nbsp;&nbsp;台站名:";
+          ht+=s.NA+"&nbsp;&nbsp;时刻:"+ top.toBeijingTime( q_v04001, q_v04002, q_v04003, q_v04004 ) + "时&nbsp;(GMT+08:00)";
+          document.getElementById("stationInfo").innerHTML=ht;
+          interId = setInterval("drawChart()",300);
+        }else{
+          top.showInfoWin("查询失败");
+        }
+       }catch(e){
+          top.showInfoWin("处理异常:"+e.message);
+       }
+   }
+   
+   function drawChart(){
+   	   if ( dataStr == '' ) return ;
+   	   try{
+         var chartFrame = document.getElementById("chartFrame");
+         if ( chartFrame.contentWindow.isLoaded() ) {
+		   clearInterval( interId );
+           chartFrame.contentWindow.doDrawChart( dataStr );
+         }
+       }catch(e){
+         //alert(e.message);	
+       }
+   }
+   
+  </script> 
+</head>   
+<body>
+   <table height="100%" width="100%"><tr>
+    <td height="30px" width="100%" id="stationInfo">
+    </td>
+	</tr><tr>
+	<td height="30px" width="100%">
+	   说明：图标“<img src="../../img/pro01/missDot.png"/>”表示缺测
+    </td>
+   </tr>
+   <tr>
+    <td height="90%" width="100%">
+      <iframe id="chartFrame" src="../chart.html" width="100%" height="100%" frameborder="0"></iframe>
+    </td>
+   </tr>
+   </table>
+</body>
+</html>

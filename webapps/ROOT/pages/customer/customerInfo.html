@@ -1,0 +1,149 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var infoId=0;
+   
+   $(document).ready(function() {
+     initData();
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   function doSubmit(){
+     var aoData=[];
+	 var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+     aoData.push( { "name": "cust.id", "value": infoId } );
+	 aoData.push( { "name": "cust.cust_code", "value": $("#cust_code").val()  } );
+	 aoData.push( { "name": "cust.cust_name", "value": $("#cust_name").val() } );
+	 aoData.push( { "name": "cust.link_name", "value": $("#link_name").val() } );
+     aoData.push( { "name": "cust.cust_type", "value": $("#cust_type").val() } );
+     aoData.push( { "name": "cust.email", "value": $("#email").val() } );
+     aoData.push( { "name": "cust.addr", "value": $("#addr").val() } );
+     aoData.push( { "name": "cust.memo", "value": $("#memo").val() } );
+	 aoData.push( { "name": "cust.status", "value": 0 } );
+	 aoData.push( { "name": "cust.telephone", "value": $("#telephone").val() } );
+	 aoData.push( { "name": "cust.mobile_phone", "value": $("#mobile_phone").val() } );
+	 top.sendAjaxRequest("/actions/Customer.action?"+(optType=='create'?'insertCustomer':'updateCustomer'),aoData,optCallback);
+   }
+   
+   function checkForm(){
+     var msg = "";
+	 msg += checkString($("#cust_name").val(),true,32,"客户名称");
+	 msg += checkString($("#telephone").val(),false,30,"固定电话");
+	 msg += checkString($("#mobile_phone").val(),false,30,"移动电话");
+	 msg += checkString($("#addr").val(),false,256,"地址");
+	 msg += checkString($("#memo").val(),false,512,"备注");
+	 var temp = "";
+	 temp = document.getElementById("email").value;
+	 if ( temp != '' && !IsEmail( document.getElementById("email"), "1" ) ) {
+	   msg += "E-mail格式不正确<br>";
+	 }
+     return msg;
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功");
+		 top.closeDialog();
+	    }else{
+	     isSaveOK = false;
+	     top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		 top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   function initData(){
+	   try{
+		   optType=top.getUrlParam(document.URL,"opt");
+		   infoId = 0;
+		   $( "#tdCustType" ).html( top.getCodeSelectHtml("CUST_TYPE","cust_type",true) );
+		   if ( optType == 'update' ) {
+		     infoId=top.getUrlParam(document.URL,"infoId");
+			 var o=top.getTempValue();
+			 $("#cust_code").val(o.cust_code);
+			 $("#link_name").val(o.link_name);
+			 $("#cust_name").val(o.cust_name);
+			 $("#cust_type").val(o.cust_type);
+			 $("#email").val(o.email);
+			 $("#addr").val(o.addr);
+			 $("#status").val(o.status);
+			 $("#memo").val(o.memo);
+			 $("#telephone").val(o.telephone);
+			 $("#mobile_phone").val(o.mobile_phone);
+		   }
+	   }catch(e){
+		   top.showInfoWinError(e.message);
+	   }
+   }
+  </script> 
+</head>
+<body>
+<br>
+<table width="100%" border="0" padding="0" spacing="0">
+ <tr>
+    <td width="27%" align="right">名称(<font color="red">*</font>):</td>
+    <td width="73%" align="left"><input type="text" id="cust_name" value="" size="30"/></td>
+ </tr>
+ <tr>
+    <td align="right">编号:</td>
+    <td align="left"><input type="text" id="cust_code" value="" size="20" /></td>
+ </tr>
+ <tr>
+    <td align="right">联系人:</td>
+    <td align="left"><input type="text" id="link_name" value="" size="20" /></td>
+ </tr>
+ <tr>
+    <td align="right">固定电话:</td>
+    <td align="left"><input type="text" id="telephone" value="" size="20" /></td>
+ </tr>
+ <tr>
+    <td align="right">移动电话:</td>
+    <td align="left"><input type="text" id="mobile_phone" value="" size="20" /></td>
+ </tr>
+ <tr>
+    <td align="right">E-mail:</td>
+    <td align="left"><input type="text" id="email" value="" size="20" /></td>
+ </tr>
+ <tr>
+    <td align="right">地址:</td>
+    <td align="left"><textarea id="addr" cols="45" rows="3" ></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">备注:</td>
+    <td align="left"><textarea id="memo" cols="45" rows="5" ></textarea></td>
+ </tr>
+ <tr id="tr_status">
+    <td width="27%" align="right">类型:</td>
+    <td width="73%" align="left" id="tdCustType"></td>
+ </tr>
+</table>
+<p align="center">
+   <table><tr>
+		    <td><span id="submitBtn" class="buttonTwo"><a href="javascript:doSubmit()">保存</a></span></td>
+		    <td><span id="closeBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+   </tr></table>
+</p>
+</body>
+</html>

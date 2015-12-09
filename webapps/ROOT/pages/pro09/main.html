@@ -1,0 +1,1191 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<link rel="stylesheet" type="text/css"
+			href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/chart.js"></script>
+
+<script type="text/javascript">
+var interGetResult1=0;
+var currentUserCode="";
+var isNeedAlarm=false;
+var todoObjs=[];
+var dataStr="";
+var interIdChart = 0;
+var year=0;
+var targetType=0;
+var month=0;
+
+var meetingResult="";
+var drawPaperUnCheck="";
+var projectQuote="";
+var contract="";
+var todayApply="";
+var designPlanUnCheck="";
+var dailyCheck="";
+var measureHouse="";
+
+
+$(document).ready( function() {
+	$( "#span_target_type" ).html( top.getCodeSelectHtml("TARGET_TYPE","target_type",false,'1','computeFactValOfWeek()') );
+	var allYear = new Date();
+	 year=allYear.getFullYear();
+	 month=allYear.getMonth()+1;
+	getTodoList();
+	getDesignPlanListCust();
+	isPermit();
+	computeFactValOfWeek();
+	//getMyWorkList();
+   var ww=$(window).width();
+   var hh=$(window).height();
+   var boxWidth=(ww-60)/2;
+   var boxHeight=(hh-90)/2;
+   $('#box_alarmList').css({"left":"20px","top":"20px","width":boxWidth+"px","height":boxHeight+"px"});
+   $('#box_todoList').css({"left":"20px","top":(boxHeight+20)+"px","width":boxWidth+"px","height":boxHeight+"px"});
+   $('#box_pathStatusList').css({"left":(boxWidth+40)+"px","top":"20px","width":boxWidth+"px","height":boxHeight+"px"});
+   $('#box_statList').css({"left":(boxWidth+40)+"px","top": (boxHeight+20)+"px","width":boxWidth+"px","height":boxHeight+"px"});
+   //getAlarmList();
+   //interGetResult1 = setInterval("getAlarmList()", 10000 );
+   queryAllToDo();
+   queryDrawPaper();
+   queryDesignPlan();
+   queryTodayApply();
+   queryContract();
+   queryProjectQuote();
+   queryDailyCheck();
+});
+
+//权限设置
+function isPermit(){
+	// 权限控制
+		if ( !top.g_isPermit('early_warning') ) {
+			$('#warlyWarningBtn').hide();
+		}
+		if ( !top.g_isPermit('undertake') ) {
+			$('#undertakeBtn').hide();
+		}
+		if ( !top.g_isPermit('vip_followup') ) {
+			$('#vipFollowupBtn').hide();
+		}
+		if ( !top.g_isPermit('daily_check') ) {
+			$('#dailyCheckBtn').hide();
+		}
+		if ( !top.g_isPermit('put_design_proposal') ) {
+			$('#putDesignProposalBtn').hide();
+		}
+		if ( !top.g_isPermit('measure_house') ) {
+			$('#measureHouseBtn').hide();
+		}
+		if ( !top.g_isPermit('project_budget') ) {
+			$('#projectBudgetBtn').hide();
+		}
+		if ( !top.g_isPermit('sales_promotion_apply') ) {
+			$('#salesPromotionApplyBtn').hide();
+		}
+		if ( !top.g_isPermit('today_order') ) {
+			$('#todayOrderBtn').hide();
+		}
+		if ( !top.g_isPermit('online_consult') ) {
+			$('#onlineConsultBtn').hide();
+		}
+		if ( !top.g_isPermit('paper_auditing') ) {
+			$('#paperAuditingBtn').hide();
+		}
+		if ( !top.g_isPermit('quote_auditing') ) {
+			$('#projectQuoteAuditingBtn').hide();
+		}
+		if ( !top.g_isPermit('quote_auditing') ) {
+			$('#productQuoteAuditingBtn').hide();
+		}
+		if ( !top.g_isPermit('contract_auditing') ) {
+			$('#contractAuditingBtn').hide();
+		}
+		if ( !top.g_isPermit('design_auditing') ) {
+			$('#designAuditingBtn').hide();
+		}
+		if ( !top.g_isPermit('budget_auditing') ) {
+			$('#budgetAuditingBtn').hide();
+		}
+		if ( !top.g_isPermit('project_tempo') ) {
+			$('#projectTempoBtn').hide();
+		}
+		if ( !top.g_isPermit('build_locale') ) {
+			$('#buildLocaleBtn').hide();
+		}
+		if ( !top.g_isPermit('target_manage') ) {
+			$('#targetManageBtn').hide();
+		}
+		if ( !top.g_isPermit('today_apply_approval') ) {
+			$('#todayApplyApprovalBtn').hide();
+		}
+		if ( !top.g_isPermit('institution_and_inform') ) {
+			$('#institutionAndInformBtn').hide();
+		}
+		if ( !top.g_isPermit('achievement_manage') ) {
+			$('#achievementManageBtn').hide();
+		}
+		if ( !top.g_isPermit('meeting_manage') ) {
+			$('#meetingManageBtn').hide();
+		}
+		if ( !top.g_isPermit('report_chart_manage') ) {
+			$('#reportChartManageBtn').hide();
+		}
+		if ( !top.g_isPermit('work_record') ) {
+			$('#workRecordBtn').hide();
+		}
+		if ( !top.g_isPermit('order_manage') ) {
+			$('#orderManageBtn').hide();
+		}
+		if ( !top.g_isPermit('today_apply') ) {
+			$('#todayApplyBtn').hide();
+		}
+		if ( !top.g_isPermit('product_settlement') ) {
+			$('#productSettlementBtn').hide();
+		}
+		if ( !top.g_isPermit('new_cust_register') ) {
+			$('#newCustRegisterBtn').hide();
+		}
+		if ( !top.g_isPermit('cust_followup') ) {
+			$('#custFollowupBtn').hide();
+		}
+		if ( !top.g_isPermit('cust_complain_deal') ) {
+			$('#custComplainDealBtn').hide();
+		}
+		if ( !top.g_isPermit('check_daily_report') ) {
+			$('#checkDailyReportBtn').hide();
+		}
+		if ( !top.g_isPermit('mark_target') ) {
+			$('#markTargetBtn').hide();
+		}
+		if ( !top.g_isPermit('check_target') ) {
+			$('#checkTargetBtn').hide();
+		}
+		if ( !top.g_isPermit('worker_recruit') ) {
+			$('#workerRecruitBtn').hide();
+		}
+		if ( !top.g_isPermit('dispatch_construction_order') ) {
+			$('#dispatchConstructionOrderBtn').hide();
+		}
+		if ( !top.g_isPermit('today_report') ) {
+			$('#todayReportBtn').hide();
+		}
+		if ( !top.g_isPermit('product_quote') ) {
+			$('#productQuoteBtn').hide();
+		}
+		if ( !top.g_isPermit('project_quote') ) {
+			$('#projectQuoteBtn').hide();
+		}
+		if ( !top.g_isPermit('check_daily_report') ) {
+			$('#checkDailyReportBtn').hide();
+		}
+		if ( !top.g_isPermit('project_followup') ) {
+			$('#projectFollowupBtn').hide();
+		}
+		if ( !top.g_isPermit('project_change') ) {
+			$('#projectChangeBtn').hide();
+		}
+}
+ function getAlarmList(){
+      isNeedAlarm=false;
+			   var surl=top.getUrlBase()+"/actions/ProMonitor.action?getProAlarmInfoList";
+			   var oTable = $('#alarmDataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					       aoData.push( { "name": "time1", "value": "" } );
+						   aoData.push( { "name": "time2", "value": "" } );
+						   aoData.push( { "name": "info.is_show", "value": 1 } );
+						   aoData.push( { "name": "info.user_code", "value": "" } );
+						   aoData.push( { "name": "info.alarm_type", "value": "" } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": [
+								{ "sTitle": "报警时间", "mDataProp": "alarm_time", "sWidth": "120px", "sClass": "center",
+                                     "fnRender": function ( oObj ) {
+									    isNeedAlarm=true;
+							            return top.getTimeStr( oObj.aData.alarm_time, false );
+                                     },
+                                     "bUseRendered": false 
+							    },
+							    { "sTitle": "报警类型", "mDataProp": "alarm_type", "sWidth": "100px", "sClass": "center",
+                                     "fnRender": function ( oObj ) {
+								        return top.getCodeName( "ALARM_TYPE", oObj.aData.alarm_type );
+                                     },
+                                     "bUseRendered": false 
+							    },
+								{ "sTitle": "订单编号", "mDataProp": "user_code", "sWidth": "100px", "sClass": "center",
+                                     "fnRender": function ( oObj ) {
+							            return '<a href=\'javascript:void(0)\' onclick="updateInfo(\''+oObj.aData.user_code+'\')" >'+oObj.aData.user_code+"</a>";
+                                     },
+                                     "bUseRendered": false 
+							     }, 
+								{ "sTitle": "操作", "mDataProp": "id", "sWidth": "50px", "bSortable":false ,
+								     "fnRender": function ( oObj ) {
+							            return "<a href=\'javascript:void(0)\' onclick=\"optAlartInfo(\'"+oObj.aData.user_code+"\',\'"+oObj.aData.alarm_type+"\',\'"+oObj.aData.alarm_time+"\',\'"+oObj.aData.id+"\')\">操作</a>";
+                                     },
+								  "bUseRendered": false }
+                      ]
+				} );
+
+	 getTodoList();
+ }
+ function AssignDesigner(designer)
+ {
+	var xurl="pages/pro09/custUpdate.html?optType=insert&designer="+designer;
+	top.openDialog("客户登记表",xurl,true,900,600,saveCallBack);
+ }
+ function saveCallBack(){
+	try{
+		var obj = top.getTempValue();
+	 if(obj.isSaveOK) doQuery();
+	}catch(e){
+		}
+	}
+function addInfo(){
+	var xurl="pages/pro09/custUpdate.html?optType=insert";
+	top.openDialog("客户登记表",xurl,true,900,600,null);
+}
+function getTodoList(){
+    var ht="";
+    var surl=top.getUrlBase()+"/actions/DesignPlan.action?getDesignerInfoList";
+			   var oTable = $('#todoDataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":1000,
+					"sAjaxSource": surl,
+					"aaSorting": [[ 2, "asc" ]],
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+							aoData.push( { "name": "designer.status", "value": "01"} );
+			        },
+			      "sDom": "frt",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": [
+			                   { "sTitle": "设计师", "mDataProp": "user_code", "sWidth": "25%","sClass": "left","bSortable":false,
+							        "fnRender": function ( oObj ) {
+                                        return "【"+oObj.aData.user_code+"】"+top.getUserNameByCode(oObj.aData.user_code);
+                                   },
+								   "bUseRendered": false
+							   },
+			                  { "sTitle": "设计师等级", "mDataProp": "designer_level", "sWidth": "20%","sClass": "center",
+								 "fnRender": function ( oObj ) {
+                                          return top.getCodeName( "DESIGNER_LEVEL", oObj.aData.designer_level );
+                                     },
+							  "bUseRendered": false },
+							  { "sTitle": "接单时间", "mDataProp": "receive_order_time", "sWidth": "30%", "sClass": "center",
+								    "fnRender": function ( oObj ) {
+                                           return top.getTimeStr(oObj.aData.receive_order_time ,false);
+                                     },
+							  "bUseRendered": false},
+							 { "sTitle": "操作", "mDataProp": "user_code", "sWidth": "25%","sClass": "center","bSortable":false,
+							        "fnRender": function ( oObj ) {
+                                        return '<a href=\'javascript:void(0)\' onclick="AssignDesigner(\''+oObj.aData.user_code+'\')" >派单</a>';
+								  },
+								  "bUseRendered": false
+							   }
+                      ]
+				} );
+}
+
+function getTodoObj(infoId){
+	 for ( var i=0;i<todoObjs.length;i++ ) {
+		  if ( todoObjs[i].id == infoId ) return todoObjs[i];
+	  }
+	 return null;
+ }
+			
+			
+function viewTodoInfo(applyId,apply_user,check_type){
+			  top.viewCheckInfo( check_type, applyId, apply_user );
+			}
+
+function saveTodoCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) getTodoList();
+				}catch(e){
+				}
+			}
+
+   //工作提醒(查询方案签订日期比缴纳定金日期>=7的信息)
+	function getDesignPlanListCust(){
+    var ht="";
+    var surl=top.getUrlBase()+"/actions/CustInfo.action?getDesignPlanListCust";
+			   var DesignPlanoTable = $('#alarmDesignPlanDataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":1000,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+							
+			        },
+			      "sDom": "frt",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": [
+			                   { "sTitle": "告警类型", "mDataProp": "type", "sWidth": "25%","sClass": "left","bSortable":false,"bUseRendered": false
+							   },
+							  { "sTitle": "客户编号", "mDataProp": "cust_code", "sWidth": "20%","sClass": "center",
+							        "fnRender": function ( oObj ) {
+                                        return '<a href=\'javascript:void(0)\' onclick="updateInfo(\''+oObj.aData.cust_code+'\')" >'+oObj.aData.cust_code+'</a>';
+										
+                                   },
+								   "bUseRendered": false
+							   },
+							  { "sTitle": "客户名称", "mDataProp": "cust_name", "sWidth": "20%","sClass": "center","bSortable":false,"bUseRendered": false },
+							 // { "sTitle": "　登记日期", "mDataProp": "register_date", "sWidth": "20%", "sClass": "center","bSortable":false,
+								    //"fnRender": function ( oObj ) {
+                                        //   return top.getTimeStr(oObj.aData.register_date ,true);
+                                   //  },
+								// "bUseRendered": false},
+						//	{ "sTitle": "交设计费日期", "mDataProp": "pay_design_time", "sWidth": "20%", "sClass": "center",
+								  //  "fnRender": function ( oObj ) {
+                                          // return top.getTimeStr(oObj.aData.pay_design_time ,true);
+                           //},
+							 // "bUseRendered": false}
+							  { "sTitle": "备注", "mDataProp": "desc", "sWidth": "35%","sClass": "left","bSortable":false,"bUseRendered": false }
+                      ]
+				} );
+			}
+	 function updateInfo(id){
+				var xurl="pages/pro09/custUpdate.html?optType=update&id="+id;
+				top.openDialog("客户详细信息",xurl,true,900,600,saveCallBack);
+			}
+			
+			
+			
+	//我的工作(每周会议记录)
+	/**function getMyWorkList(){
+    var ht="";
+    var surl=top.getUrlBase()+"/actions/Interview.action?getMeetingResultList";
+			   var MyWorkoTable = $('#MyWorkDataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":6,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+			        },
+			       "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": [
+							  { "sTitle": "负责人", "mDataProp": "manager", "sWidth": "15%","sClass": "center","bSortable":false,
+							        "fnRender": function ( oObj ) {
+                                        return top.getUserNameByCode(oObj.aData.manager);
+										
+                                   },
+								   "bUseRendered": false
+							   },
+							  { "sTitle": "承办事项", "mDataProp": "work_content", "sWidth": "20%","sClass": "center","bSortable":false,"bUseRendered": false },
+							  { "sTitle": "监督人", "mDataProp": "superintendent", "sWidth": "15%", "sClass": "center","bSortable":false, 
+								 "fnRender": function ( oObj ) {
+                                        return top.getUserNameByCode(oObj.aData.superintendent);
+                                   },
+							  "bUseRendered": false},
+							{ "sTitle": "计划日期", "mDataProp": "complete_date", "sWidth": "15%","bSortable":false, "sClass": "center",
+								    "fnRender": function ( oObj ) {
+                                           return top.getTimeStr(oObj.aData.complete_date ,true);
+                            }, 
+							"bUseRendered": false
+							},
+							{ "sTitle": "延迟日期", "mDataProp": "later_date", "sWidth": "15%","bSortable":false, "sClass": "center",
+								    "fnRender": function ( oObj ) {
+                                           return top.getTimeStr(oObj.aData.later_date ,true);
+                            },
+							  "bUseRendered": false
+							},
+							   { "sTitle": "操作", "mDataProp": "complete_status", "sWidth": "20%","sClass": "center","bSortable":false,
+							        "fnRender": function ( oObj ) {
+                                        return '<a href=\'javascript:void(0)\' onclick="updateCompleteStatus(\''+oObj.aData.result_id+'\')" >完成</a>||<a href=\'javascript:void(0)\' onclick="updateCompleteDate(\''+oObj.aData.result_id+'\')" >延期</a>';
+								  },
+								  "bUseRendered": false
+							   }
+                      ]
+				} );
+				}**/
+
+	//查询当前账户所要承办的事项的个数				
+	function queryAllToDo(){
+		var aoData=[];
+		top.sendAjaxRequest("/actions/Interview.action?getMeetingResultList",aoData,toDoinfoCallback);
+	}
+	function toDoinfoCallback(obj){
+		try{
+			 meetingResult=obj.aaData;
+			 if(meetingResult.length>0){
+				$("#todo").html( "("+meetingResult.length+")" );
+			}
+		}catch(e){}
+	}
+	
+	//查询当前账户需要审核的图纸的个数	
+	function queryDrawPaper(){
+		var aoData=[];
+		top.sendAjaxRequest("/actions/ProjectOrder.action?getConstructionDrawingListOfUnCheck",aoData,paperinfoCallback);
+	}
+	function paperinfoCallback(obj){
+		try{
+			 drawPaperUnCheck=obj.aaData;
+			 if(drawPaperUnCheck.length>0){
+				$("#paperAuditingCheck").html("("+drawPaperUnCheck.length+")" );
+			}
+		}catch(e){}
+	}
+	
+	//查询当前账户需要审核的设计方案的个数	
+	function queryDesignPlan(){
+		var aoData=[];
+		top.sendAjaxRequest("/actions/CustInfo.action?getDesignPlanListOfUnCheck",aoData,designPlaninfoCallback);
+	}
+	function designPlaninfoCallback(obj){
+		try{
+			 designPlanUnCheck=obj.aaData;
+			 if(designPlanUnCheck.length>0){
+				$("#designPlan").html( "("+designPlanUnCheck.length+")" );
+			}
+		}catch(e){}
+	}
+	
+	//查询当前账户需要审核的工程报价的个数	
+	function queryProjectQuote(){
+		var aoData=[];
+		top.sendAjaxRequest("/actions/CustInfo.action?getQuoteListOfUnCheck",aoData,projectQuoteinfoCallback);
+	}
+	function projectQuoteinfoCallback(obj){
+		try{
+			 projectQuote=obj.aaData;
+			 if(projectQuote.length>0){
+				$("#projectQuoteCheck").html( "("+projectQuote.length+")" );
+			}
+		}catch(e){}
+	}
+	
+	//查询当前账户需要审核的合同的个数	
+	function queryContract(){
+		var aoData=[];
+		top.sendAjaxRequest("/actions/CustInfo.action?getContractListOfUnCheck",aoData,contractinfoCallback);
+	}
+	function contractinfoCallback(obj){
+		try{
+			 contract=obj.aaData;
+			 if(contract.length>0){
+				$("#contractCheck").html( "("+contract.length+")" );
+			}
+		}catch(e){}
+	}
+	
+	//查询当前账户需要审批的今日申请个数	
+	function queryTodayApply(){
+		var aoData=[];
+		top.sendAjaxRequest("/actions/Interview.action?getTodayApplyListOfUnCheck",aoData,todayApplyinfoCallback);
+	}
+	function todayApplyinfoCallback(obj){
+		try{
+			 todayApply=obj.aaData;
+			 if(todayApply.length>0){
+				$("#todayApplyCheck").html( "("+todayApply.length+")" );
+			}
+		}catch(e){}
+	}
+
+	//查询当前账户需要填写的日常检查个数	
+	function queryDailyCheck(){
+		var aoData=[];
+		top.sendAjaxRequest("/actions/Interview.action?getDailyListOfUnCheck",aoData,dailyCheckinfoCallback);
+	}
+	function dailyCheckinfoCallback(obj){
+		try{
+			 dailyCheck=obj.aaData;
+			 if(dailyCheck.length>0){
+				$("#dailyCheck").html( "("+dailyCheck.length+")" );
+			}
+		}catch(e){}
+	}
+	
+	//查询当前账户需要注意的量房信息个数	
+	function queryMeasureHouse(){
+		var aoData=[];
+		top.sendAjaxRequest("/actions/Interview.action?getHouseNotMeasure",aoData,measureHosueinfoCallback);
+	}
+	function measureHosueinfoCallback(obj){
+		try{
+			 measureHouse=obj.aaData;
+			 if(measureHouse.length>0){
+				$("#measureHouse").html( "("+measureHouse.length+")");
+			}
+		}catch(e){}
+	}
+	
+	//查询当前账户需要提交的设计方案个数
+	function makeDesignPlan(){
+		var xurl="pages/pro09/yearTotalTargetManage.html";
+		top.openDialog("目标管理",xurl,true,1200,700,saveCallBack);
+	}
+	
+	//新客户登记
+	function newCustRegister(){
+		var xurl="pages/pro09/custUpdate.html?optType=insert";
+		top.openDialog("新客户登记",xurl,true,1100,700,saveCallBack);
+	}
+	function measureHosueinfoCallback(obj){
+		try{
+			 measureHouse=obj.aaData;
+			 if(measureHouse.length>0){
+				$("#measureHouse").html( "("+measureHouse.length+")");
+			}
+		}catch(e){}
+	}
+	
+	//今日申请
+	function todayApplyManage(){
+		var xurl="pages/pro09/todayApplyInfo.html?optType=insert";
+		top.openDialog("添加申请",xurl,true,800,500,saveCallBack);
+	}
+	
+	//查看产值对比
+	function factAndTargetManage(){
+		var xurl="pages/pro09/yearFactAndTargetValue.html";
+		top.openDialog("产值对比",xurl,true,1200,700,saveCallBack);
+	}
+	
+	//设定产值目标
+	function makeTargetManage(){
+		var xurl="pages/pro09/yearTargetInfo.html";
+		top.openDialog("目标设定",xurl,true,1200,700,saveCallBack);
+	}
+	
+	//目标管理
+	function targetManage(){
+		var xurl="pages/pro09/yearTotalTargetManage.html";
+		top.openDialog("目标管理",xurl,true,1200,700,saveCallBack);
+	}
+	
+	//客户跟进
+	function custFollowup(){
+		var xurl="pages/pro09/custManage.html";
+		top.openDialog("客户跟进",xurl,true,1200,700,saveCallBack);
+	}
+	
+	
+	//订单管理(项目变更)
+	function projectDhange(){
+		var xurl="pages/pro09/orderManage.html";
+		top.openDialog("订单管理",xurl,true,1200,700,saveCallBack);
+	}
+	
+	
+	function doQuery(){
+				MyWorkoTable.fnDraw();
+			}			
+	
+	
+	//计算每周的实际收入
+	function computeFactValOfWeek(){
+		var aoData=[];
+		targetType=$("#target_type").val();
+		aoData.push( { "name": "type", "value": targetType} );
+		aoData.push( { "name": "year", "value": year} );
+		top.sendAjaxRequest("/actions/CustInfo.action?ComputeFactValueOfWeek",aoData,factinfoCallback);
+	}
+	
+	function factinfoCallback(obj){
+		try{
+			if(obj.status==true){
+				var o=obj.body;
+				computChartData(o)
+			}
+			
+		}catch(e){}
+		
+	}
+	
+ function computChartData(o){
+     try{
+	        if ( o.weeks.length == 0 ) {
+			 // alert("没有数据");
+			  return;
+			}
+			dataStr='<chart title="'+month+'月每周目标与实际产值对比分析图" types="bar,bar" yTitle="产值(万元)" yAxisLableWidth="60" ';
+			var max=0;
+			var min=10000000000;
+			var step=1000;
+			var i=0;
+			var vals="";
+			var vals2="";
+			var axis="";
+			var v=0;
+
+			for ( i=0;i<o.weeks.length;i++ ) {
+			   v=o.weeks[i].realData;
+			   if ( min > v ) min=v;
+			   if ( max < v ) max=v;
+			   
+			   v=o.weeks[i].targetData;
+			   if ( min > v ) min=v;
+			   if ( max < v ) max=v;
+			   
+			   if ( i > 0 ) {
+				vals+=",";
+				axis+=",";
+				vals2+=",";
+			   }
+			   vals+=o.weeks[i].realData;
+			   vals2+=o.weeks[i].targetData;
+			   axis+="第"+(i+1)+"周";
+			}
+			
+			max = getMMax(max);
+			min = getMMin(min);
+			step = getMStep( max - min );
+			
+			dataStr+='xAxis="'+axis+'" colors="red,blue" ';
+			dataStr+='yMax="'+max+'" yMin="'+min+'" yStep="'+step+'">';
+			dataStr+='<data label="目标值" values="'+vals2+'" />';
+			dataStr+='<data label="实际值" values="'+vals+'" />';
+			dataStr+='</chart>';
+			drawChart();
+		}catch(e){
+		}
+   }
+   
+   function drawChart(){
+   	   if ( dataStr == '' ) return ;
+   	   try{
+	     var mid="pathStatusChartFrame";
+         var chartFrame = document.getElementById( mid );
+         if ( chartFrame.contentWindow.isLoaded() ) {
+           chartFrame.contentWindow.doDrawChart( dataStr );
+		   dataStr="";
+         }
+       }catch(e){
+       }
+   }
+   
+   // 由图标控件调用
+   function getChartStr(){
+      return dataStr;
+   }
+   
+   function queryDetailInfo(type){
+	var xurl="pages/pro09/detailInfo.html?type="+type;
+	top.openDialog("详细信息",xurl,true,700,500,null);
+   }
+   
+   
+ function toSysTab(xurl){
+   if ( xurl == 'workbench' ) {
+     $('#m_workbench').show();
+	 $('#mainContent').hide();
+	 return ;
+   }
+   $('#m_workbench').hide();
+   $("#mainContent").show();
+   $("#mainContent").html( '<iframe id="mainFrame" src="'+xurl+'" width="100%" height="'+($("#mainContent").height()+2)+'" style="position:absolute;left:0px;top:40px;background-color:#ffffff" frameborder="0"></iframe>' );
+ }
+
+</script>
+
+<style type="text/css">
+* html .ui-autocomplete {
+	height: 100px;
+	width: 40px;
+}
+
+* {
+	font-family: Arial, "Free Sans";
+}
+
+#box {
+	margin-top: 45px;
+	margin-left: 12px;
+}
+
+.bt,.clicked {
+	height: 20px;
+	color: #666;
+	font-size: 13px;
+	padding: 4px 10px;
+	text-decoration: none;
+	background: #f9f9f9;
+}
+
+#box .bt {
+	background: -moz-linear-gradient(top, #fff, #f3f3f3);
+	background: -webkit-gradient(linear, left top, left bottom, from(#fff),
+		to(#f3f3f3) );
+	/* For Internet Explorer 5.5 - 7 */
+	filter: progid : DXImageTransform . Microsoft .
+		gradient(startColorstr = #ffffff, endColorstr = #f3f3f3);
+	/* For Internet Explorer 8 */
+	-ms-filter:
+		"progid:DXImageTransform.Microsoft.gradient(startColorstr=#ffffff, endColorstr=#f3f3f3)"
+		;
+}
+
+#box .bt:hover {
+	background: #f3f3f3;
+	background: -moz-linear-gradient(top, #fff, #e9e9e9);
+	background: -webkit-gradient(linear, left top, left bottom, from(#fff),
+		to(#e9e9e9) );
+	/* For Internet Explorer 5.5 - 7 */
+	filter: progid : DXImageTransform . Microsoft .
+		gradient(startColorstr = #ffffff, endColorstr = #e9e9e9);
+	/* For Internet Explorer 8 */
+	-ms-filter:
+		"progid:DXImageTransform.Microsoft.gradient(startColorstr=#ffffff, endColorstr=#e9e9e9)"
+		;
+}
+
+#box .bt:active,.clicked {
+	background: #e9e9e9;
+	background: -moz-linear-gradient(top, #e9e9e9, #fff);
+	background: -webkit-gradient(linear, left top, left bottom, from(#e9e9e9),
+		to(#fff) );
+	/* For Internet Explorer 5.5 - 7 */
+	filter: progid : DXImageTransform . Microsoft .
+		gradient(startColorstr = #e9e9e9, endColorstr = #ffffff);
+	/* For Internet Explorer 8 */
+	-ms-filter:
+		"progid:DXImageTransform.Microsoft.gradient(startColorstr=#e9e9e9, endColorstr=#ffffff)"
+		;
+}
+
+.tuxing {
+	width: 280px;
+	position: absolute;
+}
+
+.tab_ty {
+	
+}
+
+.tab_ty table .tab_t2 {
+	background-image: url(../../img/table_t2.png);
+	background-repeat: repeat-x;
+	padding-top: 6px;
+}
+
+.tab_ty table .tab_m1 {
+	background-image: url(../../img/table_m1.png);
+	background-repeat: repeat-y;
+}
+
+.tab_ty table .tab_m2 {
+	background-image: url(../../img/table_m2.png);
+	background-repeat: repeat;
+	font-size: 14px;
+	color: #151515;
+	font-weight: normal;
+}
+
+.tab_ty table .tab_m3 {
+	background-image: url(../../img/table_m3.png);
+	background-repeat: repeat-y;
+}
+
+.tab_ty table tr .tab_b2 {
+	background-image: url(../../img/table_b2.png);
+	background-repeat: repeat-x;
+}
+</style>
+
+	</head>
+
+	<body>
+		<label id="factVal"></label>
+		<div id="box_alarmList" class="tuxing" style="width: 400px; height: 200px">
+			<div class="tab_ty">
+				<table width="100%" border="0" cellspacing="0" cellpadding="0">
+					<tr id="box_alarmList_top">
+						<td width="20" align="left" valign="top">
+							<img src="../../img/table_t1.png" width="20" height="36" />
+						</td>
+						<td align="left" valign="top" class="tab_t2">
+							<table border="0" cellspacing="0" cellpadding="0">
+								<tr>
+									<td width="34" height="24" align="left" valign="bottom">
+										<img src="../../img/tab_icon7.png" width="20" height="20" />
+									</td>
+									<td align="left" valign="bottom">
+										<font color="#0778C5">工作提醒</font>
+									</td>
+								</tr>
+							</table>
+						</td>
+						<td width="15" align="left" valign="top">
+							<img src="../../img/table_t3.png" width="15" height="36" />
+						</td>
+					</tr>
+					<tr>
+						<td align="left" valign="top" class="tab_m1">
+							&nbsp;
+						</td>
+						<td align="left" valign="top" class="tab_m2" height="200px">
+							<table align="center" cellpadding="0" width="100%"
+								cellspacing="0" border="0" class="display" id="alarmDesignPlanDataTable"></table>
+						</td>
+						<td align="left" valign="top" class="tab_m3">
+							&nbsp;
+						</td>
+					</tr>
+					<tr>
+						<td align="left" valign="top">
+							<img src="../../img/table_b1.png" width="20" height="15" />
+						</td>
+						<td align="left" valign="top" class="tab_b2">
+							&nbsp;
+						</td>
+						<td align="left" valign="top">
+							<img src="../../img/table_b3.png" width="15" height="15" />
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		
+		<div id="box_todoList" class="tuxing" style="width: 400px; height: 200px">
+			<div class="tab_ty">
+				<table width="100%" border="0" cellspacing="0" cellpadding="0">
+					<tr id="box_todoList_top">
+						<td width="20" align="left" valign="top">
+							<img src="../../img/table_t1.png" width="20" height="36" />
+						</td>
+						<td align="left" valign="top" class="tab_t2">
+							<table border="0" cellspacing="0" cellpadding="0">
+								<tr>
+									<td width="34" height="24" align="left" valign="bottom">
+										<img src="../../img/tab_icon5.png" width="20" height="20" />
+									</td>
+									<td align="left" valign="bottom">
+										<font color="#0778C5">设计师派单排队</font>
+									</td>
+								</tr>
+							</table>
+						</td>
+						<td width="15" align="left" valign="top">
+							<img src="../../img/table_t3.png" width="15" height="36" />
+						</td>
+					</tr>
+					<tr>
+						<td align="left" valign="top" class="tab_m1">
+							&nbsp;
+						</td>
+						<td align="left" valign="top" class="tab_m2" height="200px">
+								<table cellpadding="0" width="100%" cellspacing="0" border="0" 
+								class="display" id="todoDataTable"></table>
+						</td>
+						<td align="left" valign="top" class="tab_m3">
+							&nbsp;
+						</td>
+					</tr>
+					<tr>
+						<td align="left" valign="top">
+							<img src="../../img/table_b1.png" width="20" height="15" />
+						</td>
+						<td align="left" valign="top" class="tab_b2">
+							&nbsp;
+						</td>
+						<td align="left" valign="top">
+							<img src="../../img/table_b3.png" width="15" height="15" />
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+
+		<div id="box_pathStatusList" class="tuxing" style="width: 400px; height: 200px">
+			<div class="tab_ty">
+				<table width="100%" border="0" cellspacing="0" cellpadding="0">
+					<tr>
+						<td width="20" align="left" valign="top">
+							<img src="../../img/table_t1.png" width="20" height="36" />
+						</td>
+						<td align="left" valign="top" class="tab_t2">
+							<table border="0" cellspacing="0" cellpadding="0">
+								<tr>
+									<td width="34" height="24" align="left" valign="bottom">
+										<img src="../../img/tab_icon5.png" width="20" height="20" />
+									</td>
+									<td align="left" valign="bottom">
+										<font color="#0778C5">周产值分布图</font>
+										<span id="span_target_type"></span>&nbsp;&nbsp;&nbsp;&nbsp;
+									</td>
+								</tr>
+							</table>
+						</td>
+						<td width="15" align="left" valign="top">
+							<img src="../../img/table_t3.png" width="15" height="36" />
+						</td>
+					</tr>
+					<tr>
+						<td align="left" valign="top" class="tab_m1">
+							&nbsp;
+						</td>
+						<td align="left" valign="top" class="tab_m2" id="pathStatusTD"
+							height="200px">
+							<iframe id="pathStatusChartFrame" src="../chart.html"
+								width="100%" height="100%" frameborder="0"></iframe>
+								
+						</td>
+						<td align="left" valign="top" class="tab_m3">
+							&nbsp;
+						</td>
+					</tr>
+					<tr>
+						<td align="left" valign="top">
+							<img src="../../img/table_b1.png" width="20" height="15" />
+						</td>
+						<td align="left" valign="top" class="tab_b2">
+							&nbsp;
+						</td>
+						<td align="left" valign="top">
+							<img src="../../img/table_b3.png" width="15" height="15" />
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+
+		<div id="box_statList" class="tuxing"style="width: 400px; height: 200px">
+			<div class="tab_ty">
+				<table width="100%" border="0" cellspacing="0" cellpadding="0">
+					<tr>
+						<td width="20" align="left" valign="top">
+							<img src="../../img/table_t1.png" width="20" height="36" />
+						</td>
+						<td align="left" valign="top" class="tab_t2">
+							<table border="0" cellspacing="0" cellpadding="0">
+								<tr>
+									<td width="34" height="24" align="left" valign="bottom">
+										<img src="../../img/tab_icon5.png" width="20" height="20" />
+									</td>
+									<td align="left" valign="bottom">
+										<font color="#0778C5">我的工作</font>
+									</td>
+								</tr>
+							</table>
+						</td>
+						<td width="15" align="left" valign="top">
+							<img src="../../img/table_t3.png" width="15" height="36" />
+						</td>
+					</tr>
+					<tr>
+						<td align="left" valign="top" class="tab_m1">
+							&nbsp;
+						</td>
+						<td align="left" valign="top" class="tab_m2" id="statTD" height="200px"><br/>
+							<!--<table align="center" cellpadding="0" width="100%"
+								cellspacing="0" border="0" class="display" id="MyWorkDataTable"></table>-->
+							<table align="center" cellpadding="0" width="100%"
+								cellspacing="0" border="0" class="display">
+								<tr>
+									<td width="20%" valign="top">
+										<span id="undertakeBtn" ><a  href="javascript:void(0)" onclick="javascript:top.toSysTab('承办事项','pages/pro09/detailInfo.html?type=1')">承办事项-<font color="red"><label id="todo"></label><font></a>
+										<br/><br/></span>
+										<span id="dailyCheckBtn" ><a  href="javascript:void(0)" onclick="javascript:top.toSysTab('日常检查','pages/pro09/dailyInspectionManage.html')">日常检查-<font color="red"><label id="dailyCheck"></label><font></a>
+										<br/><br/></span>
+										<span id="projectBudgetBtn" ><a  href="javascript:void(0)" onclick="projectBudget()">工程预算</a>
+										<br/><br/></span>
+										<span id="salesPromotionApplyBtn" ><a  href="javascript:void(0)" onclick="salesPromotionApply()">促销申请</a>
+										<br/><br/></span>
+										<span id="todayOrderBtn" ><a  href="javascript:void(0)" onclick="todayOrder()">今日派单</a>
+										<br/><br/></span>
+										<span id="paperAuditingBtn" ><a  href="javascript:void(0)" onclick="javascript:top.toSysTab('施工图审核','pages/pro09/detailInfo.html?type=2')">施工图审核-<font color="red"><label id="paperAuditingCheck"></label><font></a>
+										<br/><br/></span>
+										<span id="projectQuoteAuditingBtn" ><a  href="javascript:void(0)" onclick="javascript:top.toSysTab('工程报价审核','pages/pro09/detailInfo.html?type=3')">工程报价审核-<font color="red"><label id="projectQuoteCheck"></label><font></a>
+										<br/><br/></span>
+										<span id="productQuoteAuditingBtn" ><a  href="javascript:void(0)" onclick="quoteAuditing()">产品报价审核</a></span>
+									</td>
+									<td width="20%" valign="top">
+										<span id="todayApplyApprovalBtn" ><a  href="javascript:void(0)" onclick="javascript:top.toSysTab('今日申请审批','pages/pro09/detailInfo.html?type=4')">今日申请审批-<font color="red"><label id="todayApplyCheck"></label><font></a>
+										<br/><br/></span>
+										<span id="achievementManageBtn" ><a  href="javascript:void(0)" onclick="achievementManage()">绩效管理</a>
+										<br/><br/></span>
+										<span id="meetingManageBtn" ><a  href="javascript:void(0)" onclick="javascript:top.toSysTab('会议管理','pages/pro09/meetingManage.html')">会议管理-</a>
+										<br/><br/></span>
+										<span id="reportChartManageBtn" ><a  href="javascript:void(0)" onclick="reportChartManage()">报表管理</a>
+										<br/><br/></span>
+										<span id="workRecordBtn" ><a  href="javascript:void(0)" onclick="workRecord()">工作记录</a>
+										<br/><br/></span>
+										<span id="orderManageBtn" ><a  href="javascript:void(0)" onclick="javascript:top.toSysTab('订单管理','pages/pro09/orderManage.html')">订单管理-</a>
+										<br/><br/></span>
+										<span id="onlineConsultBtn" ><a  href="javascript:void(0)" onclick="onlineConsult()">在线求助</a>
+										<br/><br/></span>
+										<span id="designAuditingBtn" ><a  href="javascript:void(0)" onclick="javascript:top.toSysTab('审核设计方案','pages/pro09/detailInfo.html?type=5')">审核设计方案<font color="red"><label id="designPlan"></label><font></a></span>
+									</td>
+										<td width="20%" valign="top">
+										<span id="measureHouseBtn" ><a  href="javascript:void(0)" onclick="measureHouse()">量房<font color="red"><label id="measureHouse"></label><font></a>
+										<br/><br/></span>
+										<span id="contractAuditingBtn" ><a  href="javascript:void(0)" onclick="javascript:top.toSysTab('合同审核','pages/pro09/detailInfo.html?type=6')">合同审核-<font color="red"><label id="contractCheck"></label></font></a>
+										<br/><br/></span>
+										<span id="todayApplyBtn" ><a  href="javascript:void(0)" onclick="todayApplyManage()">今日申请-</a>
+										<br/><br/></span>
+										<span id="productSettlementBtn" ><a  href="javascript:void(0)" onclick="productSettlement()">产品结算</a>
+										<br/><br/></span>
+										<span id="custComplainDealBtn" ><a  href="javascript:void(0)" onclick="custComplainDeal()">客诉受理</a>
+										<br/><br/></span>
+										<span id="budgetAuditingBtn" ><a  href="javascript:void(0)" onclick="budgetAuditing()">预算审核</a>
+										<br/><br/></span>
+										<span id="dispatchConstructionOrderBtn" ><a  href="javascript:void(0)" onclick="dispatchConstructionOrder()">派施工单</a>
+										<br/><br/></span>
+										<span id="workerRecruitBtn" ><a  href="javascript:void(0)" onclick="workerRecruit()">人员招聘</a></span>
+									</td>
+									<td width="20%" valign="top">
+										<span id="projectTempoBtn" ><a  href="javascript:void(0)" onclick="projectTempo()">工程进度</a>
+										<br/><br/></span>
+										<span id="targetManageBtn" ><a  href="javascript:void(0)" onclick="javascript:top.toSysTab('目标管理','pages/pro09/yearTotalTargetManage.html')">目标管理-</a>
+										<br/><br/></span>
+										<span id="todayReportBtn" ><a  href="javascript:void(0)" onclick="todayReport()">今日报备</a>
+										<br/><br/></span>
+										<span id="productQuoteBtn" ><a  href="javascript:void(0)" onclick="productQuote()">产品报价</a>
+										<br/><br/></span>
+										<span id="projectQuoteBtn" ><a  href="javascript:void(0)" onclick="projectQuote()">工程报价</a>
+										<br/><br/></span>
+										<span id="checkDailyReportBtn" ><a  href="javascript:void(0)" onclick="checkDailyReport()">查看日报</a>
+										<br/><br/></span>
+										<span id="projectFollowupBtn" ><a  href="javascript:void(0)" onclick="projectFollowup()">工程跟进 </a>
+										<br/><br/></span>
+										<span id="projectChangeBtn" ><a  href="javascript:void(0)" onclick="projectDhange()">项目变更-</a></span>
+									</td>
+									<td width="20%" valign="top">
+										<span id="newCustRegisterBtn" ><a href="javascript:void(0)" onclick="javascript:addInfo()">新客户登记- </a>
+										<br/><br/></span>
+										<span id="custFollowupBtn" ><a href="javascript:void(0)" <a href="javascript:void(0)" onclick="javascript:top.toSysTab('客户跟进','pages/pro09/custManage.html')">客户跟进-</a>
+										<br/><br/></span>
+										<span id="vipFollowupBtn" ><a  href="javascript:void(0)" onclick="vipFollowup()">重点客户跟进</a>
+										<br/><br/></span>
+										<span id="putDesignProposalBtn" ><a  href="javascript:void(0)" onclick="putDesignProposal()">提交设计方案</a>
+										<br/><br/></span>
+										<span id="buildLocaleBtn" ><a  href="javascript:void(0)" onclick="buildLocale()">施工现场交底</a>
+										<br/><br/></span>
+										<span id="institutionAndInformBtn" ><a  href="javascript:void(0)" onclick="institutionAndInform()">制度与通知 </a>
+										<br/><br/></span>
+										<span id="markTargetBtn" ><a  href="javascript:void(0)" onclick="makeTargetManage()">产值目标设定-</a>
+										<br/><br/></span>
+										<span id="checkTargetBtn" ><a  href="javascript:void(0)" onclick="factAndTargetManage()">查看产值目标-</a></span>
+									</td>
+								</tr>
+							</table>		
+						</td>
+						<td align="left" valign="top" class="tab_m3">
+							&nbsp;
+						</td>
+					</tr>
+					<tr>
+						<td align="left" valign="top">
+							<img src="../../img/table_b1.png" width="20" height="15" />
+						</td>
+						<td align="left" valign="top" class="tab_b2">
+							&nbsp;
+						</td>
+						<td align="left" valign="top">
+							<img src="../../img/table_b3.png" width="15" height="15" />
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+
+	</body>
+</html>

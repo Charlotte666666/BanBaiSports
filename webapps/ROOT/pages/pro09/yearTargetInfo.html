@@ -1,0 +1,395 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+  
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var type_id="";
+   var type_name="";
+   var target_id=0;
+   var year=0;
+   var monthTarget=0;
+   var weekTarget=0;
+   var targetId=0;
+   var week_id=0;
+   var month=0;
+
+   $(document).ready(function() {
+     initData(); 
+   } );
+   function onChange(){
+        year=$("#year").val();
+		computeDateOfweek();
+   }
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   function deleteTargetWeek(){
+		var aoData=[];
+		var xurl="/actions/Interview.action?deleteMeetingResult";
+		aoData.push( { "name": "meetingresult.meeting_id", "value": meetingid } );
+		top.sendAjaxRequest(xurl,aoData,doSubmit);
+   }
+   function check(){
+      var msg="";
+	  if($("#year_total_target").val()!="" && !IsFloat($("#year_total_target").val())){
+	     msg+="全年总产值类型错误<br/>";
+	  }
+	  for(var i=1;i<=12;i++){
+		  if($("#month"+i).val()!="" && !IsFloat($("#month"+i).val())){
+			 msg+=i+"月的月目标类型错误<br/>";
+		  }
+	  }
+	  for(var j=1;j<=53;j++){
+	     if($("#week"+j+"_target").val()!="" && !IsFloat($("#week"+j+"_target").val())){
+		     msg+="第"+j+"周的目标值类型错误<br/>"
+		 }
+	  }
+	  return msg;
+   }
+   
+   function doSubmit(){
+       var checkMsg=check();
+	   if(checkMsg!=""){
+	      top.showInfoWinWarn(checkMsg);
+		  return;
+	   }
+	   var aoData=[];
+	
+		aoData.push( { "name": "targetMonth.target_id", "value": targetId } );
+		aoData.push( { "name": "targetMonth.year", "value": year } );
+		aoData.push( { "name": "targetMonth.target_type", "value": $("#target_type").val()} );
+		aoData.push( { "name": "targetMonth.dept_id", "value": $("#dept_id").val() } );
+		aoData.push( { "name": "targetMonth.fill_user", "value": $("#fill_user").html() } );
+		aoData.push( { "name": "targetMonth.year_total_target", "value": top.g_GetNumValue($("#year_total_target").val()) } );
+		aoData.push( { "name": "targetMonth.january", "value": top.g_GetNumValue($("#month1").val()) } );
+		aoData.push( { "name": "targetMonth.february", "value": top.g_GetNumValue($("#month2").val()) } );
+		aoData.push( { "name": "targetMonth.march", "value": top.g_GetNumValue($("#month3").val()) } );
+		aoData.push( { "name": "targetMonth.april", "value": top.g_GetNumValue($("#month4").val()) } );
+		aoData.push( { "name": "targetMonth.may", "value": top.g_GetNumValue($("#month5").val()) } );
+		aoData.push( { "name": "targetMonth.june", "value": top.g_GetNumValue($("#month6").val()) } );
+		aoData.push( { "name": "targetMonth.july", "value": top.g_GetNumValue($("#month7").val()) } );
+		aoData.push( { "name": "targetMonth.august", "value": top.g_GetNumValue($("#month8").val()) } );
+		aoData.push( { "name": "targetMonth.september", "value": top.g_GetNumValue($("#month9").val()) } );
+		aoData.push( { "name": "targetMonth.october", "value": top.g_GetNumValue($("#month10").val()) } );
+		aoData.push( { "name": "targetMonth.november", "value": top.g_GetNumValue($("#month11").val()) } );
+		aoData.push( { "name": "targetMonth.december", "value": top.g_GetNumValue($("#month12").val()) } );
+		top.showLoadingInfo(true);
+		top.sendAjaxRequest("/actions/Interview.action?saveTargetMonth",aoData,saveTargetWeek);
+     }
+	 function saveTargetWeek(obj){
+		try{
+			if(obj.status==true){
+				var targets="";
+				var week_nums="";
+				var startDates="";
+				var endDates="";
+				
+				for(var j=1;j<=53;j++){
+						targets+=$("#week"+j+"_target").val()+"ISPLITI";
+						startDates+=top.toTimestamp($("#week"+j+"_start_date").val())+"ISPLITI";
+						endDates+=top.toTimestamp($("#week"+j+"_end_date").val())+"ISPLITI";
+						week_nums+=j+"ISPLITI";	
+				}
+
+				var aoData1=[];
+						aoData1.push( { "name": "targetWeek.target_id", "value": targetId } );
+						aoData1.push( { "name": "targetWeek.targets", "value":targets} );
+						aoData1.push( { "name": "targetWeek.year", "value": year});
+						aoData1.push( { "name": "targetWeek.week_nums", "value": week_nums } );
+						aoData1.push( { "name": "targetWeek.startDates", "value":startDates});
+						aoData1.push( { "name": "targetWeek.endDates", "value":endDates } );
+				top.sendAjaxRequest("/actions/Interview.action?saveTargetWeek",aoData1,optCallback);
+			}
+		}catch(e){
+		}
+	 }
+	 
+	 
+	 //当全年目标发生改变时，月目标也改变
+	function changeMonthVal(){
+		var yearTarget=$("#year_total_target").val();
+		weekTarget=yearTarget/53;
+		monthTarget=yearTarget/12;
+		for(var i=1;i<=12;i++){
+			$("#month"+i+"").val( Math.round( monthTarget ));
+			for(var j=1;j<=53;j++){
+				$("#week"+j+"_target").val( Math.round( weekTarget ));
+			}
+		}
+	}
+   function optCallback(obj){
+	   try{
+	    top.showLoadingInfo(false);
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功");
+		 top.closeDialog();
+	    }else{
+	    	isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   function initData(){
+		optType=top.getUrlParam(document.URL,"optType");
+		$( "#tdtarget_type" ).html( top.getCodeSelectHtml("TARGET_TYPE","target_type",true) );
+		if ( optType == 'update' || optType=='query' ) {
+			
+			target_id=top.getUrlParam(document.URL,"id");
+			var aoData=[];
+			aoData.push( { "name": "targetMonth.target_id", "value":target_id } );
+		    top.sendAjaxRequest("/actions/Interview.action?getTargetMonthAndWeek",aoData,targetInfoCallback);
+		}else{
+		 $("#trfill_user").hide();
+		 $("#lab_year").hide();
+		 $("#span_year").html(get6YearSelectHtml('year',false,'','onChange()'));
+		 year=$("#year").val();
+		 computeDateOfweek();
+		}
+		
+	}
+   function targetInfoCallback(obj){
+       try{
+        if ( obj.status == true ){
+			var o=obj.body;
+			
+			if(o){
+				targetId=o.target_id;
+				year=o.year;
+		        $("#lab_year").html(year);
+		        computeDateOfweek();
+				
+				$("#target_type").val(o.target_type);
+				$("#dept_id").val(o.dept_id);
+				$("#fill_user").html(o.fill_user);
+				$("#year_total_target").val( o.year_total_target);
+				$("#month1").val( o.january);
+				$("#month2").val( o.february);
+				$("#month3").val( o.march);
+				$("#month4").val( o.april);
+				$("#month5").val( o.may);
+				$("#month6").val( o.june);
+				$("#month7").val( o.july);
+				$("#month8").val( o.august);
+				$("#month9").val( o.september);
+				$("#month10").val( o.october);
+				$("#month11").val( o.november);
+				$("#month12").val( o.december);
+
+				if(o.weekList){
+					for(var i=0;i<o.weekList.length;i++){
+						$("#week"+(i+1)+"_start_date").val(  top.getTimeStr(o.weekList[i].week_start_date,true));
+						$("#week"+(i+1)+"_end_date").val( top.getTimeStr(o.weekList[i].week_end_date,true));
+						$("#week"+(i+1)+"_target").val( o.weekList[i].target);
+					}
+				}
+			}
+			if(optType=='update'){
+			  $("#span_year").hide();
+			}else{
+			  $("input").attr("disabled",true);
+			  $("input").attr("style","background-color:#f4faff;border:0px");
+			  $("#fill_user").css("width","200px");
+			  $("textarea").attr("disabled",true);
+			  $("textarea").attr("style","background-color:#f4faff;border:0px");
+			  $("#okBtn").hide();
+			  $("#cancelBtn").hide();
+			  }
+        }else{
+          top.showInfoWinError("操作失败");
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	
+	function computeDateOfweek(){
+	    var ht="";
+		var weekNum=1;
+	    var sundayTimeStamp=0;
+		var yearEndTimeStamp=0;
+		var day7=7*24*60*60000;// 7天的毫秒数
+		var t=0;
+		var d=new Date();
+		d.setFullYear(year);
+		d.setMonth(0);
+		d.setDate(1);
+		t=d.getTime();
+		// 一年第一周的计算
+		sundayTimeStamp=t+(7-d.getDay())*24*60*60000;
+		$("#week1_start_date").val(top.getTimeStr(t,true));
+		$("#week1_end_date").val(top.getTimeStr(sundayTimeStamp,true));
+		$("#lab1_week1_start_date").html(top.getTimeStr(t,true));
+		$("#lab1_week1_end_date").html(top.getTimeStr(sundayTimeStamp,true));
+		// 一年最后天的时间戳
+		d.setFullYear(year);
+		d.setMonth(11);
+		d.setDate(31);
+		yearEndTimeStamp=d.getTime();
+		
+		 ht+='<tr class="tr_data" height="35px">';
+		 ht+='<td>第'+weekNum+'周('+top.getTimeStr(t,true)+'~'+top.getTimeStr(sundayTimeStamp,true)+')';
+		 ht+='<input type="hidden" id="week'+weekNum+'_start_date" value="'+top.getTimeStr(t,true)+'" size="10"/>';
+		 ht+='<input type="hidden" id="week'+weekNum+'_end_date" value="'+top.getTimeStr(sundayTimeStamp,true)+'" size="10"/>)</td>';
+		 ht+='<td><input type="text" id="week'+weekNum+'_target" size="6"/></td>';
+		 ht+='</tr>';
+		
+		while ( yearEndTimeStamp > sundayTimeStamp ) {
+		 weekNum++;
+		 t=sundayTimeStamp+24*60*60000;
+		 sundayTimeStamp+=day7;
+		 
+		 if ( sundayTimeStamp > yearEndTimeStamp ) {
+		   sundayTimeStamp=yearEndTimeStamp;
+		 }
+		 
+		 ht+='<tr class="tr_data" height="35px">';
+		 ht+='<td>第'+weekNum+'周('+top.getTimeStr(t,true)+'~'+top.getTimeStr(sundayTimeStamp,true)+')';
+		 ht+='<input type="hidden" id="week'+weekNum+'_start_date" value="'+top.getTimeStr(t,true)+'" size="10"/>';
+		 ht+='<input type="hidden" id="week'+weekNum+'_end_date" value="'+top.getTimeStr(sundayTimeStamp,true)+'" size="10"/></td>';
+		 ht+='<td><input type="text" id="week'+weekNum+'_target" size="6"/></td>';
+		 ht+='</tr>';
+		}
+		$("#weekTable").html(ht);
+	}
+	
+	/**
+	 * 返回最近6年年份下拉选项
+	 */
+	function get6YearSelectHtml(name,hasEmpty,initValue, onchangeFn){
+		if ( !initValue ) initValue = -1;
+		var ht="<select id='"+name+"'>";
+		if ( onchangeFn ) ht="<select id='"+name+"' onchange='"+onchangeFn+"'>";
+		if ( hasEmpty ) {
+			ht+="<option value=''>&nbsp;&nbsp;</option>";
+		}
+		var d=new Date();
+		var year = Number( d.getFullYear() );
+		var toYear=Number(year+1);
+		 ht+="<option value='"+ toYear +"' ";
+		 if ( toYear == initValue ) ht+=" selected ";
+		 ht+=">"+toYear+"</option>";  
+		for(var i=year;i>year-5;i-- ){
+		   ht+="<option value='"+ i +"' ";
+		   if ( i == initValue ) ht+=" selected ";
+		   ht+=">"+i+"</option>";
+		}
+		ht+="</select>";
+		return ht;
+	}
+  </script> 
+  <style>
+		input{
+			width:99%;
+			height:99%;
+		}
+		textarea{
+			width:99%;
+			height:99%;
+		}
+</style>
+</head>
+<body>
+<input type="hidden" id="type_id" value="" />
+<br>
+<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+	<tr class="tr_data" height="35px">
+		<td width="100%" align="center" colspan="6"><B><font size="4"><label id="lab_year"></label><span id="span_year"></span>年业绩总产值计划制定</font></B></td>
+	 </tr>
+	<tr class="tr_data" height="35px">
+		<td width="15%" align="right">目标类型</td>
+		<td width="20%" align="left" id="tdtarget_type"></td>
+		<td width="15%" align="right">全年总产值</td>
+		<td width="20%" align="left"><input type="text" id="year_total_target" style="width:150px;" onChange="changeMonthVal()"/></td>
+        <td width="10%" align="right">填写人</td>
+		<td width="20%" align="left"><span id="fill_user"></span></td>
+	</tr>
+	<tr class="tr_data">
+		<td width="100%" align="right" colspan="6" style='padding:0px;border-collapse:collapse'>
+			<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				<tr class="tr_data" height="35px">
+					<td width="16%">月份</td>
+					<td width="16%">月目标</td>
+					<td rowspan="13" width="100%" colspan="6" style='padding:0px;border-collapse:collapse'>
+					<table id="weekTable" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+						<tr class="tr_data" height="35px">
+							<td width="60%">周数</td>
+							<td width="40%">周目标</td>
+						</tr>
+					</table>
+					</td>
+				</tr>
+				<tr class="tr_data" height="155px">
+					<td width="16%" >一月</td>
+					<td width="16%" ><input type="text" id="month1"/></td>
+				</tr>
+				<tr class="tr_data" height="155px">
+					<td width="16%" >二月</td>
+					<td width="16%" ><input type="text" id="month2"/></td>
+				</tr>
+				<tr class="tr_data" height="155px">
+					<td width="16%" >三月</td>
+					<td width="16%" ><input type="text" id="month3"/></td>
+				</tr>
+				<tr class="tr_data" height="155px">
+					<td width="16%" >四月</td>
+					<td width="16%" ><input type="text" id="month4"/></td>
+				</tr>
+				<tr class="tr_data" height="155px">
+					<td width="16%" >五月</td>
+					<td width="16%" ><input type="text" id="month5"/></td>
+				</tr>
+				<tr class="tr_data" height="155px">
+					<td width="16%" >六月</td>
+					<td width="16%" ><input type="text" id="month6"/></td>
+				</tr>
+				<tr class="tr_data" height="155px">
+					<td width="16%" >七月</td>
+					<td width="16%" ><input type="text" id="month7"/></td>
+				</tr>
+				<tr class="tr_data" height="155px">
+					<td width="16%" >八月</td>
+					<td width="16%" ><input type="text" id="month8" /></td>
+				</tr>
+				<tr class="tr_data" height="155px">
+					<td width="16%" >九月</td>
+					<td width="16%" ><input type="text" id="month9" /></td>
+				</tr>
+				<tr class="tr_data" height="155px">
+					<td width="16%" >十月</td>
+					<td width="16%" ><input type="text" id="month10" /></td>
+				</tr>
+				<tr class="tr_data" height="155px">
+					<td width="16%" >十一月</td>
+					<td width="16%" ><input type="text" id="month11"/></td>
+				</tr>
+				<tr class="tr_data" height="155px">
+					<td width="16%">十二月</td>
+					<td width="16%"><input type="text" id="month12"/></td>
+				</tr>
+			</table>
+		</td>
+	</tr>
+</table>
+<p align="center">
+   <table><tr>
+		    <td><span id="okBtn" class="buttonTwo"><a href="javascript:doSubmit()">提交</a></span></td>
+		    <td><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+   </tr></table>
+</p>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+ 
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+		    var aSelected = [];
+		    var tempStr="";
+		    var optType="";
+		    var qTypeId="";
+		    var qTypeName="";
+			var dialogLevel="1";
+			var currentDeleteId=0;
+			
+			$(document).ready(function() {
+                 top.sendAjaxRequest("/actions/CompetitionSchedule.action?getCompetitionScheduleList",[],getCompetitionScheduleListCallback);
+            });
+			
+   function getCompetitionScheduleListCallback(obj){
+     try{
+		  scheduleList=obj.aaData;
+		  $("#tdschedule").html( top.getScheduleSelectHtml(scheduleList,'schedule_id') );
+	 }catch(e){
+	 }
+	 loadList();
+  }
+   
+             function loadList(){   
+			   var iaoColumns= [
+                               { "sTitle": "标题", "mDataProp": "guess_title", "sWidth": "30%",
+                                      "fnRender": function ( oObj ) {
+                                         return '<img src="../../img/delete.gif" onclick="deleteInfo('+oObj.aData.id+')"></img>&nbsp;<a href=\'javascript:void(0)\' onclick="updateInfo(\''+oObj.aData.id+'\')" >'+oObj.aData.guess_title+'</a>';
+                                      },
+                                      "bUseRendered": false
+                               },
+							   { "sTitle": "选项", "mDataProp": "choices_name", "sWidth": "40%", "bUseRendered": false},
+							   { "sTitle": "答案", "mDataProp": "answer", "sWidth": "10%", "bUseRendered": false},
+							   { "sTitle": "截止时间", "mDataProp": "end_time", "sWidth": "20%",
+                                      "fnRender": function ( oObj ) {
+                                         return top.getTimeStr( oObj.aData.end_time );
+                                      },
+                                      "bUseRendered": false
+                               }
+							  ];
+			   
+			  var surl=top.getUrlBase()+"/actions/Guess.action?getGuessInfoList";
+
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					   aoData.push( { "name": "guessInfo.schedule_id", "value": top.g_GetNumValue( $("#schedule_id").val(), -1 ) } );
+					},
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			}
+
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			//添加
+			function addInfo(){
+				var xurl="pages/badminton/guessInfo.html?schedule_id="+$("#schedule_id").val();
+				top.openDialog("添加竞猜信息",xurl,true,600,550,saveInfoCallBack);
+			}
+			//修改
+			function updateInfo(group_id){
+				var xurl="pages/badminton/guessInfo.html?opt=update&id="+group_id+"&schedule_id="+$("#schedule_id").val();
+				top.openDialog("修改竞猜信息",xurl,true,600,550,saveInfoCallBack);
+			}
+			//删除
+			function deleteInfo(did){
+			    currentDeleteId=did;
+				top.showConfirm("您确定要删除选中竞猜信息吗？", doDelete);
+			}
+
+		function doDelete(){
+				var aoData=[];
+				aoData.push( { "name": "guessInfo.id", "value": currentDeleteId} );
+				top.sendAjaxRequest("/actions/Guess.action?deleteGuessInfo",aoData,optCallback);
+			}
+			// 新建、删除或修改操作回调函数
+    function optCallback(obj){
+       try{
+			if ( obj.status == true ){
+				top.showInfoWinOK("操作成功");
+				doQuery();
+			}else{
+				top.showInfoWinError("操作失败 "+obj.msg);
+			}
+		   }catch(e){
+			  top.showInfoWinError("处理异常:"+e.message);
+		   }
+	   }
+	   	function saveInfoCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				  
+				}
+	 }
+
+	</script>
+	</head>
+	<body>
+		<input type="hidden" id="type_id" value="-1" />
+		   <div style='border: 1px solid #89A1B9;'>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				    <td><div id="createBtn" class="buttonDivTwo"><a href="javascript:addInfo()">添加</a></div></td>
+			       </tr></table></td>
+				   <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				   </td>
+			  </tr>
+			</table>
+			<table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+				  <td align="right" width="30%">赛程:</td><td align="left" width="70%" id="tdschedule"></td>
+			     </tr>
+			 </table>
+			</div>
+	       <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+	</body>
+</html>

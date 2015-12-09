@@ -1,0 +1,167 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+		    var optType="";
+			$(document).ready(function() {
+			   $( "#tdOptObject" ).html( top.getCodeSelectHtml("SYS_OPT_OBJECT","q_optObject",true, "USER", "changedObject()") );
+			   $( "#tdOptType" ).html( top.getCodeSelectHtml("SYS_OPTTYPE_USER","q_optType",true) );
+			   
+			   optType=top.getUrlParam(document.URL,"optType");
+			   var iaoColumns= [
+                               { "sTitle": "操作账号", "mDataProp": "userCode", "sWidth": "10%", "bUseRendered": false },
+							   { "sTitle": "部门", "mDataProp": "deptId", "sWidth": "15%",
+                            	   "fnRender": function ( oObj ) {
+                                      return top.getDeptPath( oObj.aData.deptId );
+                                   },
+                                   "bUseRendered": false
+                               },
+                               { "sTitle": "操作对象", "mDataProp": "optObject", "sWidth": "10%","sClass": "center",
+                            	   "fnRender": function ( oObj ) {
+                                      return top.getCodeName( "SYS_OPT_OBJECT", oObj.aData.optObject );
+                                   },
+                                   "bUseRendered": false
+                               },
+                               { "sTitle": "操作类型", "mDataProp": "optType", "sWidth": "10%", "sClass": "center",
+                                   "fnRender": function ( oObj ) {
+                                        return top.getCodeName( "SYS_OPTTYPE_"+oObj.aData.optObject, oObj.aData.optType );
+                                   },
+                                   "bUseRendered": false  
+                               },
+                               { "sTitle": "IP","mDataProp": "ip","sWidth": "15%", "sClass": "center","bUseRendered": false},
+							   { "sTitle": "操作时间","mDataProp": "id","sWidth": "15%", "sClass": "center",
+                            	  "fnRender": function ( oObj ) {
+                                       return top.getTimeStr( oObj.aData.id );
+                                  },
+                                  "bUseRendered": false 
+                               },
+							   { "sTitle": "操作描述", "mDataProp": "optDesc", "sWidth": "40%", "bUseRendered": false, "bSortable":false  }
+               ];
+
+			   var surl=top.getUrlBase()+"/actions/System.action?getSysOperationList";
+
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"aaSorting": [[ 5, "desc" ]],
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     aoData.push( { "name": "opt.userCode", "value": $("#q_userCode").val() } );
+						 aoData.push( { "name": "time1", "value": $("#q_time1").val() } );
+						 aoData.push( { "name": "time2", "value": $("#q_time2").val() } );
+						 aoData.push( { "name": "opt.optType", "value": $("#q_optType").val() } );
+						 aoData.push( { "name": "opt.optObject", "value": $("#q_optObject").val() } );
+						 aoData.push( { "name": "opt.deptId", "value":$("#q_deptid").val() } );
+						 aoData.push( { "name": "opt.ip", "value": $("#q_ip").val() } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+			function changedObject(){
+			    $( "#tdOptType" ).html( top.getCodeSelectHtml("SYS_OPTTYPE_"+$("#q_optObject").val(),"q_optType",true) );
+			}
+			
+			function selectDept(){
+	           var xurl="pages/organization/selectTreeNode.html?type=dept";
+	           top.openSelectDialog("选择部门",xurl,300,450,selectDeptCallback);
+		   }
+		   function selectDeptCallback(){
+			   try{
+	             var obj = top.getTempValue();
+	             if ( obj.nodeId == -1 ) return ;
+	             if ( obj.nodeId == -2 ) {
+	                 qDeptId = "";
+	                 qDeptName = "";
+	             } else {
+	            	 qDeptId = obj.nodeId;
+                     qDeptName = obj.nodeName;
+	             }
+	             document.getElementById("q_deptid").value = qDeptId;
+	             document.getElementById("q_deptname").value = qDeptName;
+	           }catch(e){
+	           }
+		   }
+		</script>
+	</head>
+	<body>
+	  <input type="hidden" id="q_deptid" value="" />
+		<div width="100%">
+		    <div style='border: 1px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="110px">&nbsp;操作日志查询&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0" >
+			   <tr class="tr_data">
+			      <td align="right" width="10%">操作对象:</td><td align="left" width="8%" id="tdOptObject"></td>
+				  <td align="right" width="10%">操作类型:</td><td align="left" width="8%" id="tdOptType"></td>
+			      <td align="right" width="10%">操作时间:</td>
+				  <td align="left" width="20%"><input type="text" id="q_time1" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" />
+			      ~&nbsp;<input type="text" id="q_time2" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" /></td>
+			   </tr><tr class="tr_data">
+				  <td align="right" width="6%">部门:</td><td align="left" width="8%"><input type="text" id="q_deptname" value="" size="10" readonly onclick="selectDept()" /></td>
+				  <td align="right" width="10%">操作人账号:</td><td align="left" width="8%"><input type="text" id="q_userCode" value="" size="10" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+				  <td align="right" width="10%">IP:</td><td align="left" width="10%"><input type="text" id="q_ip" value="" size="10" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+			     </tr>
+			 </table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				    <td>&nbsp;查询结果列表&nbsp;</td>
+					<td>&nbsp;</td>
+			       </tr></table></td>
+			  </tr>
+			</table>
+	        <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

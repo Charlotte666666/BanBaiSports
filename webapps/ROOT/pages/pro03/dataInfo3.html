@@ -1,0 +1,118 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var infoId="";
+
+   $(document).ready(function() {
+     initData();
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    	 };
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   function doSubmit(){
+	 var aoData=[];
+     var url = "/actions/ProCmaDataInfo.action?updateDataInfo4";
+	 var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+
+     aoData.push( { "name": "info.info_id", "value": infoId } );
+	 aoData.push( { "name": "info.is_arc", "value": $("#is_arc").val() } );
+	 aoData.push( { "name": "info.arc_mb", "value": $("#arc_mb").val() } );
+	 aoData.push( { "name": "info.arc_method", "value": $("#arc_method").val() } );
+	 top.sendAjaxRequest(url,aoData,optCallback);
+   }
+   
+   function checkForm(){
+     var temp = "";
+	 temp += checkString($("#arc_method").val(),false,512,"归档策略");
+	 if ( !IsFloat($("#arc_mb").val()) ) {
+		 temp += "归档数据量应为数据类型<br/>";
+	 }
+     return temp;
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      isSaveOK = true;
+	      top.showInfoWinOK("操作成功");
+	    }else{
+	      isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+   function initData(){
+	   try{
+	      var o=top.getTempValue();
+		  optType=top.getUrlParam(document.URL,"opt");
+		  infoId=top.getUrlParam(document.URL,"infoId");
+		  if ( o.is_arc == '' ) {
+		    o.is_arc='1';
+		  }
+          $("#is_arc").val( o.is_arc );
+		  $("#arc_mb").val( o.arc_mb );
+		  $("#arc_method").val( o.arc_method );
+	  
+		   if ( optType == 'update' ) {
+		     $( "#submitBtn" ).show();
+	     	 $( "#closeBtn" ).show();
+		   } else {
+		     $( "#submitBtn" ).hide();
+	     	 $( "#closeBtn" ).hide();
+		   }
+	   }catch(e){
+		   top.showInfoWinError(e.message);
+	   }
+   }
+  </script> 
+</head>
+<body>
+<table width="100%" border="0" padding="0" spacing="0">
+ <tr>
+    <td width="20%" align="right">是否已归档:</td>
+    <td width="80%" align="left" colspan="3">
+	  <select id="is_arc" >
+	    <option value="0">是</option>
+		<option value="1">否</option>
+	  </select>
+	</td>
+ </tr>
+ <tr>
+    <td align="right">归档数据量(MB/月):</td>
+    <td align="left" colspan="3"><input id="arc_mb" value="" ></input></td>
+ </tr>
+ <tr>
+    <td align="right">归档策略:</td>
+    <td align="left" colspan="3"><textarea id="arc_method" cols="70" rows="3" ></textarea></td>
+ </tr>
+</table>
+<p align="center">
+   <table><tr>
+		    <td><span id="submitBtn" class="buttonTwo"><a href="javascript:doSubmit()">提交</a></span></td>
+		    <td><span id="closeBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+   </tr></table>
+</p>
+</body>
+</html>

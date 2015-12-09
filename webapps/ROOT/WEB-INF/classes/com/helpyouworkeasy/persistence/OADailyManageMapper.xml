@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--添加产品信息  -->
+<mapper namespace="com.helpyouworkeasy.persistence.OADailyManageMapper">
+
+<!-- 我的工作 -->
+   <insert id="insertWorkRemind" parameterType="map">
+    INSERT INTO tbl_work_remind (key_id,send_person,accept_person,resource_model,content,status,key_model,remind_id,remind_time,remind_type)
+    VALUES (#{key_id}, #{send_person}, #{accept_person}, #{resource_model}, #{content}, #{status}, #{key_model}, #{remind_id}, #{remind_time},#{remind_type})
+  </insert>
+
+  <update id="updateWorkRemind" parameterType="map">
+    update tbl_work_remind set 
+    status=#{status}
+    where remind_id = ${remind_id}
+  </update>
+  
+   <update id="updateRemindacceptPerson" parameterType="map">
+    update tbl_work_remind set 
+    accept_person=#{o.accept_person}
+    where key_id = #{o.key_id} and  key_model = #{o.key_model}  
+    and accept_person = #{old_accept_person} and remind_time>#{o.remind_time}
+  </update>
+  
+  <delete id="deleteWorkRemind">
+   delete from tbl_work_remind
+    where key_model = #{key_model} and key_id = #{key_id} and remind_time > #{remind_time}
+  </delete>
+
+  <!-- 查询工作提醒byId -->
+ <select id="getWorkRemindById" parameterType="map" resultType="WorkRemind">
+    select 
+    key_id,send_person,accept_person,resource_model,content,status,key_model,remind_id,remind_time,remind_type
+    from tbl_work_remind where remind_id =#{remind_id}
+  </select>
+  
+  <select id="getWorkRemindListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_work_remind where 1=1 
+   <if test="o.key_id != '' and o.key_id != null" >
+      and key_id=#{o.key_id}
+    </if>
+    <if test="o.send_person != '' and o.send_person != null" >
+      and send_person=#{o.send_person}
+    </if>
+    <if test="o.accept_person != '' and o.accept_person != null" >
+      and accept_person=#{o.accept_person}
+    </if>
+    <if test="o.resource_model != '' and o.resource_model != null" >
+      and resource_model=#{o.resource_model}
+    </if>
+     <if test="o.status != '' and o.status != null" >
+      and status=#{o.status}
+     </if>
+     <if test="o.key_model != '' and o.key_model != null" >
+      and key_model=#{o.key_model}
+    </if>
+    <if test="time1 != -1" >
+      and remind_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=remind_time
+    </if>
+  </select>
+  
+  <select id="getWorkRemindPageList" parameterType="map" resultType="WorkRemind">
+    select 
+    key_id,send_person,accept_person,resource_model,content,status,key_model,remind_id,remind_time,remind_type
+    from tbl_work_remind where 1=1 
+    <if test="o.key_id != '' and o.key_id != null" >
+      and key_id=#{o.key_id}
+    </if>
+    <if test="o.send_person != '' and o.send_person != null" >
+      and send_person=#{o.send_person}
+    </if>
+    <if test="o.accept_person != '' and o.accept_person != null" >
+      and accept_person=#{o.accept_person}
+    </if>
+    <if test="o.resource_model != '' and o.resource_model != null" >
+      and resource_model=#{o.resource_model}
+    </if>
+    <if test="o.status != '' and o.status != null" >
+          and status=#{o.status}
+    </if>
+    <if test="o.key_model != '' and o.key_model != null" >
+      and key_model=#{o.key_model}
+    </if>
+    <if test="time1 != -1" >
+      and remind_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=remind_time
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+  
+  <select id="getWorkRemindList" parameterType="map" resultType="WorkRemind">
+    select 
+    key_id,send_person,accept_person,resource_model,content,status,key_model,remind_id,remind_time,,remind_type
+    from tbl_work_remind where 1=1 
+    <if test="o.key_id != '' and o.key_id != null" >
+      and key_id=#{o.key_id}
+    </if>
+    <if test="o.send_person != '' and o.send_person != null" >
+      and send_person=#{o.send_person}
+    </if>
+    <if test="o.accept_person != '' and o.accept_person != null" >
+      and accept_person=#{o.accept_person}
+    </if>
+    <if test="o.resource_model != '' and o.resource_model != null" >
+      and resource_model=#{o.resource_model}
+    </if>
+    <if test="o.status != '' and o.status != null" >
+        and status=#{o.status}
+     </if>
+     <if test="o.key_model != '' and o.key_model != null" >
+      and key_model=#{o.key_model}
+    </if>
+  </select>
+	
+</mapper>

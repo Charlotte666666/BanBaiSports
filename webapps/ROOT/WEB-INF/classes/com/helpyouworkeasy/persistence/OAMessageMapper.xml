@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.helpyouworkeasy.persistence.OAMessageMapper">
+  <insert id="insertOAMessageInfo" parameterType="OAMessageInfo">
+    INSERT INTO tb_message_info (message_content,sender,sendee,message_category,message_id,send_time)
+    VALUES (#{message_content}, #{sender}, #{sendee}, #{message_category}, #{message_id}, #{send_time})
+  </insert>
+
+  <update id="updateOAMessageInfo" parameterType="OAMessageInfo">
+    update tb_message_info set 
+    message_content=#{message_content},sender=#{sender},sendee=#{sendee},message_category=#{message_category},send_time=#{send_time}
+    where message_id=#{message_id}
+  </update>
+
+  <select id="getOAMessageInfoListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tb_message_info where 1=1 
+    <if test="o.message_content != '' and o.message_content != null" >
+      and message_content=#{o.message_content}
+    </if>
+    <if test="o.sender != '' and o.sender != null" >
+      and sender=#{o.sender}
+    </if>
+    <if test="o.sendee != '' and o.sendee != null" >
+      and sendee=#{o.sendee}
+    </if>
+    <if test="o.message_category != '' and o.message_category != null" >
+      and message_category=#{o.message_category}
+    </if>
+    <if test="o.message_id != -1" >
+      and message_id=#{o.message_id}
+    </if>
+    <if test="o.send_time != -1" >
+      and send_time=#{o.send_time}
+    </if>
+    <if test="time1 != -1" >
+      and >=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=
+    </if>
+  </select>
+
+  <select id="getOAMessageInfoPageList" parameterType="map" resultType="OAMessageInfo">
+    select 
+    message_content,sender,sendee,message_category,message_id,send_time
+    from tb_message_info where 1=1 
+    <if test="o.message_content != '' and o.message_content != null" >
+      and message_content=#{o.message_content}
+    </if>
+    <if test="o.sender != '' and o.sender != null" >
+      and sender=#{o.sender}
+    </if>
+    <if test="o.sendee != '' and o.sendee != null" >
+      and sendee=#{o.sendee}
+    </if>
+    <if test="o.message_category != '' and o.message_category != null" >
+      and message_category=#{o.message_category}
+    </if>
+    <if test="o.message_id != -1" >
+      and message_id=#{o.message_id}
+    </if>
+    <if test="o.send_time != -1" >
+      and send_time=#{o.send_time}
+    </if>
+    <if test="time1 != -1" >
+      and >=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+
+
+</mapper>

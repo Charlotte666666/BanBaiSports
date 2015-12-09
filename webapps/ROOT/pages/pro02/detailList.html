@@ -1,0 +1,131 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title></title>
+<link href="../../css/comm.css" rel="stylesheet" type="text/css" />
+<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="../../js/SimpleMap.js"></script>
+<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+
+<script type="text/javascript">
+var resultList=[];
+var system="";
+var server_id="";
+var rule="";
+var category="";
+var grule="";
+var gobj="";
+var ginfo_type="";
+var gserver_id="";
+
+jQuery(document).ready(function() {
+    server_id=top.getUrlParam(document.URL,"server_id");
+	rule=top.getUrlParam(document.URL,"rule");
+	category=top.getUrlParam(document.URL,"category");
+	system=top.getUrlParam(document.URL,"system");
+	showDataList();
+ });
+
+ function showDataList(){
+    resultList = top.getDataList();
+    try{
+	  var ht="";
+	  var row=1;
+	  var timeStr="";
+	  var code="";
+	  for (var i=0;i<resultList.length;i++) {
+	      if ( system == resultList[i].system_name ) {
+		      if ( server_id != '' && server_id != resultList[i].server_id ) continue;
+			  if ( category != '' && category != resultList[i].category ) continue;
+			  if ( rule != '' && rule != resultList[i].rule ) continue;
+			  
+			  ht+='<tr ';
+			  ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+			  ht+='>';
+			  
+			  code=resultList[i].system_name+"_"+resultList[i].server_name+"_"+resultList[i].info_type+"_"+resultList[i].rule+"_"+resultList[i].obj;
+			  
+			  timeStr=resultList[i].year+"-"+top.getTwoNumberStr(resultList[i].month)+"-"+top.getTwoNumberStr(resultList[i].day);
+			  timeStr+=" "+top.getTwoNumberStr(resultList[i].hour)+":"+top.getTwoNumberStr(resultList[i].min);
+			  ht+='<td width="150px" height="32px" align="center" style="word-break:break-all;"><b>'+timeStr+'</b></td>';
+			  ht+='<td width="120px" height="32px" align="center" style="word-break:break-all;"><b>'+top.getCodeName("BUSS_NAME",resultList[i].system_name)+'</b></td>';
+			  ht+='<td width="90px" height="32px" align="center" style="word-break:break-all;"><b>'+top.getCodeName("BUSS_NAME",resultList[i].server_name)+'</b></td>';
+			  ht+='<td width="110px" height="32px" align="center" style="word-break:break-all;"><b>'+top.getCodeName("BUSS_NAME",resultList[i].info_type)+'</b></td>';
+			  ht+='<td width="120px" height="32px" align="center" style="word-break:break-all;"><b>'+top.getCodeName("BUSS_NAME",resultList[i].rule)+'</b></td>';
+			  ht+='<td width="100px" height="32px" align="center" style="word-break:break-all;"><b>'+top.getCodeName("BUSS_NAME",resultList[i].obj)+'</b></td>';
+			  ht+='<td width="70px" height="32px" align="center" style="word-break:break-all;"><b>'+resultList[i].critical+'</b></td>';
+			  ht+='<td width="70px" height="32px" align="center" style="word-break:break-all;"><b>'+resultList[i].warning+'</b></td>';
+			  ht+='<td width="70px" height="32px" align="center" style="word-break:break-all;"><b>'+resultList[i].val+'</b></td>';
+			  ht+='<td width="100px" height="32px" align="center" style="word-break:break-all;"><b><img width="16px" height="16px" src="'+ getImgSrc(resultList[i].status )+'"/></b>';
+			  
+			  if ( resultList[i].status == 'err' ) {
+				  if ( top.checkAlertObj( code ) ) {
+					ht+="&nbsp;<input type='button' value='取消' onclick='cancelAlertObj(\""+code+"\",\""+resultList[i].rule+"\",\""+resultList[i].obj+"\",\""+resultList[i].info_type+"\",\""+resultList[i].server_id+"\")'></input>";
+				  } else {
+					ht+="&nbsp;已取消";
+				  }
+			  }
+			  
+			  ht+='</td>';
+			  ht+='</tr>';
+			  if ( row == 1 ) {
+				 row=0;
+			  } else {
+				 row=1;
+			  }
+		}
+	  }
+	  $("#dataList").html( ht );
+	}catch(e){}
+ }
+ 
+ function cancelAlertObj(code,r,obj,info_type,server_id){
+    currentCancelCode=code;
+	grule=r;
+	gobj=obj;
+	ginfo_type=info_type;
+	gserver_id=server_id;
+    top.showConfirm("您确定要取消该条报警记录吗？", doCancelAlertObj);
+ }
+ 
+ function doCancelAlertObj(){
+   top.cancelAlertObj(currentCancelCode,category,grule,gobj,ginfo_type,gserver_id,showDataList);
+ }
+ 
+ function getImgSrc(status){
+   var ht="../../img/icon_success.png";
+   if ( status == 'warn' ) {
+     ht="../../img/icon_alert.png";
+   } else if ( status == 'err' ) {
+     ht="../../img/icon-error.gif";
+   }
+   return ht;
+ }
+ 
+</script>
+</head>
+
+<body style="width:100%;">
+<div style="margin: 10px;padding: 10px;width:1030px;background-color : #ffffff;	border: 2px solid #89A1B9;-moz-border-radius: 12px;-webkit-border-radius: 12px;border-radius: 12px;overflow: auto;">
+<table cellpadding="0" width="1000px" cellspacing="2px" border="1">
+ <tr bgcolor="#CEDAE8">
+  <td width="150px" height="32px" align="center">监视信息获取时间</td>
+  <td width="120px" height="32px" align="center">业务系统</td>
+  <td width="90px" height="32px" align="center">服务器</td>
+  <td width="110px" height="32px" align="center">信息分类</td>
+  <td width="120px" height="32px" align="center">规则名称</td>
+  <td width="100px" height="32px" align="center">监视对象</td>
+  <td width="70px" height="32px" align="center">报警值</td>
+  <td width="70px" height="32px" align="center">警告值</td>
+  <td width="70px" height="32px" align="center">状态值</td>
+  <td width="100px" height="32px" align="center">状态</td>
+ </tr>
+</table>
+  <div id="dataDiv" style="margin: 1px;padding:0;width:1020px;background-color:#ffffff;overflow: auto;">
+   <table id="dataList" width="1000px" cellpadding="0" cellspacing="2px" border="1" style="border-color:blue"></table>
+  </div>
+</div>
+</body>
+</html>

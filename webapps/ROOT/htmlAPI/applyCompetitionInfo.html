@@ -1,0 +1,255 @@
+<html>
+<head>
+    <meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>羽毛球比赛报名</title>
+	<link rel="stylesheet" href="../css/themes/default/jquery.mobile-1.4.5.min.css">
+	<script src="../js/jquery-1.10.2.min.js"></script>
+	<script src="../js/jquery.mobile-1.4.5.min.js"></script>
+
+  <script type="text/javascript">
+   var schedule_id=0;
+   var g_UrlBase="";
+   
+   $(document).ready(function() {
+       schedule_id=getUrlParam(document.URL,"schedule_id");
+	   //$("#optResultSpan").html("报名成功！");
+	   // 院校信息
+	   var aoData=[];
+	   aoData.push( { "name": "info.id", "value": schedule_id } );
+	   doSendAjaxRequest("/actions/CompetitionSchedule.action?getPreApplyInfo",aoData,getPreApplyInfoCallback);
+   } );
+   
+   function getPreApplyInfoCallback(obj){
+       if ( !obj.isCanApply ) {
+	      $("#registTable").hide();
+		  $("#notApply").show();
+	      return ;
+	   } else {
+	      $("#registTable").show();
+		  $("#notApply").hide();
+	   }
+       var ht='';
+	   try{
+	     var rs=obj.schoolList;
+		 for ( var i=0;i<rs.length;i++  ) {
+		   ht+='<option value="'+rs[i].school_code+'">'+rs[i].school_name+'</option>';
+		 }
+	   }catch(e){
+	   }
+	   ht+='';
+       $("#school_code").append( ht );
+   }
+
+   function doSubmit(){
+     if ( $("#user_name").val() == '' || $("#cell_phone").val() == ''  ) {
+	    $("#optResultSpan").html("<font color='red'>请填写手机号和姓名</font>");
+	    return ;
+	 }
+     var aoData=[];
+     aoData.push( { "name": "enrollInfo.schedule_id", "value": schedule_id } );
+     aoData.push( { "name": "enrollInfo.user_name", "value": $("#user_name").val() } );
+     aoData.push( { "name": "enrollInfo.cell_phone", "value":$("#cell_phone").val() } );
+     aoData.push( { "name": "enrollInfo.edu_level", "value":$("#edu_level").val() } );
+     aoData.push( { "name": "enrollInfo.graduate_year", "value":$("#graduate_year").val() } );
+	 aoData.push( { "name": "enrollInfo.school_code", "value":$("#school_code").val() } );
+	 aoData.push( { "name": "enrollInfo.job", "value":$("#job").val() } );
+	 aoData.push( { "name": "enrollInfo.email", "value":$("#email").val() } );
+	 aoData.push( { "name": "enrollInfo.school_else", "value":$("#school_else").val() } );
+	 aoData.push( { "name": "enrollInfo.unit", "value":$("#unit").val() } );
+	 aoData.push( { "name": "enrollInfo.sex", "value":$("#sex").val() } );
+	 aoData.push( { "name": "enrollInfo.fit_size", "value":$("#fit_size").val() } );
+	 aoData.push( { "name": "enrollInfo.play_year", "value":$("#play_year").val() } );
+	 $("#optResultSpan").html("");
+	 doSendAjaxRequest("/actions/CompetitionSchedule.action?insertEnrollInfo",aoData,optCallback);
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      isSaveOK = true;
+		  $("#optResultSpan").html("报名成功！");
+		  $("#submitTr").hide();
+	    } else {
+		  $("#optResultSpan").html("提交失败");
+		}
+	   }catch(e){
+		  $("#optResultSpan").html("提交失败");
+	   }
+   }
+   
+   function changeSchool(){
+       if ( $("#school_code").val() == 'else' ) {
+	     $("#else_tr").show();
+	   } else {
+	     $("#else_tr").hide();
+	   }
+   }
+   
+  function doSendAjaxRequest(xurl,param,fnCallback){
+	    if ( xurl.indexOf('http://') == -1 ) xurl = g_UrlBase+xurl;
+		$.ajax( {
+			"url":  xurl,
+			"data": param,
+			"timeout" : 10000,
+			"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+			"success": function (json) {
+				try{ fnCallback( json );}catch(e){}
+			},
+			"dataType": "json",
+			"cache": false,
+			"type": "POST",
+			"error": function (xhr, error, thrown) {
+			}
+		} );
+ }
+ 
+ function getUrlParam(xurl,name){
+	    var para="";
+	    if(xurl.lastIndexOf("?")>0){
+	        para=xurl.substring(xurl.lastIndexOf("?")+1,xurl.length);
+			var arr=para.split("&");
+			para="";
+			for(var i=0;i<arr.length;i++){
+			   if(arr[i].split("=")[0]==name) return arr[i].split("=")[1];
+			}
+			return "";
+	   }else{
+	        return "";
+	   }
+	}
+  </script>
+  <style type="text/css">
+    .ptd{
+	  padding:2px;
+	  font-size:20px;
+	  font-color:#3e454d;
+	  text-align:left;
+	}
+	input{
+		BACKGROUND-COLOR: transparent;
+		BORDER-BOTTOM: #ffffff 1px solid;
+		BORDER-LEFT: #ffffff 1px solid;
+		BORDER-RIGHT: #ffffff 1px solid;
+		BORDER-TOP: #ffffff 1px solid;
+		COLOR: #ffffff;
+		HEIGHT: 20px;
+		border-color: #ffffff #ffffff #ffffff #ffffff; font-size: 10pt
+    }
+  </style>
+</head>
+<body>
+<p id="notApply" align="center" style="display:none">
+  <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin:50px 0px 0px 0px">
+   <tr>
+     <td width="100%" align="center">
+	   <img src="../pages/badminton/img/notRegist.png"></img>
+	 </td>
+   </tr>
+  </table>
+</p>
+<table id="registTable" width="100%" border="0" cellpadding="0" cellspacing="0" style="background-color:white;display:none">
+ <tr>
+    <td class="ptd" colspan="2" style=""><font color='#18b4ed'>羽毛球比赛报名</font></td>
+ </tr>
+ <tr>
+    <td class="ptd">姓名:</td>
+    <td class="ptd"><input type="text" id="user_name" value=""  /></td>
+ </tr>
+ <tr>
+    <td class="ptd">性别:</td>
+    <td class="ptd">
+	 <select id="sex">
+	  <option value="1">男</option><option value="0">女</option>
+	 </select>
+	</td>
+ </tr>
+ <tr>
+    <td class="ptd">手机:</td>
+    <td class="ptd"><input type="text" id="cell_phone" value=""  /></td>
+ </tr>
+ <tr>
+    <td class="ptd">邮箱:</td>
+    <td class="ptd"><input type="email" id="email" value=""  /></td>
+ </tr>
+ <tr>
+    <td class="ptd">毕业院校:</td>
+    <td class="ptd"><select id="school_code" onchange="changeSchool()"></select>
+	</td>
+ </tr>
+ <tr id="else_tr" class="ptd" style="display:none">
+	<td class="ptd">其他院校:</td>
+	<td class="ptd"><input type="text" id="school_else" value=""  /></td>
+ </tr>
+ <tr>
+    <td class="ptd">毕业年份:</td>
+    <td class="ptd">
+	 <select id="graduate_year">
+	  <option value="2015">2015</option><option value="2014">2014</option>
+	  <option value="2013">2013</option><option value="2012">2012</option>
+	  <option value="2011">2011</option><option value="2010">2010</option>
+	  <option value="2009">2009</option><option value="2008">2008</option>
+	  <option value="2007">2007</option><option value="2006">2006</option>
+	  <option value="2005">2005</option><option value="2004">2004</option>
+	  <option value="2003">2003</option><option value="2002">2002</option>
+	  <option value="2001">2001</option><option value="2000">2000</option>
+	  <option value="1999">1999</option><option value="1998">1998</option>
+	  <option value="1999">1997</option><option value="1998">1996</option>
+	  <option value="1999">1995</option><option value="1998">1994</option>
+	  <option value="1999">1993</option><option value="1998">1992</option>
+	  <option value="1999">1991</option><option value="1998">1990</option>
+	  <option value="1999">1989</option><option value="1998">1988</option>
+	  <option value="1999">1987</option><option value="1998">1986</option>
+	  <option value="1999">1985</option><option value="1998">1984</option>
+	  <option value="1999">1983</option><option value="1998">1982</option>
+	  <option value="1999">1981</option><option value="1998">1980</option>
+	  <option value="1999">1979</option><option value="1998">1978</option>
+	 </select>
+ </tr>
+ <tr>
+    <td class="ptd">学历:</td>
+    <td class="ptd">
+	 <select id="edu_level">
+	  <option value="1">博士</option><option value="2">硕士</option>
+	  <option value="3">本科</option><option value="4">大专</option>
+	 </select>
+	</td>
+ </tr>
+ <tr>
+    <td class="ptd">工作单位:</td>
+    <td class="ptd"><input type="text" id="unit" value=""  /></td>
+ </tr>
+ <tr>
+    <td class="ptd">职务:</td>
+    <td class="ptd"><input type="text" id="job" value=""  /></td>
+ </tr>
+ <tr>
+    <td class="ptd">球龄:</td>
+    <td class="ptd"><input type="range" id="play_year" min="0" max="50" value="1" /></td>
+ </tr>
+ <tr>
+    <td class="ptd">球衣尺寸:</td>
+    <td class="ptd">
+	 <select id="fit_size">
+	  <option value="S">S</option><option value="M">M</option>
+	  <option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option>
+	 </select>
+	</td>
+ </tr>
+ <!--tr>
+    <td class="ptd">附件:</td>
+    <td class="ptd">
+	  <form action="CompetitionSchedule.action?" method="post" enctype="multipart/form-data">
+	    <input type="file" name="applyFile" />
+	  </form>
+	</td>
+ </tr-->
+  <tr id="submitTr">
+    <td class="ptd" colspan="2"><input type="button" id="submitBtn" onclick="doSubmit()" value="提交"></input></td>
+ </tr>
+</table>
+<p align="center">
+   <span id="optResultSpan"></span>
+</p>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="../../js/yetii-min.js"></script>
+<style type="text/css">
+#main{
+	height:100%;
+	padding: 10px;
+}
+</style>
+<script type="text/javascript">
+var oTableSystem = null;
+var currentOptIconId = "";
+$(document).ready( function() {
+    loadSystemParameter();
+});
+
+ function loadSystemParameter(){
+    var iaoColumnsSystem= [
+               { "sTitle": "参数编码", "mDataProp": "code", "sWidth": "20%", "bSortable":false},
+               { "sTitle": "参数值", "mDataProp": "value", "sWidth": "35%","sClass": "center",
+                   "fnRender": function ( oObj ) {
+                     return '<input type="text" style="width:100%" id="param_value_'+oObj.aData.code+'" onchange="showOptIcon(\'param_opt_'+oObj.aData.code+'\',true)" value="'+oObj.aData.value+'" />' ;
+                   },
+                   "bUseRendered": false , "bSortable":false
+               },
+               { "sTitle": "参数说明", "mDataProp": "memo", "sWidth": "35%",
+                   "fnRender": function ( oObj ) {
+                      return '<input type="text" style="width:100%" id="param_memo_'+oObj.aData.code+'" onchange="showOptIcon(\'param_opt_'+oObj.aData.code+'\',true)" value="'+oObj.aData.memo+'" />' ;
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "操作", "mDataProp": "code", "sWidth": "10%","bSortable":false,
+                    "fnRender": function ( oObj ) {
+                       return '<span id="param_opt_'+oObj.aData.code+'" align="center" style="cursor:pointer;display:none;" onclick="editParam(\''+oObj.aData.code+'\',\''+oObj.aData.belong+'\')"><img src="../../img/save.bmp" />&nbsp;保存修改</span>';
+                    },
+                    "bUseRendered": false
+               }
+        ];
+ 	
+		oTableSystem = $('#systemParameterDataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":1000,
+					"sAjaxSource": top.getUrlBase()+"/actions/System.action?getParameterList",
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+			      "sDom": "frt",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumnsSystem
+	   } );
+ }
+ 
+
+ function editParam(code,belong){
+    var aoData=[];
+	var v = document.getElementById("param_value_"+code).value;
+	var memo = document.getElementById("param_memo_"+code).value;
+	if ( v == '' ) {
+	    top.showInfoWinWarn("请输入参数值");
+        return ;
+	}
+	if ( memo == '' ) {
+	    top.showInfoWinWarn("请输入参数说明");
+        return ;
+	}
+	aoData.push( { "name": "param.belong", "value": belong } );
+    aoData.push( { "name": "param.code", "value": code } );
+    aoData.push( { "name": "param.value", "value": v } );
+	aoData.push( { "name": "param.memo", "value": memo} );
+	
+	currentOptIconId = "param_opt_"+code;
+    top.sendAjaxRequest("/actions/System.action?updateParameter",aoData,optCallback);
+ }
+ 
+ function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      top.showInfoWinOK("操作成功");
+	    }else{
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+ }
+ 
+ function showOptIcon(id,b){
+    if ( b ) {
+ 	  $("#"+id).show();
+	} else $("#"+id).hide();
+ }
+</script>
+</head>
+<body>
+<p style="padding:5px">系统参数管理:此为系统关键设置，请谨慎操作。</p>
+<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="systemParameterDataTable"></table>
+</body>
+</html> 

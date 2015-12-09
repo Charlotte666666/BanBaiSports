@@ -1,0 +1,6 @@
+<Context path="/ROOT" 
+   docBase="D:/workspace/Jade/webApp">
+    <Manager className="org.apache.catalina.session.PersistentManager" saveOnRestart="false">
+        <Store className="org.apache.catalina.session.FileStore"/>
+    </Manager>
+</Context>

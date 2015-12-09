@@ -1,0 +1,134 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+  <link rel="stylesheet" type="text/css" href="../../css/redmond/jquery.ui.all.css">
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+
+  <script type="text/javascript">
+   var orderId=0;
+   var oTable=null;
+   $(document).ready(function() {
+               initData();
+	           var iaoColumns= [
+					 { "sTitle": "商品名称", "mDataProp": "goodsName", "sWidth": "35%","sClass": "left", "bUseRendered": false , "bSortable":false},
+					 { "sTitle": "商品分类", "mDataProp": "type1_id", "sWidth": "15%","sClass": "left", "bSortable":false,
+					    "fnRender": function ( oObj ) {
+                            return top.getTypeNameById( oObj.aData.type1_id );
+                        },
+						"bUseRendered": false
+					 },
+					 { "sTitle": "单位", "mDataProp": "unit", "sWidth": "10%","sClass": "center","bSortable":false,
+						  "fnRender": function ( oObj ) {
+							   return top.getCodeName( "ERP_GOODS_UNIT", oObj.aData.unit );
+						  },
+						  "bUseRendered": false
+					 },
+					 { "sTitle": "规格", "mDataProp": "specification", "sWidth": "10%","sClass": "left", "bUseRendered": false, "bSortable":false },
+					 { "sTitle": "价格(元)", "mDataProp": "price", "sWidth": "15%","sClass": "left", "bUseRendered": false, "bSortable":false },
+					 { "sTitle": "数量", "mDataProp": "amount", "sWidth": "15%","sClass": "left", "bUseRendered": false , "bSortable":false}
+               ];
+
+			   var surl=top.getUrlBase()+"/actions/ProGoods.action?getSalesOrderDetailList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"aaSorting": [[ 1, "desc" ]],
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+						 aoData.push( { "name": "salesOrder.orderId", "value": orderId } );
+			        },
+			        "sDom": "frt",
+					"aoColumns": iaoColumns
+				} );
+   } );
+   function initData(){
+	   try{
+		   orderId=top.getUrlParam(document.URL,"orderId");
+		   var userCode=top.getUrlParam(document.URL,"userCode");
+		   var total=top.getUrlParam(document.URL,"total");
+		   var allowance=top.getUrlParam(document.URL,"allowance");
+		   var received=top.getUrlParam(document.URL,"received");
+		   var paymentMethod=top.getUrlParam(document.URL,"paymentMethod");
+		   $("#td_orderId").html(orderId);
+		   $("#td_userCode").html(userCode);
+		   $("#td_total").html(total+"元");
+		   $("#td_allowance").html( allowance +"元");
+		   $("#td_received").html(received+"元");
+		   $("#td_paymentMethod").html( top.getCodeName( "ERP_PAYMENT_METHOD", paymentMethod ) );
+		   $("#td_time").html( top.getTimeStr( orderId ) );
+	   }catch(e){
+		   top.showInfoWinError(e.message);
+	   }
+   }
+  </script> 
+</head>
+<style>
+.infoTd{
+  border:1px;
+  border-style:none none dotted none;
+  border-color: blue;
+  font-size:14px;
+  color:#000000;
+  padding:0;
+}
+</style>
+<body>
+<br>
+<table width="100%" style="border:0px;spacing:2px;padding:2px;">
+ <tr>
+    <td width="20%" align="right" class="infoTd" style="border-style:dotted none dotted none;">销售单号:</td>
+    <td width="30%" align="left" id="td_orderId" class="infoTd" style="border-style:dotted dotted dotted none;"></td>
+	<td width="20%" align="right" class="infoTd" style="border-style:dotted none dotted none;">操作人账号:</td>
+    <td width="30%" align="left" id="td_userCode" class="infoTd" style="border-style:dotted none dotted none;"></td>
+ </tr>
+ <tr>
+    <td align="right" class="infoTd">合计:</td>
+    <td align="left" id="td_total" class="infoTd" style="border-style:none dotted dotted none;"></td>
+	<td align="right" class="infoTd">折让:</td>
+    <td align="left" id="td_allowance" class="infoTd"></td>
+ </tr>
+ <tr>
+    <td align="right" class="infoTd">实收:</td>
+    <td align="left" id="td_received" class="infoTd" style="border-style:none dotted dotted none;"></td>
+	<td align="right" class="infoTd">付款方式:</td>
+    <td align="left" id="td_paymentMethod" class="infoTd"></td>
+ </tr>
+ <tr>
+    <td align="right" class="infoTd">操作时间:</td>
+    <td colspan="3" align="left" id="td_time" class="infoTd"></td>
+ </tr>
+</table>
+<br/>
+销售商品列表明细:
+<br/>
+<table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+</body>
+</html>

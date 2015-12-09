@@ -1,0 +1,335 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>积分筛选</title>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css"	href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"	src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" src="../../js/checkForm.js"></script>
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var buList=[];
+			var filialeList=[];
+			var deptList=[];
+
+			
+			$(document).ready(function() {
+			    top.sendAjaxRequest("/actions/User.action?getAllDeptList",[],getAllDeptListCallback);
+                $("#tdrecord_source").html(top.getCodeSelectHtml("RECORD_SOURCE","record_source",true));
+                $("#tdsource_award_points").html(top.getCodeSelectHtml("SOURCE_AWARD_POINTS","source_award_points",true));
+                $("#tdjob_title").html(top.getCodeSelectHtml("SYS_POSITION","job_title",true,null,"getJobLevel()",null,"120px"));
+                $("#tdsex").html(top.getCodeSelectHtml("SEX","sex",true));
+                $("#tdeducation_background").html(top.getCodeSelectHtml("EDUCATION_BACKGROUND","education_background",true));
+				getJobLevel();
+				
+				$("#bx").click(function(){
+				  if($(this).attr("checked")=="checked" && $("#gl").attr("checked")=="checked"){
+				    $("#spanbx_percent").show();
+				    $("#spangl_percent").show();
+				  }else{
+				    $("#bx_percent").val("");
+				    $("#gl_percent").val("");
+				    $("#spanbx_percent").hide();
+				    $("#spangl_percent").hide();
+				  }
+				});
+				
+				$("#gl").click(function(){
+				  if($(this).attr("checked")=="checked" && $("#bx").attr("checked")=="checked"){
+				    $("#spanbx_percent").show();
+				    $("#spangl_percent").show();
+				  }else{
+				    $("#bx_percent").val("");
+				    $("#gl_percent").val("");
+				    $("#spanbx_percent").hide();
+				    $("#spangl_percent").hide();
+				  }
+				});
+				
+			} );
+			
+			function getAllDeptListCallback(obj){
+			   var bu="<select id='bu_id' style='width:120px' onchange='getFiliale()'>";
+			   var filiale="<select id='filiale' style='width:120px;' onchange='getDept()'>";
+			   var dept="<select id='dept' style='width:120px;'>";
+			   bu+="<option value=''></option>";
+			   filiale+="<option value=''></option>";
+			   dept+="<option value=''></option>";
+			   if(obj.status==true){
+			      if(obj.body){
+                      var o=obj.body;
+                      for(var i=0;i<o.length;i++){
+                        if(o[i].dept_type=="group"){
+						  bu+="<option value='"+o[i].deptId+"'>"+o[i].name+"</option>";
+						  buList.push(o[i]);
+						}else if(o[i].dept_type=="filiale"){
+						  filiale+="<option value='"+o[i].deptId+"'>"+o[i].name+"</option>";
+						  filialeList.push(o[i]);
+						}else if(o[i].dept_type!="headquarters"){
+						  dept+="<option value='"+o[i].deptId+"'>"+o[i].name+"</option>";
+						  deptList.push(o[i]);
+						}
+					  }	
+				  }
+			   }
+			   bu+="</select>";
+			   filiale+="</select>";
+			   dept+="</select>";
+			   $("#tdbu").html(bu);
+			   $("#tdfiliale").html(filiale);
+			   $("#tddept").html(dept);
+			}
+			
+			function getJobLevel(){
+			  var ht=top.getJobLevelSelectHtml("job_level",$("#job_title").val());
+			  $("#tdjob_level").html(ht);
+		    }
+			
+			function getFiliale(){
+			  var ht="<select id='filiale' style='width:120px;' onchange='getDept()'>";
+			  ht+="<option value=''></option>";
+			  if(filialeList.length>0 && buList.length>0){
+			    for(var i=0;i<filialeList.length;i++){
+				    if(filialeList[i].parentId==$("#bu_id").val()){
+                       ht+="<option value='"+filialeList[i].deptId+"'>"+filialeList[i].name+"</option>";
+                    }					
+				}
+			  }
+			  ht+="</select>";
+			  $("#tdfiliale").html(ht);
+			  getDept();
+			}
+			
+			function getDept(){
+			  var ht="<select id='dept' style='width:120px;'>";
+			  ht+="<option value=''></option>";
+			  if(deptList.length>0 && filialeList.length>0){
+			    for(var i=0;i<deptList.length;i++){
+					if(deptList[i].parentId==$("#filiale").val()){
+					    ht+="<option value='"+deptList[i].deptId+"'>"+deptList[i].name+"</option>";				
+					}
+				}
+			  }
+			  ht+="</select>";
+			  $("#tddept").html(ht);
+			}
+			
+			function doQuery(){
+			  if($("#bx").attr("checked")!="checked" && $("#gl").attr("checked")!="checked"){
+			    top.showInfoWinWarn("请选择表现积分或工龄积分!");return;
+			  }
+			  if($("#bx").attr("checked")=="checked" && $("#gl").attr("checked")=="checked"){
+			    if((!$("#bx_percent").val()!="" && $("#gl").val()!="")){
+				  top.showInfoWinWarn("请填写表现积分和工龄积分的比例值！");return;
+				}else{
+				  if(!IsFloat($("#bx_percent").val())){
+				    top.showInfoWinWarn("表现积分的比例值为数字类型！");return;
+				  }
+				  if(!IsFloat($("#bx_percent").val())){
+				    top.showInfoWinWarn("工龄积分的比例值为数字类型！");return;
+				  }
+				}
+			  }
+			  
+			  var aoData=[];
+			  if($("#bx").attr("checked")=="checked" && $("#gl").attr("checked")=="checked"){//表现积分和工龄积分
+			     aoData.push( { "name":"type","value":"2" } );
+				 aoData.push( { "name":"bx_percent","value":$("#bx_percent").val() } );
+				 aoData.push( { "name":"gl_percent","value":$("#gl_percent").val() } );
+			  }else{
+			     if($("#bx").attr("checked")=="checked" && $("#gl").attr("checked")!="checked"){//表现积分 
+				     aoData.push( { "name":"type","value":"0" } );
+				 }
+				 if($("#bx").attr("checked")!="checked" && $("#gl").attr("checked")=="checked"){//工龄积分
+				     aoData.push( { "name":"type","value":"1" } );
+				 }
+			  }
+			  aoData.push( { "name":"bu_id","value":$("#bu_id").val() } );
+			  aoData.push( { "name":"filiale_id","value":$("#filiale").val() } );
+			  aoData.push( { "name":"item.dept","value":$("#dept").val() } );
+			  aoData.push( { "name":"item.record_source","value":$("#record_source").val() } );
+			  aoData.push( { "name":"item.source_award_points","value":$("#source_award_points").val() } );
+			  aoData.push( { "name":"item_user.job_title","value":$("#job_title").val() } );
+			  aoData.push( { "name":"item_user.job_level","value":$("#job_level").val() } );
+			  aoData.push( { "name":"item_user.sex","value":$("#sex").val() } );
+			  aoData.push( { "name":"item_user.education_background","value":$("#education_background").val() } );
+			  aoData.push( { "name":"item.reward_points","value":$("#reward_points").val() } );
+			  aoData.push( { "name":"time1","value":$("#time1").val() } );
+			  aoData.push( { "name":"time2","value":$("#time2").val() } );
+			  aoData.push( { "name":"sort","value":$("#sort_order").attr("checked")=="checked"?"desc":"asc" } );
+			  
+			  top.sendAjaxRequest("/actions/IntegrationItem.action?getIntegrationScreen",aoData,getIntegrationScreenCallback);
+			}
+			
+			function getIntegrationScreenCallback(obj){
+			   var ht="<tr class='tr_data' style='font-weight:bold;background-color: #b9d8f3;'><td align='center'>排名</td><td align='center'>帐号</td><td align='center'>姓名</td><td align='center'>部门</td><td align='center'>职位</td><td align='center'>职级</td>";
+			   if($("#bx").attr("checked")=="checked"){
+			     ht+="<td align='center'>表现积分</td>";
+			   }
+			   if($("#gl").attr("checked")=="checked"){
+			     ht+="<td align='center'>工龄积分</td>";
+			   }
+			   if($("#bx").attr("checked")=="checked" && $("#gl").attr("checked")=="checked"){
+			     ht+="<td align='center'>总积分</td>";
+			   }
+			   ht+="</tr>";
+			   if(obj.status==true){
+			    if(obj.body){
+				   var o=obj.body;
+				   if($("#sort_order").attr("checked")!="checked"){//升序
+				     for(var i=o.length;i>0;i--){
+					    ht+="<tr class='tr_data'>";
+						ht+="<td align='center'>"+o[i-1].all_rank+"</td>";
+						ht+="<td align='left'>"+o[i-1].employee_code+"</td>";
+						ht+="<td align='left'>"+o[i-1].employee_name+"</td>";
+						ht+="<td align='left'>"+top.getDeptPath(o[i-1].dept)+"</td>";
+						ht+="<td align='left'>"+top.getCodeName("SYS_POSITION",o[i-1].job_title)+"</td>";
+						ht+="<td align='left'>"+top.getJobLevelNameByCode(o[i-1].job_level,o[i-1].job_title)+"</td>";
+						
+						if($("#bx").attr("checked")=="checked"){
+						  ht+="<td align='center'>"+o[i-1].score+"</td>";
+					    }
+					    if($("#gl").attr("checked")=="checked"){
+						  ht+="<td align='center'>"+o[i-1].gl_score+"</td>";
+					    }
+					    if($("#bx").attr("checked")=="checked" && $("#gl").attr("checked")=="checked"){
+						  ht+="<td align='center'>"+o[i-1].sum_score+"</td>";
+					    }
+						ht+="</tr>";
+					 }
+				   }else{
+				      for(var i=0;i<o.length;i++){
+					    ht+="<tr class='tr_data'>";
+						ht+="<td align='center'>"+o[i].all_rank+"</td>";
+						ht+="<td align='left'>"+o[i].employee_code+"</td>";
+						ht+="<td align='left'>"+o[i].employee_name+"</td>";
+						ht+="<td align='left'>"+top.getDeptPath(o[i].dept)+"</td>";
+						ht+="<td align='left'>"+top.getCodeName("SYS_POSITION",o[i].job_title)+"</td>";
+						ht+="<td align='left'>"+top.getJobLevelNameByCode(o[i].job_level,o[i].job_title)+"</td>";
+						if($("#bx").attr("checked")=="checked"){
+						  ht+="<td align='center'>"+o[i].score+"</td>";
+					    }
+					    if($("#gl").attr("checked")=="checked"){
+						  ht+="<td align='center'>"+o[i].gl_score+"</td>";
+					    }
+					    if($("#bx").attr("checked")=="checked" && $("#gl").attr("checked")=="checked"){
+						  ht+="<td align='center'>"+o[i].sum_score+"</td>";
+					    }
+						ht+="</tr>";
+					 }
+				   }
+				}
+			   }else{
+			      top.showInfoWinError("操作失败！");
+			   }
+			   $("#dataTable").html(ht);
+			}
+			
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+			<div style='border: 1px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="110px">
+							&nbsp;积分筛选&nbsp;
+						</td>
+						<td align="right">
+							<div class="buttonDivFour">
+							  <a href="javascript:doQuery()">统计分析</a>
+						    </div>
+						</td>
+						<td width="2px">
+							&nbsp;
+						</td>
+					</tr>
+				</table>
+				<table width="100%" align="center" cellpadding="1px"
+					cellspacing="1px" border="0">
+					<tr class="tr_data">
+						<td align="right" colspan="4">
+							<input id="bx" type="checkbox" />表现积分 <label id="spanbx_percent" style="display:none;"><input type="text" id="bx_percent" size="6"/>%</label>
+						</td>
+						<td align="left" colspan="4">
+						    <input id="gl" type="checkbox" />工龄积分 <label id="spangl_percent" style="display:none;"><input type="text" id="gl_percent" size="6"/>%</label>
+						</td>
+					</tr>
+					<tr class="tr_data">
+						<td align="right" width="10%">事业部：</td>
+						<td align="left" id="tdbu" width="10%">
+						   
+						</td>
+						<td align="right" width="10%">分公司：</td>
+						<td align="left" width="10%" id="tdfiliale">
+							
+						</td>
+						<td align="right" width="10%">部门：</td>
+						<td align="left" width="10%" id="tddept">
+						
+						</td>
+						<td align="right" width="10%">积分来源：</td>
+					    <td align="left" width="10%" id="tdrecord_source"></td>
+					</tr>
+					<tr class="tr_data">
+					   <td align="right" width="10%">奖扣分类型：</td>
+					   <td align="left" width="10%" id="tdsource_award_points"></td>
+					   <td align="right" width="10%">职位：</td>
+					   <td align="left" width="10%" id="tdjob_title"></td>
+					   <td align="right" width="10%">职级：</td>
+					   <td align="left" width="10%" id="tdjob_level"></td>
+					   <td align="right" width="10%">性别：</td>
+					   <td align="left" width="10%" id="tdsex">
+					   </td>
+					</tr>
+					<tr class="tr_data">
+					   <td align="right" width="10%">学历：</td>
+					   <td align="left" width="10%" id="tdeducation_background"></td>
+					   <td align="right" width="10%">奖/扣</td>
+					   <td align="left" width="10%">
+					      <select id="reward_points" style="width:120px;">
+						     <option value="2">全部</option>
+						     <option value="1">奖分</option>
+						     <option value="0">扣分</option>
+						  </select>
+					   </td>
+					   <td align="right" width="10%">入职时间：</td>
+					   <td align="left" colspan="2">
+					       <input type="text" id="time1" value="" onclick="top.selectDate(this);"  size="10" />
+						-- <input type="text" id="time2" value="" onclick="top.selectDate(this);"  size="10" />
+					   </td>
+					   <td colspan="1" align="left">
+					      <input id="sort_order" type="checkbox" />降序
+					   </td>
+					  
+					</tr>
+				</table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0"
+				border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									&nbsp;排名列表&nbsp;
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<center>
+            <table id="dataTable"  border="1" cellpadding="3" cellspacing="1" style="margin-top:4px;width:98%;background-color: #b9d8f3;">
+			   
+			
+			</table>
+			</center>
+		</div>
+	</body>
+</html>

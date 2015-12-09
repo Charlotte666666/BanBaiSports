@@ -1,0 +1,258 @@
+<!DOCTYPE HTML>
+<html>
+ <head>
+	 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	 <link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	 <link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	 <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	 <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	 <script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+	 <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+ 
+ <script type="text/javascript" charset="utf-8">
+		  var oTable=null;
+		  var isNational="";
+		  var timeType = "";
+		  var year="";
+		  var season="";
+		  var month="";
+		  var day="";
+		  var nationalCode="";
+		  var s_type="1";
+
+ $(document).ready(function() {
+			   isNational = top.getUrlParam(document.URL,"isNational");
+			   timeType = top.getUrlParam(document.URL,"timeType");
+			   year = top.getUrlParam(document.URL,"year");
+			   season = top.getUrlParam(document.URL,"season");
+			   month = top.getUrlParam(document.URL,"month");
+			   //if ( isNational == '1' ) month = Number(month);
+			   day = top.getUrlParam(document.URL,"day");
+			   nationalCode = top.getUrlParam(document.URL,"nationalCode");
+			   s_type = top.getUrlParam(document.URL,"s_type");
+			   
+			   var type = top.getUrlParam(document.URL,"type");
+			   var colName = decodeURI(top.getUrlParam(document.URL,"colName"));
+
+			   var surl=top.getUrlBase()+"/actions/ProCmaReport.action?getStatListData";
+			   
+			   var iaoColumns = [
+                               { "sTitle": "站号", "mDataProp": "stationCode","sWidth": "20%","sClass": "center","bSortable":true,
+                            	  "fnRender": function ( oObj ) {
+                                       return top.getCode2ASII(""+oObj.aData.stationCode);
+                                  },
+                                  "bUseRendered": false
+                               },
+                               { "sTitle": "可用率", "mDataProp": "right", "sWidth": "20%","sClass": "center","bSortable":true,"bUseRendered": false},
+                               { "sTitle": "可疑率", "mDataProp": "susp", "sWidth": "20%","sClass": "center","bSortable":true,"bUseRendered": false},
+                               { "sTitle": "错误率", "mDataProp": "error", "sWidth": "20%","sClass": "center","bSortable":true,"bUseRendered": false},
+                               { "sTitle": "缺测率", "mDataProp": "lack", "sWidth": "20%","sClass": "center","bSortable":true,"bUseRendered": false}
+               ];
+			   
+			   if ( type == 31 ) {
+			      iaoColumns = [
+                               { "sTitle": colName, "mDataProp": "national","sWidth": "17%","sClass": "center","bSortable":true,
+                            	  "fnRender": function ( oObj ) {
+                                       return top.getCodeName( "PROVINCE", oObj.aData.national );
+                                  },
+                                  "bUseRendered": false
+                               },
+                               { "sTitle": "反馈率(%)", "mDataProp": "V01000", "sWidth": "20%","sClass": "center","bSortable":true,
+                            	   "fnRender": function ( oObj ) {
+                            	        return oObj.aData.stationName+"("+top.getCode2ASII(oObj.aData.V01000)+")";
+                            	   },
+                                   "bUseRendered": false
+                               },
+                               { "sTitle": "下发错误记录数", "mDataProp": "time", "sWidth": "10%","sClass": "center","bSortable":true,
+                                  "fnRender": function ( oObj ) {
+                                       return oObj.aData.time.substring(0,13);
+                                  },
+                                  "bUseRendered": false
+                               },
+                               { "sTitle": "反馈数", "mDataProp": "F_1", "sWidth": "10%","sClass": "center","bSortable":true,
+                                  "fnRender": function ( oObj ) {
+                                       return top.getCodeName( "CMA_QC_STATUS", oObj.aData.F_1 );
+                                  },
+                                  "bUseRendered": false
+                               }
+                   ];
+			   } else if ( type == 32 ) {
+			      iaoColumns = [
+                               { "sTitle": colName, "mDataProp": "national","sWidth": "17%","sClass": "center","bSortable":true,
+                            	  "fnRender": function ( oObj ) {
+                                       return top.getCodeName( "PROVINCE", oObj.aData.national );
+                                  },
+                                  "bUseRendered": false
+                               },
+                               { "sTitle": "反馈率(%)", "mDataProp": "V01000", "sWidth": "20%","sClass": "center","bSortable":true,
+                            	   "fnRender": function ( oObj ) {
+                            	        return oObj.aData.stationName+"("+top.getCode2ASII(oObj.aData.V01000)+")";
+                            	   },
+                                   "bUseRendered": false
+                               },
+                               { "sTitle": "下发可疑记录数", "mDataProp": "time", "sWidth": "10%","sClass": "center","bSortable":true,
+                                  "fnRender": function ( oObj ) {
+                                       return oObj.aData.time.substring(0,13);
+                                  },
+                                  "bUseRendered": false
+                               },
+                               { "sTitle": "反馈数", "mDataProp": "F_1", "sWidth": "10%","sClass": "center","bSortable":true,
+                                  "fnRender": function ( oObj ) {
+                                       return top.getCodeName( "CMA_QC_STATUS", oObj.aData.F_1 );
+                                  },
+                                  "bUseRendered": false
+                               },
+                               { "sTitle": "确认正确", "mDataProp": "F_1", "sWidth": "10%","sClass": "center","bSortable":true,
+                                  "fnRender": function ( oObj ) {
+                                       return top.getCodeName( "CMA_QC_STATUS", oObj.aData.F_1 );
+                                  },
+                                  "bUseRendered": false
+                               },
+                               { "sTitle": "确认错误", "mDataProp": "F_1", "sWidth": "10%","sClass": "center","bSortable":true,
+                                  "fnRender": function ( oObj ) {
+                                       return top.getCodeName( "CMA_QC_STATUS", oObj.aData.F_1 );
+                                  },
+                                  "bUseRendered": false
+                               },
+                               { "sTitle": "无法判断", "mDataProp": "F_1", "sWidth": "10%","sClass": "center","bSortable":true,
+                                  "fnRender": function ( oObj ) {
+                                       return top.getCodeName( "CMA_QC_STATUS", oObj.aData.F_1 );
+                                  },
+                                  "bUseRendered": false
+                               }
+                   ];
+			   } else if ( type == 33 ) {
+			      iaoColumns = [
+                               { "sTitle": colName, "mDataProp": "national","sWidth": "17%","sClass": "center","bSortable":true,
+                            	  "fnRender": function ( oObj ) {
+                                       return top.getCodeName( "PROVINCE", oObj.aData.national );
+                                  },
+                                  "bUseRendered": false
+                               },
+                               { "sTitle": "反馈率(%)", "mDataProp": "V01000", "sWidth": "20%","sClass": "center","bSortable":true,
+                            	   "fnRender": function ( oObj ) {
+                            	        return oObj.aData.stationName+"("+top.getCode2ASII(oObj.aData.V01000)+")";
+                            	   },
+                                   "bUseRendered": false
+                               },
+                               { "sTitle": "下发错误记录数", "mDataProp": "time", "sWidth": "10%","sClass": "center","bSortable":true,
+                                  "fnRender": function ( oObj ) {
+                                       return oObj.aData.time.substring(0,13);
+                                  },
+                                  "bUseRendered": false
+                               },
+                               { "sTitle": "反馈数", "mDataProp": "F_1", "sWidth": "10%","sClass": "center","bSortable":true,
+                                  "fnRender": function ( oObj ) {
+                                       return top.getCodeName( "CMA_QC_STATUS", oObj.aData.F_1 );
+                                  },
+                                  "bUseRendered": false
+                               },
+                               { "sTitle": "确认正确", "mDataProp": "F_1", "sWidth": "10%","sClass": "center","bSortable":true,
+                                  "fnRender": function ( oObj ) {
+                                       return top.getCodeName( "CMA_QC_STATUS", oObj.aData.F_1 );
+                                  },
+                                  "bUseRendered": false
+                               },
+                               { "sTitle": "确认错误", "mDataProp": "F_1", "sWidth": "10%","sClass": "center","bSortable":true,
+                                  "fnRender": function ( oObj ) {
+                                       return top.getCodeName( "CMA_QC_STATUS", oObj.aData.F_1 );
+                                  },
+                                  "bUseRendered": false
+                               },
+                               { "sTitle": "无法判断", "mDataProp": "F_1", "sWidth": "10%","sClass": "center","bSortable":true,
+                                  "fnRender": function ( oObj ) {
+                                       return top.getCodeName( "CMA_QC_STATUS", oObj.aData.F_1 );
+                                  },
+                                  "bUseRendered": false
+                               }
+                   ];
+			   }
+            top.showLoadingInfo(true);
+           	oTable = $('#dataTable').dataTable( {
+                   "bProcessing": true,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+                   "oLanguage": {
+                       "sUrl": top.getUrlBase()+"/lang_zh.txt"
+                   },
+				   "fnInitComplete": function(oSettings, json) {
+					   top.showLoadingInfo(false);
+				    },
+                   "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+							    top.showLoadingInfo(false);
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+						 aoData.push( { "name": "isNational", "value": isNational } );
+						 aoData.push( { "name": "isProvince", "value": "0" } );
+						 aoData.push( { "name": "timeType", "value": timeType } );
+						 aoData.push( { "name": "year", "value": year } );
+						 aoData.push( { "name": "season", "value": season } );
+						 aoData.push( { "name": "month", "value": month } );
+						 aoData.push( { "name": "day", "value": day } );
+						 aoData.push( { "name": "nationalCode", "value": nationalCode } );
+						 aoData.push( { "name": "s_type", "value": s_type } );
+			        },
+			        "sDom": "frtlip",
+				    "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+  } );
+			
+  function doQuery(){
+	 oTable.fnDraw();
+  }
+			
+  function headButtonFun1(){
+     var aoData=[];
+     aoData.push( { "name": "isNational", "value": isNational } );
+	 aoData.push( { "name": "isProvince", "value": "0" } );
+	 aoData.push( { "name": "timeType", "value": timeType } );
+	 aoData.push( { "name": "year", "value": year } );
+	 aoData.push( { "name": "season", "value": season } );
+	 aoData.push( { "name": "month", "value": month } );
+	 aoData.push( { "name": "day", "value": day } );
+	 aoData.push( { "name": "nationalCode", "value": nationalCode } );
+	 aoData.push( { "name": "s_type", "value": s_type } );
+	 top.showLoadingInfo(true);
+     top.sendAjaxRequest("/actions/ProCmaReport.action?exportData",aoData,callBackExportData);
+ }
+ 
+ function callBackExportData(obj){
+     top.showLoadingInfo(false);
+	 try{
+	    if ( obj.status == true ){
+		   var downUrl=top.getUrlBase()+"/download?filePath="+obj.msg+"&fileName=统计数据.xls";
+		   document.location.href=downUrl;
+	    }else{
+		   top.showInfoWin("操作失败 "+obj.msg);
+	    }
+	 }catch(e){
+	    top.showInfoWin("处理异常:"+e.message);
+	 }
+ }
+		</script>
+	</head>
+	<body>
+	    <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		
+	</body>
+</html>

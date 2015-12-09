@@ -1,0 +1,197 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css"
+			href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var objs=[];
+			var obj={};
+			var cust_code="";
+			var require_id="";
+			$(document).ready(function() {
+			 //$( "#tdorder_type" ).html( top.getCodeSelectHtml("ORDER_TYPE","order_type",true) );
+			$( "#tdstatus" ).html( top.getCodeSelectHtml("ORDER_STATUS","status",true) );
+			 var iaoColumns= [
+			                { "sTitle": "订单编号", "mDataProp": "project_order_id", "sWidth": "8%","sClass": "center",
+							        "fnRender": function ( oObj ) {
+										objs[objs.length]=oObj.aData;
+                                        return '<a href=\'javascript:void(0)\' onclick="chooseCust(\''+oObj.aData.project_order_id+'\')" >'+oObj.aData.project_order_id+'</a>';
+										
+                                  },
+								   "bUseRendered": false
+							},
+			                { "sTitle": "客户编号", "mDataProp": "cust_code", "sWidth": "8%", "bUseRendered": false},
+                            { "sTitle": "家装设计师", "mDataProp": "designer", "sWidth": "8%", "sClass": "center",
+							"fnRender": function ( oObj ) {
+                                           return top.getUserNameByCode(oObj.aData.designer);
+                              },
+							"bUseRendered": false},
+							{ "sTitle": "工程监理", "mDataProp": "engineer_manager", "sWidth": "8%", "sClass": "center", 
+							"fnRender": function ( oObj ) {
+                                           return top.getUserNameByCode(oObj.aData.engineer_manager);
+                              },
+							"bUseRendered": false   },
+							{ "sTitle": "项目经理", "mDataProp": "project_manager", "sWidth": "8%", "sClass": "center",
+							"fnRender": function ( oObj ) {
+                                           return top.getUserNameByCode(oObj.aData.project_manager);
+                              },
+							"bUseRendered": false},
+							{ "sTitle": "产品设计师", "mDataProp": "product_designer", "sWidth": "8%", "sClass": "center",
+							 "fnRender": function ( oObj ) {
+                                           return top.getUserNameByCode(oObj.aData.product_designer);
+                              },
+							"bUseRendered": false},
+							{ "sTitle": "订单状态", "mDataProp": "status", "sWidth": "8%","sClass": "center",
+								"fnRender": function ( oObj ) {
+											   return top.getCodeName("ORDER_STATUS",oObj.aData.status);
+								  },
+									"bUseRendered": false 
+							}
+			   
+               ];			
+			   var surl=top.getUrlBase()+"/actions/ProjectOrder.action?getProjectOrderList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    cust_code=top.getUrlParam(document.URL,"cust_code");
+			        require_id=top.getUrlParam(document.URL,"require_id");
+				    aoData.push({ "name":"projectOrder.cust_code","value":cust_code});
+				    aoData.push({ "name":"projectOrder.require_id","value":require_id});
+				    aoData=getParamDate(aoData);
+			    },
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+				objs=[];
+				oTable.fnDraw();
+			}
+			
+		   function getParamDate(aoData){
+			     	aoData.push( { "name": "projetOrder.cust_name", "value":$("#cust_name").val() } );
+					aoData.push( { "name": "projectOrder.project_order_id", "value":$("#order_id").val() } );
+					aoData.push( { "name": "projectOrder.status", "value":$("#status").val() } );
+				return aoData;
+			}
+			function chooseCust(id)
+			{
+				obj=getObj(id);
+				parent.closeDialog();
+			}
+			
+			function doBeforeClose(){
+			   top.setTempValue(obj);
+		    }
+			
+			function getObj(cid){
+			   try{
+			     for ( var i=0;i<objs.length;i++ ) {
+				    if ( objs[i].project_order_id == cid ){
+					    return objs[i];
+					}
+				 }
+			   }catch(e){}
+			   return null;
+			}
+		</script>
+	</head>
+	<body>
+	<div style="margin:20px" width="100%">
+			<div style='border: 2px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="150px">
+							&nbsp;工程订单查询&nbsp;
+						</td>
+						<td align="right">
+							<div class="buttonDivTwo">
+								<a href="javascript:doQuery()">查询</a>
+							</div>
+						</td>
+						<td width="2px">
+							&nbsp;
+						</td>
+					</tr>
+				</table>
+				<table width="100%" align="center" cellpadding="1px"
+					cellspacing="1px" border="0">
+					<tr class="tr_data">
+						<td align="right">
+							客户姓名
+						</td>
+						<td align="left" id="custId">
+							<input type="text" id="cust_name" value="" size="15"
+								onkeydown="if(event.keyCode==13) doQuery();" />
+						</td>
+						<td align="right">订单编号</td>
+						<td align="left" ><input type="text" id="order_id" value="" size="15"
+								onkeydown="if(event.keyCode==13) doQuery();" /></td>
+						<td align="right">订单状态</td>
+						<td align="left" id="tdstatus"></td>
+					</tr>
+				</table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0"
+				border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									&nbsp;查询结果列表&nbsp;
+								</td>
+								
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<table cellpadding="0" width="100%" cellspacing="0" border="0"
+				class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

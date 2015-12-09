@@ -1,0 +1,242 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=true;
+   var optType="";
+   var info_id=0;
+   var schedule_id=-1;
+   var gchoices_name="";
+   var gchoices="";
+   var teamList=[];
+   
+   $(document).ready(function() {
+      $( "#tdguess_type" ).html( top.getCodeSelectHtml("GUESS_TYPE","guess_type",false,"QA") );
+	  schedule_id=top.getUrlParam(document.URL,"schedule_id");
+      getTeamList();
+   } );
+
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   function doSubmit(){
+	   var aoData=[];
+	   // 检查
+		var checkMsg = checkFormDoSubmit();
+		if ( checkMsg != '' ) {
+		   top.showInfoWinWarn(checkMsg);
+		   return ;
+		}
+		gchoices="";
+		gchoices_name="";
+		var co=["A","B","C","D","E","F","G","H"];
+		for ( var n=0;n<co.length;n++ ) {
+			if ( $("#choices_name"+co[n] ).val() != '' ) {
+			   gchoices+=co[n]+";";
+			   gchoices_name+=$("#choices_name"+co[n] ).val()+";";
+			}
+		}
+		var end_time_str=$("#end_date").val()+" "+top.getTwoNumberStr( $("#end_hour").val() )+":"+top.getTwoNumberStr( $("#end_min").val() );
+		aoData.push( { "name": "guessInfo.id", "value": info_id } );
+		aoData.push( { "name": "guessInfo.guess_type", "value": $("#guess_type").val() } );
+		aoData.push( { "name": "guessInfo.guess_title", "value": $("#guess_title").val() } );
+		aoData.push( { "name": "guessInfo.choices", "value": gchoices } );
+		aoData.push( { "name": "guessInfo.end_time", "value":  top.toTimestamp(end_time_str) } );
+		aoData.push( { "name": "guessInfo.schedule_id", "value": schedule_id } );
+		aoData.push( { "name": "guessInfo.choices_name", "value": gchoices_name } );
+		if ( $("#guess_type").val() == 'TEAM' ) {
+		  aoData.push( { "name": "guessInfo.answer", "value": $("#answer2").val() } );
+		} else {
+		  aoData.push( { "name": "guessInfo.answer", "value": $("#answer1").val() } );
+		}
+		var xurl="/actions/Guess.action?updateGuessInfo";
+		if(info_id==0){
+		   xurl="/actions/Guess.action?insertGuessInfo";
+		}
+		top.sendAjaxRequest(xurl,aoData,optCallback);
+     }
+	 
+   function checkFormDoSubmit(){
+		var msg="";
+		msg += checkString($("#guess_title").val(),true,128,"题目");
+		return msg;
+	 }
+	 
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true){
+		 top.showInfoWinOK("操作成功");
+		 isSaveOK=true;
+		 top.closeDialog();
+	    }else{
+	      top.showInfoWinError("操作失败 ");
+	    }
+	   }catch(e){
+		   isSaveOK=false;
+	       top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+   function initData(){
+		optType=top.getUrlParam(document.URL,"opt");
+		if ( optType == 'update' ) {
+			info_id=top.getUrlParam(document.URL,"id");
+			var aoData=[];
+		    aoData.push( { "name": "guessInfo.id", "value":info_id } );
+		    top.sendAjaxRequest("/actions/Guess.action?getGuessInfoById",aoData,getInfoCallback);
+		}
+	}
+	
+   function getInfoCallback(obj){
+       try{
+        if ( obj.status == true ){
+			var o=obj.body;
+			$("#guess_title").val(o.guess_title);
+			var timeStr=top.getTimeStr( o.end_time );
+			if ( timeStr != '' ) {
+				$("#end_date").val( timeStr.substring(0,10) );
+				$("#end_hour").val( timeStr.substring(11,13) );
+				$("#end_min").val( timeStr.substring(14,16) );
+			}
+			$("#guess_type").val(o.guess_type);
+			if ( o.guess_type == 'TEAM' ) {
+			   $("#answerTr1").hide();
+			   $("#answerTr2").show();
+			   $("#answer2").val(o.answer);
+			} else {
+			   $("#answerTr2").hide();
+			   $("#answerTr1").show();
+			   $("#answer1").val(o.answer);
+			}
+			gchoices = o.choices;
+			gchoices_name = o.choices_name;
+			initChoices();
+		}else{
+          top.showInfoWinError("操作失败");
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	
+	// answer2Td
+ function getTeamList(){
+	 var aoData=[];
+	 aoData.push( { "name": "info.schedule_id", "value": schedule_id } );
+	 aoData.push( { "name": "info.leader_id", "value": -1 } );
+	 aoData.push( { "name": "iDisplayStart", "value": 0 } );
+	 aoData.push( { "name": "iDisplayLength", "value": 1000 } );
+	 top.sendAjaxRequest("/actions/Team.action?getTeamList",aoData,getTeamListCallback);
+ }
+
+ function getTeamListCallback(obj){
+     try{
+		  teamList=obj.aaData;
+		  $("#answer2Td").html( getTeamSelectHtml('answer2','-1') );
+	 }catch(e){
+	 }
+	 initData();
+ }
+ 
+ function getTeamSelectHtml(sid, code){
+    if ( !teamList ) return "";
+	if ( !code ) code="";
+	var ht="<select id='"+sid+"' style='width:120px'>";
+	ht+="<option value='-1'></option>";
+	for(var i=0;i<teamList.length;i++){
+	  ht+="<option value='"+teamList[i].id+"'";
+	  if ( teamList[i].id == code ) ht+="selected ";
+	  ht+=">"+teamList[i].team_name;+"</option>";
+	}
+	ht+="</select>";
+	return ht;
+ }
+	
+	function initChoices(){
+		try{
+		  if ( gchoices == '' ) return ;
+		  var cs=gchoices.split(";");
+		  var cn=gchoices_name.split(";");
+		  for ( var i=0;i<cs.length;i++ ) {
+		    if ( cs[i] == '' ) continue;
+		    $("#choices_name"+cs[i]).val( cn[i] );
+		  }
+		}catch(e){
+		}
+	}
+  </script> 
+</head>
+<body>
+<br>
+<table  cellpadding="1" cellspacing="1" width="95%" style="background-color: #b9d8f3;margin:0px auto">
+	 <tr class="tr_data">
+		<td align="right">题目</td>
+		<td align="left"><input type="text" id="guess_title" size="40"/></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="right">题目类型</td>
+		<td align="left" id="tdguess_type"></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="right">截止时间:</td>
+		<td align="left"><input type="text" id="end_date" onclick="top.selectDate(this);" value="" size="10" />
+		 <input type="text" id="end_hour" value="" size="3" />:<input type="text" id="end_min" value="" size="3" />
+		</td>
+	 </tr>
+	 <tr class="tr_data" id="answerTr1">
+		<td align="right">竞猜答案:</td>
+		<td align="left">
+		  <select id="answer1">
+		    <option value="" ></option>
+			<option value="A" >A</option>
+			<option value="B" >B</option>
+			<option value="C" >C</option>
+			<option value="D" >D</option>
+			<option value="E" >E</option>
+			<option value="F" >F</option>
+			<option value="G" >G</option>
+			<option value="H" >H</option>
+		  </select>
+		</td>
+	 </tr>
+	 <tr class="tr_data" id="answerTr2" style="display:none">
+		<td align="right">竞猜答案:</td>
+		<td align="left" id="answer2Td">
+		</td>
+	 </tr>
+	 <tr class="tr_data" height="300px">
+		<td align="left" colspan="2" valign="top" cellpadding="10px" cellspacing="10px">
+		  <table  cellpadding="1" cellspacing="1" width="95%" style="margin:10px auto">
+		   <tr><td width="10%" align="center">A</td><td width="90%"><input type="text" id="choices_nameA" value="" /></td></tr>
+		   <tr><td width="10%" align="center">B</td><td width="90%"><input type="text" id="choices_nameB" value="" /></td></tr>
+		   <tr><td width="10%" align="center">C</td><td width="90%"><input type="text" id="choices_nameC" value="" /></td></tr>
+		   <tr><td width="10%" align="center">D</td><td width="90%"><input type="text" id="choices_nameD" value="" /></td></tr>
+		   <tr><td width="10%" align="center">E</td><td width="90%"><input type="text" id="choices_nameE" value="" /></td></tr>
+		   <tr><td width="10%" align="center">F</td><td width="90%"><input type="text" id="choices_nameF" value="" /></td></tr>
+		   <tr><td width="10%" align="center">G</td><td width="90%"><input type="text" id="choices_nameG" value="" /></td></tr>
+		   <tr><td width="10%" align="center">H</td><td width="90%"><input type="text" id="choices_nameH" value="" /></td></tr>
+		  </table>
+		</td>
+	 </tr>
+</table>
+<br/>
+<p align="center">
+   <table  width="95%" align="center"><tr>
+		    <td width="45%" align="right"><span id="okBtn" class="buttonTwo"><a href="javascript:doSubmit()">保存</a></span></td>
+		    <td width="50%" align="left"><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+   </tr></table>
+</p>
+</body>
+</html>

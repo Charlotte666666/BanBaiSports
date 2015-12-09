@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html style="display: block;"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<title>系统登陆</title>
+<style type="text/css">
+/* css reset */
+body{color:#000;background:#fff;font-size:12px;line-height:166.6%;text-align:center;}
+body.move{-webkit-transition:padding 0.3s ease;-moz-transition:padding 0.3s ease;-o-transition:padding 0.3s ease;-ms-transition:padding 0.3s ease;transition:padding 0.3s ease;}
+body,input,select,button{font-family:verdana}
+h1,h2,h3,select,input,button{font-size:100%}
+body,h1,h2,h3,ul,li,form,p,img{margin:0;padding:0;border:0}
+input,button,select,img{margin:0;line-height:normal}
+select{padding:1px}
+ul{list-style:none}
+select,input,button,button img,label{vertical-align:middle}
+header,footer,section,aside,nav,hgroup,figure,figcaption{display:block;margin:0;padding:0;border:none}
+a{text-decoration:none;color:#959595}
+a:hover{color:#626262}
+.fontWeight{font-weight:700;}
+/* global */
+.unvisi{visibility:hidden}
+.txt-suc{color: #22AC38}
+.txt-err{color: #e60012}
+/* backgroundImage */
+.themeCtrl a,
+.loginFormIpt,
+.headerIntro,
+.loginIcoCurrent,
+.loginIcoNew,
+.verify-input-line,
+.themeText li,
+.btn,
+.btn-moblogin,
+.ico,
+.locationTestTitle,
+.verSelected,
+.servSelected,
+.locationTestTitleClose,
+#extText li,
+#mobtips_arr,
+#mobtips_close{background-image:url(img/bg_v3.png)}
+.headerLogo,
+.headerIntro,
+.headerNav,
+.footerLogo,
+.footerNav,
+.loginIcoCurrent,
+.loginIcoNew,
+.formIpt,
+.domain,
+#whatAutologinTip,
+#mobtips,
+#mobtips_arr{position:absolute}
+/* ico */
+.ico-uid{width:14px;height:16px;background-position:-154px -64px}
+.ico-pwd{width:14px;height:16px;background-position:-178px -64px}
+.ico-miniAlert{margin-right:3px;display:inline-block;width:14px;height:14px;background-position:-132px -112px;vertical-align:top;}
+.ico-arr{display:inline-block;width:7px;height:12px;vertical-align:baseline;background-position:-160px -112px;}
+.ico-arr-d{background-position:-160px -110px;}
+.loginFormConf a:hover .ico-arr-d,
+.ico-arr-d-focus{background-position:-176px -110px;}
+*+html .ico-arr-d{background-position:-160px -112px;}
+*+html .loginFormConf a:hover .ico-arr-d,
+*+html .loginFormConf a:hover .ico-arr-d,
+*+html .ico-arr-d-focus{background-position:-176px -112px;}
+.ico-yxLogo{display:inline-block;margin-top:-3px;_margin-top:0;width:19px;height:19px;background-position:-90px 0;vertical-align:middle;}
+
+/* header */
+.header{width:1000px;height:64px;position:relative;margin:0 auto;z-index:2;overflow:hidden;}
+.headerLogo{top:10px;left:85px}
+.headerIntro{height:28px;width:144px;display:block;background-position:0 -64px;top:17px;left:194px}
+.headerNav{top:21px;right:100px;text-align:right;color:#cfd0d0;}
+.headerNav a{padding-left:13px;display:inline-block;}
+.headerNav .last{padding-left: 0;}
+/* main */
+.main{height:600px;background:#fff;position: relative;min-width: 1000px;}
+.main-inner-iframe{border:0; width: 100%; height: 600px; overflow: hidden;}
+#mainCnt{width:100%;height:600px;position:relative;clear:both;background-repeat:no-repeat;background-position:center top;}
+#theme{margin:0 auto;height:600px;width:1000px;overflow:hidden;position:relative;}
+.themeLink{height:274px;width:430px;display:block;outline:0;}
+.themeText{margin-left:26px;}
+.themeText li{line-height:22px;-line-height:24px;height:24px;color:#858686;text-indent:12px;background-position:-756px -72px;background-repeat:no-repeat}
+.themeText li a{color:#005590;text-decoration:underline;}
+.login{width:295px;height:400px;padding:13px 14px 15px;top:56px;left:50%;margin-left:90px;text-align:left;position:absolute;z-index:2;background:url(img/login_v4.png);-background-image:url(http://mimg.127.net/index/163/img/2013/login_ie6_v4.png);}
+.unishadow{box-shadow:0px 1px 3px 0 rgba(0,0,0,0.2);-webkit-box-shadow:0px 1px 3px 0 rgba(0,0,0,0.2);-moz-box-shadow:0px 1px 3px 0 rgba(0,0,0,0.2);}
+.loginFunc{width:100%;height:47px;overflow:hidden;clear:both;}
+.loginFuncNormal,.loginFuncDynPw{width:296px;height:100%;overflow:hidden;position:relative;line-height:46px;float:left;font-size:14px;text-align:center;+line-height:48px;color:#626262;}
+.loginIcoCurrent{width:24px;height:24px;left:26px;top:9px;display:none;}
+.loginIcoNew{width:21px;height:10px;font-size:0;background-position:-684px 0;left:135px;top:12px;}
+.tab-1 .loginFuncNormal .loginIcoCurrent,
+.tab-11 #extVerSelect,
+.tab-1 #lfBtnReg1{display:block;}
+.tab-11 #extText,
+.tab-2 #lfBtnReg{display:none;}
+/* form */
+.loginForm{position:relative;padding-top:40px;}
+#login163{height: 310px;}
+.loginFormIpt{position:relative;width:240px;height:42px;line-height:42px;margin:0 0 20px 25px;padding-right:5px;clear:both;background-position:0 -352px;z-index:2}
+.loginFormIpt .ico{position:absolute;left:9px;top:13px;z-index:1;}
+.loginFormIpt-over{}
+.loginFormIpt-focus{box-shadow:0 0 5px rgba(2,145,252,.5);}
+.loginFormIpt-focus .placeholder{color:#C9C9C9;}
+.loginFormBtn{position:relative;width:245px;height:38px;margin:18px 0 0 25px}
+.formIpt{width:205px;padding:9px 0 10px;ime-mode:disabled;height:21px;top:1px;left:28px;color:#333;font-size:14px;font-weight:700;border:none;font-family:verdana;line-height:21px;background:transparent!important;}
+.formIpt:focus{outline:0;}
+.showPlaceholder .placeholder{visibility:visible;cursor:text;}
+.placeholder{color:#C9C9C9;;font-size:14px;position:absolute;left:30px;top:14px;line-height:14px;visibility:hidden;background:none;}
+.domain{padding-left:5px;width:75px;height:33px;line-height:33px;color:#616161;font-size:14px;overflow:hidden;display:block;right:8px;top:4px;white-space:nowrap;}
+#idInput::-ms-clear{display:none;}
+#idInputTest{visibility: hidden; position: absolute; font-size: 14px; font-weight: 700;}
+.loginFormCheck{height:14px;line-height:14px;color:#555;margin-left:25px;clear:both;width:245px;position:relative;z-index:1;}
+.loginFormCheckInner{line-height:13px;width:150px;float:left;position: relative;}
+#dynPwInput{width:110px;}
+#dynPwLoginHint{margin-left:25px;height:14px;line-height:14px;color:#959595;}
+.forgetPwdLine{text-align: right}
+#capsLockHint{position: absolute; top: 42px; left: 0px;padding: 4px 8px; line-height: 12px; background-color: #ffffcc; border: 1px solid #d7d7d7; color: #555; z-index: 2;}
+#remAutoLogin{visibility:hidden; position: absolute;left:0;}
+.ico-checkbox{display: inline-block; width: 13px; height: 13px; background-position: -40px -160px; vertical-align: middle; cursor: pointer;}
+.autoLogin-checked .ico-checkbox{background-position: -40px -180px;}
+#remAutoLoginTxt,
+.forgetPwd{color:#848585;}
+#remAutoLoginTxt:hover,
+.forgetPwd:hover{color:#626262;}
+.loginFormCbx{width:13px;height:13px;padding:0;overflow:hidden;margin:0; vertical-align: middle;}
+#whatAutologinTip{z-index:9; width:180px; height:36px;background-color:#fffde4; border:1px #dfb86d solid; left:0px;top:16px;text-align:left; padding:5px 10px;line-height:18px; color:#dc9632;display:none;border-radius: 4px}
+.btn{width:110px;height:38px;float:left;text-align:center;cursor:pointer;border:0;padding:0;font-weight:700;font-size:14px;display:inline-block;vertical-align:baseline;line-height:38px;outline:0;background-color:transparent;}
+.btn-main{color:#fff;box-shadow:0 2px 5px rgba(0,28,88,.3);}
+.btn-side{color:#6d798c;box-shadow:0 2px 5px rgba(0,0,0,.1);}
+.btn-login{background-position:0 -208px;}
+.btn-login-hover{background-position:0 -256px;}
+.btn-login-active{background-position:0 -304px;color:#b5d1ee;}
+.btn-reg{background-position:-117px -208px;float:right;}
+.btn-reg-hover{background-position:-117px -256px;color:#347bc7;}
+.btn-reg-active{background-position:-117px -304px;color:#6d798c;}
+.btn-cancel{width:124px;background-position:-160px -565px;}
+.btn-cancel-hover{background-position:-160px -613px;color:#347bc7;}
+.btn-cancel-active{background-position:-160px -661px;color:#6d798c;}
+.loginFormConf{height:14px;line-height:14px;margin-left:25px;margin-top:18px;clear:both;width:245px;position:relative;color:#848585;z-index:1;}
+
+/* footer */
+.footer{height:65px;margin:0 auto;}
+.footer-inner{width:1000px;height:63px;overflow:visible;margin:0 auto;color:#848585;position:relative;}
+.footerLogo{top:11px;left:35px}
+.footerNav{top:25px;right:270px;}
+.footerNav a{margin-left:12px}
+.copyright{margin-left:12px}
+/* noscript */
+.noscriptTitle{line-height:32px;font-size:24px;color:#d90000;padding-top:60px;font-weight:700;background:#fff;}
+.noscriptLink{text-decoration:underline;color:#005590;font-size:14px;}
+/* mobtips */
+#mobtips{height:18px;border:1px solid #c6c6a8;top:41px;left:30px;line-height:18px;background:#ffffe1;padding-left:6px;padding-right:20px;display:none;color:#565656;zoom:1;}
+#mobtips_arr{width:9px;height:9px;background-position:-684px -72px;top:-5px;left:15px;}
+#mobtips_close{background-position:-715px -68px;top:2px;width:16px;height:14px;right:0px;}
+#mobtips em{font-style:normal;color:#328721;}
+#mobtips a{text-decoration:underline;color:#005590;}
+/* mask */
+.mask{position:absolute;left:0;top:0;width:100%;height:100%;background:#000;filter:alpha(opacity=30);-moz-opacity:0.3;opacity:0.3;z-index:998}
+
+
+/* 错误提示 */
+.layer .error-tt a{color:#5B8CCA;font-family:simsun;}
+.layer .error-tt p{padding: 10px 10px 8px 50px; line-height: 22px; font-weight: bold; font-size: 14px; background-position: -714px -4px; background-repeat: no-repeat;}
+.layer .error-detail{margin-top:2px; padding: 8px 12px 5px; color: #7d7d7d; line-height: 18px; border-top: 1px solid #e1e1e1;}
+.layer .error-detail a{color: #4e90e2; text-decoration: underline;}
+
+
+</style>
+
+</head>
+
+<body class=" move" style="padding-top: 0px;">
+<header class="header">
+	<h1 class="headerLogo"><a href="" target="_blank"><img src="pages/pro09/image/logo.png"></a></h1>
+	<span class="unvisi">管理系统</span>
+	<nav class="headerNav">
+		<a href="http://www.helpyouworkeasy.com/" target="_blank">帮助</a>
+	</nav>
+</header>
+
+<section class="main" id="mainBg" style="background-color: rgb(19, 19, 19);">
+	<div class="main-inner" id="mainCnt" style="background-image: url(pages/pro09/image/login_img.jpg);">
+		
+	</div>
+	<!--气泡浮层遮罩-->
+	<div id="mainMask" style="display:none"></div>
+	<!--通用气泡浮层-->
+	<div id="bubbleLayer" class="layer">
+		<div class="layer-hd"></div>
+		<div id="bubbleLayerWrap" class="layer-mid"></div>
+		<div class="layer-ft"></div>
+		<div id="layerArr" class="layer-arrow"></div>
+	</div>
+	<!--登录框-->
+	<div id="loginBlock" class="login tab-1">
+		<div class="loginFunc">
+			<div id="lbNormal" class="loginFuncNormal">
+				系统登录
+			</div>
+		</div>
+		<div class="loginForm">
+			<form id="login163" name="login163" method="post" target="frameforlogin">
+				<input type="hidden" id="savelogin" name="savelogin" value="0">
+				<input type="hidden" id="url2" name="url2" value="http://mail.163.com/errorpage/error163.htm">
+				<div id="idInputLine" class="loginFormIpt showPlaceholder">
+					<b class="ico ico-uid"></b>
+					<input class="formIpt" tabindex="1" title="请输入帐号" id="idInput" name="username" type="text" maxlength="50" value="" autocomplete="off">
+					<div id="mobtips"></div>
+					<label for="idInput" class="placeholder" id="idPlaceholder">登录帐号</label>
+					<div id="idInputTest"></div>
+				</div>
+				<!-- 普通密码登录 -->
+				<div id="normalLogin">
+					<div id="pwdInputLine" class="loginFormIpt showPlaceholder">
+						<b class="ico ico-pwd"></b>
+						<input class="formIpt" tabindex="2" title="请输入密码" id="pwdInput" name="password" type="password">
+						<label for="pwdInput" class="placeholder" id="pwdPlaceholder">密码</label>
+					</div>
+					<div class="loginFormCheck">
+						<div id="lfAutoLogin" class="loginFormCheckInner">
+						</div>
+						<div class="forgetPwdLine">						
+						</div>
+					</div>
+					<div class="loginFormBtn">
+						<button id="loginBtn" class="btn btn-main btn-login" tabindex="6" type="submit">登&nbsp;&nbsp;录</button>
+						<a id="lfBtnReg" class="btn btn-side btn-reg" href="" target="_blank" tabindex="7">注&nbsp;&nbsp;册</a>
+					</div>
+				</div>
+			
+			</form>
+		</div>
+
+	
+	</div>
+</section>
+
+<footer id="footer" class="footer">
+	<div class="footer-inner" id="footerInner">
+		<nav class="footerNav">
+			<a href="http://www.helpyouworkeasy.com" target="_blank">技术支持</a>|<span class="copyright">北京一维慧动科技有限公司版权所有 © 2014</span>
+		</nav>
+	</div>
+</footer>
+
+
+
+<script id="jsExec" type="text/javascript">
+/* 全局变量 */
+// 保存UD数据，用于缓存
+var gAdUserPropertyData;
+
+//错误提示语
+var gErrorInfo = {
+	'noId' : {
+		'title' : '请先输入您的帐号'
+	},
+	'noPhone' : {
+		'title' : '请先输入您的手机号码帐号'
+	},
+	'noPw' : {
+		'title' : '请输入您的密码'
+	},
+	'noDynPw' : {
+		'title' : '请输入动态密码'
+	},
+	'noDynPwByMob' : {
+		'title' : '请输入手机短信中的动态密码'
+	},
+	'noDynPwByYX' : {
+		'title' : '请输入易信接收到的动态密码'
+	},
+	'dynPwWrong' : {
+		'title' : '您输入的动态密码错误，请重新输入'
+	},
+	'noBindingMob' : {
+		'title' : '该帐号未绑定手机号码，需绑定才能使用动态密码功能 <a id="bindMobileBtn" href="http://shouji.mail.163.com/?from=dtmm" target="_blank">立即绑定>></a>'
+	},
+	'dynPwd2Much' : {
+		'title' : '您今天使用动态密码登录次数太多了，请用普通密码登录吧'
+	},
+	'idLocked' : {
+		'title' : '抱歉！您的帐号已被锁定，<br />暂时无法登录。'
+	},
+	'systemBusy' : {
+		'title' : '繁忙的系统暂时需要停下歇歇，请您稍后再试。'
+	},
+	'loginWrong' : {
+		'title' : '您的登录过于频繁，请稍后再试。'
+	},
+	'loginTimeout' : {
+		'title' : '登录超时！',
+		'info' 	: '当前登录状态已失效, 请重新登录。'
+	}
+};
+
+var oStyle = {
+	value	:	'-1'
+};
+
+(function(window){
+	window.indexLogin = {
+		init 					: fInit,
+		setUserInfo 			: fSetUserInfo,
+		// 输入相关
+		initInputBox 			: fInitInputBox,
+		focusInputBox 			: fFocusInputBox,
+		idInputEvent 			: fIdInputEvent,
+		checkPw 				: fCheckPw,
+		checkDynPw 				: fCheckDynPw,
+		checkInputAlways 		: fCheckInputAlways,
+		handleString 			: fHandleString,
+		// tab切换相关
+		switchTab 				: fSwitchTab,
+		switchTabTimeout 		: fSwitchTabTimeout,
+		setbSwitchTabTimeout 	: fSetbSwitchTabTimeout,
+		// 登录相关
+		setStyle 				: fSetStyle,
+		submitForm 				: fSubmitForm,
+		showTheHttpLogin 		: fShowTheHttpLogin,
+		showError 				: fShowError,
+		showLayer 				: fShowLayer,
+		hideLayer 				: fHideLayer,
+		yxLogin 				: fInitYxLogin,
+		zoomWrap 				: fZoomWrap,
+		vericalAlignBody 		: fVericalAlignBody,
+		// 其它
+		KX 						: fKX,
+		tmpSwitchLog 			: fTmpSwitchLog
+	};
+
+	var oId, oIdL, oPw, oPwL, oDynPw, oDynPwL;
+	var nDomainWidth = 75;
+	var tab1Cls = 'login tab-1',
+		tab2Cls = 'login tab-2';
+	var ntabOn = 1,
+		sTmpPwd = '',
+		sTmpDynPwd = '';
+	var bSwitchTabTimeout = true;
+
+	//登录流程
+	var sLoginFunc = 'ssl',
+		bIsFirstLog = true,
+		sCoremailCookie = '';
+
+	// starttime 登录时间统计
+	var bStartTime = true;
+
+	var fScaleInterval = null,
+		bStartScale = false;
+
+	function fInit(){
+		var me = this;
+
+		oId = $id('idInput');
+		oIdL = $id('idInputLine');
+		oPw = $id('pwdInput');
+		oPwL = $id('pwdInputLine');
+		oDynPw = $id('dynPwInput');
+		oDynPwL = $id('dynPwInputLine');
+
+		window.frames['frameforlogin'].location.href = 'about:blank';
+		// 读取url判断是否有错误信息
+		var sErrKey = 'errorType';
+		if(window.location.href.indexOf('?' + sErrKey) > -1){
+			var sErrorCode = fGetQuery(sErrKey);
+			me.showError(sErrorCode);
+		}
+
+		// tab控制
+		if(gbForcepc){
+			tab1Cls = 'login tab-1 tab-11';
+		}
+		$id('loginBlock').className = tab1Cls;
+
+		var oTab2 = $id('lbDynPw');
+		fEventListen(oTab2, 'mouseover', me.switchTabTimeout);
+		fEventListen(oTab2, 'mouseout', me.setbSwitchTabTimeout);
+
+		if((window.location.href.indexOf('tab2') > -1) || fGetQueryHash('tab') == '2'){
+			me.switchTab(); // 手机号码
+			me.tmpSwitchLog(); // 临时统计
+		}
+
+		me.focusInputBox();
+
+		me.setUserInfo();
+		me.initInputBox();
+
+		// 绑定提交表单事件
+		// fEventListen($id('login163'), 'submit', me.submitForm);
+		$id('login163').onsubmit = function(){
+			return me.submitForm();
+		};
+
+		// 大写锁定开启判断
+		var oCapsLockTest = new CapsLock({
+			el : oPw,
+			change : function(bFlag){
+				var oHint = $id('capsLockHint');
+				if(bFlag){
+					oHint.style.display = 'block';
+				}else{
+					oHint.style.display = 'none';
+				}
+			}
+		});
+		
+		me.yxLogin();
+		me.KX(); // 可信标识
+	}
+
+	
+		
+	/**
+	 * 绑定输入框事件
+	 */
+	function fInitInputBox(){
+		var me = this;
+		var oLo = $id('loginBtn'),
+			oLo2 = $id('loginBtn2'),
+			oRg = $id('lfBtnReg'),
+			oIdLabel = $id('idPlaceholder'),
+			oPwLabel = $id('pwdPlaceholder'),
+			oDynPwLabel = $id('dynPwPlaceholder'),
+			oAutoTips = $id('whatAutologinTip'),
+			oAutoLoginWrap = $id('lfAutoLogin'),
+			oAutoLoginCheckbox = oAutoLoginWrap.getElementsByTagName('b')[0],
+			oRemAutoLogin = $id('remAutoLogin'),
+			oAutoLoginTxt = $id('remAutoLoginTxt'),
+			oStyleConf = $id('styleConf'),
+			oStyleConfBlk = $id('styleConfBlock'),
+			oShowDynPwWrap = $id('showDynPwWrap');
+		var oBubbleLayer = $id('bubbleLayer');
+		//帐号
+		fEventListen(oIdL, 'mouseover', function(){
+			fCls(oIdL, 'loginFormIpt-over', 'add');
+		});
+		fEventListen(oIdL, 'mouseout', function(){
+			fCls(oIdL, 'loginFormIpt-over', 'remove');
+		});
+		fEventListen(oId, 'focus', function(){
+			fCls(oId, 'formIpt-focus', 'add');
+			fCls(oIdL, 'loginFormIpt-focus', 'add');
+		});
+		fEventListen(oId, 'blur', function(){
+			fCls(oIdL, 'loginFormIpt-focus', 'remove');	
+			if(oId.value == ''){
+				fCls(oIdL, 'showPlaceholder', 'add');
+				fCls(oId, 'formIpt-focus', 'remove');
+			}else{
+				oId.value = fCheckAccount(oId.value);
+			}
+		});
+
+		var sEventName = '';
+		var bIsIe = false;
+		if(document.body.onpropertychange === null){
+			sEventName = 'propertychange';
+			var bIsIe = true;
+		}else{
+			sEventName = 'input';
+			me.checkInputAlways();
+		}
+		var el = document.createElement('div');
+		el.setAttribute('oninput', 'return;')
+		if(typeof el.oninput === 'function'){
+			sEventName = 'input';
+			if(bIsIe){
+				me.checkInputAlways();
+			}
+		}
+		fEventListen(oId, sEventName, me.idInputEvent);
+		//点击双击文字
+		fEventListen(oIdLabel, 'dbclick', function(){
+			oId.focus();
+		});
+		fEventListen(oIdLabel, 'click', function(){
+			oId.focus();
+		});
+
+		//密码
+		fEventListen(oPwL, 'mouseover', function(){
+			fCls(oPwL, 'loginFormIpt-over', 'add');
+		});
+		fEventListen(oPwL, 'mouseout', function(){
+			fCls(oPwL, 'loginFormIpt-over', 'remove');
+		});
+		fEventListen(oPw, 'focus', function(){
+			fCls(oPw, 'formIpt-focus', 'add');
+			fCls(oPwL, 'loginFormIpt-focus', 'add');
+		});
+		fEventListen(oPw, 'blur', function(){
+			fCls(oPwL, 'loginFormIpt-focus', 'remove');
+			if(oPw.value == ''){
+				fCls(oPwL, 'showPlaceholder', 'add');
+				fCls(oPwL, 'formIpt-focus', 'remove');
+			}
+		});
+		fEventListen(oPw, sEventName, me.checkPw);
+		//点击双击文字
+		fEventListen(oPwLabel, 'dbclick', function(){
+			oPw.focus();
+		});
+		fEventListen(oPwLabel, 'click', function(){
+			oPw.focus();
+		});
+		
+		//登录按钮
+		fEventListen(oLo, 'mouseover', function(){
+			fCls(oLo, 'btn-login-hover', 'add');
+		});
+		fEventListen(oLo, 'mouseout', function(){
+			oLo.className = 'btn btn-main btn-login';
+		});
+		fEventListen(oLo, 'mousedown', function(){
+			fCls(oLo, 'btn-login-active', 'add');
+		});
+		//注册按钮
+		fEventListen(oRg, 'mouseover', function(){
+			fCls(oRg, 'btn-reg-hover', 'add');
+		});
+		fEventListen(oRg, 'mouseout', function(){
+			oRg.className = 'btn btn-side btn-reg';
+		});
+		fEventListen(oRg, 'mousedown', function(){
+			fCls(oRg, 'btn-reg-active', 'add');
+		});
+		fEventListen(oRg, 'mouseup', function(){
+			oRg.className = 'btn btn-side btn-reg';
+		});
+		
+		//阻止事件触发
+		function _fE(fFunc, oE, oThat){
+			var e = oE,
+			relatedTarget = e.toElement || e.relatedTarget;
+			while(relatedTarget && relatedTarget != oThat){
+				relatedTarget = relatedTarget.parentNode;
+			}
+			if(!relatedTarget){
+				fFunc();
+			}
+		}
+	}
+
+	/**
+	 * 输入框聚焦
+	 */
+	function fFocusInputBox(){
+		try{
+			if(oId.value != ''){
+				/*if(ntabOn == 1){
+					gMobileNumMail.getNumFromMail(oId.value);
+				}else{
+					gMobileNumMail.getMailFromNum(oId.value);
+				}*/
+				fCls(oIdL, 'showPlaceholder', 'remove');
+				fCls(oId, 'formIpt-focus', 'add');
+				if(ntabOn == 1){
+					oPw.focus();
+					fCls(oPwL, 'loginFormIpt-focus', 'add');
+				}else{
+					oDynPw.focus();
+					fCls(oDynPwL, 'loginFormIpt-focus', 'add');
+				}
+			}else{
+				oId.focus();
+			}
+		}catch(e){}
+	}
+
+	
+
+	/**
+	 * 检查密码输入框状态
+	 */
+	function fCheckPw(){
+		if(oPw.value != ''){
+			fCls(oPwL, 'showPlaceholder', 'remove');
+			fCls(oPw, 'formIpt-focus', 'add');
+		}else{
+			fCls(oPwL, 'showPlaceholder', 'add');
+		}
+	}
+
+	
+	/**
+	 * 持续检查输入框状态
+	 */
+	function fCheckInputAlways(){
+		var me = this;
+		window.oIntervalCheckInputAlways = setInterval(function(){
+			if(oId.value != ''){
+				fCls(oIdL, 'showPlaceholder', 'remove');
+				fCls(oId, 'formIpt-focus', 'add');
+			}else{
+				fCls(oIdL, 'showPlaceholder', 'add');
+			}
+			me.idInputEvent();
+			me.checkPw();
+			me.checkDynPw();
+		},500);
+	}
+
+	/**
+	 * 字符转换（全角转半角，中文逗号转英文逗号）
+	 * @param  {[type]} s [description]
+	 * @return {[type]}   [description]
+	 */
+	function fHandleString(s){ 
+		var result = "";
+		for(var i = 0; i < s.length; i++){
+			if(s.charCodeAt(i)==12288){
+				result += String.fromCharCode(s.charCodeAt(i)-12256);
+				continue;
+			}
+			if(s.charCodeAt(i)>65280 && s.charCodeAt(i)<65375){
+				result += String.fromCharCode(s.charCodeAt(i)-65248);
+			}else{
+				result += String.fromCharCode(s.charCodeAt(i));
+			}
+		}
+		result.replace(/。/g, '.');
+		return result;
+	}
+
+	/**
+	 * 绑定tab事件
+	 */
+	function fSwitchTab(){
+		var me = this;
+		var oTab = $id('loginBlock'),
+			oTab1 = $id('lbNormal'),
+			oTab2 = $id('lbDynPw'),
+			oIdLabel = $id('idPlaceholder'),
+			oNormalLg = $id('normalLogin'),
+			oDynPwLg = $id('dynPwLogin');
+		var oInputTest = $id('idInputTest');
+		me.hideLayer();
+
+		if(ntabOn == 1){
+			// 加载动态密码登录js
+			var oDynPwConf = {
+				domain: '163.com'
+			};
+			if(!window.DynamicPassword){
+				fGetScript('http://mimg.127.net/index/lib/scripts/dynamicpassword.js', function(){
+					new DynamicPassword(oDynPwConf);
+				});
+			}
+			oPw.name = '';
+			oDynPw.name = 'password';
+			sTmpPwd = oPw.value;
+			oNormalLg.style.display = 'none';
+			oDynPwLg.style.display = 'block';
+			oTab.className = tab2Cls;
+			ntabOn = 2;
+			fEventUnlisten(oTab2, 'mouseover', me.switchTabTimeout);
+			fEventUnlisten(oTab2, 'mouseout', me.setbSwitchTabTimeout);
+			fEventListen(oTab1, 'mouseover', me.switchTabTimeout);
+			fEventListen(oTab1, 'mouseout', me.setbSwitchTabTimeout);
+			oPw.value = sTmpDynPwd;
+			if( sTmpDynPwd == '' ){
+				fCls(oPwL, 'showPlaceholder', 'add');
+			}else{
+				fCls(oPwL, 'showPlaceholder', 'remove');
+			}
+			if(window.bHTTPSDisabled){
+				// 浏览器禁止了ssl
+				alert('由于您在浏览器设置中禁止使用了ssl，所以无法使用动态密码登录！');
+			}
+		}else{
+			oPw.name = 'password';
+			oDynPw.name = '';
+			sTmpDynPwd = oPw.value;
+			oDynPwLg.style.display = 'none';
+			oNormalLg.style.display = 'block';
+			oTab.className = tab1Cls;
+			ntabOn = 1;
+			fEventUnlisten(oTab1, 'mouseover', me.switchTabTimeout);
+			fEventUnlisten(oTab1, 'mouseout', me.setbSwitchTabTimeout);
+			fEventListen(oTab2, 'mouseover', me.switchTabTimeout);
+			fEventListen(oTab2, 'mouseout', me.setbSwitchTabTimeout);
+			oPw.value = sTmpPwd;
+			if(sTmpPwd == ''){
+				fCls(oPwL, 'showPlaceholder', 'add');
+			}else{
+				fCls(oPwL, 'showPlaceholder', 'remove');
+			}
+		}
+		me.idInputEvent();
+		me.focusInputBox();
+	}
+
+	function fSwitchTabTimeout(){
+		setTimeout(function(){
+			if(bSwitchTabTimeout){
+				indexLogin.switchTab();
+			}else{
+				bSwitchTabTimeout = true;
+			}
+		}, 300);
+	}
+
+	function fSetbSwitchTabTimeout(){
+		bSwitchTabTimeout = false;
+	}
+
+	
+	/**
+	 * 登录提交
+	 * @return {Boolean}
+	 */
+	function fSubmitForm(){
+		var me = this;
+
+		// 检查输入
+		oId.value = fTrim(oId.value);
+		if(oId.value == ''){
+			oId.focus();
+			me.showError(1);
+			return false;
+		}
+		if(ntabOn == 1){
+			if(oPw.value.length == ''){
+				oPw.focus();
+				me.showError(3);
+				return false;
+			}else if(!fTrim(oPw.value)){ // 特殊处理密码全空格
+				me.showError(460);
+				return false;
+			}
+		}else{
+			if(oDynPw.value.length == ''){
+				oDynPw.focus();
+				if(window.DynamicPassword){
+					if(DynamicPassword.sms){
+						me.showError(5);
+					}else if(DynamicPassword.yixin){
+						me.showError(6);
+					}else{
+						me.showError(4);
+					}
+				}else{
+					me.showError(4);
+				}
+				return false;
+			}else if(!fTrim(oDynPw.value)){ // 特殊处理密码全空格
+				me.showError(460);
+				return false;
+			}
+		}
+
+		// starttime 登录时间统计
+		if(bStartTime){
+			var sNow = new Date().getTime();
+			fSetCookie("starttime", sNow, false);
+			bStartTime = false;
+		}
+
+		//用户名、密码不标准字符处理
+		oId.value = me.handleString(oId.value);
+		oPw.value = me.handleString(oPw.value);
+		oDynPw.value = me.handleString(oDynPw.value);
+
+		//16位密码截断
+		if(oPw.value.length > 16){
+			oPw.value = oPw.value.substr(0,16);
+		}
+		//保存十天免登录
+		if($id('remAutoLogin').checked){
+			$id('savelogin').value = 1;
+		}else{
+			$id('savelogin').value = 0;
+		}
+		//登陆后锁定tab
+		var oTabDisabled;
+		if( ntabOn == 1 ){
+			oTabDisabled = $id('lbDynPw');
+		}else{
+			oTabDisabled = $id('lbNormal');
+		}
+		fEventUnlisten(oTabDisabled, 'mouseover', me.switchTabTimeout);
+		fEventUnlisten(oTabDisabled, 'mouseout', me.setbSwitchTabTimeout);
+
+		var fReBindSwitchTab = setInterval(function(){
+			try{
+				//若有错误提示，则重新绑定切换tab事件
+				if(window.frames["frameforlogin"].document.body.className == 'error'){
+					fEventListen(oTabDisabled, 'mouseover', me.switchTabTimeout);
+					fEventListen(oTabDisabled, 'mouseout', me.setbSwitchTabTimeout);
+					clearInterval(fReBindSwitchTab);
+				}
+			}catch(e){}
+		},500);
+
+		//锁定登录键
+		$id('loginBtn').disabled = true;
+		$id('loginBtn2').disabled = true;
+
+		//储存登录信息
+		gUserInfo.username = oId.value;
+		gUserInfo.style = oStyle.value;
+		if(bIsFirstLog){
+			//if($id('SslLogin').checked){
+				gUserInfo.safe = 1;
+				sLoginFunc = 'ssl';
+			/*}else{
+				gUserInfo.safe = 0;
+				sLoginFunc = 'http';
+			}*/
+		}else{
+			if(sLoginFunc == 'ssl'){
+				gUserInfo.safe = 1;
+			}else{
+				gUserInfo.safe = 0;
+			}
+		}
+		gVisitorCookie.saveInfo();
+		//弹出超时对话框
+		if(bIsFirstLog){
+			sCoremailCookie = fGetCookie('Coremail');
+			setTimeout(function(){
+				//若无错误提示，则判断为登录超时
+				try{
+					if(window.frames["frameforlogin"].document.body.className != 'error'){
+						me.showTheHttpLogin();
+					}
+				}catch(e){
+					me.showTheHttpLogin();
+				}
+			},5000);
+		}
+		
+		return false;
+	}
+
+	/**
+	 * 错误信息提示
+	 * @param  {Number} nCode 错误代码
+	 */
+	function fShowError(nCode){
+		var me = this;
+		var sErrType = '',
+			nTarget = 0;
+		var sTitle = '',
+			sInfo = '',
+			sTpl = '';
+
+		if(!isNaN(nCode)){
+	    	nCode = nCode - 0;
+	    }
+		switch(nCode){
+			case 'Login_Timeout':
+				sErrType = 'loginTimeout';
+				nTarget = 0;
+				break;
+			case 1:
+				sErrType = 'noId';
+				nTarget = 1;
+				break;
+			case 2:
+				sErrType = 'noPhone';
+				nTarget = 1;
+				break;
+			case 3:
+				sErrType = 'noPw';
+				nTarget = 2;
+				break;
+			case 4:
+				sErrType = 'noDynPw';
+				nTarget = 2;
+				break;
+			case 5:
+				sErrType = 'noDynPwByMob';
+				nTarget = 2;
+				break;
+			case 6:
+				sErrType = 'noDynPwByYX';
+				nTarget = 2;
+				break;
+			case 1000:
+				sErrType = 'noBindingMob';
+				nTarget = 1;
+				break;
+			case 1001:
+				sErrType = 'dynPwWrong';
+				nTarget = 2;
+				break;
+			case 1002:
+				sErrType = 'dynPwd2Much';
+				nTarget = 0;
+				break;
+			case 1003:
+				sErrType = 'mobLoginWrongDomain';
+				nTarget = 1;
+				break;
+			case 460:
+			case 420:
+				$id('dynPwInput').value = '';
+				sErrType = 'inputWrong';
+				nTarget = 0;
+				break;
+			case 422:
+				sErrType = 'idLocked';
+				nTarget = 1;
+				break;
+			case 414:
+			case 415:
+			case 416:
+			case 417:
+			case 418:
+			case 419:
+				sErrType = 'loginWrong';
+				nTarget = 0;
+				break;
+			/*case 412:
+				//已单独处理
+				break;*/
+			default:
+				sErrType = 'systemBusy';
+				nTarget = 0;
+		}
+		sTitle = gErrorInfo[sErrType].title,
+		sInfo = gErrorInfo[sErrType].info,
+		sTpl = [
+			'<div class="error-tt">',
+				'<p>' + sTitle + '</p>',
+			'</div>',
+			sInfo && sInfo != '' ?  
+			['<div id="errorDetail" class="error-detail">',
+				'<p>提示：</p>',
+				'<p class="error-info">' + sInfo + '</p>',
+			'</div>'].join('') : ''
+		].join('');
+		me.showLayer(sTpl, nTarget);
+
+		//恢复登录键
+		$id('loginBtn').disabled = false;
+		$id('loginBtn2').disabled = false;
+	}
+
+	/**
+	 * 显示气泡浮层
+	 * @param  {String} sHtml 浮层内容
+	 * @param  {Number} nTarget 浮层指向 0-通用 1-账号 2-密码
+	 */
+	function fShowLayer(sHtml, nTarget){
+		var me = this;
+		var oLayer = $id('bubbleLayer'),
+			oLayerWrap = $id('bubbleLayerWrap'),
+			oArr = $id('layerArr');
+		var nBasePoint = 215;
+		if(nTarget == 1){
+			nBasePoint -= 30;
+		}else if(nTarget == 2){
+			nBasePoint += 30;
+		}
+		oLayerWrap.innerHTML = sHtml;
+		$id('mainMask').style.display = 'block';
+		fCls(oLayer, 'bubbleLayer-show', 'add');
+		oLayer.style.top = nBasePoint - oLayer.offsetHeight/2 + 'px';
+		oArr.style.top = (oLayer.offsetHeight - oArr.offsetHeight)/2 + 'px';
+
+		fEventListen(document, 'click', me.hideLayer);
+		if(!oLayer.__bindClick){
+			fEventListen(oLayer, 'click', function(oEvt){
+				try {
+					oEvt.stopPropagation();
+				} catch (e) {
+					oEvt.cancelBubble = true;
+				}
+				oLayer.__bindClick = true;
+			});
+		}
+
+		
+	}
+
+	/**
+	 * 隐藏气泡浮层
+	 */
+	function fHideLayer(){
+		fCls($id('bubbleLayer'), 'bubbleLayer-show', 'remove');
+		$id('mainMask').style.display = 'none';
+		fEventUnlisten(document, 'click', indexLogin.hideLayer);
+	}
+
+	/**
+	 * 设置垂直居中
+	 */
+	function fVericalAlignBody(){
+		var nBodyHeight = 730;
+		var nClientHeight = document.documentElement.clientHeight;
+		if(nClientHeight >= nBodyHeight + 2){
+			var nDis = (nClientHeight - nBodyHeight)/2;
+			document.body.style.paddingTop = nDis + 'px';
+		}else{
+			document.body.style.paddingTop = '0px';
+		}
+	}
+window.onload = function(){
+
+};
+
+</script>
+
+</body></html>

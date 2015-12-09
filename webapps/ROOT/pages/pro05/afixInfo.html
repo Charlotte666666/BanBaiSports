@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/base/ui.all.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+<style type="text/css">
+#main{
+	height:100%;
+	padding: 10px;
+}
+</style>
+<script type="text/javascript">
+var isSaveOK=false;
+var opt="";
+var infoId="";
+var oldO={};
+var newO={};
+var types="";
+var cols="";
+var vals="";
+
+$(document).ready( function() {
+   optType=top.getUrlParam(document.URL,"opt");
+   infoId=top.getUrlParam(document.URL,"infoId");
+   newO=top.getTempValue();
+   var aoData=[];
+   aoData.push( { "name": "id", "value": infoId } );
+   top.sendAjaxRequest("/actions/Pro05.action?getPro05aById",aoData,optGetInfoCallback);
+});
+
+function initObj(){
+    $("#custName").val( oldO.c1101 );
+	$("#custNo").val( oldO.c1102 );
+	$("#bmtDate").val( top.getTimeStr( oldO.c1109, true ) );
+
+    var gAllFiled=top.getAllFields();
+	var str="";
+	for ( var i=0;i<gAllFiled.length;i++ ) {
+	  if ( gAllFiled[i].table_name == 'tbl_pro05_a' ) {
+	     if ( oldO[gAllFiled[i].col_name] != newO[gAllFiled[i].col_name] ) {
+		    //str+=gAllFiled[i].col_name+",";
+			types+=gAllFiled[i].type+",";
+			cols+=gAllFiled[i].col_name+",";
+			str+='<tr bgcolor="#ADD8E6"><td>'+gAllFiled[i].title+'</td>';
+			if ( gAllFiled[i].type == 'date' ) {
+			  str+='<td>'+top.getTimeStr( oldO[gAllFiled[i].col_name], true )+'</td><td><input type="text"  id="'+gAllFiled[i].col_name+'" value="'+top.getTimeStr( newO[gAllFiled[i].col_name], true )+'" onclick="selectDate(this)" style="width:93px"></input>';
+			  str+='</td></tr>';
+			} else if ( gAllFiled[i].type == 'dic' ) {
+			  str+='<td>'+oldO[gAllFiled[i].col_name]+'</td><td>';
+			  str+=top.getCodeSelectHtml(gAllFiled[i].dic_type,gAllFiled[i].col_name,true,newO[gAllFiled[i].col_name])+'</td></tr>';
+			} else {
+			  str+='<td>'+oldO[gAllFiled[i].col_name]+'</td><td><input type="text" id="'+gAllFiled[i].col_name+'" value="';
+			  str+=newO[gAllFiled[i].col_name]+'"></input></td></tr>';
+			}
+		 }
+	  }
+	}
+	$("#olist").append(str);
+}
+
+function doBeforeClose(){
+    var obj={
+   		  "isSaveOK":isSaveOK
+	};
+    top.setTempValue(obj);
+}
+
+function doCancel(){
+    top.closeDialog();
+}
+
+function headButtonFun1(){
+    doSubmit();
+}
+function headButtonFun2(){
+    top.showConfirm("您确定撤销该条冲突吗？", deletePro05a2);
+}
+function deletePro05a2(){
+    var aoData=[];
+    aoData.push( { "name": "id", "value": infoId } );
+    top.sendAjaxRequest("/actions/Pro05.action?deletePro05a2",aoData,optCallback);
+}
+			
+function doSubmit(){
+	var aoData=[];
+	var colArr=cols.split(",");
+	var typeArr=types.split(",");
+	for (var i=0;i<colArr.length;i++) {
+	  if ( !typeArr[i] || typeArr[i] == '') continue;
+	  if ( typeArr[i] == 'date' ) {
+	     vals+= top.toTimestamp( $("#"+colArr[i]).val() )+"ISPLITI";
+	  } else {
+	     vals+=$("#"+colArr[i]).val()+"ISPLITI";
+	  }
+	}
+	
+    aoData.push( { "name": "types", "value": types } );
+	aoData.push( { "name": "cols", "value": cols } );
+	aoData.push( { "name": "vals", "value": vals } );
+	aoData.push( { "name": "id", "value": infoId } );
+	top.sendAjaxRequest("/actions/Pro05.action?mergePro05a",aoData,optCallback);
+}
+
+function optGetInfoCallback(obj){
+	try{
+	 if ( obj.status == true ){
+	  oldO=obj.body;
+	  initObj();
+	 }else{
+	  top.showInfoWinError("操作失败 "+obj.msg);
+	 }
+	}catch(e){
+	  top.showInfoWinError("处理异常:"+e.message);
+	}
+}
+
+function optCallback(obj){
+	try{
+	 if ( obj.status == true ){
+	  isSaveOK = true;
+	  top.showInfoWinOK("操作成功");
+	  top.closeDialog();
+	 }else{
+	  isSaveOK = false;
+	  top.showInfoWinError("操作失败 "+obj.msg);
+	 }
+	}catch(e){
+	  top.showInfoWinError("处理异常:"+e.message);
+	}
+}
+</script>
+</head>
+<body>
+<div id="main">
+<div id="demo" class="demolayout" style="background-color:#ffffff;">
+<table width="100%"><tr>
+<td align='right'>姓名:</td><td align='left'><input type='text' disabled="true" id='custName' value=''></input></td>
+<td align='right'>病历号:</td><td align='left'><input type='text' disabled="true" id='custNo' value=''></input></td>
+<td align='right'>BMT日期:</td><td align='left'><input type='text' disabled="true" id='bmtDate' value='' style='width:93px'></input></td>
+</tr>
+</table>
+<table id="olist" width="100%">
+  <tr bgcolor="#67B0F9">
+    <td>字段标题</td><td>原值</td><td>修改值</td>
+  </tr>
+</table>
+</div>
+ 
+</div>
+</body>
+</html> 

@@ -1,0 +1,243 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var goodsId="";
+   var type1=-1;
+   var type2=-1;
+   var type3=-1;
+   
+   $(document).ready(function() {
+     initData();
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   function doSubmit(){
+     var aoData=[];
+	 var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+     var t="";
+     aoData.push( { "name": "info.goods_id", "value": goodsId } );
+	 t=$("#type1_id").val();
+	 if ( !t ) t=-1;
+     aoData.push( { "name": "info.type1_id", "value": t } );
+	 t=$("#type2_id").val();
+	 if ( !t ) t=-1;
+     aoData.push( { "name": "info.type2_id", "value": t } );
+	 t=$("#type3_id").val();
+	 if ( !t ) t=-1;
+     aoData.push( { "name": "info.type3_id", "value": t } );
+     aoData.push( { "name": "info.name", "value": $("#name").val() } );
+	 aoData.push( { "name": "info.unit", "value": $("#unit").val() } );
+	 aoData.push( { "name": "info.priority", "value": $("#priority").val() } );
+     aoData.push( { "name": "info.barcode", "value": $("#barcode").val() } );
+	 aoData.push( { "name": "info.specification", "value": $("#specification").val() } );
+	 aoData.push( { "name": "info.inventory", "value": $("#inventory").val() } );
+	 var temp = $("#alertInventory").val();
+	 aoData.push( { "name": "info.alertInventory", "value": temp==''?-1:temp } );
+	 aoData.push( { "name": "info.price", "value": $("#price").val() } );
+	 temp = $("#offPrice").val();
+	 aoData.push( { "name": "info.offPrice", "value": temp==''?-1:temp } );
+	 aoData.push( { "name": "info.memo", "value": $("#memo").val() } );
+	 aoData.push( { "name": "info.status", "value": $("#status").val() } );
+	 top.sendAjaxRequest("/actions/ProGoods.action?"+(optType=='insert'?'insertGoods':'updateGoods'),aoData,optCallback);
+   }
+   
+   function checkForm(){
+     var msg = "";
+	 var temp = "";
+     if ( $("#name").val()=='' ) {
+	    msg+="请输入商品名称<br>";
+	 }
+	 temp = $("#price").val();
+	 if ( temp=='' ) {
+	    msg+="请输入商品价格<br>";
+	 } else if ( !IsFloat(temp) ) {
+	    msg+="商品价格应为数字类型<br>";
+	 }
+	 temp = $("#inventory").val();
+	 if ( temp=='' ) {
+	    msg+="请输入库存";
+	 } else if ( !IsFloat(temp) ) {
+	    msg+="商品库存应为数字<br>";
+	 }
+     return msg;
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功");
+	    }else{
+	     isSaveOK = false;
+	     top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		 top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   function initData(){
+	   try{
+		   optType=top.getUrlParam(document.URL,"opt");
+		   type1=top.getUrlParam(document.URL,"type1");
+		   type2=top.getUrlParam(document.URL,"type2");
+		   type3=top.getUrlParam(document.URL,"type3");
+		   if ( optType == 'update' ) {
+		     goodsId=top.getUrlParam(document.URL,"goodsId");
+			 var aoData=[];
+		     aoData.push( { "name": "info.goods_id", "value":goodsId } );
+		     top.sendAjaxRequest("/actions/ProGoods.action?getGoodsInfo",aoData,infoCallback);
+		   } else {
+		     goodsId = 0;
+			 $("#tdUnit").html( top.getCodeSelectHtml("ERP_GOODS_UNIT","unit",false) );
+			 $("#tdStatus").html( top.getCodeSelectHtml("ERP_GOODS_STATUS","status",false) );
+			 $("#tdPriority").html( top.getCodeSelectHtml("ERP_GOODS_PRIORITY","priority",false) );
+			 $("#span_type1").html( top.getGoodsTypeLevel("type1_id",1, 0, type1) );
+		     $("#span_type2").html( top.getGoodsTypeLevel("type2_id",2, (type1==''?$("#type1_id").val():type1), type2) );
+		     $("#span_type3").html( top.getGoodsTypeLevel("type3_id",3, (type2==''?$("#type2_id").val():type2), type3) );
+		   }
+		   var rightId="erp_addGoods";
+	   	   if ( optType == 'update' ) rightId="erp_editGoods";
+	       if ( top.g_isPermit(rightId) ) {
+	     	 $("#submitBtn").show();
+	     	 $("#closeBtn").show();
+	       } else{
+	     	 $("#submitBtn").hide();
+	     	 $("#closeBtn").hide();
+			 $("#name").attr("disabled",true);
+			 $("#barcode").attr("disabled",true);
+			 $("#price").attr("disabled",true);
+			 $("#inventory").attr("disabled",true);
+			 $("#priority").attr("disabled",true);
+			 $("#offPrice").attr("disabled",true);
+			 $("#memo").attr("disabled",true);
+			 $("#alertInventory").attr("disabled",true);
+	   	   }
+	   }catch(e){
+		   top.showInfoWinError(e.message);
+	   }
+   }
+   function s_changeType(lev){
+       if ( lev == 1 ) {
+	      $("#span_type2").html( top.getGoodsTypeLevel("type2_id",2, $("#type1_id").val()) );
+		  $("#span_type3").html( top.getGoodsTypeLevel("type3_id",3, $("#type2_id").val()) );
+	   } else if ( lev == 2 ) {
+	      $("#span_type3").html( top.getGoodsTypeLevel("type3_id",3, $("#type2_id").val()) );
+	   }
+   }
+   function infoCallback(obj){
+       try{
+        if ( obj.status == true ){
+          var goods=obj.body;
+		  goodsId = goods.goods_id;
+          $("#name").val(goods.name);
+          $("#barcode").val(goods.barcode);
+		  $("#tdUnit").html( top.getCodeSelectHtml("ERP_GOODS_UNIT","unit",false,goods.unit) );
+          $("#price").val(goods.price);
+		  $("#inventory").val(goods.inventory);
+		  $("#tdPriority").html( top.getCodeSelectHtml("ERP_GOODS_PRIORITY","priority",false,goods.priority) );
+		  $("#alertInventory").val(goods.alertInventory==-1?"":goods.alertInventory);
+		  $("#offPrice").val(goods.offPrice==-1?"":goods.offPrice);
+		  $("#tdStatus").html( top.getCodeSelectHtml("ERP_GOODS_STATUS","status",false,goods.status) );
+		  $("#span_type1").html( top.getGoodsTypeLevel("type1_id",1, 0, goods.type1_id) );
+		  $("#span_type2").html( top.getGoodsTypeLevel("type2_id",2, goods.type1_id, goods.type2_id) );
+		  $("#span_type3").html( top.getGoodsTypeLevel("type3_id",3, goods.type2_id, goods.type3_id) );
+		  $("#specification").val(goods.specification);
+		  $("#memo").val(goods.memo);
+		  
+		  if ( !top.g_isPermit("erp_editGoods") ) {
+			 $("#unit").attr("disabled",true);
+			 $("#priority").attr("disabled",true);
+			 $("#status").attr("disabled",true);
+			 $("#type1_id").attr("disabled",true);
+			 $("#type2_id").attr("disabled",true);
+			 $("#type3_id").attr("disabled",true);
+	   	   }
+        }else{
+          top.showInfoWinError("操作失败");
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+  </script> 
+</head>
+<body>
+<br>
+<table width="100%" border="0" padding="0" spacing="0">
+ <tr>
+    <td width="27%" align="right">商品名称:</td>
+    <td width="73%" align="left"><input type="text" id="name" value="" size="40"/></td>
+ </tr>
+ <tr>
+    <td align="right">所属分类:</td>
+    <td align="left"><span id="span_type1"></span><span id="span_type2"></span><span id="span_type3"></span></td>
+ </tr>
+ <tr>
+    <td align="right">条形编码:</td>
+    <td align="left"><input type="text" id="barcode" value="" size="30" /></td>
+ </tr>
+ <tr>
+    <td align="right">单位:</td>
+    <td align="left" id="tdUnit"></td>
+ </tr>
+ <tr>
+    <td align="right">规格:</td>
+    <td align="left"><input type="text" id="specification" value="" size="10" /></td>
+ </tr>
+ <tr>
+    <td align="right">价格:</td>
+    <td align="left"><input type="text" id="price" value="" size="10" />元</td>
+ </tr>
+ <tr>
+    <td align="right">折扣价:</td>
+    <td align="left"><input type="text" id="offPrice" value="" size="10" />元</td>
+ </tr>
+ <tr id="tr_status">
+    <td align="right">状态:</td>
+    <td align="left" id="tdStatus"></td>
+ </tr>
+ <tr>
+    <td align="right">库存数量:</td>
+    <td align="left"><input type="text" id="inventory" value="" size="10" /></td>
+ </tr>
+ <tr>
+    <td align="right">库存告警值:</td>
+    <td align="left"><input type="text" id="alertInventory" value="" size="10" /></td>
+ </tr>
+ <tr>
+    <td align="right">检索优先级:</td>
+    <td align="left" id="tdPriority"></td>
+ </tr>
+ <tr>
+    <td align="right">备注:</td>
+    <td align="left"><textarea id="memo" cols="45" rows="5" ></textarea></td>
+ </tr>
+</table>
+<p align="center">
+   <table><tr>
+		    <td><span id="submitBtn" class="buttonTwo"><a href="javascript:doSubmit()">保存</a></span></td>
+		    <td><span id="closeBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+   </tr></table>
+</p>
+</body>
+</html>

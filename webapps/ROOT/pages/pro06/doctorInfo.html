@@ -1,0 +1,257 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <link rel="stylesheet" type="text/css" href="../../css/redmond/jquery.ui.all.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var infoId="";
+   var OSS_BASE="http://bookdoctor.oss-cn-beijing.aliyuncs.com/";
+   var gstatus=0;
+    
+   $(document).ready(function() {
+	 initData();
+   } );
+
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   function doSubmit(){
+	 var aoData=[];
+	 var xurl="/actions/Doctor.action?updateDoctor";
+ 
+     if ( optType == 'insert' ) {
+       aoData.push( { "name": "doctor.password", "value": top.hex_md5("12345678") } );
+	   xurl="/actions/Doctor.action?insertDoctor";
+     }
+	 var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+     aoData.push( { "name": "doctor.id", "value": infoId } );
+	 aoData.push( { "name": "doctor.hospital_dept", "value": $("#hospital_dept").val() } );
+	 aoData.push( { "name": "doctor.star", "value": top.g_GetNumValue( $("#star").val() ) } );
+	 top.sendAjaxRequest(xurl,aoData,optCallback);
+   }
+   
+   function updateStatus(status){
+	 var aoData=[];
+	 gstatus=status;
+	 var xurl="/actions/Doctor.action?updateDoctorStatus";
+	 aoData.push( { "name": "doctor.status", "value": status } );
+	 aoData.push( { "name": "doctor.id", "value": infoId } );
+	 top.sendAjaxRequest(xurl,aoData,updateStatusCallback);
+   }
+   
+   function checkForm(){
+     var msg = "";
+     return msg;
+   }
+   
+   function updateStatusCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      top.showInfoWinOK("操作成功");
+		  $("#tdStatus" ).html( top.getCodeName("DOC_STATUS",gstatus) );
+		  top.closeDialog();
+	    }else{
+	      isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      isSaveOK = true;
+	      top.showInfoWinOK("操作成功");
+		  top.closeDialog();
+	    }else{
+	      isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   function initData(){
+	   try{
+		   optType=top.getUrlParam(document.URL,"opt");
+		   infoId=top.getUrlParam(document.URL,"infoId");
+		   if ( optType == 'update' ) {
+			 var aoData=[];
+		     aoData.push( { "name": "doctor.id", "value": infoId } );
+		     top.sendAjaxRequest("/actions/Doctor.action?getDoctorById",aoData,userInfoCallback);
+		   }else{
+			 $( "#tdStatus" ).html( top.getCodeName("USER_STATUS",'0') );
+			 $( "#tdsex" ).html( top.getCodeSelectHtml("SEX","sex",true) );
+		   }
+	   }catch(e){
+		   top.showInfoWinError(e.message);
+	   }
+   }
+   function userInfoCallback(obj){
+       try{
+        if ( obj.status == true ){
+          var user=obj.body;
+          $("#span_real_name").html( user.real_name );
+		  $("#span_cell_phone").html( user.cell_phone );
+		  gstatus=user.status;
+		  if ( user.status == 0 ) {
+            $("#span_status" ).html( top.getCodeName("DOC_STATUS",user.status) + '&nbsp;<input type="button" id="check_btn_pass" value="审核通过" onclick="updateStatus(1)" />&nbsp;<input type="button" id="check_btn_notPass" value="审核不通过" onclick="updateStatus(2)" />' );
+		  } else {
+		    $("#span_status" ).html( top.getCodeName("DOC_STATUS",user.status) );
+		  }
+		  $("#span_sex" ).html( top.getCodeName("SEX",user.sex) );
+		  $("#span_regist_time").html( top.getTimeStr(user.regist_time) );
+		  $("#span_map_time").html( top.getTimeStr(user.map_time) );
+		  $("#span_hospital_name").html( user.hospital_name );
+		  $("#span_hospital_dept").html( user.hospital_dept_name );
+		  $("#span_bank_code").html( user.bank_code );
+		  $("#span_level").html( top.getCodeName( "JOB_LEVEL", user.level ) );
+		  $("#span_bank_account").html( user.bank_account );
+		  $("#span_invitation_code").html( user.invitation_code );
+		  $("#skilled_disease1").html( user.skilled_disease1 );
+		  $("#skilled_disease2").html( user.skilled_disease2 );
+		  $("#skilled_disease3").html( user.skilled_disease3 );
+		  $("#skilled_disease4").html( user.skilled_disease4 );
+		  $("#skilled_disease5").html( user.skilled_disease5 );
+		  $("#skilled_disease6").html( user.skilled_disease6 );
+		  $("#disease_symp1").html( user.disease_symp1 );
+		  $("#disease_symp2").html( user.disease_symp2 );
+		  $("#disease_symp3").html( user.disease_symp3 );
+		  $("#disease_symp4").html( user.disease_symp4 );
+		  $("#disease_symp5").html( user.disease_symp5 );
+		  $("#disease_symp6").html( user.disease_symp6 );
+		  $("#span_star").html( user.star );
+
+		  if ( user.img_url != '' ) {
+		    $("#pic").attr("src", (OSS_BASE+""+user.img_url) );
+		  }
+        }else{
+          top.showInfoWinError("操作失败");
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+  </script> 
+</head>
+<body>
+<br/>
+
+<table width="100%" border="0" padding="0" spacing="0">
+ <tr class="tr_data">
+    <td colspan="2" rowspan="14" valign="top">
+		<img src="../../img/photos.png" height="180px" id="pic"/>
+		<input type="hidden" id="img_url" value="" />
+	</td>
+    <td align="right">手机号码:</td>
+    <td align="left" align="left"><span id="span_cell_phone"></span></td>
+ </tr>
+  <tr id="tr_status" class="tr_data">
+    <td align="right">帐号状态:</td>
+    <td align="left" ><span id="span_status"></span></td>
+ </tr>
+  <tr class="tr_data">
+	<td width="30%" align="right">姓名:</td>
+    <td width="70%" align="left"><span id="span_real_name"></span></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">医院:</td>
+    <td align="left"><span id="span_hospital_name"></span></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">科室:</td>
+    <td align="left" ><span id="span_hospital_dept"></span></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">职称:</td>
+    <td align="left" ><span id="span_level"></span></td>
+ </tr>
+ <tr id="tr_status" class="tr_data">
+    <td align="right">性别:</td>
+    <td align="left" ><span id="span_sex"></span></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">评价星级:</td>
+    <td align="left" ><span id="span_star" ></span>星级</td>
+ </tr>
+ <tr class="tr_data">
+	<td align="right">注册时间:</td>
+    <td align="left" ><span id="span_regist_time"></span></td>
+  </tr>
+ <tr class="tr_data">
+	<td align="right">活跃时间:</td>
+    <td align="left" ><span id="span_map_time"></span></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">银行:</td>
+    <td align="left" ><span id="span_bank_code"></span></td>
+  </tr>
+ <tr class="tr_data">
+    <td align="right">银行账号:</td>
+    <td align="left"><span id="span_bank_account"></span></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">邀请人:</td>
+    <td align="left" ><span id="span_invitation_code"></span></td>
+ </tr>
+</table>
+
+ <table width="100%" border="0" padding="10px" spacing="0">
+ <tr class="tr_data">
+	<td width="10%" align="right">病种1:</td>
+    <td width="20%" align="left"><span id="skilled_disease1" ></span></td>
+    <td width="70%" align="left"><span id="disease_symp1" ></span></td>
+ </tr>
+ <tr class="tr_data">
+	<td width="10%" align="right">病种2:</td>
+    <td width="20%" align="left"><span id="skilled_disease2" ></span></td>
+    <td width="70%" align="left"><span id="disease_symp2" ></span></td>
+ </tr>
+ <tr class="tr_data">
+	<td width="10%" align="right">病种3:</td>
+    <td width="20%" align="left"><span id="skilled_disease3" ></span></td>
+    <td width="70%" align="left"><span id="disease_symp3" ></span></td>
+ </tr>
+ <tr class="tr_data">
+	<td width="10%" align="right">病种4:</td>
+    <td width="20%" align="left"><span id="skilled_disease4" ></span></td>
+    <td width="70%" align="left"><span id="disease_symp4" ></span></td>
+ </tr>
+  <tr class="tr_data">
+	<td width="10%" align="right">病种5:</td>
+    <td width="20%" align="left"><span id="skilled_disease5" ></span></td>
+    <td width="70%" align="left"><span id="disease_symp5" ></span></textarea></td>
+ </tr>
+  <tr class="tr_data">
+	<td width="10%" align="right">病种6:</td>
+    <td width="20%" align="left"><span id="skilled_disease6" ></span></td>
+    <td width="70%" align="left"><span id="disease_symp6" ></span></td>
+ </tr>
+ </table>
+
+<!--p align="center">
+   <table><tr>
+		    <td><span id="okBtn" class="buttonTwo"><a href="javascript:doSubmit()">提交</a></span></td>
+		    <td><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+   </tr></table>
+</p-->
+</body>
+</html>

@@ -1,0 +1,159 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+  <script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var type_id="";
+   var type_name="";
+   var info_id=0;
+   var cust_code="";
+   var require_id="";
+   
+   $(document).ready(function() {
+     initData();
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	  top.closeSelectDialog();
+   }
+   function doSubmit(){
+	   var aoData=[];
+	 // 检查
+			var checkMsg = checkFormDoSubmit();
+				if ( checkMsg != '' ) {
+				   top.showInfoWinWarn(checkMsg);
+				   return ;
+				}
+		aoData.push( { "name": "moneyRecord.id", "value": info_id } );
+		aoData.push( { "name": "moneyRecord.money_type", "value": $("#money_type").val() } );
+		aoData.push( { "name": "moneyRecord.cust_code", "value": cust_code } );
+		aoData.push( { "name": "moneyRecord.opt_user", "value": $("#opt_user").val() } );
+		aoData.push( { "name": "moneyRecord.pay_time", "value": top.toTimestamp($("#pay_time").val()) } );
+		aoData.push( { "name": "moneyRecord.money", "value": top.g_GetNumValue($("#money").val()) } );
+		aoData.push( { "name": "moneyRecord.demo", "value": $("#demo").val() } );
+		aoData.push( { "name": "moneyRecord.require_id", "value":require_id } );
+		
+		var xurl="/actions/CustInfo.action?updateMoneyRecord";
+		if(info_id==0){
+		var xurl="/actions/CustInfo.action?insertMoneyRecord";
+		}
+		top.sendAjaxRequest(xurl,aoData,optCallback);
+     }
+	 function checkFormDoSubmit(){
+		var msg="";
+		msg += checkString($("#money_type").val(),true,32,"交款类别");
+		msg += checkString($("#money").val(),true,32,"交款金额");
+		if(!IsFloat( $("#money").val()))msg += "交款金额应为数字类型<br>";
+		return msg;
+	 }
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功");
+		  top.closeSelectDialog();
+	    }else{
+	    	isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   function initData(){
+		cust_code=decodeURI(top.getUrlParam(document.URL,"cust_code"));
+		require_id=decodeURI(top.getUrlParam(document.URL,"require_id"));
+		info_id=top.getUrlParam(document.URL,"id");
+		if ( info_id ) {
+			var aoData=[];
+		    aoData.push( { "name": "moneyRecord.id", "value":info_id } );
+		    top.sendAjaxRequest("/actions/CustInfo.action?getMoneyRecordInfoById",aoData,moneyRecordInfoCallback);
+		}else{
+		$( "#tdmoney_type" ).html( top.getCodeSelectHtml("MONEY_TYPE","money_type",true) );
+		}
+	}
+   function moneyRecordInfoCallback(obj){
+       try{
+        if ( obj.status == true ){
+			var o=obj.body;
+			$("#id").val(o.id);
+			$("#pay_time").val( top.getTimeStr(o.pay_time,true));
+			$("#demo").val( o.demo);
+			$("#money").val( o.money);
+			
+			$("#opt_user").val(top.getUserNameByCode(o.opt_user ));
+			$("#tr_opt_user").show();
+			$("#tdmoney_type" ).html( top.getCodeSelectHtml("MONEY_TYPE","money_type",true,o.money_type) );
+			$("input[type='text']").attr("disabled",true);
+			$("select").attr("disabled",true);
+			$("#demo").attr("disabled",false);
+		}else{
+          top.showInfoWinError("操作失败");
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	
+	function getTypeNameById(pid){
+			  var type_name="";
+			  try{
+			    type_name=top.getProductTypeNameById(pid);
+			  }catch(e){
+			    alert(e.message);
+			  }
+			  return type_name;
+    }
+	
+	 
+  </script> 
+</head>
+<body>
+<input type="hidden" id="type_id" value="" />
+<br>
+<table width="100%" border="0" padding="0" spacing="0">
+	  <tr class="tr_data">
+		<td align="right">交款时间</td>
+		<td align="left" ><input type="text" id="pay_time" onclick="new Calendar().show(this);" readonly="true"/></td>
+	 </tr>
+	  <tr class="tr_data">
+		<td width="30%" align="right">交款类别</td>
+		<td width="70%" align="left" id="tdmoney_type"></td>
+	 </tr>
+	  <tr class="tr_data">
+		<td align="right">交款金额</td>
+		<td align="left"><input type="text" id="money"/>元</td>
+	 </tr>
+	 <tr id="tr_opt_user" style="display:none" class="tr_data">
+		<td align="right">操作人</td>
+		<td align="left"><input type="text"  id="opt_user" /></td>
+	 </tr>
+	 <tr rowspan="2" class="tr_data">
+		<td align="right">备注</td>
+		<td align="left"><textarea  id="demo" rows="2" cols="35" ></textarea></td>
+	 </tr>
+	 
+</table>
+<p align="center">
+   <table><tr>
+		    <td><span id="okBtn" class="buttonTwo"><a href="javascript:doSubmit()">提交</a></span></td>
+		    <td><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+			</tr></table>
+</p>
+</body>
+</html>

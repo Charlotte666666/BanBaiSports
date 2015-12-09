@@ -1,0 +1,190 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var objs=[];
+			var tableName='tbl_pro05_b';
+
+			$(document).ready(function() {
+			   initCols();
+			   var iaoColumns= top.getTableListHead(tableName);
+			   var surl=top.getUrlBase()+"/actions/Pro05.action?getPro05b2List";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+								objs=top.getTempObjs();
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+						 aoData.push( { "name": "condStr", "value": getCondStr() } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+			    top.emptyObjs();
+				oTable.fnDraw();
+			}
+			
+ function getCondStr(){
+	var str="";
+	var currentUser=top.top.getCurrentUser();
+	var deptId="-1";
+	if ( currentUser != null ) {
+	  deptId=currentUser.deptId;
+	}
+	if ( !top.g_isPermit("bussQueryAll") ) {
+	    str+=" and dept_id='"+deptId+"' ";
+	}
+	
+	var allFields = top.getAllFields();
+	var userConfig = top.getUserConfig();
+	var configCols="";
+	if ( userConfig ) {
+	    configCols=userConfig.c4;
+	}
+	configCols=configCols+",";
+	var v="";
+	for (var i=0;i<allFields.length;i++) {
+	  if ( allFields[i].table_name == tableName && configCols.indexOf(allFields[i].col_name+",") != -1 ) {
+	    switch( allFields[i].type ){
+		  case 'text': 
+		     v=$("#"+allFields[i].col_name).val();
+		     if ( v != '' ) {
+			   str+=" and "+allFields[i].col_name+" like '%"+v+"%' ";
+			 }
+		     break;
+		  case 'string': 
+		     v=$("#"+allFields[i].col_name).val();
+		     if ( v != '' ) {
+			   str+=" and "+allFields[i].col_name+" like '%"+v+"%' ";
+			 }
+		     break;
+		  case 'date': 
+		     v=$("#"+allFields[i].col_name+"_s").val();
+		     if ( v != '' ) {
+			   str+=" and "+allFields[i].col_name+" >= "+ top.toTimestamp(v)+" ";
+			 }
+			 v=$("#"+allFields[i].col_name+"_e").val();
+		     if ( v != '' ) {
+			   str+=" and "+ top.toTimestamp(v)+" >= "+allFields[i].col_name;
+			 }
+		     break;
+		  case 'number': 
+		     v=$("#"+allFields[i].col_name+"_s").val();
+		     if ( v != '' ) {
+			   str+=" and "+allFields[i].col_name+" >= "+ v+" ";
+			 }
+			 v=$("#"+allFields[i].col_name+"_e").val();
+		     if ( v != '' ) {
+			   str+=" and "+v+" >= "+allFields[i].col_name;
+			 }
+		     break; 
+		  case 'dic': 
+		     v=$("#"+allFields[i].col_name).val();
+		     if ( v != '' ) {
+			   str+=" and "+allFields[i].col_name+" = '"+v+"' ";
+			 }
+		     break;
+		  default: break;
+		}
+	 }
+	}
+   return str;
+ }
+			
+			
+			function updateInfo(infoId){
+			    var o=getObj(infoId);
+			    top.setTempValue( o );
+				var xurl="pages/pro05/bfixInfo.html?opt=update&infoId="+infoId;
+				top.openDialog("血液科数据冲突明细信息&nbsp;"+top.getDialogButtonHtml("保存",1,'img/save.bmp')+"&nbsp;"+top.getDialogButtonHtml("撤销",2,'img/delete.gif'),xurl,true,1100,650,saveCallBack);
+			}
+
+			function initCols(){
+			  $("#queryArea").html( top.getQueryFieldHtml( tableName ) );
+			}
+			
+			function saveCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				  
+				}
+			}
+		  
+		  function getObj(infoId){
+			   for ( var i=0;i<objs.length;i++ ) {
+			     if ( objs[i].id == infoId ) return objs[i];
+			   }
+			   return null;
+		  }
+			
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+		    <div style='border: 2px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="200px">&nbsp;解决血液科数据导入冲突&nbsp;</td>
+				  <td align="left">&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table id="queryArea" width="100%" align="center" cellpadding="0" cellspacing="0" border="0" >
+			 </table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				    <td>&nbsp;查询结果列表&nbsp;</td>
+					<td>&nbsp;</td>
+			       </tr></table></td>
+			  </tr>
+			</table>
+	        <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

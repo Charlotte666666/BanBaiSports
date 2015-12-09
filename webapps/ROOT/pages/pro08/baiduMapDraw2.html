@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+<style type="text/css">
+body, html{width: 100%;height: 100%;overflow: hidden;margin:0;}
+#allmap {height: 100%;overflow: hidden;}
+#result {border-left:1px dotted #999;height:100%;width:295px;position:absolute;top:0px;right:0px;font-size:12px;}
+dl,dt,dd,ul,li{
+    margin:0;
+    padding:0;
+    list-style:none;
+}
+p{font-size:12px;}
+dt{
+    font-size:14px;
+    font-family:"微软雅黑";
+    font-weight:bold;
+    border-bottom:1px dotted #000;
+    padding:5px 0 5px 5px;
+    margin:5px 0;
+}
+dd{
+    padding:5px 0 0 5px;
+}
+li{
+    line-height:28px;
+}
+</style>
+<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=OBRxzWlMWAK4phVNAnL55Cj3"></script>
+<!--加载鼠标绘制工具-->
+<script type="text/javascript" src="http://api.map.baidu.com/library/DrawingManager/1.4/src/DrawingManager_min.js"></script>
+<link rel="stylesheet" href="http://api.map.baidu.com/library/DrawingManager/1.4/src/DrawingManager_min.css" />
+<!--加载检索信息窗口-->
+<script type="text/javascript" src="http://api.map.baidu.com/library/SearchInfoWindow/1.4/src/SearchInfoWindow_min.js"></script>
+<link rel="stylesheet" href="http://api.map.baidu.com/library/SearchInfoWindow/1.4/src/SearchInfoWindow_min.css" />
+
+<title>鼠标绘制工具</title>
+</head>
+<body>
+<div id="allmap" style="overflow:hidden;zoom:1;position:relative;">	
+	<!--div width="40">
+		活动范围标题：<input type="text"  id="area_name" ></input>
+		<input type="button" value="保存" id="save" onclick="saveArea()"></input>
+		<input type="button" onclick="showHelper()" value="操作说明"/>
+		<div id="optHelper" style="display:none">
+		 选中右侧工具栏第五个多边形绘制工具，鼠标单击地图开始绘制，随后每单机一次产生一个节点，双击完成绘制，保存按钮用于最终保存绘制结果！
+		</div>
+	</div-->
+    <div id="map" style="height:100%;-webkit-transition: all 0.5s ease-in-out;transition: all 0.5s ease-in-out;"></div>
+    <div id="panelWrap" style="width:0px;position:absolute;top:0px;right:0px;height:100%;overflow:auto;-webkit-transition: all 0.5s ease-in-out;transition: all 0.5s ease-in-out;">
+        <div style="width:20px;height:200px;margin:-100px 0 0 -10px;color:#999;position:absolute;opacity:0.5;top:50%;left:50%;" id="showOverlayInfo">此处用于展示覆盖物信息</div>
+        <div id="panel" style="position:absolute;"></div>
+    </div>
+</div>
+<script type="text/javascript">
+
+// 百度地图API功能
+    var map = new BMap.Map('map');
+    var poi = new BMap.Point( top.getCenterLon(), top.getCenterLat());
+	var points=[];
+	var area_name="";
+	var areaId='';
+	var isShow=false;
+    map.centerAndZoom(poi,top.getDefaultMapLevel()-3);
+    map.enableScrollWheelZoom();
+	 var myIcon=null;
+    var overlays = [];
+    //回调获得覆盖物信息
+    var overlaycomplete = function(e){
+		points=[];
+        overlays.push(e.overlay);
+        var result = "";
+        result = "<p>";
+        result += e.drawingMode + ":";
+        if (e.drawingMode == BMAP_DRAWING_MARKER) {
+            result += ' 坐标：' + e.overlay.getPosition().lng + ',' + e.overlay.getPosition().lat;
+        }
+        if (e.drawingMode == BMAP_DRAWING_CIRCLE) {
+            result += ' 半径：' + e.overlay.getRadius();
+            result += ' 中心点：' + e.overlay.getCenter().lng + "," + e.overlay.getCenter().lat;
+        }
+		if (e.drawingMode == BMAP_DRAWING_POLYGON) {
+			points=e.overlay.getPath();
+        }
+        if (e.drawingMode == BMAP_DRAWING_POLYLINE || e.drawingMode == BMAP_DRAWING_POLYGON || e.drawingMode == BMAP_DRAWING_RECTANGLE) {
+            result += ' 所画的点个数：' + e.overlay.getPath().length;
+        }
+        result += "</p>";
+        $("showOverlayInfo").style.display = "none";
+        $("panel").innerHTML += result; //将绘制的覆盖物信息结果输出到结果面板
+    };
+
+    var styleOptions = {
+        strokeColor:"red",    //边线颜色。
+        fillColor:"red",      //填充颜色。当参数为空时，圆形将没有填充效果。
+        strokeWeight: 3,       //边线的宽度，以像素为单位。
+        strokeOpacity: 0.8,	   //边线透明度，取值范围0 - 1。
+        fillOpacity: 0.6,      //填充的透明度，取值范围0 - 1。
+        strokeStyle: 'solid' //边线的样式，solid或dashed。
+    }
+    //实例化鼠标绘制工具
+    var drawingManager = new BMapLib.DrawingManager(map, {
+        isOpen: false, //是否开启绘制模式
+       // enableDrawingTool: true, //是否显示工具栏
+	    enableDrawingTool: false,
+        drawingToolOptions: {
+            anchor: BMAP_ANCHOR_TOP_RIGHT, //位置
+            offset: new BMap.Size(5, 5), //偏离值
+            scale: 0.8 //工具栏缩放比例
+        },
+        circleOptions: styleOptions, //圆的样式
+        polylineOptions: styleOptions, //线的样式
+        polygonOptions: styleOptions, //多边形的样式
+        rectangleOptions: styleOptions //矩形的样式
+    });
+
+    
+    //添加鼠标绘制工具监听事件，用于获取绘制结果
+    drawingManager.addEventListener('overlaycomplete', overlaycomplete);
+    
+
+    function $(id){
+        return document.getElementById(id);
+    }
+	
+	function clearDraw() {
+        for(var i = 0; i < overlays.length; i++){
+            map.removeOverlay(overlays[i]);
+        }
+    }
+
+    function clearAll() {
+        clearDraw();
+        overlays.length = 0;
+		//document.getElementById("area_name").value="";
+		points=[];
+    }
+
+	function drawPolygon(str,name,id){
+		clearDraw();
+		//document.getElementById("area_name").value=name;
+		areaId=id;
+		if ( str!=''&&str!=null ) {
+			var ps=str.split(",");
+			var pois=[];
+			for(var i=0;i<ps.length;i=i+2)
+			{
+				pois.push(new BMap.Point(ps[i],ps[i+1]));
+			}
+			var polygon = new BMap.Polygon(pois,{strokeColor:"red", strokeWeight:5, strokeOpacity:0.5});
+			overlays.push(polygon);
+			map.addOverlay(polygon);
+			map.centerAndZoom(pois[0], top.getDefaultMapLevel()-3);
+			points=pois;
+		}
+	}	
+	
+	function setAreaId(aid){
+	   areaId=aid;
+	}
+	
+	function saveArea(){
+	  //  area_name=document.getElementById("area_name").value;
+	    if(areaId==''||areaId==null){
+		  if(area_name==''||area_name==null){
+		    top.showInputDialog("保存活动区域名称", "请输入活动区域名称", dosaveArea, area_name);
+		  }else{
+			dosaveArea(area_name);
+		  }
+		}else{
+		  parent.updateArea(points,area_name,areaId);
+		}
+	}
+	
+    function dosaveArea(area_name){
+        if ( area_name == '' ) {
+            top.showInfoWinWarn("请输入活动区域名称！");
+             return ;
+        }
+		parent.addArea(points,area_name);
+       }
+	function showHelper(){
+		if(isShow){
+		document.getElementById("optHelper").style.display ="none";
+		isShow=false;
+		}else{
+		document.getElementById("optHelper").style.display ="block";
+		isShow=true;
+		}
+	}
+	
+    function setAreaName(area_name){
+		document.getElementById("area_name").value=area_name;
+	}
+
+	</script>
+	
+</body>
+</html>
+</script>

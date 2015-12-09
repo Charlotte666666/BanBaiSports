@@ -1,0 +1,102 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title></title>
+<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+<link href="../../css/comm.css" rel="stylesheet" type="text/css" />
+<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript">
+var oTable=null;
+
+jQuery(document).ready(function() {
+	      var area=top.getUrlParam(document.URL,"area");
+		  var province_code=top.getUrlParam(document.URL,"province_code");
+		  var notExam=top.getUrlParam(document.URL,"notExam");
+		  var year=top.getUrlParam(document.URL,"year");
+		  var month=top.getUrlParam(document.URL,"month");
+		  var day=top.getUrlParam(document.URL,"day");
+		  var hour=top.getUrlParam(document.URL,"hour");
+		  var minute=top.getUrlParam(document.URL,"minute");
+
+	      var iaoColumns= [
+                               { "sTitle": "站号", "mDataProp": "v01000", "sWidth": "20%", "bSortable":false },
+                               { "sTitle": "要素", "mDataProp": "elementCode", "sWidth": "30%","sClass": "center","bSortable":false,
+                                      "fnRender": function ( oObj ) {
+                                           return oObj.aData.elementCode;
+                                      },
+                                      "bUseRendered": false 
+                               },
+                               { "sTitle": "质控", "mDataProp": "fCode", "sWidth": "20%","bSortable":false,
+                            	   "fnRender": function ( oObj ) {
+                                      return oObj.aData.fCode;
+                                   },
+                                   "bUseRendered": false
+                               },
+							   { "sTitle": "值", "mDataProp": "value","sWidth": "10%","bSortable":false },
+                               { "sTitle": "更新时间", "mDataProp": "updateTime", "sWidth": "20%", "sClass": "center","bSortable":false,
+                                   "fnRender": function ( oObj ) {
+                                        return top.getTimeStr( oObj.aData.updateTime );
+                                   },
+                                   "bUseRendered": false  
+                               }
+               ];
+		   
+			   var surl=top.getUrlBase()+"/actions/CmaTable.action?provinceHourlyChangeDetail";
+
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+			          aoData.push( { "name": "area", "value": area } );
+	                  aoData.push( { "name": "minute", "value": minute } );
+	                  aoData.push( { "name": "province_code", "value": province_code } );
+	                  aoData.push( { "name": "notExam", "value": notExam } );
+					  aoData.push( { "name": "year", "value": year } );
+					  aoData.push( { "name": "month", "value": month } );
+					  aoData.push( { "name": "day", "value": day } );
+					  aoData.push( { "name": "hour", "value": hour } );
+					  
+			     },
+			    "sDom": "frt",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+});
+
+</script>
+</head>
+
+<body style="width:100%;">
+  <br/>
+  <table cellpadding="0" width="98%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+</body>
+</html>

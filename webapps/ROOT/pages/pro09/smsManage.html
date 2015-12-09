@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+    <link rel="stylesheet" type="text/css" href="../../css/drag-drop-folder-tree.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/context-menu.css"></link>
+    <link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+    <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js" ></script>
+	<script type="text/javascript" language="javascript" src="../../js/myDtree.js" ></script>
+	<script type="text/javascript" language="javascript" src="../../js/context-menu.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/drag-drop-folder-tree.js" ></script>
+	<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+	<style type="text/css"> 
+	 .versionStyle{background-color:#6CA6CD;margin-bottom:10px; text-align: center;color:#FFFFFF; width:100px;height:30px;}
+	 .versionStyle2{background-color:#FF7F00;margin-bottom:10px; text-align: center;color:#FFFFFF; width:100px;height:30px;}
+	 </style>
+	<script type="text/javascript" >
+	 
+       var d=null;
+       var treeObj=null;
+       var currentProId=0;
+       var sms_type=0;
+       $(document).ready(function(){
+    	  initSMSType();
+       });
+	   function initSMSType(){
+	     var ht='';
+		 ht+='<tr class="tr_data" height="35px"><td  align="center"><b>短信类型</b></td></tr>';
+		 ht+='<tr class="tr_data" height="35px"><td  id="td_0" class="versionStyle" align="center" onclick="querySmsContent(0)">日常营销</td></tr>';
+		 ht+='<tr class="tr_data" height="35px"><td   id="td_10" class="versionStyle" align="center" onclick="querySmsContent(10)">进店短信</td></tr>';
+		 ht+='<tr class="tr_data" height="35px"><td   id="td_1" class="versionStyle" align="center" onclick="querySmsContent(1)">日常约访</td></tr>';
+		 ht+='<tr class="tr_data" height="35px"><td   id="td_2" class="versionStyle" align="center" onclick="querySmsContent(2)">活动约访</td></tr>';
+		  ht+='<tr class="tr_data" height="35px"><td   id="td_3" class="versionStyle" align="center" onclick="querySmsContent(3)">楼盘个性</td></tr>';
+		   ht+='<tr class="tr_data" height="35px"><td   id="td_4" class="versionStyle" align="center" onclick="querySmsContent(4)">工程服务</td></tr>';
+		    ht+='<tr class="tr_data" height="35px"><td   id="td_5" class="versionStyle" align="center" onclick="querySmsContent(5)">主材服务</td></tr>';
+			 ht+='<tr class="tr_data" height="35px"><td   id="td_6" class="versionStyle" align="center" onclick="querySmsContent(6)">客户服务</td></tr>';
+			  ht+='<tr class="tr_data" height="35px"><td  id="td_7"  class="versionStyle" align="center" onclick="querySmsContent(7)">内部沟通</td></tr>';
+			   ht+='<tr class="tr_data" height="35px"><td   id="td_8" class="versionStyle" align="center" onclick="querySmsContent(8)">感谢短信</td></tr>';
+			    ht+='<tr class="tr_data" height="35px"><td   id="td_9" class="versionStyle" align="center" onclick="querySmsContent(9)">其他短信</td></tr>';
+				
+		 $("#table_sms_type").html( ht );
+		  querySmsContent(sms_type);
+	   }
+	   function querySmsContent(type){
+	       $("#td_"+sms_type).removeClass('versionStyle2');
+	       $("#td_"+sms_type).addClass('versionStyle');
+           sms_type = type;
+	       $("#td_"+sms_type).removeClass('versionStyle');
+	       $("#td_"+sms_type).addClass('versionStyle2');
+	     
+		  var aoData=[];
+		  aoData.push( { "name": "sms.sms_type", "value": sms_type } );
+		  var xurl="/actions/DailyManage.action?getSmsInfoList";
+	      top.sendAjaxRequest(xurl,aoData,querySmsCallBack);
+	   }
+	   function querySmsCallBack(obj){
+	   try{
+	     var sms=obj.aaData;
+		 var len = sms.length;
+	     var ht='';
+		 ht+='<tr class="tr_data" height="35px"><td align="center" width="90%"><b>短信模板内容</b></td><td align="center" width="10%"><b>操作</b></td></tr>';
+		 if(len>0){
+		 for(var i=0;i<len;i++){
+			 ht+='<tr class="tr_data" ><td align="center"><textarea id="content_'+sms[i].id+'" cols="100" rows="4">'+sms[i].sms_contents+'</textarea></td>';
+			 ht+='<td>';
+			 ht+='<a href=\'javascript:void(0)\' onclick="saveSmsContent(\''+sms[i].id+'\')">保存</a>';
+			 ht+='&nbsp;&nbsp;<a href=\'javascript:void(0)\' onclick="deleteSmsContent(\''+sms[i].id+'\')" >删除</a>';
+			 ht+='</td></tr>';
+		  }
+		 }
+		 /**else {
+		        ht+='<tr ';
+				ht+='class="tr_data"';
+				ht+='height="35px"';
+				ht+='>';
+				ht+='<td colspan="2">';
+				ht+='暂无任何数据';
+				ht+='</td>';
+				ht+'</tr>';
+		 } */
+		 ht+='<tr class="tr_data"><td align="center"><textarea id="add_sms_content" cols="100" rows="4"></textarea></td><td  align="center">';
+		 ht+='<div  class="buttonDivTwo">'
+	     ht+='<a href="javascript:void(0)" onclick="addSmsContent(\''+sms_type+'\')">添加</a></div></td></tr>'; 
+		 $("#table_sms_content").html( ht);
+		 }
+		 catch(e){
+		 alert(e.message);
+		 }
+	   }
+	   function saveSmsContent(id){
+	   if($("#content_"+id).val()==''){
+		   top.showInfoWinWarn("填写短信模板！");
+		   return;
+		 }
+	       var aoData=[];
+		   aoData.push( { "name": "sms.id", "value": id } );
+		   aoData.push( { "name": "sms.sms_contents", "value": $("#content_"+id).val() } );
+		  var xurl="/actions/DailyManage.action?updateSmsInfo";
+	      top.sendAjaxRequest(xurl,aoData,savaCallback);
+	   }
+	   function deleteSmsContent(id){
+	    var aoData=[];
+		   aoData.push( { "name": "sms.id", "value": id } );
+		  var xurl="/actions/DailyManage.action?deleteSmsInfoById";
+	      top.sendAjaxRequest(xurl,aoData,savaCallback);
+	   }
+	   function addSmsContent(type){
+	     if($("#add_sms_content").val()==''){
+		   top.showInfoWinWarn("短信模板内容不能为空！");
+		   return;
+		 }
+	    var aoData=[];
+		  aoData.push( { "name": "sms.sms_contents", "value": $("#add_sms_content").val() } );
+		   aoData.push( { "name": "sms.sms_type", "value": type } );
+		  var xurl="/actions/DailyManage.action?insertSmsInfo";
+	      top.sendAjaxRequest(xurl,aoData,savaCallback);
+	  }
+	  
+	   function savaCallback(obj){
+	    try{
+			   if ( obj.status == true ){
+			        top.showInfoWinOK("操作成功");
+			          querySmsContent(sms_type);
+			        }else{
+			        top.showInfoWinError("操作失败");
+			        }
+			       }catch(e){
+			          top.showInfoWinError("处理异常:"+e.message);
+			       }
+	   }
+       // 新建、删除或修改操作回调函数
+       function optCallback(obj){
+           try{
+            if ( obj.status == true ){
+              loadProTree();
+              top.showInfoWinOK("操作成功");
+			  top.closeDialog();
+            }else{
+              top.showInfoWinError("操作失败");
+            }
+           }catch(e){
+              top.showInfoWinError("处理异常:"+e.message);
+           }
+       }
+
+    </script>
+</head>
+<body>
+
+<table style="width:100%;height:100%;padding:20px;spacing:0;">
+  <tr class="tr_data" style="width:100%;height:100%;text-align:left">
+   <td style="width:15%;border:1px;border-style: dotted;border-color: #A0CFEC;" valign="top">
+   <table border="1" cellpadding="3" cellspacing="1" width="100%"  align="right" style="background-color: #b9d8f3;" id="table_sms_type"></table>
+   </td>
+	<td id="treeDetail" style="width:85%;border:1px;border-style: dotted dotted dotted none;border-color: #A0CFEC;" valign="top">
+     <table border="1" cellpadding="3" cellspacing="1" width="100%"  align="center" style="background-color: #b9d8f3;" id="table_sms_content"></table>
+   </td>
+  </tr>	
+</table>
+
+</body>
+</html>

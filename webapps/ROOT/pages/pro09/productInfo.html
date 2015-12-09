@@ -1,0 +1,309 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var type_id="";
+   var type_name="";
+   var info_id=0;
+   
+   $(document).ready(function() {
+     if ( top.g_isPermit("09_product_info_edit") ) {
+			     $("#okBtn").show();
+				 $("#cancelBtn").show();
+	  } else {
+			     $("#okBtn").hide();
+				 $("#cancelBtn").hide();
+	  }
+   
+     initData();
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeSelectDialog2();
+   }
+   function doSubmit(){
+	   var aoData=[];
+	 // 检查
+			var checkMsg = checkFormDoSubmit();
+				if ( checkMsg != '' ) {
+				   top.showInfoWinWarn(checkMsg);
+				   return ;
+				}
+
+		aoData.push( { "name": "product.product_id", "value": $("#product_id").val() } );
+		aoData.push( { "name": "product.memo", "value": $("#memo").val() } );
+		aoData.push( { "name": "product.product_brand", "value": $("#product_brand").val() } );
+		aoData.push( { "name": "product.product_name", "value": $("#product_name").val() } );
+		aoData.push( { "name": "product.product_model", "value": $("#product_model").val() } );
+		aoData.push( { "name": "product.product_standard", "value": $("#product_standard").val() } );
+		aoData.push( { "name": "product.unit", "value": $("#unit").val() } );
+		aoData.push( { "name": "product.price", "value": $("#price").val() } );
+		aoData.push( { "name": "product.discount", "value":$("#discount").val() } );
+		aoData.push( { "name": "product.raw_price", "value": $("#raw_price").val() } );
+		aoData.push( { "name": "product.type_id", "value": $("#type_id").val()} );
+		aoData.push( { "name": "product.material_manufacturer", "value": $("#material_manufacturer").val()} );
+		aoData.push( { "name": "product.main_or_sub", "value": $("#main_or_sub").val()} );
+		aoData.push( { "name": "product.material_pic", "value": $("#material_pic").val()} );
+		aoData.push( { "name": "product.sale_mode", "value": $("#sale_mode").val()} );
+		//aoData.push( { "name": "product.stock_number", "value": $("#stock_number").val()} );
+		/*if($("#is_standard").attr("checked")=="checked"){
+		    $("#is_standard").val("1");
+		}else{
+		    $("#is_standard").val("0");
+		}
+		aoData.push( { "name": "product.is_standard", "value": $("#is_standard").val()} );
+		*/
+		var xurl="/actions/ProductInfo.action?updateProductInfo";
+		if(info_id==0){
+		var xurl="/actions/ProductInfo.action?insertProductInfo";
+		}
+		top.sendAjaxRequest(xurl,aoData,optCallback);
+     }
+	 function checkFormDoSubmit(){
+		var msg="";
+		msg += checkString($("#type_name").val(),true,32,"类型名称");
+		msg += checkString($("#product_name").val(),true,64,"产品名称");
+		msg += checkString($("#product_id").val(),true,20,"材料编号");
+		msg += checkString($("#material_manufacturer").val(),false,32,"材料商");
+		msg += checkString($("#main_or_sub").val(),false,2,"主辅材");
+		msg += checkString($("#memo").val(),false,512,"备注");
+		if($("#price").val().substring(0,1)=="-"){
+		   msg += "[售价]应为0~99999999数字类型<br/>";
+		   $("#price").val("0");
+		}
+		if($("#price").val()!="" && (!IsFloat( $("#price").val()) || $("#price").val()>99999999)){
+		   msg += "[售价]应为0~99999999数字类型<br/>";
+		   $("#price").val("0");
+		}
+		if($("#raw_price").val().substring(0,1)=="-"){
+		   msg += "[进价]应为0~99999999数字类型<br/>";
+		   $("#raw_price").val("0");
+		}
+		if($("#raw_price").val()!="" && (!IsFloat( $("#raw_price").val()) || $("#raw_price").val()>99999999)){
+		   msg += "[进价]应为应为0~99999999数字类型<br/>";
+		   $("#raw_price").val("0");
+		}
+		if($("#discount").val().substring(0,1)=="-"){
+		   msg +="[折扣]应为介于0~1之间的小数<br/>";
+		}
+		if($("#discount").val()>1||$("#discount").val()<0){
+			msg +="[折扣]应为介于0~1之间的小数<br/>";
+		}
+		if($("#discount").val()!="" && !IsFloat( $("#discount").val() )){
+		   msg += "[折扣]应为数字类型<br/>";
+		}
+		return msg;
+	 }
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功");
+		 top.closeSelectDialog2();
+	    }else{
+	    	isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   function initData(){
+		optType=top.getUrlParam(document.URL,"opt");
+		type_name=decodeURI(top.getUrlParam(document.URL,"typeName"));
+		type_id=top.getUrlParam(document.URL,"typeId");
+		if ( type_id ) {
+		  $("#type_id").val( type_id );
+		  $("#type_name").val( type_name );
+		}
+		if ( optType == 'updateproduct' ) {
+			info_id=top.getUrlParam(document.URL,"id");
+			var aoData=[];
+		    aoData.push( { "name": "product.product_id", "value":info_id } );
+		    top.sendAjaxRequest("/actions/ProductInfo.action?getProductInfoById",aoData,productInfoCallback);
+		}
+		$( "#tdproduct_brand" ).html( top.getAllSupplierSelect("product_brand","") );
+		$( "#tdunit" ).html( top.getCodeSelectHtml("UNIT","unit",true) );
+		$( "#tdsale_mode" ).html( top.getCodeSelectHtml("SALE_MODE","sale_mode",true) );
+		$( "#tdmain_or_sub").html( top.getCodeSelectHtml("MAIN_OR_SUB","main_or_sub",true));
+		$( "#tdmaterial_manufacturer").html( top.getCodeSelectHtml("MADE_PRODUCT_TYPE","material_manufacturer",true));
+		$( "#tdmaterial_manufacturer").html( top.getCodeSelectHtml("MADE_PRODUCT_TYPE","material_manufacturer",true));
+	}
+   function productInfoCallback(obj){
+       try{
+        if ( obj.status == true ){
+			var o=obj.body;
+			$("#product_name").val(o.product_name);
+			$("#product_model").val(o.product_model);
+			$("#product_standard").val(o.product_standard);
+			$("#price").val( o.price);
+			$("#raw_price").val( o.raw_price);
+			$("#discount").val( o.discount);
+			$("#memo").val( o.memo);
+			$("#total_price").val( o.total_price);
+			$("#type_name").val(getTypeNameById(o.type_id ));
+			$("#type_id").val(o.type_id );
+			$( "#tdproduct_brand" ).html( top.getAllSupplierSelect("product_brand",o.product_brand) );
+			$( "#tdunit" ).html( top.getCodeSelectHtml("UNIT","unit",true,o.unit) );
+			$( "#tdsale_mode" ).html( top.getCodeSelectHtml("SALE_MODE","sale_mode",true,o.sale_mode) );
+			$( "#tdmain_or_sub").html( top.getCodeSelectHtml("MAIN_OR_SUB","main_or_sub",true,o.main_or_sub));
+			$( "#tdmaterial_manufacturer").html( top.getCodeSelectHtml("MADE_PRODUCT_TYPE","material_manufacturer",true,o.material_manufacturer));
+			$( "#product_id").val(o.product_id);
+			
+			$("#product_id").attr("disabled", true);
+			
+			$( "#material_pic").val(o.material_pic);
+			if(o.material_pic!=""){
+			   $("#img_material_pic").attr("src",top.getUrlBase()+"/download?filePath="+o.material_pic);
+			}
+			if(o.is_standard=="1"){
+			   $("#is_standard").attr("checked","checked");
+			}
+			$("#is_standard").val(o.is_standard);
+			
+			if ( !top.g_isPermit("09_product_info_edit") ) {
+			    $("input").attr("disabled",true);
+				$("select").attr("disabled",true);
+				$("textarea").attr("disabled",true);
+			}
+        }else{
+          top.showInfoWinError("操作失败");
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	
+	function getTypeNameById(pid){
+			  var type_name="";
+			  try{
+			    type_name=top.getProductTypeNameById(pid);
+			  }catch(e){
+			    alert(e.message);
+			  }
+			  return type_name;
+    }
+	
+	function selectType(){
+	   var xurl="pages/pro09/selectProductType.html";
+       top.openSelectDialog("选择分类",xurl,300,450,selectTypeCallback);
+	}
+	
+	function selectTypeCallback(){
+       try{
+         var obj = top.getTempValue();
+         if ( obj.nodeId == -1 ) return ;
+         if ( obj.nodeId == -2 ) {
+             type_id = "";
+             type_name = "";
+         } else {
+             type_id = obj.nodeId;
+             type_name = obj.nodeName;
+         }
+         $("#type_id").val( type_id );
+		 $("#type_name").val( type_name );
+       }catch(e){
+       }
+   }
+   
+   	//上传材料图片
+	function uploadImg(){
+		top.openDialog("上传材料照片","pages/uploadFile.html?belong_id="+new Date().getTime()+"&belong_id0="+new Date().getTime(),true,500,220,uploadImgCallback);
+	}
+	
+	 //上传成功后显示该图片
+	 function uploadImgCallback(obj){
+		try{
+			var obj=top.getTempValue();
+			if ( obj.isSaveOK ) {
+				var file_id=$("#file_id").val();
+				if(file_id!=""){
+				    var aoData=[];
+					aoData.push( {"name":"fileinfo.file_id","value":$("#file_id").val()} );
+					aoData.push( {"name":"fileinfo.belong_type","value":8} );
+				    top.sendAjaxRequest("/actions/File.action?deleteFile",aoData,null);
+				}
+				$("#img_material_pic").attr("src",top.getUrlBase()+"/download?filePath="+obj.filePath);
+				$("#material_pic").val( obj.filePath );
+				$("#file_id").val( obj.file_id );
+			}
+	    }catch(e){}
+	}
+  </script> 
+</head>
+<body>
+<input type="hidden" id="type_id" value="" />
+<br>
+<table  cellpadding="1" cellspacing="1" width="95%" style="background-color: #b9d8f3;margin:0px auto">
+	  <tr class="tr_data">
+		<td align="right" width="15%">分类</td>
+		<td align="left" width="20%"><input type="text" id="type_name" readonly onclick="selectType()" size="20" /></td>
+		<td align="right" width="15%">名称</td>
+		<td align="left" width="15%"><input type="text" id="product_name" size="15"/></td>
+		<td width="35%">材料图片<input type="button" id="btnUploadPic" onclick="uploadImg()" value="上传"/></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="right">经营方式</td>
+		<td align="left" id="tdsale_mode"></td>
+		<td align="right">成品类</td>
+		<td align="left" id="tdmaterial_manufacturer"></td>
+		<td rowspan="6" width="35%"><input type="hidden" id="file_id"/><input type="hidden" id="material_pic"/><img id="img_material_pic" src="/img/no_picture1.jpg" width="220px" height="180px"/></td>
+	 </tr>
+	 <tr class="tr_data">
+	    <td align="right">主辅材</td>
+		<td align="left" id="tdmain_or_sub"></td>
+		<td align="right">品牌</td>
+		<td align="left" id="tdproduct_brand"></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="right">材料编号</td>
+		<td align="left"><input type="text" id="product_id" size="15"/></td>
+		<td align="right">型号</td>
+		<td align="left"><input type="text"  id="product_model" size="15"/></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="right">规格</td>
+		<td align="left"><input type="text" id="product_standard"size="15" /></td>
+		<td align="right">单位</td>
+		<td align="left" id="tdunit"></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="right">进价</td>
+		<td align="left"><input type="text" id="raw_price" size="15" /></td>
+		<td align="right">售价</td>
+		<td align="left"><input type="text" id="price" size="15" /></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="right">折扣</td>
+		<td align="left" colspan="3"><input type="text" id="discount" size="15" />(输入范围：0~1)</td>
+		<!--<td align="right">是否标配项目</td>
+		<td align="left"><input type="checkbox" id="is_standard" value="0"/>标配项目</td>-->
+	 </tr>
+	 <tr class="tr_data">
+	   <!-- <td align="right">库存数量</td>
+		<td align="left"><input type="text" id="stock_number" size="15"/></td>-->
+		<td align="right">备注</td>
+		<td align="left" colspan="5"><textarea id="memo" cols="50" rows="5" style="width:100%" ></textarea></td>
+	 </tr>
+</table>
+<p align="center">
+   <table><tr>
+		    <td><span id="okBtn" class="buttonTwo"><a href="javascript:doSubmit()">提交</a></span></td>
+		    <td><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+   </tr></table>
+</p>
+</body>
+</html>

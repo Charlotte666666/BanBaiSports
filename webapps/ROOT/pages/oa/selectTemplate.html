@@ -1,0 +1,115 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+			
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var currentOptTemplateId="";
+			var currentOptTemplateName="";
+
+			$(document).ready(function() {
+			   $( "#tdtemplate_status" ).html( top.getCodeSelectHtml("TEMPLATE_STATUS","template_status",true,"",null,"全部","60px") );
+			   $( "#spanform_type" ).html( top.getCodeSelectHtml("FORM_TYPE","left_template_type",true,"",null,"全部","80px") );
+			   var iaoColumns= [
+                              { "sTitle": "分类", "mDataProp": "template_type", "sWidth": "40%",
+							       "fnRender": function ( oObj ) {
+                                        return top.getCodeName( "FORM_TYPE", oObj.aData.template_type  );
+                                   },"bUseRendered": false},
+							  { "sTitle": "名称", "mDataProp": "template_id", "sWidth": "40%",
+                                      "fnRender": function ( oObj ) {
+										     return '<a href="javascript:void(0)" onclick="selectTemplate(\''+oObj.aData.template_id+'\',\''+oObj.aData.template_name+'\')">'+oObj.aData.template_name+'</a>';
+                                      },
+                                      "bUseRendered": false
+                               },
+                               { "sTitle": "状态", "mDataProp": "template_status", "sWidth": "20%", "sClass": "center",
+                                   "fnRender": function ( oObj ) {
+                                        return top.getCodeName( "TEMPLATE_STATUS", oObj.aData.template_status  );
+                                   },
+                                   "bUseRendered": false  
+                               }
+               ];
+
+			   var surl=top.getUrlBase()+"/actions/WorkOrder.action?getWOTemplateList";
+			  
+
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+						aoData.push( { "name": "woTemplate.template_status", "value":'-1'} );
+						aoData.push( { "name": "woTemplate.template_name", "value":$("#template_name").val() } );
+						if($("#left_template_type").val()!=""){
+						    aoData.push( { "name": "woTemplate.template_type", "value":$("#left_template_type").val()} );
+						}
+					},
+			      "sDom": "frtip",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+               });
+
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+	      function doBeforeClose(){
+		    var obj={
+    	        "templateId":currentOptTemplateId,
+    	        "templateName":currentOptTemplateName
+    	    };
+    	    top.setTempValue(obj);
+          }
+		  
+		  function selectTemplate(sid,sname){
+		    currentOptTemplateId=sid;
+			currentOptTemplateName=sname;
+			top.closeSelectDialog();
+		  }
+		</script>
+	</head>
+	<body>
+	  <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0">
+			 <tr class="tr_data">
+				 <td width="10%" align="right">分类：</td><td align="left" width="30%" id="spanform_type"></td>
+				 <td width="10%" align="right">名称：</td><td align="left" width="30%"><input type="text" id="template_name" size="10" onkeydown="if(event.keyCode==13) doQuery();"/></td>
+				 <td align="center" width="20%">
+					 <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				 </td>
+			 </tr>
+	  </table>
+	  <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>	
+	</body>
+</html>

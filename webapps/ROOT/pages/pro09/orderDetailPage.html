@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+    <link rel="stylesheet" type="text/css" href="../../css/drag-drop-folder-tree.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/context-menu.css"></link>
+    <link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+    <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js" ></script>
+	<script type="text/javascript" language="javascript" src="../../js/myDtree.js" ></script>
+	<script type="text/javascript" language="javascript" src="../../js/context-menu.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/drag-drop-folder-tree.js" ></script>
+	<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+	<script type="text/javascript" >
+       
+
+       $(document).ready(function(){
+    	  getOrderDetailListByIds();
+       });
+	   function getOrderDetailListByIds(){
+			var aoData=[];
+			var acceptance_content=top.getUrlParam(document.URL,"acceptance_content");
+			aoData.push( { "name": "ids", "value": acceptance_content } );
+			top.sendAjaxRequest("/actions/ProductOrder.action?getOrderDetailListByIds",aoData,acceptanceListCallback);
+		}
+		function acceptanceListCallback(obj){
+			var ht="";
+			var list=obj.body;
+			 var ht='<tr bgcolor="#C6DEFF" height="32px"  align="center"><td width="60px">产品类别</td><td width="60px">名称</td><td width="60px">品牌</td><td width="60px">型号</td><td width="60px">规格</td><td width="60px">单位</td><td width="60px">单价</td><td width="60px">折扣</td><td width="100px">使用位置</td><td >数量</td></tr>';
+			if(list){
+				for(var i=0;i<list.length;i++){
+					ht+='<tr height="32px" class="tr_data"><td width="60px">'+list[i].type_name+'</td><td width="60px">'+list[i].product_name+'</td>';
+					ht+='<td  width="60px" >'+top.getSupplierNameById(list[i].product_brand)+'</td>';
+					ht+='<td  width="60px" ">'+list[i].product_model+'</td>';
+					ht+='<td  width="60px" ">'+list[i].product_standard+'</td>';
+					ht+='<td  width="60px" unit">'+top.getCodeName("UNIT",list[i].unit)+'</td>';
+					ht+='<td  width="60px" sale_price">'+list[i].sale_price+'</td>';
+					ht+='<td  width="60px" ">'+list[i].discount+'</td>';
+					ht+='<td  width="70px">'+list[i].use_position+'</td>';
+					ht+='<td>'+list[i].amount+'</td>';
+					ht+='</tr>';
+				}
+			}else{
+				ht+="<tr><td colspan=''>当前没有可以显示的数据！</td></tr>";
+			}
+			$("#detailLisetTable").html(ht);
+		}
+    </script>
+</head>
+<body>
+<br/>
+<span style="margin:10px" bgcolor="#C6DEFF">产品清单：</span>
+<table style="width:95%;height:100%;padding:0;spacing:0;margin-top:5px;margin-left:auto;margin-right:auto;border: 2px solid #89A1B9" id="detailLisetTable">
+ </table>
+</body>

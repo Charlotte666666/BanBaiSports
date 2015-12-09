@@ -1,0 +1,204 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css"
+			href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var time1 = new Date().setDate(new Date().getDate()-7);
+			var curId="";
+			
+			$(document).ready(function() {
+			   $("#q_time1").val(top.getTimeStr(time1,true));
+			   $("#s_plan_status").html(top.getCodeSelectHtml("MY_PLAN_STATUS","plan_status",true));
+			   var iaoColumns= [
+					{ "sTitle": "完成时间", "mDataProp": "complete_date", "sWidth": "10%", "sClass": "center",
+						"fnRender": function ( oObj ) {
+                            return  top.getTimeStr(oObj.aData.complete_date ,true);
+                                     },
+						"bUseRendered": false},
+					{ "sTitle": "部门", "mDataProp": "dept_id", "sWidth": "10%", "sClass": "center",
+                        "fnRender": function ( oObj ) {
+                            return top.getDeptPath( oObj.aData.dept_id);
+                                     },					
+						"bUseRendered": false},
+					{ "sTitle": "工作内容", "mDataProp": "work_content", "sWidth": "40%", "sClass": "left", "bUseRendered": false},
+					{ "sTitle": "监督人", "mDataProp": "superintendent", "sWidth": "10%", "sClass": "center", 
+						"fnRender": function ( oObj ) {
+                            return  top.getUserNameByCode(oObj.aData.superintendent);
+                                     },
+						"bUseRendered": false},
+					{ "sTitle": "负责人", "mDataProp": "manager", "sWidth": "10%", "sClass": "center",
+	                    "fnRender": function ( oObj ) {
+                            return  top.getUserNameByCode(oObj.aData.manager);
+                                     },
+						"bUseRendered": false},
+					{ "sTitle": "计划状态", "mDataProp": "status", "sWidth": "10%", "sClass": "center",
+					"fnRender": function ( oObj ) {
+                            return top.getCodeName("MY_PLAN_STATUS",oObj.aData.status);
+                                     },
+					"bUseRendered": false},
+					{ "sTitle": "操作", "mDataProp": "id", "sWidth": "10%", "sClass": "center",
+						"fnRender": function ( oObj ) {
+                            var ht='<a href=\'javascript:void(0)\' onclick="updateInfo(\''+oObj.aData.id+'\')" >查看</a>&nbsp;';
+							   ht+='<a href=\'javascript:void(0)\' onclick="deleteInfo(\''+oObj.aData.id+'\')" >删除</a>&nbsp;';
+							return ht;
+                                     },
+						"bUseRendered": false}
+               ];
+			  
+			   var surl=top.getUrlBase()+"/actions/Interview.action?getMyPlanList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData=getParamDate(aoData);
+			    },
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+			function updateInfo(id){
+				var xurl="pages/pro09/myPlanInfo.html?optType=query&id="+id;
+				top.openDialog("计划信息表",xurl,true,600,500,saveCallBack);
+			}
+			function deleteInfo(id){
+			curId=id;
+			top.showConfirm("您确定要删除该计划吗？", doDeleteInfo);
+				
+			}
+			function doDeleteInfo(){
+				var aoData=[];
+		        aoData.push( { "name": "myPlan.id", "value": curId} );
+		        top.sendAjaxRequest("/actions/Interview.action?deleteMyPlanById",aoData,optCallback);
+			}
+			function saveCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				}
+			}
+			function optCallback(obj){
+			       try{
+			        if ( obj.status == true ){
+			          top.showInfoWin("操作成功");
+			          doQuery();
+			        }else{
+			          top.showInfoWin("操作失败 "+obj.msg);
+			        }
+			       }catch(e){
+			          top.showInfoWin("处理异常:"+e.message);
+			       }
+		  }
+
+		 function getParamDate(aoData){
+	      aoData.push( { "name": "myPlan.status", "value":$("#plan_status").val() } );
+	      aoData.push( { "name": "time1", "value": $("#q_time1").val()} );
+		  aoData.push( { "name": "time2", "value": $("#q_time2").val() } );
+			return aoData;
+		}
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+		<div style='border: 2px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="150px">
+							&nbsp;我的计划查询&nbsp;
+						</td>
+						<td align="right">
+							<div class="buttonDivTwo">
+								<a href="javascript:doQuery()">查询</a>
+							</div>
+						</td>
+						<td width="2px">
+							&nbsp;
+						</td>
+					</tr>
+				</table>
+				<table width="100%" align="center" cellpadding="1px"
+					cellspacing="1px" border="0">
+					<tr class="tr_data">
+						
+						<td width="10%" align="right">
+						  计划完成时间
+						</td>
+						<td  width="30%" align="left" >
+						  &nbsp;&nbsp;<input type="text" id="q_time1" value="" size="15" onclick="new Calendar().show(this);" readonly="true" /><b>&nbsp;--</b>
+						  <input type="text" id="q_time2" value="" size="15" onclick="new Calendar().show(this);" readonly="true"/>
+						</td>
+						<td width="10%" align="right">
+						  计划状态
+						</td>
+						<td  width="10%" align="left">
+							 &nbsp;&nbsp;<span id="s_plan_status"></span>
+						</td>
+						<td width="20%" ></td>
+					</tr>
+				</table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									&nbsp;查询结果列表&nbsp;
+								</td>
+								
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

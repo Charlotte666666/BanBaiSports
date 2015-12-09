@@ -1,0 +1,223 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>evectionManage.html</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" language="JavaScript1.2"  src="../../js/Calendar3.js"></script>
+    <script type="text/javascript">
+	
+	  $(document).ready(function() {
+			$( "#tdstatus" ).html( top.getCodeSelectHtml("APPLY_STATUS","status",true,null,null,"全部") );
+			 var iaoColumns= [
+			                { "sTitle": "员工编号", "mDataProp": "employee_code", "sWidth": "8%","sClass": "left",
+							    "fnRender":function(oObj){
+								   return "<input name='checkId' type='checkbox' value='"+oObj.aData.id+"'/>"+oObj.aData.employee_code;
+								},
+								"bUseRendered": false
+							},
+							{ "sTitle": "员工姓名", "mDataProp": "employee_name", "sWidth": "8%","sClass": "left",
+								"bUseRendered": false
+							},
+							{ "sTitle": "所在部门", "mDataProp": "dept", "sWidth": "15%","sClass": "left",
+							    "fnRender":function(oObj){
+								   return top.getDeptPath( oObj.aData.dept );
+								},
+								   "bUseRendered": false
+							},
+							{ "sTitle": "出差日期", "mDataProp": "evection_date", "sWidth": "8%","sClass": "center",
+							   "fnRender":function(oObj){
+							      return top.getTimeStr(oObj.aData.evection_date,true);
+							   },
+							  "bUseRendered": false
+							},
+							{ "sTitle": "回来日期", "mDataProp": "back_date", "sWidth": "8%","sClass": "center",
+							  "fnRender":function(oObj){
+							    return top.getTimeStr(oObj.aData.back_date,true);
+							  },
+							  "bUseRendered": false
+							},
+							{ "sTitle": "所需天数", "mDataProp": "days", "sWidth": "8%","sClass": "center",
+							  "bUseRendered": false
+							},
+							{ "sTitle": "出差地点", "mDataProp": "evection_addr", "sWidth": "8%","sClass": "center",
+							  "bUseRendered": false
+							},
+							{ "sTitle": "出差事由", "mDataProp": "evection_reason", "sWidth": "8%","sClass": "center",
+							  "bUseRendered": false
+							},
+							{ "sTitle": "带队负责人", "mDataProp": "lead_head", "sWidth": "8%","sClass": "center",
+							  "bUseRendered": false
+							},
+							{ "sTitle": "操作", "mDataProp": "id", "sWidth": "8%","sClass": "center",
+							   "fnRender":function(oObj){
+							      if(oObj.aData.status=="3" || oObj.aData.status=="2"){
+								    return "<a href='javascript:void(0)' onclick='approval(\"query\",\""+oObj.aData.id+"\")'>查看</a>";
+								  }
+							      return "<a href='javascript:void(0)' onclick='approval(\"approval\",\""+oObj.aData.id+"\")'>审核</a>";
+							   },
+							  "bUseRendered": false
+							}
+               ];			
+			   var surl=top.getUrlBase()+"/actions/Evection.action?getEvectionList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData=getParamDate(aoData);
+			    },
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+
+		    function getParamDate(aoData){
+			    aoData.push( { "name": "info.employee_name", "value":$("#employee_name").val() } );
+			    aoData.push( { "name": "time1", "value":$("#time1").val() } );
+			    aoData.push( { "name": "time2", "value":$("#time2").val() } );
+			    aoData.push( { "name": "info.dept", "value":$("#dept").val() } );
+			    aoData.push( { "name": "info.status", "value":$("#status").val() } );
+				return aoData;
+			}
+	
+	  function addEvection(){
+	     top.openDialog("出差申请","pages/oa/addEvection.html?optType=insert",true,800,500,null); 		 
+	  }
+	  
+	  function approval(type,id){
+	     var title="审核出差申请";
+		 if(type=="query"){
+		    title="查看出差申请";
+		 }
+	     top.openDialog(title,"pages/oa/addEvection.html?optType="+type+"&id="+id,true,800,500,doQuery); 		 
+	  }
+	  
+	  function deleteEvection(){
+	    var ids=top.getAllCheckedValue( document.getElementsByName('checkId') );
+	    if (ids.length > 0){
+			top.showConfirm("您确定要删除选中的出差信息吗？", doDeleteEvection);
+		}else{
+			top.showInfoWinWarn("请选择要删除的出差信息!");
+		}
+	  }
+	  
+	  function doDeleteEvection(){
+	    var aoData=[];
+		aoData.push( { "name":"ids","value": top.getAllCheckedValue( document.getElementsByName('checkId') ) } );
+		top.sendAjaxRequest("/actions/Evection.action?deleteEvection",aoData,doDeleteEvectionCallback);
+	    
+	  }
+	  
+	  function doDeleteEvectionCallback(obj){
+	    if(obj.status==true){
+		  top.showInfoWinOK("操作成功！");
+		  doQuery();
+		}else{
+		  top.showInfoWinError("操作失败！");
+		}
+	  }
+	  
+	  function selectDept(){
+		   top.openSelectDialog("选择要管理积分的部门","pages/organization/selectTreeNode.html?type=dept",300,450,selectDeptCallback);
+		}
+		
+	  function selectDeptCallback(){
+		  try{
+			 var obj = top.getTempValue();
+			 if ( obj.nodeId == -1 ) return ;
+			 if ( obj.nodeId == -2 ) {
+				 $("#deptname").val("");
+				 $("#dept").val("");
+			 } else {
+				 $("#dept").val(obj.nodeId);
+				 $("#deptname").val(obj.nodeName);
+			 }
+		   }catch(e){
+		   }
+	   }
+	  
+	</script>
+  </head>
+  
+  <body>
+    <div id="main" width="100%">
+	  <div style='border: 1px solid #89A1B9;'>
+	    <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			<tr bgcolor="#C6DEFF">
+				<td align="left" width="150px">
+					&nbsp;
+					出差管理&nbsp;
+				</td>
+				<td align="right">
+					<!--<span><image id="queryCtlIcon" src="../../img/icons/arrow-down.gif" alt="展开" onclick="javascript:dwOup();"/></span>-->
+				</td>
+				<td width="2px">
+					&nbsp;
+				</td>
+			</tr>
+		</table>
+		<table width="100%" align="center" cellpadding="1px" id="queryTab" cellspacing="1px" border="0">
+		  <tr class="tr_data">
+			<td align="right" style="font-weight:bold;">姓名</td><td align="left"><input id="employee_name" type="text" size="10"/></td>
+			<td align="right" style="font-weight:bold;">部门</td><td align="left"><input type="hidden" id="dept"/><input id="deptname" type="text" size="15" onclick="selectDept()" readonly /></td>
+			<td align="right" style="font-weight:bold;">状态</td><td align="left" id="tdstatus"></td>
+			<td align="right" style="font-weight:bold;">时间</td><td align="left"><input id="time1" type="text" onclick="top.selectDate(this)" size="10"/>--<input id="time2" type="text" onclick="top.selectDate(this)" size="10"/></td>
+			<td align="left"><div class="buttonDivTwo"><a href="javascript:void(0)" onclick="doQuery()">查询</a></div></td>
+		  </tr>
+		</table>
+	  </div>
+	  <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									&nbsp;查询结果列表&nbsp;
+								</td>
+								<td><div class="buttonDivTwo"><a href="javascript:void(0)" onclick="deleteEvection()">删除</a></div></td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+		</table>
+		<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable">
+		</table>
+	</div>
+  </body>
+</html>

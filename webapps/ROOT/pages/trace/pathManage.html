@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+
+<script type="text/javascript" charset="utf-8">
+var interGetResult1=0;
+
+$(document).ready(function() {
+    var wh=$(window).height();
+	var ww=$(window).width();
+	$('#map').css("height",wh - 50);
+	try{
+	 clearInterval( interGetResult1 );
+	 interGetResult1 = setInterval("getNewestPath()", 5000 );
+    }catch(e){}
+} );
+
+function getNewestPath(){
+    if ( $("#deviceId").val() == '' ) return ;
+    var aoData=[];
+	aoData.push( { "name": "traceRecd.device_id", "value": $("#deviceId").val() } );
+	top.sendAjaxRequest("/actions/TraceClient.action?getCurrentLocation",aoData,getNewestPathCallback,true);
+}
+
+function getNewestPathCallback(obj){
+    if ( obj ) {
+	    if ( obj.status == false ) {
+		  $("#msg").html(obj.msg);
+		  return ;
+		}
+		$("#msg").html("最后报告时间:"+top.getTimeStr(obj.body.report_time, false));
+		var mapFrame = document.getElementById("mapFrame");
+		try{
+		  if ( mapFrame ) mapFrame.contentWindow.drawAndCenterDot( obj.body.lon, obj.body.lat );
+		}catch(e){
+		}
+	}
+}
+
+</script>
+</head>
+<body>
+<div width="100%">
+	        <div style='border: 2px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="150px">&nbsp;轨迹查询&nbsp;</td>
+				  <td align="right">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			     <tr class="tr_data">
+				   <td align="right" width="40%">设备编号:</td><td width="50%" align="left"><input type="text" id="deviceId" />
+				     &nbsp;<span id="msg"></span>
+				   </td>
+			     </tr>
+			 </table>
+			</div>
+</div>
+<div id="map">
+  <iframe id="mapFrame" src="../baiduMap.html" width="100%" height="100%" style="background-color:#ffffff" frameborder="0"></iframe>
+</div>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css"
+			href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			
+			$(document).ready(function() {
+			   $( "#tdStatus" ).html( top.getCodeSelectHtml("OA_PROJECT_TASK_STATUS","q_status",true,null,null,"全部") );
+			   $( "#tdemergence" ).html( top.getCodeSelectHtml("OA_PROJECT_TASK_EMG","emergence",true,null,null,"全部") );
+			   $( "#tdimportance" ).html( top.getCodeSelectHtml("OA_PROJECT_TASK_IMP","importance",true,null,null,"全部") );
+			   $( "#tddeal_user" ).html( top.getAllUserSelect("deal_user") );
+			   $( "#tdproject_code" ).html( top.getAllProjectSelect("project_code") );
+			
+			   var iaoColumns= [
+			        { "sTitle": "任务编号", "mDataProp": "task_code", "sWidth": "8%", "sClass": "center", "bUseRendered": false},
+					{ "sTitle": "所属项目", "mDataProp": "project_code", "sWidth": "18%", "sClass": "left",
+					    "fnRender": function ( oObj ) {
+							 return '<a href=\'javascript:void(0)\' onclick="updateProjectInfo(\''+oObj.aData.project_code+'\')" >'+top.getProjectNameByCode(oObj.aData.project_code)+'</a>';
+                         },
+						"bUseRendered": false},
+					{ "sTitle": "任务名称", "mDataProp": "task_name", "sWidth": "20%", "sClass": "left",
+						"fnRender": function ( oObj ) {
+							 return '<a href=\'javascript:void(0)\' onclick="updateInfo(\''+oObj.aData.task_code+'\')" >'+oObj.aData.task_name+'</a>';
+                         },
+						"bUseRendered": false},
+					{ "sTitle": "紧急程度", "mDataProp": "emergence", "sWidth": "8%","sClass": "center",
+						"fnRender": function ( oObj ) {
+                            return top.getCodeName( "OA_PROJECT_TASK_EMG", oObj.aData.emergence );
+                        },
+					    "bUseRendered": false 
+					},
+					{ "sTitle": "重要程度", "mDataProp": "importance", "sWidth": "8%","sClass": "center",
+						"fnRender": function ( oObj ) {
+                            return top.getCodeName( "OA_PROJECT_TASK_IMP", oObj.aData.importance );
+                        },
+					    "bUseRendered": false 
+					},
+					{ "sTitle": "处理人", "mDataProp": "deal_user", "sWidth": "8%","sClass": "center",
+					    "fnRender": function ( oObj ) {
+                            return top.getUserNameByCode( oObj.aData.deal_user );
+                        },
+					    "bUseRendered": false 
+					},
+					{ "sTitle": "完成情况", "mDataProp": "done_type", "sWidth": "8%","sClass": "center",
+						"fnRender": function ( oObj ) {
+                            return top.getCodeName( "OA_PROJECT_TASK_DONE", oObj.aData.done_type );
+                        },
+					    "bUseRendered": false 
+					},
+					{ "sTitle": "期望完成日期", "mDataProp": "expect_end_date", "sWidth": "10%", "sClass": "center",
+						"fnRender": function ( oObj ) {
+                            return top.getTimeStr(oObj.aData.expect_end_date ,true);
+                         },
+						"bUseRendered": false},
+					{ "sTitle": "任务状态", "mDataProp": "status", "sWidth": "8%","sClass": "center",
+						"fnRender": function ( oObj ) {
+                            return top.getCodeName( "OA_PROJECT_TASK_STATUS", oObj.aData.status );
+                        },
+					    "bUseRendered": false 
+					}
+               ];
+			   
+			   var surl=top.getUrlBase()+"/actions/OAProject.action?getOAProjectTaskList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"aaSorting": [[ 8, "asc" ]],
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData=getParamDate(aoData);
+			    },
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+			function addInfo(){
+				var xurl="pages/oa/projectTaskInfo.html?optType=insert";
+				top.openDialog("添加项目任务",xurl,true,600,580,saveCallBack);
+			}
+			
+			function updateInfo(id){
+				var xurl="pages/oa/projectTaskInfo.html?optType=update&id="+id;
+				top.openDialog("项目任务明细信息",xurl,true,600,580,saveCallBack);
+			}
+			
+			function updateProjectInfo(id){
+				var xurl="pages/oa/projectInfo.html?optType=update&id="+id;
+				top.openDialog("项目明细信息",xurl,true,600,380,saveCallBack);
+			}
+
+			function saveCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				}
+			}
+
+		 function getParamDate(aoData){
+		    aoData.push( { "name": "time1", "value": $("#q_time1").val() } );
+			aoData.push( { "name": "time2", "value": $("#q_time2").val() } );
+			aoData.push( { "name": "time3", "value": $("#q_time3").val() } );
+			aoData.push( { "name": "time4", "value": $("#q_time4").val() } );
+			aoData.push( { "name": "task.task_code", "value": $("#q_task_code").val() } );
+			aoData.push( { "name": "task.project_code", "value": $("#project_code").val() } );
+			aoData.push( { "name": "task.task_name", "value": $("#q_task_name").val() } );
+			aoData.push( { "name": "task.deal_user", "value": $("#deal_user").val() } );
+			aoData.push( { "name": "task.importance", "value": $("#importance").val() } );
+			aoData.push( { "name": "task.emergence", "value": $("#emergence").val() } );
+			aoData.push( { "name": "task.status", "value": $("#q_status").val() } );
+			return aoData;
+		}
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+		   <div style='border: 1px solid #89A1B9;'>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="110px">&nbsp;项目任务查询&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+			<table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+			      <td align="right" width="10%">任务编号:</td><td align="left" width="20%"><input type="text" id="q_task_code" value="" style="width:120px" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+			      <td align="right" width="10%">任务状态:</td><td align="left" width="20%" id="tdStatus"></td>
+				  <td align="right" width="10%">任务名称:</td><td align="left" width="30%"><input type="text" id="q_task_name" value="" size="40" onkeydown="if(event.keyCode==13) doQuery();"/></td>
+				 </tr>
+				 <tr class="tr_data">
+			      <td align="right" width="10%">所属项目:</td><td align="left" width="20%" id="tdproject_code"></td>
+			      <td align="right" width="10%">紧急程度:</td><td align="left" width="20%" id="tdemergence"></td>
+				  <td align="right" width="10%">重要程度:</td><td align="left" width="20%" id="tdimportance"></td>
+				 </tr>
+				 <tr class="tr_data">
+				  <td align="right">开始时间从:</td><td align="left" ><input type="text" id="q_time1" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" />
+				     到:<input type="text" id="q_time2" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" /></td>
+				  <td align="right">完成时间从:</td><td align="left" ><input type="text" id="q_time3" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" />
+				     到:<input type="text" id="q_time4" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" /></td>
+				  <td align="right" width="10%">处理人:</td><td align="left" width="20%" id="tddeal_user"></td>
+			     </tr>
+			 </table>
+			 </div>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									&nbsp;查询结果列表&nbsp;
+								</td>
+								<td>
+									<div id="createBtn" class="buttonDivTwo">
+										<a href="javascript:addInfo()">添加</a>
+									</div>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

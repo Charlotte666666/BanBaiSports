@@ -1,0 +1,313 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css"
+			href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var info_id="";
+			var cust_code="";
+			var acceptance_content="";
+			var project_id="";
+			$(document).ready(function() {
+			 info_id=top.getUrlParam(document.URL,"id");
+			 queryOrderDetail();
+			 queryAllOrderDetail();
+			 queryAcceptanceList();
+			} );
+			 //查询所有订单明细中的产品产品信息
+			function queryAllOrderDetail() {
+				var aoData=[];
+				aoData.push( { "name": "orderdetail.order_id", "value": info_id } );
+				top.sendAjaxRequest("/actions/ProductOrder.action?getOrderDetailByOrdertId",aoData,QuoteDetailCallback);
+			}
+			function QuoteDetailCallback(obj){
+			 var orderdetailList=obj.body;
+			 var ht="";
+			 ht+="<tr height='30px'><td><input type='checkBox' name='selectAll' value='全选' onclick='docheck()' >全选</input></td><td>产品类别</td><td>名称</td><td>品牌</td><td>型号</td><td>规格</td>";
+			 ht+="<td>单位</td><td>单价</td><td>折扣</td><td>使用位置</td><td>数量</td><td>状态</td></tr>";
+			 if(orderdetailList){
+				 for(var i=0;i<orderdetailList.length;i++){
+					ht+='<tr height="30px">';
+					ht+="<td><input type='checkBox' name='productBox' value='"+orderdetailList[i].id+"'/></td>";
+					ht+="<td>"+orderdetailList[i].type_name+"</td>";
+					ht+="<td>"+orderdetailList[i].product_name+"</td>";
+					ht+="<td>"+top.getSupplierNameById(orderdetailList[i].product_brand)+"</td>";
+					ht+="<td>"+orderdetailList[i].product_model+"</td>";
+					ht+="<td>"+orderdetailList[i].product_standard+"</td>";
+					ht+="<td>"+top.getCodeName("UNIT",orderdetailList[i].unit)+"</td>";
+					ht+="<td>"+orderdetailList[i].sale_price+"</td>";
+					ht+="<td>"+orderdetailList[i].discount+"</td>";
+					ht+="<td>"+orderdetailList[i].use_position+"</td>";
+					ht+="<td>"+orderdetailList[i].amount+"</td>";
+					//ht+='<a href="javascript:onCheck('+orderdetailList[i].id+')">'+orderdetailList[i].product_name+'</a><br/>';
+					ht+="<td>"+top.getCodeName("PRODUCT_DETAIL_STATUS",orderdetailList[i].order_status)+"</td>";
+					ht+="</tr>";
+				 }
+			 }
+			 $("#noAcceptanceList").html(ht);
+			}
+			function doAcceptance(){
+			   var msg="";
+			  if($("#supervision").val()==""){
+			   msg+="请添写工程监理！<br>";
+			  }
+			  if($("#install_date").val()==""){
+			   msg+="请添写验收时间！<br>";
+			  }
+			  if(msg!=""){
+			   top.showInfoWinWarn(msg);
+			   return;
+			  }
+			  if($('input[name="productBox"]:checked').length>0){
+			   top.showConfirm("确定验收选择的"+$('input[name="productBox"]:checked').length+"项产品吗？", confirmAcceptance);
+			  }else{
+			   top.showInfoWinWarn("请勾选需要验收的产品！");
+			  }
+			}
+			function confirmAcceptance(){
+				 acceptance_content="";
+				$('input[name="productBox"]:checked').each(function(){    
+					acceptance_content+=$(this).val(); //多一个逗号
+					acceptance_content+=",";
+				});
+				if(acceptance_content!=""){	
+					acceptance_content= acceptance_content.substring(0,acceptance_content.length-1);
+				}
+				 addAcceptance();
+			}
+			//查询所有订单信息
+			function queryOrderDetail() {
+				var aoData=[];
+				aoData.push( { "name": "orderInfo.id", "value": info_id } );
+				top.sendAjaxRequest("/actions/ProductOrder.action?orderProOrderInfoById",aoData,OrderDetailCallback);
+			}
+			function addAcceptance(){
+				var aoData=[];
+				aoData.push( { "name": "acceptanceInfo.contract_id", "value": $("#contract_id").val() } );
+				aoData.push( { "name": "acceptanceInfo.addr", "value": $("#addr").val() } );
+				aoData.push( { "name": "acceptanceInfo.designer", "value": $("#designer").val() } );
+				aoData.push( { "name": "acceptanceInfo.supervision", "value": $("#supervision").val() });
+				aoData.push( { "name": "acceptanceInfo.designer_tel", "value": $("#designer_tel").val() } );
+				aoData.push( { "name": "acceptanceInfo.supervision_tel", "value": $("#supervision_tel").val() } );
+				aoData.push( { "name": "acceptanceInfo.cust_code", "value": cust_code } );
+				aoData.push( { "name": "acceptanceInfo.acceptance_content", "value":acceptance_content } );
+				aoData.push( { "name": "acceptanceInfo.install_date", "value": top.toTimestamp($("#install_date").val()) } );
+				aoData.push( { "name": "acceptanceInfo.order_id", "value":info_id } );
+
+				aoData.push( { "name": "projectOrder.project_order_id", "value":project_id } );
+				top.sendAjaxRequest("/actions/ProductOrder.action?insertAcceptanceInfo",aoData,optCallback);
+
+		}
+			function OrderDetailCallback(obj){
+				var order=obj.body;
+				$("#addr").val(order.pro_add);
+				$("#contract_id").val(order.contract_code);
+				$("#designer").val(top.getUserNameByCode(order.designerCode));
+				$("#span_addr").html(order.pro_add);
+				$("#span_contract_id").html(order.contract_code);
+				$("#span_designer").html(top.getUserNameByCode(order.designerCode));
+				project_id = order.project_order_id;
+				cust_code=order.cust_code;
+				
+			}
+			 //查询所有验收单信息
+			/*function queryAcceptanceList() {
+				var aoData=[];
+				aoData.push( { "name": "acceptanceInfo.order_id", "value": info_id } );
+				top.sendAjaxRequest("/actions/ProductOrder.action?getOrderDetailByOrdertId",aoData,acceptanceListCallback);
+			}*/
+			
+			
+			function optCallback(obj){
+			       try{
+			        if ( obj.status == true ){
+			          top.showInfoWin("操作成功");
+					  queryAllOrderDetail();
+			          queryAcceptanceList();
+			        }else{
+			          top.showInfoWin("操作失败 "+obj.msg);
+			        }
+			       }catch(e){
+			          top.showInfoWin("处理异常:"+e.message);
+			       }
+		  }
+
+		    function getParamDate(aoData){
+			     	//aoData.push( { "name": "orderInfo.cust_name", "value":$("#cust_name").val() } );
+					//aoData.push( { "name": "orderInfo.designerCode", "value":$("#designerCode").val() } );
+					aoData.push( { "name": "acceptanceInfo.order_id", "value":info_id } );
+				return aoData;
+			}
+		   function docheck(){
+			  if( $("[name = selectAll]:checkbox").attr("checked")){// 全选
+					$("[name = productBox]:checkbox").attr("checked", true);
+				}else{ 
+					$("[name = productBox]:checkbox").attr("checked",false );
+				}
+		}
+		function queryAcceptanceList(){
+			var iaoColumns= [
+			                { "sTitle": "验收单编号", "mDataProp": "id", "sWidth": "14%","sClass": "center",
+							"fnRender": function ( oObj ) {
+									return '<a href=\'javascript:void(0)\' onclick="queryProducts(\''+oObj.aData.acceptance_content+'\')" >'+oObj.aData.id+'</a>';
+							},
+							        "bUseRendered": false
+							},
+			                { "sTitle": "验收时间", "mDataProp": "install_date", "sWidth": "14%","sClass": "center",
+									"fnRender": function ( oObj ) {
+									return top.getTimeStr(oObj.aData.install_date ,true);
+                                     },
+									"bUseRendered": false 
+							},
+			                { "sTitle": "监理", "mDataProp": "supervision", "sWidth": "10%", 
+							 "fnRender": function ( oObj ) {
+                                          return top.getUserNameByCode(oObj.aData.supervision);
+                                     },
+							"bUseRendered": false},
+                            { "sTitle": "工程地址", "mDataProp": "addr", "sWidth": "16%", "sClass": "center","bUseRendered": false},
+							{ "sTitle": "合同编号", "mDataProp": "contract_id", "sWidth": "14%", "sClass": "center",
+							"bUseRendered": false},
+							 { "sTitle": "工程监理", "mDataProp": "supervision", "sWidth": "10%", "sClass": "center",
+							 "fnRender": function ( oObj ) {
+                                          return top.getUserNameByCode(oObj.aData.supervision);
+                                     },
+							"bUseRendered": false},
+							{ "sTitle": "设计师", "mDataProp": "designer", "sWidth": "10%", "sClass": "center",
+							"fnRender": function ( oObj ) {
+                                          return top.getUserNameByCode(oObj.aData.designer);
+                                     },
+							"bUseRendered": false   },
+							
+			   
+               ];			
+			   var surl=top.getUrlBase()+"/actions/ProductOrder.action?getAcceptanceInfoList";
+			   oTable = $('#acceptanceList').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData=getParamDate(aoData);
+			    },
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+		}
+		function queryProducts (acceptance_contents){
+			//acceptance_content=acceptance_contents;
+			var xurl="/pages/pro09/orderDetailPage.html?acceptance_content="+acceptance_contents;
+			openDialog("验收单",xurl,true,700,300,null);
+		}
+	/*	function queryProducts(acceptance_content){
+			var aoData=[];
+				aoData.push( { "name": "acceptanceInfo.acceptance_content", "value": acceptance_content } );
+				top.sendAjaxRequest("/actions/ProductOrder.action?getOrderDetailByOrdertIds",aoData,acceptanceListCallback);
+		}*/
+		
+		//弹出二层框
+	function openDialog(t,xurl,isModal,w,h,callback){
+		if ( isModal == undefined ) isModal=true;
+		if ( !h ) h=200;
+		if ( !w ) w=400;
+		$( "#dialog" ).dialog({
+			title: t,
+			height: h,
+			width: w,
+			modal: isModal,
+			resizable: false,
+		    beforeClose: function(event, ui) {
+		        try{
+		            document.getElementById("self_iframe").contentWindow.doBeforeClose();
+		            if ( callback ) callback.apply();
+		        }catch(e){
+		        }
+		        return true;
+		    }
+		});
+		document.getElementById("self_iframe").src = xurl;
+    }
+		</script>
+		<style type="text/css">
+		.table-border{border-right:1px solid #89A1B9;border-bottom:1px solid #89A1B9;margin:5px} 
+		.table-border td{border-left:1px solid #89A1B9;border-top:1px solid #89A1B9} 
+		</style>
+	</head>
+	<body>
+		<div width="100%">
+			<div style='margin:20px;padding:15px'>
+				<span style="margin-left:20px;font-weight:bold;bgcolor:#C6DEFF">产品订单验收：</span>
+				<table width="95%" align="center" style="margin-left:auto;margin-right:auto"
+					 class="table-border">
+					<tr height="30px"><td class="table_property_title" width="20%" align="center">工程地址</td><td width="28%"><span id="span_addr"></span><input type="hidden" id="addr"></td><td class="table_property_title" width="20%" align="center">合同编号</td><td width="28%"><span id="span_contract_id"></span><input type="hidden" id="contract_id"></td></tr>
+					<tr><td class="table_property_title" align="center">设计师</td><td><span id="span_designer"></span><input type="hidden" id="designer"></td><td  class="table_property_title" align="center">设计师电话</td><td><input type="text" id="designer_tel"></td></tr>
+					<tr><td class="table_property_title" align="center">工地监理<span style="color:red;">(*)</span></td><td><input type="text" id="supervision"></td><td class="table_property_title" align="center">工程监理电话</td><td ><input type="text" id="supervision_tel"></td></tr>
+					<tr><td class="table_property_title" align="center">验收时间<span style="color:red;">(*)</span></td><td colspan="3"><input type="text" id="install_date" onclick="new Calendar().show(this);" readonly="true"/></td></tr>
+					<tr >
+						<td class="table_property_title" align="center">安装主管签字</td><td id="install_leader"><input type="text" id=""/></td>
+						<td class="table_property_title" align="center">监理签字</td><td id="tdzg"><input type="text" id=""/></td>
+					</tr>
+				</table>
+				<table  width="95%" align="center" cellpadding="0" cellspacing="0" style="margin-left:auto;margin-right:auto" >
+				<tr height="35px">
+						<td align="left" >
+							<b>选择要验收的已到货的产品：</b>
+						</td>
+					</tr>
+				</table>
+				<table class="table-border" width="95%" style="margin-left:auto;margin-right:auto" align="center" id="noAcceptanceList"></table>
+			   <table  width="95%" align="center" cellpadding="0" cellspacing="0" style="margin-left:auto;margin-right:auto">
+				<tr >
+						<td align="center">
+							<div class="buttonDivTwo">
+								<a href="javascript:doAcceptance()">确定</a>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<span style="margin-left:48px;padding-bottom:10px;font-weight:bold;bgcolor:#C6DEFF">验收单列表：</span><br/>
+			<table style="margin-left:auto;margin-right:auto" width="95%" align="center"  class="display"	id="acceptanceList"></table>
+		</div>
+		
+		<div id="dialog" title="" style="display: none; padding: 0 0 0 0; margin: 0 0 0 0; z-index: 10000">
+			<iframe id="self_iframe" src="about:blank" width="100%" height="96%" frameborder="0"></iframe>
+		</div>
+	</body>
+</html>

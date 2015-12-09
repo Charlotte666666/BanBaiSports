@@ -1,0 +1,127 @@
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title></title>
+<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css"/>
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css"
+			media="print, projection, screen">
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+<script type="text/javascript">
+var year=0;
+var mouth=0;
+var d=new Date();
+ $(document).ready(function() {
+ var d=new Date();
+ $("#time2").val(top.getTimeStr(d.getTime(),true));
+ $("#time1").val(top.getTimeStr(Number(d.getTime())-Number(7*24*60*60000),true));
+   mouthQuery();
+ });
+
+ function queryMouthTableCallback(obj){
+	   try{
+	  bookCust=obj.aaData;
+	  ht="";
+	  row=1;
+			 for (var i=0;i<bookCust.length;i++) {
+			  ht+='<tr ';
+			  ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';                              
+			  ht+='>';
+			  ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+bookCust[i].code+'</td>';
+			  ht+='<td width="5%" height="32px" align="center" style="word-break:break-all;">'+bookCust[i].cust_name+'</td>';
+			  ht+='<td width="5%" height="32px" align="center" style="word-break:break-all;">'+bookCust[i].project_addr+'</td>';
+			  ht+='<td width="5%" height="32px" align="center" style="word-break:break-all;">'+top.getUserNameByCode(bookCust[i].require_manager)+'</td>';
+			  ht+='<td width="6%" height="32px" align="center" style="word-break:break-all;">'+top.getTimeStr(bookCust[i].measure_date,true)+'</td>';
+			  ht+='<td width="5%" height="32px" align="center" style="word-break:break-all;">'+top.getTimeStr(bookCust[i].payedTime,true)+'</td>';
+			  ht+='<td width="6%" height="32px" align="center" style="word-break:break-all;">'+top.getTimeStr(bookCust[i].firstTime ,true)+'</td>';
+			  ht+='<td width="6%" height="32px" align="center" style="word-break:break-all;">'+top.getTimeStr(bookCust[i].nextTime ,true)+'</td>';
+			  ht+='<td width="6%" height="32px" align="center" style="word-break:break-all;">'+top.getTimeStr(bookCust[i].finalTime ,true)+'</td>';
+			  ht+='<td width="6%" height="32px" align="center" style="word-break:break-all;">'+top.getTimeStr(bookCust[i].come_time,true)+'</td>';
+			  ht+='<td width="4%" height="32px" align="center" style="word-break:break-all;">'+top.getCodeName("RESULT_STATUS",bookCust[i].result_status)+'</td>';
+			  if(bookCust[i].sign_date!='0'){
+			   ht+='<td width="3%" height="32px" align="center" style="word-break:break-all;">是</td>';
+			   ht+='<td width="6%" height="32px" align="center" style="word-break:break-all;">'+top.getTimeStr(bookCust[i].sign_date,true)+'</td>';
+			   ht+='<td width="5%" height="32px" align="center" style="word-break:break-all;">'+bookCust[i].circle/24/60/6000+'天</td>';
+			 }else{
+			  ht+='<td width="3%" height="32px" align="center" style="word-break:break-all;">否</td>';
+			  ht+='<td width="6%" height="32px" align="center" style="word-break:break-all;">'+top.getTimeStr(bookCust[i].sign_date,true)+'</td>';
+			  ht+='<td width="5%" height="32px" align="center" style="word-break:break-all;"></td>';
+			 }
+			 ht+='</tr>';
+			  if ( row == 1 ) {
+				 row=0;
+			  } else {
+				 row=1;
+			  }
+	  } 
+	   ht+='<tr ';
+			  ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+			  ht+='>';
+			  ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">合计</td>';
+			  ht+='<td width="93%" colspan="13" height="32px" align="center" style="word-break:break-all;">客户数量：'+bookCust.length+'位</td>';
+			  ht+='</tr>';
+	  $("#tab0List").html( ht );
+	}catch(e){e.message()}
+	
+ }
+ function mouthQuery(){
+	var aoData=[];
+	var aoData=[];
+    aoData.push( { "name": "time1", "value": top.toTimestamp($("#time1").val())});
+	aoData.push( { "name": "time2", "value": top.toTimestamp($("#time2").val())});
+	var xurl="/actions/CustInfo.action?getServiceCustState";
+	top.sendAjaxRequest(xurl,aoData,queryMouthTableCallback);
+ }
+
+</script>
+</head>
+<body style="width:100%;">
+	<div id="tabs-0">
+		<center>
+			<table cellpadding="0" width="99%" cellspacing="2px" border="1" width="100%">
+				<tr bgcolor="#C9E4D6"><td align="center" colspan="14" height="64px"  width="100%">客户服务流程表</td></tr>
+				<tr bgcolor="#CEDAE8">
+					<td colspan="2"  width="24%" height="32px" align="center" ></td>
+					<td colspan="3" width="24%" height="32px" align="center">开始时间：<input type="text" id="time1" style="text-align:center;" size="12" onclick="new Calendar().show(this);" readonly="true"/></td>
+					<td colspan="3" width="26%" height="32px" align="center">截至时间：<input type="text" id="time2" style="text-align:center;" size="12" onclick="new Calendar().show(this);" readonly="true"/></</td>
+					<td colspan="6" width="40%" height="32px" align="left"><input type="button" onclick="mouthQuery()" value="查询"></td>
+				</tr>
+				<tr bgcolor="#CEDAE8">	
+				  <td rowspan="3" width="7%" height="96px" align="center">客户编号</td>				 
+				  <td rowspan="3" width="5%" height="96px" align="center">客户姓名</td>
+				  <td rowspan="3" width="5%" height="96px" align="center">小区地址</td>
+				  <td rowspan="3" width="5%" height="96px" align="center">设计师</td>
+				  <td colspan="7" width="40%" height="32px" align="center">方案、报价情况</td>
+				  <td colspan="3"  width="19%" height="32px" align="center">签单情况</td>
+				  </tr>
+				 <tr bgcolor="#CEDAE8">	
+				 <td rowspan="2" height="64px" width="6%">量房日期</td>
+				 <td height="32px" width="5%">收取设计</td>
+				  <td height="32px" colspan="3" width="18%">方案、报价阶段</td>
+				   <td height="32px" colspan="2" width="11%">回访</td>
+				    <td  height="64px" rowspan="2" width="3%">是否签单</td>
+					 <td height="64px"rowspan="2" width="6%">签单日期</td>
+					  <td height="64px"rowspan="2" width="5%">所用时间</td>
+				 </tr>
+				 <tr bgcolor="#CEDAE8">
+				 <td width="5%" height="32px">定金日期</td>
+				 <td width="6%" height="32px">初案、初次报价时间</td>
+				 <td width="6%" height="32px">修改案时间</td>
+				 <td width="6%" height="32px">终案、终报价时间</td>
+				 <td width="6%" height="32px">日期</td>
+				 <td width="4%" height="32px">结果</td>
+				 </tr>
+			</table>
+			<div id="dataDiv" style="margin: 1px;padding:0;width:99%;background-color:#ffffff;overflow: auto;">
+			<table id="tab0List" width="100%" cellpadding="0" cellspacing="2px" border="1" style="border-color:blue"></table>
+		</div>
+		</center>
+	</div>
+</body>
+</html>

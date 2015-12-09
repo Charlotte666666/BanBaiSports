@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery.dataTables.min.js"></script>
+
+<script type="text/javascript">
+var oTable = null;
+var teamList=[];
+var scheduleList=[];
+var currentSelectId=0;
+
+$(document).ready( function() {
+    // 加载赛程信息
+	top.sendAjaxRequest("/actions/CompetitionSchedule.action?getCompetitionScheduleList",[],getCompetitionScheduleListCallback);
+});
+
+ function loadTeamList(){
+    // load all team list
+	var aoData=[];
+	aoData.push( { "name": "info.schedule_id", "value": top.g_GetNumValue( $("#schedule_id").val(), -1 ) } );
+	aoData.push( { "name": "info.leader_id", "value": -1 } );
+	aoData.push( { "name": "iDisplayStart", "value": 0 } );
+	aoData.push( { "name": "iDisplayLength", "value": 1000 } );
+	top.sendAjaxRequest("/actions/Team.action?getTeamList",aoData,getTeamListCallback);
+ }
+
+ function getTeamListCallback(obj){
+     try{
+		  teamList=obj.aaData;
+		  $("#tdteam").html( getTeamSelectHtml('team_id','-1') );
+	 }catch(e){
+	 }
+	 loadList();
+ }
+ 
+ function loadList(){
+    var iaoColumns= [
+	           { "sTitle": "会员ID", "mDataProp": "player_id", "sWidth": "20%",
+                   "fnRender": function ( oObj ) {
+                      return '<input type="text" style="width:50%" disabled="false" id="player_id_'+oObj.aData.id+'" value="'+oObj.aData.player_id+'" />&nbsp;&nbsp;<input type="button" onclick="selectMember(\''+oObj.aData.id+'\')" value="选择" ></input>' ;
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+               { "sTitle": "球员姓名", "mDataProp": "player_name", "sWidth": "10%", 
+			       "fnRender": function ( oObj ) {
+                     return '<input type="text" style="width:100%" id="player_name_'+oObj.aData.id+'" value="'+oObj.aData.player_name+'" />' ;
+                   },
+                   "bUseRendered": false , "bSortable":false},
+               { "sTitle": "所属球队", "mDataProp": "team_id", "sWidth": "10%","sClass": "center",
+                   "fnRender": function ( oObj ) {
+				     return getTeamSelectHtml("team_id_"+oObj.aData.id,oObj.aData.team_id);
+                   },
+                   "bUseRendered": false , "bSortable":false
+               },
+               { "sTitle": "性别", "mDataProp": "player_sex", "sWidth": "10%",
+                   "fnRender": function ( oObj ) {
+				      return top.getCodeSelectHtml("SEX","player_sex_"+oObj.aData.id,true,oObj.aData.player_sex);
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "级别", "mDataProp": "player_level", "sWidth": "10%",
+                   "fnRender": function ( oObj ) {
+				      return top.getCodeSelectHtml("PLAYER_LEVEL","player_level_"+oObj.aData.id,true,oObj.aData.player_level);
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "电话", "mDataProp": "player_phone", "sWidth": "15%",
+                   "fnRender": function ( oObj ) {
+				      return '<input type="text" style="width:100%" id="player_phone_'+oObj.aData.id+'" value="'+oObj.aData.player_phone+'" />' ;
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "操作", "mDataProp": "id", "sWidth": "10%","bSortable":false,
+                    "fnRender": function ( oObj ) {
+                       var ht= '<span align="center" style="cursor:pointer;" onclick="saveInfo(\''+oObj.aData.id+'\')"><img src="../../img/save.bmp" />&nbsp;保存</span>';
+					   ht+='&nbsp;<span align="center" style="cursor:pointer;" onclick="deleteInfo(\''+oObj.aData.id+'\')"><img src="../../img/delete.gif" />&nbsp;删除</span>';
+                       return ht;
+					},
+                    "bUseRendered": false
+               }
+        ];
+
+		oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": top.getUrlBase()+"/actions/TeamMember.action?getTeamMemberList",
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     aoData.push( { "name": "info.team_id", "value": $("#team_id").val() } );
+						 aoData.push( { "name": "optType", "value": "addRow" } );
+						 aoData.push( { "name": "info.schedule_id", "value": top.g_GetNumValue( $("#schedule_id").val(), -1 ) } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumns
+	   } );
+ }
+ 
+ function getCompetitionScheduleListCallback(obj){
+     try{
+		  scheduleList=obj.aaData;
+		  $("#tdschedule").html( getScheduleSelectHtml('schedule_id') );
+	 }catch(e){
+	 }
+	 loadTeamList();
+ }
+ 
+ function getScheduleSelectHtml(sid){
+    if ( !scheduleList ) return "";
+	var ht="<select id='"+sid+"' style='width:260px' onchange='loadTeamList()' >";
+	for(var i=0;i<scheduleList.length;i++){
+	  ht+="<option value='"+scheduleList[i].id+"'";
+	  ht+=">"+scheduleList[i].title+"</option>";
+	}
+	ht+="</select>";
+	return ht;
+ }
+
+ function getTeamSelectHtml(sid, code){
+    if ( !teamList ) return "";
+	if ( !code ) code="";
+	var ht="<select id='"+sid+"' style='width:120px'>";
+	ht+="<option value='-1'></option>";
+	for(var i=0;i<teamList.length;i++){
+	  ht+="<option value='"+teamList[i].id+"'";
+	  if ( teamList[i].id == code ) ht+="selected ";
+	  ht+=">"+teamList[i].team_name;+"</option>";
+	}
+	ht+="</select>";
+	return ht;
+ }
+
+ function saveInfo(code){
+    var aoData=[];
+	aoData.push( { "name": "info.id", "value": code } );
+	aoData.push( { "name": "info.player_name", "value": $("#player_name_"+code).val() } );
+    aoData.push( { "name": "info.player_sex", "value": $("#player_sex_"+code).val() } );
+	aoData.push( { "name": "info.player_mail", "value": $("#player_mail_"+code).val() } );
+	aoData.push( { "name": "info.player_phone", "value": $("#player_phone_"+code).val() } );
+	aoData.push( { "name": "info.player_level", "value": $("#player_level_"+code).val() } );
+	aoData.push( { "name": "info.player_id", "value": $("#player_id_"+code).val() } );
+	aoData.push( { "name": "info.team_id", "value": $("#team_id_"+code).val() } );
+	aoData.push( { "name": "info.schedule_id", "value": top.g_GetNumValue( $("#schedule_id").val(), -1 ) } );
+	var xurl="/actions/TeamMember.action?updateTeamMember";
+	if ( code == 0 ) {
+	  xurl="/actions/TeamMember.action?insertTeamMember";
+	}
+    top.sendAjaxRequest(xurl,aoData,optCallback);
+ }
+ 
+ function deleteInfo(code){
+    currentDeleteCode=code;
+	top.showConfirm("您确定要删除选中的记录吗？", doDelete);
+ }
+			
+ function doDelete(){
+    var aoData=[];
+	aoData.push( { "name": "info.id", "value": currentDeleteCode } );
+	var xurl="/actions/TeamMember.action?deleteTeamMember";
+    top.sendAjaxRequest(xurl,aoData,optCallback);
+ }
+ 
+ function importMember(){
+	    if ( $("#schedule_id").val() == '' ) {
+		  top.showInfoWinWarn("请选择赛程");
+		  return ;
+		}
+		if ( $("#team_id").val() == -1 ) {
+		  top.showInfoWinWarn("请选择队伍");
+		  return ;
+		}
+	    var xurl="pages/badminton/importTeamMember.html?schedule_id="+$("#schedule_id").val()+"&team_id="+$("#team_id").val();
+		top.openDialog("导入队员信息",xurl,true,500,200,doQuery);
+ }
+ 
+ function doQuery(){
+	oTable.fnDraw();
+ }
+ 
+ function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      top.showInfoWinOK("操作成功");
+		  doQuery();
+	    }else{
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+ }
+ 
+function selectMember(jid){
+    currentSelectId=jid;
+    var xurl="pages/badminton/selectMember.html";
+	top.openSelectDialog("选择会员账户",xurl,600,500,doAddMember);
+}
+
+function doAddMember(){
+	var so = top.getTempValue();
+	if ( so.userIds == '' ) return ;
+	$("#player_id_"+currentSelectId).val( so.userIds );
+	$("#player_name_"+currentSelectId).val( so.userNames );
+	$("#player_sex_"+currentSelectId).val( so.sexs );
+	$("#player_level_"+currentSelectId).val( so.levels );
+}
+
+</script>
+</head>
+<body>
+            <div style='border: 1px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="180px">&nbsp;球员信息查询&nbsp;</td>
+				  <td><div id="importBtn" class="buttonDivTwo" style="dispaly:none"><a href="javascript:importMember()">导入</a></div></td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+				  <td align="right" width="20%">赛程:</td><td align="left" width="30%" id="tdschedule"></td>
+			      <td align="right" width="20%">所属球队:</td><td align="left" width="30%" id="tdteam"></td>			  		  
+			     </tr>
+			 </table>
+			</div>
+<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+</body>
+</html> 

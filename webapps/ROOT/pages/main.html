@@ -1,0 +1,77 @@
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7">
+   <meta name="viewport" content="width=device-width; initial-scale=1.0;">
+   <title>慧动工单流程管理系统</title>
+   <script type="text/javascript" src="lps/includes/embed-compressed.js"></script>
+   <style type="text/css">
+            html, body
+            {
+                height: 100%;
+                /* prevent browser decorations */
+                margin: 0;
+                padding: 0;
+                border: 0 none;
+                overflow-x: hidden; 
+                overflow-y: hidden
+            }
+            body {
+                background-color: #E0FFFF;
+            }
+            img { border: 0 none; }
+        </style><!--[if IE]>
+        <style type="text/css">
+            /* Fix IE scrollbar braindeath */
+            html { overflow: auto; overflow-x: hidden; }
+        </style>
+        <![endif]-->
+
+<script type="text/javascript">
+function getServerUrl(arg){
+    return "http://127.0.0.1:8081/order/";
+}
+
+function getFuctions(arg){
+    var str = '&lt;Functions&gt;';
+    str += '&lt;System name="工作台" &gt;&lt;function name="首页" code="homeScreen"/&gt;&lt;function name="任务查询" code="TaskQuery"/&gt;';
+    str += '&lt;function name="工单查询" code="InstanceQuery"/&gt;&lt;/System&gt;';
+    str += '&lt;System name="流程管理" &gt;&lt;function name="流程图管理" code="FlowDesignerScreen"/&gt;';
+    str += '&lt;function name="表单管理" code="TemplateTab"/&gt;&lt;/System&gt;';
+    str += '&lt;System name="组织机构" &gt;&lt;function name="组织机构" code="Org_main"/&gt;';
+    str += '&lt;function name="角色权限" code="RoleManageTab"/&gt;&lt;/System&gt;';
+    str += '&lt;System name="报表统计" &gt;&lt;function name="受理量统计" code="CountAccept"/&gt;&lt;function name="超时统计" code="CountTimeout"/&gt;&lt;/System&gt;';
+    str += '&lt;/Functions&gt;';
+    return str;
+}
+
+function removeLoadingPage(p){
+    var splash = document.getElementById('lzsplash');
+    if (splash) {
+        splash.parentNode.removeChild(splash);
+        document.getElementById('lzapp').width = "100%";
+        document.getElementById('lzapp').height = "100%";
+    }
+}
+
+</script>
+
+</head>
+<body>
+<div id="lzsplash" style="z-index: 1000; top: 0; left: 0; width: 100%; height: 100%; position: fixed; display: table">
+ <p style="display: table-cell; vertical-align: middle; align: center;">
+  <div id="lzsplashtext" style="display: block; margin: 20% auto; font-size:15px; font-family:Helvetica,sans-serif;" align="center">
+   欢迎访问<br>
+   <span align="center"><font size="13" >Loading...</font></span>
+  </div>
+ </p>
+</div>
+<script type="text/javascript">
+    lz.embed.swf({url: 'my-apps/main.lzx.swf10.swf', 
+        allowfullscreen: 'true', bgcolor: '#ffffff', width: '0', height: '0', id: 'lzapp', accessible: 'true', history: 'true'}, 9);
+</script>
+
+</body>
+</html>

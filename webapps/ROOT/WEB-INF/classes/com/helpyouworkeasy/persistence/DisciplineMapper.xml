@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.helpyouworkeasy.persistence.DisciplineMapper">
+  <insert id="insertDiscipline" parameterType="Discipline">
+    INSERT INTO tbl_discipline (employee_code,employee_name,dept,job_title,discipline_memo,opt_user,discipline_rule,is_deleted,id,discipline_date,opt_time,money,status)
+    VALUES (#{employee_code}, #{employee_name}, #{dept}, #{job_title}, #{discipline_memo}, #{opt_user}, #{discipline_rule}, #{is_deleted}, #{id}, #{discipline_date}, #{opt_time}, #{money},#{status})
+  </insert>
+
+  <update id="updateDiscipline" parameterType="Discipline">
+    update tbl_discipline set 
+    employee_code=#{employee_code},employee_name=#{employee_name},dept=#{dept},job_title=#{job_title},discipline_memo=#{discipline_memo},opt_user=#{opt_user},discipline_rule=#{discipline_rule},discipline_date=#{discipline_date},opt_time=#{opt_time},money=#{money},status=#{status}
+    where id=#{id}
+  </update>
+
+  <select id="getDisciplineListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_discipline where is_deleted=0
+    <if test="o.employee_name != '' and o.employee_name != null" >
+      and employee_name like '%${o.employee_name}%'
+    </if>
+    <if test="o.dept != '' and o.dept != null" >
+      and dept=#{o.dept}
+    </if>
+    <if test="o.status != '' and o.status != null">
+      and status=#{o.status}
+    </if>
+    <if test="time1 != -1" >
+      and discipline_date>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=discipline_date
+    </if>
+  </select>
+
+  <select id="getDisciplinePageList" parameterType="map" resultType="Discipline">
+    select 
+    employee_code,employee_name,dept,job_title,discipline_memo,opt_user,discipline_rule,is_deleted,id,discipline_date,opt_time,money,status
+    from tbl_discipline where is_deleted=0 
+    <if test="o.employee_name != '' and o.employee_name != null" >
+      and employee_name like '%${o.employee_name}%'
+    </if>
+    <if test="o.dept != '' and o.dept != null" >
+      and dept=#{o.dept}
+    </if>
+    <if test="o.status != '' and o.status != null">
+      and status=#{o.status}
+    </if>
+    <if test="time1 != -1" >
+      and discipline_date>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=discipline_date
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+  
+  <update id="deletedDiscipline" parameterType="long">
+     update tbl_discipline set is_deleted=1 where id=#{value}
+  </update>
+
+  <select id="getDisciplineById" parameterType="long" resultType="Discipline">
+     select *
+     from tbl_discipline
+     where id=#{value}
+  </select>
+  
+  <update id="updateApplyStatus" parameterType="map">
+     update tbl_discipline set status=#{status} where id=#{apply_id}
+  </update>
+  
+  <update id="deleteDiscipline" parameterType="long">
+     update tbl_discipline set is_deleted=1 where id=#{id}
+  </update>
+
+</mapper>

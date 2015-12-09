@@ -1,0 +1,176 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css"
+			href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+		<script type="text/javascript" charset="utf-8">
+		    var info_id='';
+			var require_id='';
+			var cust_code='';
+			var opt_person='';//审核时需要传回到后台
+			var optType='';
+			var remind_id='';
+			var isSaveOK=false;
+			$(document).ready(function() {
+				$("#td_disable_type").html(top.getCodeSelectHtml("DISABLE_TYPE","disable_type",false));
+				$("#td_examine_status").html(top.getCodeSelectHtml("EXAMINE_STATUS","examine_status",false));
+				 
+				require_id=top.getUrlParam(document.URL,"require_id");
+				cust_code=top.getUrlParam(document.URL,"cust_code");
+				info_id=top.getUrlParam(document.URL,"id");
+				if(info_id!=null&&info_id!=''){
+					getDisableCustById();
+				}else{//插入新纪录
+					optType="insert";
+				}
+			} );
+			function getDisableCustById(){
+				if(info_id!=null&&info_id!=''){
+					var aoData=[];
+					aoData.push({"name":"disableCustRecord.id","value":info_id});
+					top.sendAjaxRequest("/actions/CustInfo.action?getDisableCustRecordById",aoData,getDisableCustByIdCallBack);
+				}
+			}
+			function getDisableCustByIdCallBack(obj){
+				if(obj.status==true){
+					var disabledCust=obj.body;
+					if(disabledCust.examine_time==0&&top.g_isPermit("09_examine_cust_disable")){//未审核
+						optType="examine";
+						$("#tr_opt_person").show();
+						$("#td_disable_type").html(top.getCodeName("DISABLE_TYPE",disabledCust.disable_type)); 
+						$("#td_disabled_reason").html(disabledCust.disable_reason);  
+						$("#opt_person").html(top.getUserNameByCode(disabledCust.opt_person));  
+						$("#opt_time").html(top.getTimeStr(disabledCust.opt_time,true)); 
+						$("#tr_examine_status").show();
+						$("#tr_examine_suggest").show();
+						opt_person=disabledCust.opt_person;
+						remind_id=disabledCust.remind_id;
+						cust_code=disabledCust.cust_code;
+						require_id=disabledCust.require_id;
+					}
+					if(disabledCust.examine_time!=0){
+						optType="query";
+						$("#tr_examine_suggest").show();
+						$("#tr_opt_person").show();
+						$("#td_disable_type").html(top.getCodeName("DISABLE_TYPE",disabledCust.disable_type)); 
+						$("#td_disabled_reason").html(disabledCust.disable_reason);  
+						$("#opt_person").html(top.getUserNameByCode(disabledCust.opt_person));  
+						$("#opt_time").html(top.getTimeStr(disabledCust.opt_time,true)); 
+						$("#tr_examine_status").show();
+						$("#tr_examine_user").show();
+						$("#td_examine_status").html(top.getCodeName("EXAMINE_STATUS",disabledCust.examine_status)); 
+						$("#examine_person").html(top.getUserNameByCode(disabledCust.examine_person));  
+						$("#examine_time").html(top.getTimeStr(disabledCust.examine_time,true)); 
+						$("#td_examine_suggest").html(disabledCust.examine_suggest);
+					}
+				}
+			}
+			function doSubmit(){
+				if(optType=="insert"){
+					addexamineDisableCust();
+				}else{
+					examineDisableCust();
+				}
+			}
+			function examineDisableCust(){
+				var aoData=[];
+				aoData.push({"name":"disableCustRecord.id","value":info_id});
+				aoData.push({"name":"disableCustRecord.remind_id","value":remind_id});
+				aoData.push({"name":"disableCustRecord.require_id","value":require_id});
+				aoData.push({"name":"disableCustRecord.cust_code","value":cust_code});
+				aoData.push({"name":"disableCustRecord.opt_person","value":opt_person});
+				aoData.push({"name":"disableCustRecord.examine_suggest","value":$("#examine_suggest").val()});
+				aoData.push({"name":"disableCustRecord.examine_status","value":$("#examine_status").val()});
+				top.sendAjaxRequest("/actions/CustInfo.action?examineDisableCustRecord",aoData,optDisableCustCallBack);
+				
+			}
+			
+			function addexamineDisableCust(){
+				var aoData=[];
+				aoData.push({"name":"disableCustRecord.require_id","value":require_id});
+				aoData.push({"name":"disableCustRecord.cust_code","value":cust_code});
+				aoData.push({"name":"disableCustRecord.disable_type","value":$("#disable_type").val()});
+				aoData.push({"name":"disableCustRecord.disable_reason","value":$("#disable_reason").val()});
+				top.sendAjaxRequest("/actions/CustInfo.action?insertDisableCustRecord",aoData,optDisableCustCallBack);
+			}
+			function optDisableCustCallBack(obj){
+				  try{
+					if ( obj.status == true ){
+						isSaveOK = true;
+						top.showInfoWinOK("操作成功");
+						  parent.closeDialog();
+						
+					}else{
+						isSaveOK = false;
+						top.showInfoWinError("操作失败 "+obj.msg);
+					}
+				   }catch(e){
+					  top.showInfoWinError("处理异常:"+e.message);
+				   }
+			}
+			function doBeforeClose(){
+				var obj={
+					"isSaveOK":isSaveOK
+				};
+				top.setTempValue(obj);
+		    }
+		</script>
+	</head>
+	<body Style="margin-top:10px">
+			<table id="table_examine" width="95%" border="1" cellpadding="3" cellspacing="1" style="margin:0px auto;background-color: #b9d8f3;font-size:13px;">
+			<tr  height = "35px" class="tr_data">
+				<td>废单类型</td>
+				<td align="left" id="td_disable_type" colspan="3"></td>
+			</tr>
+			<tr  height = "35px"  class="tr_data" >
+				<td>废单原因</td>
+				<td align="left" colspan="3" id = "td_disabled_reason">
+					<textarea style="width:99%" rows = '5' id='disable_reason'></textarea>
+				</td>
+			</tr>
+			<tr  height = "35px" id="tr_opt_person" class="tr_data" style="display:none;">
+				<td>申请人</td>
+				<td align="left"><span id="opt_person"></span></td>
+				<td height = "35px" >申请时间</td>
+				<td align="left"><span id="opt_time"></span></td>
+			</tr>
+			<tr  height = "35px" id = "tr_examine_user" class="tr_data" style="display:none;">
+				<td>审核人</td>
+				<td align="left"><span id="examine_person"></span></td>
+				<td height = "35px" >审核时间</td>
+				<td align="left"><span id="examine_time"></span></td>
+			</tr>
+			<tr id="tr_examine_status" height = "35px" class="tr_data" style="display:none">
+				<td>审核状态</td>
+				<td align="left" colspan="3" id="td_examine_status"></td>
+			</tr>
+			<tr id="tr_examine_suggest" class="tr_data" style="display:none">
+				<td>审核意见</td>
+				<td align="left" height="70px" colspan="3" id="td_examine_suggest" >
+					<textarea style="width:99%" rows = '5' id='examine_suggest'></textarea>
+				</td>
+			</tr>
+			<tr  class="tr_data">
+			<td colspan="4"  align="center" >
+				<div class="buttonDivTwo">
+					<a href="javascript:void(0)" onclick="doSubmit()">保存</a>
+				</div>
+			</td>
+			</tr>
+		</table>
+	</body>
+</html>

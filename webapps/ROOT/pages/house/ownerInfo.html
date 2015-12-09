@@ -1,0 +1,121 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css"/>
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+  <script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var info_id=0;
+   var optType="";
+   
+   $(document).ready(function() {
+     initData();
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+              "isSaveOK":isSaveOK
+            };
+     top.setTempValue(obj);
+   }
+   
+   function doSubmit(){
+     var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+     var aoData=[];
+     aoData.push( { "name": "houseowner.id", "value": info_id } );
+	 aoData.push( { "name": "houseowner.owner_name", "value": $("#owner_name").val() } );
+	 aoData.push( { "name": "houseowner.owner_tel", "value": $("#owner_tel").val() } );
+	 aoData.push( { "name": "houseowner.card_no", "value": $("#card_no").val() } );
+	 aoData.push( { "name": "houseowner.owner_bank", "value": $("#owner_bank").val() } );
+	 aoData.push( { "name": "houseowner.owner_bank_no", "value": $("#owner_bank_no").val() } );
+	 aoData.push( { "name": "houseowner.memo", "value": $("#memo").val() } );
+	 
+	 var xurl="/actions/HouseCust.action?updateTblHouseOwner";
+	 if ( info_id == 0 ) {
+	   xurl="/actions/HouseCust.action?insertTblHouseOwner";
+	 }
+     top.sendAjaxRequest(xurl,aoData,optCallback);
+   }
+   
+   function checkForm(){
+     var msg = "";
+	 msg += checkString($("#owner_name").val(),true,10,"业主姓名");
+	 msg += checkString($("#owner_tel").val(),true,20,"联系电话");
+     return msg;
+   }
+   
+   function optCallback(obj){
+       try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+			top.closeDialog();
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+   
+   function initData(){
+       optType=top.getUrlParam(document.URL,"optType");
+	   if ( optType=='update' ) {
+	     info_id=top.getUrlParam(document.URL,"id");
+		 $("#owner_id").val( info_id );
+		 var aoData=[];
+         aoData.push( { "name": "houseowner.id", "value": info_id } );
+		 top.sendAjaxRequest("/actions/HouseCust.action?getTblHouseOwner",aoData,infoCallback);
+	   }
+    }
+	
+	function infoCallback(obj){
+	   try{
+        if ( obj.status == true ){
+		  var o=obj.body;
+          $("#owner_name").val(o.owner_name);
+		  $("#owner_tel").val(o.owner_tel);
+		  $("#card_no").val(o.card_no);
+		  $("#owner_bank").val(o.owner_bank);
+		  $("#owner_bank_no").val(o.owner_bank_no);
+		  $("#memo").val(o.memo);
+		}else{
+          top.showInfoWinError("操作失败");
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+  </script> 
+</head>
+<body>
+<br>
+<table border="1" cellpadding="1" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+    <tr class="tr_data"><td align="right">业主编号：</td><td align="left"><input type="text" size="10" id="owner_id" value="系统自动生成" disabled="true"></input></td></tr>
+	<tr class="tr_data"><td align="right">业主姓名：</td><td align="left"><input type="text" size="10" id="owner_name" value=""></input></td></tr>
+	<tr class="tr_data"><td align="right">联系电话：</td><td align="left"><input type="text" size="10" id="owner_tel" value=""></input></td></tr>
+	<tr class="tr_data"><td align="right">身份证号：</td><td align="left"><input type="text" size="20" id="card_no" value=""></input></td></tr>
+	<tr class="tr_data"><td align="right">开户银行：</td><td align="left"><input type="text" size="20" id="owner_bank" value=""></input></td></tr>
+	<tr class="tr_data"><td align="right">银行卡号：</td><td align="left"><input type="text" size="20" id="owner_bank_no" value=""></input></td></tr>
+	<tr class="tr_data">
+       <td align="right">备注：</td><td align="left"><textarea id="memo" cols="36" rows="5"></textarea></td>
+    </tr>
+</table>
+<br/>
+<p align="center">
+   <table><tr>
+            <td><span class="buttonTwo"><a href="javascript:doSubmit()">提交</a></span></td>
+   </tr></table>
+</p>
+</body>
+</html>

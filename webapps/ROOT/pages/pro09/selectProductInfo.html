@@ -1,0 +1,156 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+ 
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var dialogLevel="1";
+			var arr=[];
+			var typeList=[];
+			
+			$(document).ready(function() {
+			   getAllProductTypeList();
+			});
+			
+	function initData(){
+	   var iaoColumns= [
+	                           { "sTitle": "产品类别","mDataProp": "type_id","sWidth": "15%", "sClass": "center", "bSortable":false ,
+								    "fnRender": function ( oObj ) {
+                                           return getProductType( oObj.aData.type_id );
+                                      },
+							        "bUseRendered": false },
+                               { "sTitle": "项目名称", "mDataProp": "product_name", "sWidth": "55%",
+                                      "fnRender": function ( oObj ) {
+									       arr[arr.length]=oObj.aData;
+                                           var ht='';
+										   ht+='<a href=\'javascript:void(0)\' onclick="selectInfo(\''+oObj.aData.product_id+'\')" >'+oObj.aData.product_name+'</a>';
+										   return ht;
+                                      },
+                                      "bUseRendered": false
+                               },
+							   { "sTitle": "经营类型", "mDataProp": "product_name", "sWidth": "10%",
+                                      "fnRender": function ( oObj ) {
+                                           return top.getCodeName("SALE_MODE",oObj.aData.sale_mode);
+                                      },
+                                      "bUseRendered": false
+                               },
+							   { "sTitle": "单位","mDataProp": "unit","sWidth": "10%", "sClass": "center",
+								    "fnRender": function ( oObj ) {
+                                           return top.getCodeName( "UNIT", oObj.aData.unit );
+                                      },
+							        "bUseRendered": false },
+							   { "sTitle": "价格(元)", "mDataProp": "price","sWidth": "10%","sClass": "center","bUseRendered": false  }
+               ];
+			   
+			  var surl=top.getUrlBase()+"/actions/ProductInfo.action?getProductInfoList";
+
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+							aoData.push( { "name": "product.type_id", "value":$("#type_id").val() } );
+							aoData.push( { "name": "product.product_id", "value":$("#product_id").val() } );
+							aoData.push( { "name": "product.product_name", "value":$("#product_name").val() } );
+					},
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+	}
+			
+    function getAllProductTypeList(){
+	   top.sendAjaxRequest("/actions/ProductInfo.action?getProductTypeList",null,proTypeCallback);		
+	}
+	
+	function proTypeCallback(obj){
+	 typeList=obj.aaData;
+	 initData();
+	}
+	
+	function getProductType(pid){
+       for(var j=0;j<typeList.length;j++){
+			 if(typeList[j].type_id==pid){
+					return typeList[j].type_name;
+			 }
+       }
+       return "";
+   }
+			
+			function doQuery(){
+			    arr=[];
+				oTable.fnDraw();
+			}
+
+			function selectInfo(product_id){
+				//alert(product_id);
+				var obj=getProductInfo(product_id);
+				top.setTempValue(obj);
+				parent.closeDialog();
+			}
+			
+			function getProductInfo(pid){
+			   for ( var i=0;i<arr.length;i++ ) {
+			      if ( arr[i].product_id == pid ) return arr[i];
+			   }
+			   return null;
+			}
+			
+			function doBeforeClose(){
+			}
+	</script>
+	</head>
+	<body>
+		<input type="hidden" id="type_id" value="-1" />
+		<div width="100%;">
+			<table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+				<tr class="tr_data">
+				  <td align="right" width="10%">产品编号:</td>
+				  <td align="left" width="30%">
+				     <input type="text" id="product_id" onkeydown="if(event.keyCode==13) doQuery();" value="" ></input>
+				  </td>
+				  <td align="right" width="10%">产品名称:</td>
+				  <td align="left" width="30%">
+				     <input type="text" id="product_name" onkeydown="if(event.keyCode==13) doQuery();" value="" ></input>
+				  </td>
+				  <td align="right" width="20%">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				    </td>
+			     </tr>
+			 </table>
+	        <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

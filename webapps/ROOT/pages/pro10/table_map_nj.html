@@ -1,0 +1,232 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title></title>
+<link href="../../css/comm.css" rel="stylesheet" type="text/css" />
+<link href="../../css/commBg.css" rel="stylesheet" type="text/css" />
+<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+<script type="text/javascript">
+var currentTime=0;
+var ds=[];
+var eles=[];
+var cHour=0;
+var dataList=[];
+
+jQuery(document).ready(function() {
+	var today=new Date();
+	today.setTime( today.getTime() - 9*60*60000 );
+	
+    var y = today.getFullYear();
+    var m = today.getMonth() + 1;
+    var d = today.getDate();
+    var h = today.getHours();
+
+	$("#q_date").val( y+"-"+top.getTwoNumberStr(m)+"-"+top.getTwoNumberStr(d) );
+	$("#span_ele_code").html( top.getEleSelectHtml("ele_code","doQuery()") );
+	
+	  eles=parent.getEles();
+	
+	  var ht="";
+	  var row=0;
+	  
+	  for (var i=0;i<eles.length;i++) {
+			  ht+='<tr ';
+			  ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+			  ht+='>';
+			  ht+='<td width="190px" height="32px" bgcolor="#CEDAE8" style="border-width: 0px 0px 1px 0;padding:0 0 0 10px;border-style: none none dotted none;border-color: #89A1B9" align="left">'+eles[i].ele_name+'</td>';
+			  ht+='<td width="300px" align="center" width="60px"><b><span id="'+eles[i].ele_code+'_649_status"></span></b></td>';
+			  ht+='<td width="300px" align="center" width="60px"><b><span id="'+eles[i].ele_code+'_650_status"></span></b></td>';
+			  ht+='</tr>';
+		  if ( row == 1 ) {
+			 row=0;
+		  } else {
+		     row=1;
+		  }
+	  }
+	  $("#dataList").html( ht );
+	currentTime=today.getTime();
+	$("#nextHourBtn").hide();
+	doQuery();
+	
+	var tt = $('#tabMap').offset().top;
+	var tl = $('#tabMap').offset().left;
+	
+	$("#point649").show();
+	$('#point649').css("position","absolute"); 
+	$('#point649').css("top","200px");
+	$('#point649').css("left",(tl+65)+"px");
+	
+	$("#point650").show();
+	$('#point650').css("position","absolute"); 
+	$('#point650').css("top","290px");
+	$('#point650').css("left",(tl+475)+"px");
+	
+	$('#point2').css("position","absolute"); 
+	$('#point2').css("top","110px");
+	$('#point2').css("left",(tl+400)+"px");
+	$('#point1').css("position","absolute"); 
+	$('#point1').css("top","140px");
+	$('#point1').css("left",(tl+400)+"px");
+	
+	$('#point2Txt').css("position","absolute"); 
+	$('#point2Txt').css("top","110px");
+	$('#point2Txt').css("left",(tl+425)+"px");
+	$('#point1Txt').css("position","absolute"); 
+	$('#point1Txt').css("top","140px");
+	$('#point1Txt').css("left",(tl+425)+"px");
+	
+ });
+ 
+function toHour(ah){
+  $("#spanType"+cHour).css("background-color","#E1F2EC");
+  cHour=ah;
+  $("#spanType"+ah).css("background-color","yellow");
+  doQuery();
+}
+
+ function doQuery(){
+    try{
+	  var dateStr=$("#q_date").val();
+	  var hour= cHour;
+	  if ( hour < 10 ) hour="0"+hour;
+	  
+	  var aoData=[];
+	  var d=new Date(2013,1,1);
+		  d.setFullYear( Number(dateStr.substring(0,4)) );
+		  d.setMonth( Number(dateStr.substring(5,7)) - 1 );
+		  d.setDate( Number(dateStr.substring(8,10)) );
+		  d.setHours( Number(hour) );
+		  d.setMinutes(0);
+		  d.setSeconds(0);
+		  d.setMilliseconds(0);
+
+	  var year= d.getFullYear();
+	  var month= d.getMonth() + 1;
+	  var day= d.getDate();
+	  hour= d.getHours();
+	  if ( month<10 ) month="0"+month;
+	  if ( day <10 ) day="0"+day;
+	  if ( hour < 10 ) hour="0"+hour;
+	  
+	  aoData.push( { "name": "eleData.year", "value": year } );
+	  aoData.push( { "name": "eleData.month", "value": month } );
+	  aoData.push( { "name": "eleData.day", "value": day } );
+	  aoData.push( { "name": "eleData.hour", "value": hour } );
+	  
+	  
+	  for (var i=0;i<eles.length;i++) {
+	      $("#"+eles[i].ele_code+"_649_status").html("-");
+		  $("#"+eles[i].ele_code+"_650_status").html("-");
+	  }
+	  $("#point649").css("background-color","gray");
+	  $("#point650").css("background-color","gray");
+	  
+	  top.sendAjaxRequest("/actions/CmaTable.action?getNjFullEleDataList",aoData,callbackGetFullEleDataList);
+	}catch(e){
+	}
+ }
+ 
+ function callbackGetFullEleDataList(obj){
+    try{
+	  ds=obj.body.eleList;
+	  dataList=obj.body.dataList;
+	  setData();
+	}catch(e){
+	}
+ }
+ 
+ function setData(){
+       try{
+	    //var status="-";
+	    for ( var i=0;i<ds.length;i++ ) {
+		  /** if ( ds[i].right == 1 ) {
+		    status="<font color='blue'><b>正确</b></font>";
+		  } else if ( ds[i].err == 1 ) {
+		    status="<font color='red'><b>错误</b></font>";
+		  } else if ( ds[i].suspi == 1 ) {
+		    status="<font color='blue'><b>可疑</b></font>";
+		  } else if ( ds[i].nolack == 1 ) {
+		    status="<font color='blue'><b>有观测值</b></font>";
+		  } */
+		  
+		  if ( ds[i].site_num > 0 ) {
+		    $("#point"+ds[i].zone_sign).css("background-color","green");
+		  } else {
+		    $("#point"+ds[i].zone_sign).css("background-color","gray");
+		  }
+		}
+
+		var zoneSign="";
+		var v=0;
+		for (var n=0;n<eles.length;n++) {
+			for ( var i=0;i<dataList.length;i++ ) {
+			  if ( dataList[i].V01000 == 89573 ) {
+				 zoneSign="649";
+			  } else {
+				 zoneSign="650";
+			  }
+			  try{
+			    v=dataList[i][eles[n].ele_code];
+				if ( v && v != 999999 ) {
+			      $("#"+eles[n].ele_code+"_"+zoneSign+"_status").html( v + "&nbsp;" +eles[n].unit );
+				}
+			  }catch(e){}
+			}
+	    }
+	  }catch(e){
+	  }
+ }
+ 
+ 
+ 
+ function onDateSelectChanged(o){
+    try{
+	   doQuery();
+	}catch(e){}
+ }
+</script>
+</head>
+<body style="width:100%;background-color : #F3F3F3;">
+<center>
+<div style="margin: 10px;padding: 10px;width:1000px;background-color : #ffffff;	border: 2px solid #89A1B9;-moz-border-radius: 12px;-webkit-border-radius: 12px;border-radius: 12px;overflow: auto;">
+<table cellpadding="0px" width="1000px" cellspacing="0px" border="0">
+ <tr><td colspan="4" align="center" ><font size="4"><b>南极地面资料质量实时评估地图</b></font></td></tr>
+ <tr bgcolor="#E1F2EC">
+  <td width="50%" align="right">
+   时间(世界时)：<input type="text" id="q_date" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" />
+  </td>
+  <td width="50%" align="left">&nbsp;&nbsp;
+	  <span id="spanType0" style="height:100px;background-color:yellow;cursor:pointer" onclick="toHour(0)"><font size="4">0时</font></span>&nbsp;
+	  <span id="spanType6" style="height:100px;background-color:#E1F2EC;cursor:pointer" onclick="toHour(6)"><font size="4">6时</font></span>&nbsp;
+	  <span id="spanType12" style="height:100px;background-color:#E1F2EC;cursor:pointer" onclick="toHour(12)"><font size="4">12时</font></span>&nbsp;
+	  <span id="spanType18" style="height:100px;background-color:#E1F2EC;cursor:pointer" onclick="toHour(18)"><font size="4">18时</font></span>
+  </td>
+ </tr>
+</table>
+<table id="tabMap" cellpadding="0" width="907px" height="851px" border="0" style="margin:0px;padding:0px;background-image:url('images/nj_s.jpg');background-repeat: no-repeat;width:599px;height:562px;">
+ <div id="point650" style="display:none;width:20px;height:20px;background-color:gray;z-index:10000">&nbsp;</div>
+ <div id="point649" style="display:none;width:20px;height:20px;background-color:gray;z-index:10000">&nbsp;</div>
+ <div id="point1" style="width:20px;height:20px;background-color:gray;z-index:10000">&nbsp;</div>
+ <div id="point2" style="width:20px;height:20px;background-color:green;z-index:10000">&nbsp;</div>
+ <div id="point1Txt" style="z-index:10000"><b>当前时刻无观测值</b></div>
+ <div id="point2Txt" style="z-index:10000"><b>当前时刻有观测值</b></div>
+</table>
+<br/>
+<table cellpadding="0" width="800px" cellspacing="2px" border="0">
+ <tr bgcolor="#CEDAE8">
+  <td width="200px" height="32px" align="center">要素</td>
+  <td width="300px" height="32px" align="center">南极中山基本站</td>
+  <td width="300px" height="32px" align="center">南极长城基本站</td>
+ </tr>
+</table>
+<div id="dataDiv" style="margin: 1px;padding:0;width:800px;background-color:#ffffff;overflow: auto;">
+  <table id="dataList" width="800px" cellpadding="0" cellspacing="2px" border="1" style="border-color:blue"></table>
+</div>
+</div>
+</center>
+</body>
+</html>

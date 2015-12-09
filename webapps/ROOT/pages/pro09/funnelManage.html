@@ -1,0 +1,258 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css"
+			href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+
+		
+	</head>
+	<script type="text/javascript">
+	var funnel="";
+	var row=1;
+	var year=0;
+	var weekNum=0;
+	var time1="";
+	var time2="";
+	var funnelId="";
+	var d=new Date();
+	$(document).ready(function() {
+		year=d.getFullYear();
+		$("#td_year").html('年份：'+top.get5YearSelectHtml('year',false,year,"queryFunnelReportList()"));
+		var aoData=[];
+		aoData.push( { "name": "time1", "value":top.toTimestamp(year+'-01-01')});
+		aoData.push( { "name": "time2", "value":top.toTimestamp(year+'-12-31')});
+		top.sendAjaxRequest("/actions/FunnelReport.action?getFunnelReportList",[],CallbackFunnelReportList);
+	
+	})
+	function queryFunnelReportList(){
+		var aoData=[];
+		aoData.push( { "name": "time1", "value":top.toTimestamp($("#year").val()+'-01-01')});
+		aoData.push( { "name": "time2", "value":top.toTimestamp($("#year").val()+'-12-31')});
+		top.sendAjaxRequest("/actions/FunnelReport.action?getFunnelReportList",[],CallbackFunnelReportList);
+	}
+	function CallbackFunnelReportList(obj){
+		try{
+		 funnel=obj.aaData;
+		 var ht="";
+		 var row=0;
+		 for (var i=0;i<funnel.length;i++) {
+			  ht+='<tr ';
+			 // ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" '; bgcolor="#CEDAE8"
+			  ht+='>';
+			  ht+='<td class="week_td" width="150px" height="32px" id="'+funnel[i].id+'"  style="border-width: 0px 0px 1px 0;border-style: none none dotted none;border-color: #89A1B9" align="center">';
+			  ht+='<a href=\'javascript:void(0)\' onclick="getFunnelReport(\''+funnel[i].id+'\')">'+'第'+funnel[i].report_year+'年'+funnel[i].report_week+'周漏斗管理'+'</a>'
+			  ht+='</td>';
+			  ht+='</tr>';
+			 if ( row == 1 ) {
+				 row=0;
+			  } else {
+				 row=1;
+			  }
+		  }
+		  $("#reportList").html( ht );
+		  if(funnel.length>0) funnelId=funnel[0].id;
+		  getFunnelReport(funnelId);
+		}catch(e){
+		}
+	}
+	function getFunnelReport(id)
+	{
+		if(!id) return;
+		$("#"+funnelId).removeClass("selected");
+			$("#"+funnelId).addClass("week_td");
+			funnelId=id;
+			$("#"+funnelId).removeClass("week_td");
+			$("#"+funnelId).addClass("selected");
+		var aoData=[];
+		aoData.push( { "name": "funnelreport.id", "value":id } );
+		top.sendAjaxRequest("/actions/FunnelReport.action?getFunnelReport",aoData,FunnelReportCallback);
+	}
+	function FunnelReportCallback(obj)
+	{
+		try{
+			if ( obj.status == true ){
+				var o=obj.body;		
+			    $("#design_norm").html(o.design_norm);
+				$("#design_week_num").html(o.design_week_num);
+				$("#design_change").html(o.design_change);
+				$("#come_norm").html(o.come_norm);
+				$("#come_week_num").html(o.come_week_num);
+				$("#come_change").html(o.come_change);
+				$("#m_house_lv").html(o.m_house_lv);
+				$("#m_house_week_num").html(o.m_house_week_num);
+				$("#m_house_change").html(o.m_house_change);
+				$("#sign_norm").html(o.sign_norm);
+				$("#sign_week_num").html(o.sign_week_num);
+				$("#sign_change").html(o.sign_change);
+				$("#run_norm").html(o.run_norm);
+				$("#run_week_num").html(o.run_week_num);
+				$("#run_change").html(o.run_change);
+				$("#report_year").html(o.report_year);
+				year=o.report_year;
+				$("#report_week").html(o.report_week);
+				weekNum=o.report_week;
+				$("#a_week_num").html(o.a_week_num);
+				$("#a_total").html(o.a_total);
+				$("#a_change").html(o.a_change);
+				$("#b_week_num").html(o.b_week_num);
+				$("#b_total").html(o.b_total);
+				$("#b_change").html(o.b_change);
+				$("#c_week_num").html(o.c_week_num);
+				$("#c_total").html(o.c_total);
+				$("#c_change").html(o.c_change);
+				$("#d_week_num").html(o.d_week_num);
+				$("#d_total").html(o.d_total);
+				$("#d_change").html(o.d_change);
+				time1=top.getTimeStr(o.start_time);
+				time2=top.getTimeStr(o.end_time);
+			}
+		}catch(e)
+		{
+		}
+	}
+	//查询漏斗详细信息
+	function queryFunnelDetail(cust_type){
+		var custType="";
+		if(cust_type=='A'){
+			custType='A';
+		}else if(cust_type=='B'){
+			custType='B';
+		}else if(cust_type=='C'){
+			custType='C';
+		}else if(cust_type=='D'){
+			custType='D';
+		}else if(cust_type=='A_all'){
+			custType='A_all';
+		}else if(cust_type=='B_all'){
+			custType='B_all';
+		}else if(cust_type=='C_all'){
+			custType='C_all';
+		}else if(cust_type=='D_all'){
+			custType='D_all';
+		}else{
+			custType='';
+		}
+		var xurl="pages/pro09/funnelDetailInfo.html?time1="+time1+"&time2="+time2+"&cust_type="+custType;
+		top.openDialog("漏斗详细信息",xurl,true,650,400,null);
+	}
+
+	</script>
+	<style type="text/css">
+		.selected{
+			background-color:#FF7F00;
+			color:#FFFFFF;
+	 } 
+	 .selected a{
+		color:#FFFFFF;
+		text-decoration:none;
+		padding:8px;
+	 }
+	 .week_td{
+		background-color:#6CA6CD;
+		color:#FFFFFF;
+	 }
+	  .week_td a{
+		color:#FFFFFF;
+		text-decoration:none;
+		padding:8px;
+	 }
+	</style>
+	<body>
+			<table width="95%" align="center" style="margin:0 auto;margin:10px" cellpadding="2px" cellspacing="2px" border="2px" height="100%">
+				<tr class="tr_data">
+					<td width="30%" id="td_year"></td>
+					<td rowspan="2" align="center">
+					<p align="center"><font size="5"><b><label id="report_year"></label>(第<label id="report_week"></label>周)&nbsp;漏斗管理</b></font></p>
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" height="100%">
+				<tr class="tr_data" height="45px">
+					<td align="center" width="8%">客户级别</td>
+					<td align="center" width="8%">本期数</td>
+					<td align="center" width="8%">累计数</td>
+					<td align="center" width="8%">增/减</td>
+				</tr>
+				<tr class="tr_data" height="45px">
+					<td align="center">A类</td>
+					<td align="center"><a style="cursor:pointer;padding:10px 40px 10px 40px;text-decoration:none;" href="javascript:void(0)" onclick="queryFunnelDetail('A')"><label id="a_week_num"></label></a></td>
+					<td align="center"><a style="cursor:pointer;padding:10px 40px 10px 40px;text-decoration:none;" href="javascript:void(0)" onclick="queryFunnelDetail('A_all')"><label id="a_total"></label></a></td>
+					<td align="center"><label id="a_change"></label></td>
+				</tr>
+				<tr class="tr_data" height="45px">
+					<td align="center">B类</td>
+					<td align="center"><a style="cursor:pointer;padding:10px 40px 10px 40px;text-decoration:none;" href="javascript:void(0)" onclick="queryFunnelDetail('B')"><label id="b_week_num"></label></a></td>
+					<td align="center"><a style="cursor:pointer;padding:10px 40px 10px 40px;text-decoration:none;" href="javascript:void(0)" onclick="queryFunnelDetail('B_all')"><label id="b_total"></label></a></td>
+					<td align="center"><label id="b_change"></label></td>
+				</tr>
+			<tr class="tr_data" height="45px">
+					<td align="center">C类</td>
+					<td align="center"><a style="cursor:pointer;padding:10px 40px 10px 40px;text-decoration:none;" href="javascript:void(0)" onclick="queryFunnelDetail('C')"><label id="c_week_num"></label></a></td>
+					<td align="center"><a style="cursor:pointer;padding:10px 40px 10px 40px;text-decoration:none;" href="javascript:void(0)" onclick="queryFunnelDetail('C_all')"><label id="c_total"></label></a></td>
+					<td align="center"><label id="c_change"></label></td>
+				</tr>
+				<tr class="tr_data" height="45px">
+					<td align="center">D类</td>
+					<td align="center"><a style="cursor:pointer;padding:10px 40px 10px 40px;text-decoration:none;" href="javascript:void(0)" onclick="queryFunnelDetail('D')"><label id="d_week_num"></label></a></td>
+					<td align="center"><a style="cursor:pointer;padding:10px 40px 10px 40px;text-decoration:none;" href="javascript:void(0)" onclick="queryFunnelDetail('D_all')"><label id="d_total"></label></a></td>
+					<td align="center"><label id="d_change"></label></td>
+				</tr>
+			</table>
+			<br/><br/>
+			<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				<tr class="tr_data" height="40px">
+					<td align="center" width="8%">具体目标</td>
+					<td align="center" width="8%">衡量指标</td>
+					<td align="center" width="8%">本期数</td>
+					<td align="center" width="8%">增/减</td>
+				</tr>
+			<tr class="tr_data" height="40px">
+					<td align="center">预约设计成功率</td>
+					<td align="center"><label id="design_norm"></label></td>
+					<td align="center"><label id="design_week_num"></label></td>
+					<td align="center"><label id="design_change"></label></td>
+				</tr>
+				<tr class="tr_data" height="40px">
+					<td align="center">二次预约来店成功率</td>
+					<td align="center"><label id="come_norm"></label></td>
+					<td align="center"><label id="come_week_num"></label></td>
+					<td align="center"><label id="come_change"></label></td>
+				</tr>
+				<tr class="tr_data" height="40px">
+					<td align="center">量房成功率</td>
+					<td align="center">6%</td>
+					<td align="center">15%</td>
+					<td align="center">+1%</td>
+				</tr>
+				<tr class="tr_data" height="40px">
+					<td align="center">签单成功率</td>
+					<td align="center">2%</td>
+					<td align="center">10%</td>
+					<td align="center">+2%</td>
+				</tr>
+			<tr class="tr_data" height="40px">
+					<td align="center">跑单率</td>
+					<td align="center">3%</td>
+					<td align="center">15%</td>
+					<td align="center">+1%</td>
+				</tr>
+			</table>
+					</td>
+				</tr>
+				<tr class="tr_data">
+					<td valign="top">
+						<table width="100%" align="center" id="reportList" border="1" cellpadding="3" cellspacing="1" width="100%"  style="background-color: #b9d8f3;" ></table>
+					</td>
+				</tr>
+			</table>
+	</body>
+</html>

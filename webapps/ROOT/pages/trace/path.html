@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+
+<script type="text/javascript" charset="utf-8">
+var interGetResult1=0;
+var g_UrlBase="/jade";
+
+$(document).ready(function() {
+    var wh=$(window).height();
+	var ww=$(window).width();
+	$('#map').css("height",wh - 50);
+	try{
+	 clearInterval( interGetResult1 );
+	 interGetResult1 = setInterval("getNewestPath()", 8000 );
+    }catch(e){}
+	
+	    var ind=document.URL.indexOf("/pages/");
+	    if ( ind != -1 ) {
+		  g_UrlBase = document.URL.substring(0,ind);
+		} else g_UrlBase = document.URL;
+} );
+
+function getNewestPath(){
+    if ( $("#deviceId").val() == '' ) return ;
+    var aoData=[];
+	aoData.push( { "name": "traceRecd.device_id", "value": $("#deviceId").val() } );
+	sendAjaxRequest("/actions/TraceClient.action?getCurrentLocation",aoData,getNewestPathCallback,true);
+}
+
+function getNewestPathCallback(obj){
+    if ( obj ) {
+	    if ( obj.status == false ) {
+		  $("#msg").html(obj.msg);
+		  return ;
+		}
+		$("#msg").html("最后报告时间:"+obj.body.time);
+		var mapFrame = document.getElementById("mapFrame");
+		try{
+		  if ( mapFrame ) mapFrame.contentWindow.drawAndCenterGPSDot( obj.body.lon, obj.body.lat );
+		}catch(e){
+		}
+	}
+}
+
+
+
+function sendAjaxRequest(xurl,param,fnCallback,notShowError){
+	    if ( !notShowError ) notShowError = false;
+	    if ( xurl.indexOf('http://') == -1 ) xurl = g_UrlBase+xurl;
+		$.ajax( {
+			"url":  xurl,
+			"data": param,
+			"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+			"success": function (json) {
+				try{ fnCallback( json );}catch(e){}
+			},
+			"dataType": "json",
+			"cache": false,
+			"type": "POST",
+			"error": function (xhr, error, thrown) {
+			}
+		} );
+	}
+</script>
+</head>
+<body>
+<div width="100%">
+	        <div style='border: 2px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="150px">&nbsp;当前轨迹跟踪&nbsp;</td>
+				  <td align="right">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			     <tr class="tr_data">
+				  <td align="right" width="20%">设备编号:</td><td align="left" width="60%"><input type="text" id="deviceId" />&nbsp;<font color="blue">(输入设备编号后页面会自动刷新查询)</font></td>
+				  <td align="left" width="20%">
+				   <span id="msg"></span> 
+				  </td>
+			     </tr>
+			 </table>
+			</div>
+</div>
+<div id="map">
+  <iframe id="mapFrame" src="../baiduMap.html" width="100%" height="100%" style="background-color:#ffffff" frameborder="0"></iframe>
+</div>
+</body>
+</html>

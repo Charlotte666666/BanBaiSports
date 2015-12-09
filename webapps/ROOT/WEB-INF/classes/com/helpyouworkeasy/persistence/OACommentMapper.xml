@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.helpyouworkeasy.persistence.OACommentMapper">
+  <insert id="insertCommentInfo" parameterType="CommentInfo">
+    INSERT INTO tb_comment_info (comment_code,task_code,comment_category,comment_content,status,publisher_code,is_delete,publish_time)
+    VALUES (#{comment_code}, #{task_code}, #{comment_category}, #{comment_content}, #{status}, #{publisher_code}, #{is_delete}, #{publish_time})
+  </insert>
+
+  <update id="updateCommentInfo" parameterType="CommentInfo">
+    update tb_comment_info set 
+    task_code=#{task_code},comment_category=#{comment_category},comment_content=#{comment_content},status=#{status},publisher_code=#{publisher_code},is_delete=#{is_delete},publish_time=#{publish_time}
+    where comment_code=#{comment_code}
+  </update>
+
+  <select id="getCommentInfoListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tb_comment_info where 1=1 
+    <if test="o.comment_code != '' and o.comment_code != null" >
+      and comment_code=#{o.comment_code}
+    </if>
+    <if test="o.task_code != '' and o.task_code != null" >
+      and task_code=#{o.task_code}
+    </if>
+    <if test="o.comment_category != '' and o.comment_category != null" >
+      and comment_category=#{o.comment_category}
+    </if>
+    <if test="o.comment_content != '' and o.comment_content != null" >
+      and comment_content=#{o.comment_content}
+    </if>
+    <if test="o.status != '' and o.status != null" >
+      and status=#{o.status}
+    </if>
+    <if test="o.publisher_code != '' and o.publisher_code != null" >
+      and publisher_code=#{o.publisher_code}
+    </if>
+    <if test="o.is_delete != '' and o.is_delete != null" >
+      and is_delete=#{o.is_delete}
+    </if>
+    <if test="o.publish_time != -1" >
+      and publish_time=#{o.publish_time}
+    </if>
+    <if test="time1 != -1" >
+      and >=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=
+    </if>
+  </select>
+
+  <select id="getCommentInfoPageList" parameterType="map" resultType="CommentInfo">
+    select 
+    comment_code,task_code,comment_category,comment_content,status,publisher_code,is_delete,publish_time
+    from tb_comment_info where 1=1 
+    <if test="o.comment_code != '' and o.comment_code != null" >
+      and comment_code=#{o.comment_code}
+    </if>
+    <if test="o.task_code != '' and o.task_code != null" >
+      and task_code=#{o.task_code}
+    </if>
+    <if test="o.comment_category != '' and o.comment_category != null" >
+      and comment_category=#{o.comment_category}
+    </if>
+    <if test="o.comment_content != '' and o.comment_content != null" >
+      and comment_content=#{o.comment_content}
+    </if>
+    <if test="o.status != '' and o.status != null" >
+      and status=#{o.status}
+    </if>
+    <if test="o.publisher_code != '' and o.publisher_code != null" >
+      and publisher_code=#{o.publisher_code}
+    </if>
+    <if test="o.is_delete != '' and o.is_delete != null" >
+      and is_delete=#{o.is_delete}
+    </if>
+    <if test="o.publish_time != -1" >
+      and publish_time=#{o.publish_time}
+    </if>
+    <if test="time1 != -1" >
+      and >=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+
+
+</mapper>

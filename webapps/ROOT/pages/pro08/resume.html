@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		
+		    var oTable=null;
+		    var optType="";
+			var prison_code="";
+			var objs=[];
+			var isSaveOK=false;
+			
+	$(document).ready(function() {
+		optType=top.getUrlParam(document.URL,"optType");
+		infoId=top.getUrlParam(document.URL,"infoId");
+		prison_code=top.getUrlParam(document.URL,"prison_code");
+		tel=top.getUrlParam(document.URL,"tel");
+		var post=decodeURI(top.getUrlParam(document.URL,"post"));
+		if(!post)  post = "";
+		var begin_date=top.getUrlParam(document.URL,"begin_date") ;
+		if(!begin_date)  begin_date = "";
+		var end_date=top.getUrlParam(document.URL,"end_date") ;
+		if(!end_date)  end_date = "";
+		var company=decodeURI(top.getUrlParam(document.URL,"company"));
+		if ( !company ) company="";
+		$("#post").val(post);
+		$("#begin_date").val(begin_date);
+		$("#end_date").val(end_date );
+		$("#company").val( company );
+   } );
+   function checkSavebegin_date(){
+		var msg="";
+		if( $("#post").val() == '' )msg += "职务不能为空！";
+		if( $("#begin_date").val() == '' )msg += "开始日期不能为空！";
+		if( $("#end_date").val() == '' )msg += "结束日期不能为空！";
+		if( $("#company").val() == '' )msg += "所在单位不能为空";
+		return msg;
+	}
+	function saveResumeInfo(){
+		var checkMsg = checkSavebegin_date();
+	    if ( checkMsg != '' ) {
+	       top.showInfoWinWarn(checkMsg);
+           return ;
+	    }
+		var aoData=[];
+		aoData.push( { "name": "resumeRecd.prison_code", "value": prison_code } );
+		aoData.push( { "name": "resumeRecd.post", "value": $("#post").val() } );
+		aoData.push( { "name": "resumeRecd.end_date", "value": $("#end_date").val() } );
+		aoData.push( { "name": "resumeRecd.begin_date", "value": $("#begin_date").val() } );
+		aoData.push( { "name": "resumeRecd.company", "value": $("#company").val() } );
+		 if(optType == "insert"){
+	  var xurl="/actions/Prison.action?insertResumeRecd";
+	  }
+	  else if(optType == "update"){
+	   aoData.push( { "name": "resumeRecd.id", "value": infoId} );
+	  var xurl="/actions/Prison.action?updateResumeRecd";
+	  }
+
+	 top.sendAjaxRequest(xurl,aoData,optCallback);
+ }
+	
+  function optCallback(obj){
+	try{
+	    if (obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功");
+		 parent.closeDialog();
+	    }else{
+	      isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   
+	function doCancel(){
+	   parent.closeDialog();
+    }
+		</script>
+		
+	</head>
+	<body>
+		<div width="100%">	
+		    <div style='border: 2px solid #89A1B9;margin:5px;margin-top:25px'>
+			<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				<tr class="tr_data">
+					<td width="20%">开始日期</td><td width="30%" align="left"><input type="text" id="begin_date" size="20"></input></td>
+				</tr>
+				<tr class="tr_data">
+				<td width="20%">结束日期</td><td width="30%" align="left"><input type="text" id="end_date" /></td>
+				</tr>
+				<tr class="tr_data">
+					<td width="20%">所在单位</td><td width="30%" align="left"><input type="text" id="company" value=""/></td>
+				</tr>
+				<tr class="tr_data">
+					<td width="20%">职务</td><td width="30%" align="left"><input type="text" id="post" value=""  size="20"></input></td>
+				</tr>
+	</table>
+		<p>
+		   <table  width="100%" align="center"><tr>
+					<td align="right"><span id="okBtn" class="buttonTwo"><a href="javascript:saveResumeInfo()">提交</a></span></td>
+					<td align="left"><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">取消</a></span></td>
+		   </tr></table>
+		   </p>
+		</div>
+	</body>
+</html>

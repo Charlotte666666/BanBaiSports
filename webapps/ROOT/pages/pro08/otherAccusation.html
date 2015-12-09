@@ -1,0 +1,141 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		
+		    var oTable=null;
+		    var optType="";
+			var prison_code="";
+			var objs=[];
+			var isSaveOK=false;
+			
+	$(document).ready(function() {
+        optType=top.getUrlParam(document.URL,"optType");
+		infoId=top.getUrlParam(document.URL,"infoId");
+		prison_code=top.getUrlParam(document.URL,"prison_code");
+		var measure_date=top.getUrlParam(document.URL,"measure_date");
+		if(!measure_date)  measure_date = "";
+		var acccusation=decodeURI( top.getUrlParam(document.URL,"acccusation") );
+		if(!acccusation)  acccusation = "";
+		var invest_auth=decodeURI(top.getUrlParam(document.URL,"invest_auth"));
+		if ( !invest_auth ) invest_auth="";
+		var judicial=decodeURI(top.getUrlParam(document.URL,"judicial"));
+		if ( !judicial ) judicial="";
+		var prison_term=top.getUrlParam(document.URL,"prison_term");
+		if(!prison_term)  prison_term = "";
+		var charge=decodeURI( top.getUrlParam(document.URL,"charge") );
+		if(!charge)  charge = "";
+		$("#measure_date").val(top.getTimeStr(measure_date,true));
+		$("#acccusation").val( acccusation );
+		$("#invest_auth").val( invest_auth );
+		$("#judicial").val( judicial );
+		$("#charge").val( charge );
+		$("#prison_term").val( prison_term );
+   } );
+   function checkSaveInterviewInfo(){
+		var msg="";
+		if( $("#measure_date").val() == '' )msg += "采取强制措施时间不能为空！";
+		if( $("#acccusation").val() == '' )msg += "罪名不能为空！";
+		if( $("#invest_auth").val() == '' )msg += "侦查机关不能为空";
+		if( $("#judicial").val() == '' )msg += "审判机关不能为空";
+		if( $("#charge").val() == '' )msg += "所涉罪名不能为空";
+		if( $("#prison_term").val() == '' )msg += "刑期不能为空";
+		return msg;
+	}
+	
+	function saveTermChangeInfo(){
+	var checkMsg = checkSaveInterviewInfo();
+	    if ( checkMsg != '' ) {
+	       top.showInfoWinWarn(checkMsg);
+           return ;
+	    }
+		var aoData=[];
+		aoData.push( { "name": "otherInfo.prison_code", "value": prison_code } );
+		aoData.push( { "name": "otherInfo.measure_date", "value": top.toTimestamp($("#measure_date").val()) } );
+		aoData.push( { "name": "otherInfo.acccusation", "value": $("#acccusation").val() } );
+		aoData.push( { "name": "otherInfo.invest_auth", "value": $("#invest_auth").val() } );
+		aoData.push( { "name": "otherInfo.judicial", "value": $("#judicial").val() } );
+		aoData.push( { "name": "otherInfo.charge", "value": $("#charge").val() } );
+		aoData.push( { "name": "otherInfo.prison_term", "value": $("#prison_term").val() } );
+		if(optType == "insert"){
+	  var xurl="/actions/Prison.action?insertOtherAccusation";
+	  }
+	  else if(optType == "update"){
+	   aoData.push( { "name": "otherInfo.id", "value": infoId} );
+	  var xurl="/actions/Prison.action?updateOtherAccusation";
+	  }
+
+	 top.sendAjaxRequest(xurl,aoData,optCallback);
+	}
+	
+   
+   
+    function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功");
+		 parent.closeDialog();
+	    }else{
+	    	isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   
+	function doCancel(){
+	   parent.closeDialog();
+   }
+		</script>
+		
+	</head>
+	<body>
+		<div width="100%">
+		    <div style='border: 2px solid #89A1B9;margin:5px;margin-top:25px'>
+			<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				<tr class="tr_data">
+				<td width="30%">罪名</td><td width="70%" align="left"><input type="text" id="acccusation" value=""/></td>
+				</tr>
+				<tr class="tr_data">
+					<td width="20%">被采取强制措施时间</td><td align="left"><input type="text" id="measure_date" value="" onclick="new Calendar().show(this);"  size="20"></input></td>
+				</tr>
+				<tr class="tr_data">
+				  <td width="20%">侦查机关</td><td align="left" ><textarea id="invest_auth" rows="2" cols="60"></textarea></td>
+				</tr>
+				<tr class="tr_data">
+				  <td width="20%">所涉罪名</td><td align="left" ><textarea id="charge" rows="2" cols="60"></textarea></td>
+				</tr>
+				<tr class="tr_data">
+				  <td width="20%">刑期</td><td align="left" colspan="3"><input type="text" id="prison_term"></textarea></td>
+				</tr>
+				<tr class="tr_data">
+				  <td width="20%">审判机关</td><td align="left" ><textarea id="judicial" rows="2" cols="60"></textarea></td>
+				</tr>
+		</table>
+		<p>
+		   <table  width="100%" align="center"><tr>
+					<td align="right"><span id="okBtn" class="buttonTwo"><a href="javascript:saveTermChangeInfo()">提交</a></span></td>
+					<td align="left"><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">取消</a></span></td>
+		   </tr></table>
+		   </p>
+		</div>
+	</body>
+</html>

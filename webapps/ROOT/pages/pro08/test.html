@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>社区矫正信息管理系统</title>
+	<link type="text/css" href="css/bootstrap.css" rel="stylesheet" />
+	<link type="text/css" href="css/common.css" rel="stylesheet" />
+	<link type="text/css" href="css/main.css" rel="stylesheet" />
+  <script type="text/javascript" src="js/jquery.min.js"></script>
+  <script src="js/html5shiv.js"></script>
+  
+<link type="text/css" href="css/test.css" rel="stylesheet" />
+
+</head>
+<body>
+
+	<div class="container test-container pd20 clearfix">
+		<div class="main test-main pdb20 clearfix">
+			<h2 class="fw-normal text-main-t text-center pdb10 fs-20 mgb30">社区矫正对象等级管理测定量表</h2>
+			<!-- test-cont -->
+			<ul class="test-cont unstyled clearfix mgb20">
+				<li class="info-way">
+					<span class="info-way-t">信息获取渠道：</span>
+					<label for="" class="radio"><input name="info_type" type="radio" checked />查询档案资料</label>
+					<label for="" class="radio"><input name="info_type" type="radio" />与矫正对象谈话</label>
+					<label for="" class="radio"><input name="info_type" type="radio" />走访社区</label>
+					<label for="" class="radio"><input name="info_type" type="radio" />走访邻居</label>
+					<label for="" class="radio"><input name="info_type" type="radio" />联系派出所</label>
+					<label for="" class="radio"><input name="info_type" type="radio" />走访单位或学校</label>
+					<label for="" class="radio"><input name="info_type" type="radio" />走访受害人及家庭</label>
+				</li>
+				<!-- test-sort1 -->
+				<li class="test-sort test-sort1" class="d">
+					<h3 class="sort-t fs-18 fw-normal">一、家庭背景（20分）</h3>
+					<!-- sort-cont1 -->
+					<div class="sort-cont sort-cont1">
+						<p class="sort-pt">
+							（一）家庭经济情况（3分）
+							<span class="help-inline">评分标准：第1-3题选第一项得1分，选第二项得0.5分，选第三项不得分。</span>
+						</p>
+						<ul class="sort-cont-list unstyled">
+							<li>
+								<span class="cont-list-t">1）本人经济情况</span>
+								<label for="" class="radio"><input name="data1[data1]" type="radio" checked value="1" class="d">无工作，无收入，无亲友帮助</label>
+								<label for="" class="radio"><input name="data1[data1]" type="radio" value="0.5">有工作收入但不稳定，或偶有亲友帮助</label>
+								<label for="" class="radio"><input name="data1[data1]" type="radio" value="0">有工作，且收入稳定，或有亲友经常帮助</label>
+							</li>
+							<li>
+								<span class="cont-list-t">2）配偶经济情况</span>
+								<label for="" class="radio"><input name="data1[data2]" type="radio" checked value="1" class="d">无配偶，或配偶无工作，无收入，无亲友帮助</label>
+								<label for="" class="radio"><input name="data1[data2]" type="radio" value="0.5">有工作收入但不稳定，或偶有亲友帮助</label>
+								<label for="" class="radio"><input name="data1[data2]" type="radio" value="0">有工作，且收入稳定，或有亲友经常帮助</label>
+							</li>
+							<li>
+								<span class="cont-list-t">3）父母家庭经济总体情况</span>
+								<label for="" class="radio"><input name="data1[data3]" type="radio" checked value="1" class="d">较差</label>
+								<label for="" class="radio"><input name="data1[data3]" type="radio" value="0.5">一般</label>
+								<label for="" class="radio"><input name="data1[data3]" type="radio" value="0">较好</label>
+							</li>
+						</ul>
+					</div>
+					<!-- sort-cont1 end -->
+					<!-- sort-cont2 -->
+					<div class="sort-cont sort-cont2">
+						<p class="sort-pt">
+							（二）矫正对象基本情况（10分）
+							<span class="help-inline">评分标准：第4-20题选“是”得1分，选“否”不得分。</span>
+						</p>
+						<ul class="sort-cont-list unstyled">
+							<li>
+								<span class="cont-list-t">4）未婚，或年龄在70岁以下</span>
+								<label for="" class="radio"><input name="data1[data4]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data1[data4]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">5）无家可归</span>
+								<label for="" class="radio"><input name="data1[data5]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data1[data5]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">6）无业可就</span>
+								<label for="" class="radio"><input name="data1[data6]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data1[data6]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">7）无生活来源</span>
+								<label for="" class="radio"><input name="data1[data7]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data1[data7]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">8）文化程度初中、小学或以下</span>
+								<label for="" class="radio"><input name="data1[data8]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data1[data8]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">9）离异、丧偶</span>
+								<label for="" class="radio"><input name="data1[data9]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data1[data9]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">10）邻里关系较差或不容纳</span>
+								<label for="" class="radio"><input name="data1[data10]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data1[data10]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">11）家庭关系紧张，不接纳或断绝来往</span>
+								<label for="" class="radio"><input name="data1[data11]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data1[data11]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">12）基本无生存技能，需要教育或培训</span>
+								<label for="" class="radio"><input name="data1[data12]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data1[data12]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">13）社区成员对其进入社区矫正不理解、抵触、排斥或基本不过问</span>
+								<label for="" class="radio"><input name="data1[data13]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data1[data13]" type="radio" value="0">否</label>
+							</li>
+						</ul>
+					</div>
+					<!-- sort-cont2 end -->
+					<!-- sort-cont3 -->
+					<div class="sort-cont sort-cont1">
+						<p class="sort-pt">
+							（三）家庭对矫正对象的监督情况（3分）
+						</p>
+						<ul class="sort-cont-list unstyled">
+							<li>
+								<span class="cont-list-t">14）基本无监督，无管教 </span>
+								<label for="" class="radio"><input name="data1[data14]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data1[data14]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">15）家庭不太重视，或监督有困难，监督无力 </span>
+								<label for="" class="radio"><input name="data1[data15]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data1[data15]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">16）监督方法简单粗暴，或有暴力倾向</span>
+								<label for="" class="radio"><input name="data1[data16]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data1[data16]" type="radio" value="0">否</label>
+							</li>
+						</ul>
+					</div>
+					<!-- sort-cont3 end -->
+					<!-- sort-cont4 -->
+					<div class="sort-cont sort-cont1">
+						<p class="sort-pt">
+							（四）矫正对象对家庭、亲友的态度情况（2分）
+						</p>
+						<ul class="sort-cont-list unstyled">
+							<li>
+								<span class="cont-list-t">17）关系冷淡，或态度对抗、敌视</span>
+								<label for="" class="radio"><input name="data1[data17]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data1[data17]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">18）认为很难和睦相处，或没法共同生活</span>
+								<label for="" class="radio"><input name="data1[data18]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data1[data18]" type="radio" value="0">否</label>
+							</li>
+						</ul>
+					</div>
+					<!-- sort-cont4 end -->
+					<!-- sort-cont5 -->
+					<div class="sort-cont sort-cont1">
+						<p class="sort-pt">
+							（五）矫正对象居住情况（2分）
+						</p>
+						<ul class="sort-cont-list unstyled">
+							<li>
+								<span class="cont-list-t">19）没有住房，或无固定居住地</span>
+								<label for="" class="radio"><input name="data1[data19]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data1[data19]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">20）独居，或常与社会不良人员合住</span>
+								<label for="" class="radio"><input name="data1[data20]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data1[data20]" type="radio" value="0">否</label>
+							</li>
+						</ul>
+					</div>
+					<!-- sort-cont5 end -->
+				</li>
+				<!-- test-sort1 end -->
+
+				<!-- test-sort2 -->
+				<li class="test-sort test-sort2">
+					<h3 class="sort-t fs-18 fw-normal">二、个性特点（30分）
+						<span class="help-inline fs-14">评分标准：第21-50题选“是”得1分，选“否”不得分。</span>
+					</h3>
+					<!-- sort-cont6 -->
+					<div class="sort-cont sort-cont1">
+						<p class="sort-pt">
+							（一）矫正对象生理健康情况（5分）
+						</p>
+						<ul class="sort-cont-list unstyled">
+							<li>
+								<span class="cont-list-t">21）身体健康 </span>
+								<label for="" class="radio"><input name="data2[data21]" type="radio" value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data21]" type="radio" checked value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">22）有疾病，但不严重，生活能自理，行为活动基本不受影响 </span>
+								<label for="" class="radio"><input name="data2[data22]" type="radio" value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data22]" type="radio" checked value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">23）吸毒，或有吸毒史，或对毒品依赖</span>
+								<label for="" class="radio"><input name="data2[data23]" type="radio" value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data23]" type="radio" checked value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">24）经常酗烟、饮用烈性酒，行为经常失常</span>
+								<label for="" class="radio"><input name="data2[data24]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data24]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">25）有精神病，或有精神病史</span>
+								<label for="" class="radio"><input name="data2[data25]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data25]" type="radio" value="0">否</label>
+							</li>
+						</ul>
+					</div>
+					<!-- sort-cont6 end -->
+					<!-- sort-cont7 -->
+					<div class="sort-cont sort-cont2">
+						<p class="sort-pt">
+							（二）矫正对象心里健康情况（10分）
+						</p>
+						<ul class="sort-cont-list unstyled">
+							<li>
+								<span class="cont-list-t">26）认为自己是被歧视或不公平对待的受害者</span>
+								<label for="" class="radio"><input name="data2[data26]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data26]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">27） 如果有人惹，会实施报复，或对过去发生的事耿耿于怀</span>
+								<label for="" class="radio"><input name="data2[data27]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data27]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">28）经常有想摔东西或破坏东西的冲动</span>
+								<label for="" class="radio"><input name="data2[data28]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data28]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">29）对当前自身环境经常感到压抑</span>
+								<label for="" class="radio"><input name="data2[data29]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data29]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">30）对未来感到茫然，对生活失去信心和希望或有强烈焦虑感、恐惧感</span>
+								<label for="" class="radio"><input name="data2[data30]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data30]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">31）如果在找工作时被拒绝，或被工作单位辞退，其心理上会不堪忍受</span>
+								<label for="" class="radio"><input name="data2[data31]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data31]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">32）经常感到忧伤、不愉快以至于不能忍受</span>
+								<label for="" class="radio"><input name="data2[data32]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data32]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">33）有过自我伤害、试图自杀现象</span>
+								<label for="" class="radio"><input name="data2[data33]" type="radio" value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data33]" type="radio" checked value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">34）与周围的没有共同话题可谈</span>
+								<label for="" class="radio"><input name="data2[data34]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data34]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">35）经常感到自己没什么价值 </span>
+								<label for="" class="radio"><input name="data2[data35]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data35]" type="radio" value="0">否</label>
+							</li>
+						</ul>
+					</div>
+					<!-- sort-cont7 end -->
+					<!-- sort-cont8 -->
+					<div class="sort-cont sort-cont1">
+						<p class="sort-pt">
+							（三）矫正对象思维及行为情况（10分）
+						</p>
+						<ul class="sort-cont-list unstyled">
+							<li>
+								<span class="cont-list-t">36）脾气暴躁，经常不能控制自己言行 </span>
+								<label for="" class="radio"><input name="data2[data36]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data36]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">37）行为鲁莽，缺乏对自己行为后果的认识 </span>
+								<label for="" class="radio"><input name="data2[data37]" type="radio" value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data37]" type="radio" checked value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">38）经常遮掩自己的错误</span>
+								<label for="" class="radio"><input name="data2[data38]" type="radio" value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data38]" type="radio" checked value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">39）心胸狭窄，或很难体谅别人难处</span>
+								<label for="" class="radio"><input name="data2[data39]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data39]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">40）有时明知所做的事不对也会继续去做</span>
+								<label for="" class="radio"><input name="data2[data40]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data40]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">41）缺乏主见、易受他人控制</span>
+								<label for="" class="radio"><input name="data2[data41]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data41]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">42）觉得自己工作成绩或进步总得不到别人认可</span>
+								<label for="" class="radio"><input name="data2[data42]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data42]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">43）认为一旦犯罪，就将永远抬不起头</span>
+								<label for="" class="radio"><input name="data2[data43]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data43]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">44）觉得周围的人都与自己对着干</span>
+								<label for="" class="radio"><input name="data2[data44]" type="radio" value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data44]" type="radio" checked value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">45）遇到喜欢的异性时不能理智交往</span>
+								<label for="" class="radio"><input name="data2[data45]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data45]" type="radio" value="0">否</label>
+							</li>
+						</ul>
+					</div>
+					<!-- sort-cont8 end -->
+					<!-- sort-cont9 -->
+					<div class="sort-cont sort-cont1">
+						<p class="sort-pt">
+							（四）矫正对象社会交往情况（5分）
+						</p>
+						<ul class="sort-cont-list unstyled">
+							<li>
+								<span class="cont-list-t">46）经常与社会闲杂人员交往</span>
+								<label for="" class="radio"><input name="data2[data46]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data46]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">47）经常与同案犯交往</span>
+								<label for="" class="radio"><input name="data2[data47]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data47]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">48）经常与社会上不良人群被动交往</span>
+								<label for="" class="radio"><input name="data2[data48]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data48]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">49）很少，或没有善良人群或知心朋友与其交往</span>
+								<label for="" class="radio"><input name="data2[data49]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data49]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">50）总是尽量回避，不愿与外界交往</span>
+								<label for="" class="radio"><input name="data2[data50]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data2[data50]" type="radio" value="0">否</label>
+							</li>
+						</ul>
+					</div>
+					<!-- sort-cont9 end -->
+				</li>
+				<!-- test-sort2 end -->
+
+
+				<!-- test-sort3 -->
+				<li class="test-sort test-sort3">
+					<h3 class="sort-t fs-18 fw-normal">三、案件情况（30分）
+						<span class="help-inline fs-14">评分标准：第55-80题选“是”得1分，选“否”不得分。</span>
+					</h3>
+					<!-- sort-cont6 -->
+					<div class="sort-cont sort-cont1">
+						<p class="sort-pt">
+							（一）本次犯罪前曾受过处罚情况（5分）
+						</p>
+						<ul class="sort-cont-list unstyled">
+							<li>
+								<span class="cont-list-t">51）记过处分或受过行政拘留</span>
+								<label for="" class="radio"><input name="data3[data51]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data51]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">52）受过劳动教养 </span>
+								<label for="" class="radio"><input name="data3[data52]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data52]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">53）有犯罪史，或犯罪次数在2次以上</span>
+								<label for="" class="radio"><input name="data3[data53]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data53]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">54）初次犯罪时年龄在25岁以下</span>
+								<label for="" class="radio"><input name="data3[data54]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data54]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">55）上次犯罪距本次犯罪时间未超过3年</span>
+								<label for="" class="radio"><input name="data3[data55]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data55]" type="radio" value="0">否</label>
+							</li>
+						</ul>
+					</div>
+					<!-- sort-cont6 end -->
+					<!-- sort-cont7 -->
+					<div class="sort-cont sort-cont2">
+						<p class="sort-pt">
+							（二）本次犯罪情况（15分）
+						</p>
+						<ul class="sort-cont-list unstyled">
+							<li>
+								<span class="cont-list-t">56）惯犯、累犯</span>
+								<label for="" class="radio"><input name="data3[data56]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data56]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">57）主犯</span>
+								<label for="" class="radio"><input name="data3[data57]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data57]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">58）暴力犯罪</span>
+								<label for="" class="radio"><input name="data3[data58]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data58]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">59）团伙犯罪</span>
+								<label for="" class="radio"><input name="data3[data59]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data59]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">60）涉毒</span>
+								<label for="" class="radio"><input name="data3[data60]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data60]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">61）涉枪</span>
+								<label for="" class="radio"><input name="data3[data61]" type="radio" value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data61]" type="radio" checked value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">62）黑恶势力</span>
+								<label for="" class="radio"><input name="data3[data62]" type="radio" value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data62]" type="radio" checked value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">63）作案计划严密</span>
+								<label for="" class="radio"><input name="data3[data63]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data63]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">64）故意犯罪</span>
+								<label for="" class="radio"><input name="data3[data64]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data64]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">65）报复行为</span>
+								<label for="" class="radio"><input name="data3[data65]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data65]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">66）好逞强、逞能，或有强烈的表现欲、占有欲</span>
+								<label for="" class="radio"><input name="data3[data66]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data66]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">67）认为某些特定的罪行是可以接受的（如赌博、吸毒、卖淫、敲诈“贪官”等）</span>
+								<label for="" class="radio"><input name="data3[data67]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data67]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">68）认为某些人受到攻击是可以接受的（如从事色情服务的人员、外来人员、精神病人、残疾人、流浪人员等）</span>
+								<label for="" class="radio"><input name="data3[data68]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data68]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">69）犯罪实施期间无终止意识</span>
+								<label for="" class="radio"><input name="data3[data69]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data69]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">70）本次判决认罪态度一般，基本认罪或不认罪</span>
+								<label for="" class="radio"><input name="data3[data70]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data70]" type="radio" value="0">否</label>
+							</li>
+						</ul>
+					</div>
+					<!-- sort-cont7 end -->
+					<!-- sort-cont8 -->
+					<div class="sort-cont sort-cont1">
+						<p class="sort-pt">
+							（三）本次犯罪存在的客观情况（10分）
+						</p>
+						<ul class="sort-cont-list unstyled">
+							<li>
+								<span class="cont-list-t">71）因不健康生活、恶习等原因导致犯罪（如沉迷上网、酗酒、夜不归宿、经常斗殴打架等）</span>
+								<label for="" class="radio"><input name="data3[data71]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data71]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">72）因社会、家庭、学校、单位、等原因导致犯罪（如贫穷、厌学、辍学、处分、开除、劝退等）</span>
+								<label for="" class="radio"><input name="data3[data72]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data72]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">73）生活居住的环境恶劣或属犯罪高发区</span>
+								<label for="" class="radio"><input name="data3[data73]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data73]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">74）没有稳定的工作，无所事事</span>
+								<label for="" class="radio"><input name="data3[data74]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data74]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">75）他人诱使、受骗或胁迫犯罪</span>
+								<label for="" class="radio"><input name="data3[data75]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data75]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">76）受暴利、赌博、恐怖活动等音像制品或书刊读物影响</span>
+								<label for="" class="radio"><input name="data3[data76]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data76]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">77） 因交友不慎，或受到吸贩毒、卖淫嫖娼等社会丑恶现象影响而犯罪</span>
+								<label for="" class="radio"><input name="data3[data77]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data77]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">78）犯罪前对法律法规基本常识不了解</span>
+								<label for="" class="radio"><input name="data3[data78]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data78]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">79）改造期间长期无人看望，出狱后重新犯罪</span>
+								<label for="" class="radio"><input name="data3[data79]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data79]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">80） 出狱后失去家庭及社会的约束力，或没有得到帮教机构有效的帮助教育</span>
+								<label for="" class="radio"><input name="data3[data80]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data3[data80]" type="radio" value="0">否</label>
+							</li>
+						</ul>
+					</div>
+					<!-- sort-cont8 end -->
+				</li>
+				<!-- test-sort3 end -->
+
+				<!-- test-sort4 -->
+				<li class="test-sort test-sort4">
+					<h3 class="sort-t fs-18 fw-normal">四、对自己危害行为的认识（8分）</h3>
+					<!-- sort-cont6 -->
+					<div class="sort-cont sort-cont1">
+						<p class="sort-pt">
+							（一）矫正对象存在的消极情况（4分）
+							<span class="help-inline">评分标准：第81-84题选“是”得1分，选“否”不得分。</span>
+						</p>
+						<ul class="sort-cont-list unstyled">
+							<li>
+								<span class="cont-list-t">81）不愿意承担责任，或不能认识到危害行为对受害者和家庭的影响 </span>
+								<label for="" class="radio"><input name="data4[data81]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data4[data81]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">82）对工作人员态度基本不配合，或蛮横 </span>
+								<label for="" class="radio"><input name="data4[data82]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data4[data82]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">83）认为自己行为在当今社会是正常的事，仅仅是自己运气不好</span>
+								<label for="" class="radio"><input name="data4[data83]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data4[data83]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">84）认为自己还有可能犯同样的错误</span>
+								<label for="" class="radio"><input name="data4[data84]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data4[data84]" type="radio" value="0">否</label>
+							</li>
+						</ul>
+					</div>
+					<!-- sort-cont6 end -->
+					<!-- sort-cont7 -->
+					<div class="sort-cont sort-cont2">
+						<p class="sort-pt">
+							（二）矫正对象存在积极转变情况（4分）
+							<span class="help-inline">评分标准：第85-88题选“否”得1分，选“是”不得分</span>
+						</p>
+						<ul class="sort-cont-list unstyled">
+							<li>
+								<span class="cont-list-t">85）能正确认识自身行为，或承认危害事实</span>
+								<label for="" class="radio"><input name="data4[data85]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data4[data85]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">86）认识到重新犯罪的严重后果</span>
+								<label for="" class="radio"><input name="data4[data86]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data4[data86]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">87）真心想停止对社会和他人实施危害</span>
+								<label for="" class="radio"><input name="data4[data87]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data4[data87]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">88）遵规守纪，积极参加矫正活动，或受到奖励</span>
+								<label for="" class="radio"><input name="data4[data88]" type="radio" value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data4[data88]" type="radio" checked value="0">否</label>
+							</li>
+						</ul>
+					</div>
+					<!-- sort-cont7 end -->
+				</li>
+				<!-- test-sort4 end -->
+
+				<!-- test-sort5 -->
+				<li class="test-sort test-sort5">
+					<h3 class="sort-t fs-18 fw-normal">
+						五、矫正条件（12分）
+						<span class="help-inline fs-14">评分标准：第89-100题选“否”得1分，选“是”不得分。</span>
+					</h3>
+					<!-- sort-cont6 -->
+					<div class="sort-cont sort-cont1">
+						<ul class="sort-cont-list unstyled">
+							<li>
+								<span class="cont-list-t">89）恢复了自信和自我价值意识</span>
+								<label for="" class="radio"><input name="data5[data89]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data5[data89]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">90）生活有目标，有责任感</span>
+								<label for="" class="radio"><input name="data5[data90]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data5[data90]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">91）有稳定、健康的社交活动，乐意与他人合作以求改变</span>
+								<label for="" class="radio"><input name="data5[data91]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data5[data91]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">92）积极接受家庭、朋友或他人的帮助</span>
+								<label for="" class="radio"><input name="data5[data92]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data5[data92]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">93）家庭对其犯罪行为的正确认识，积极配合社区矫正</span>
+								<label for="" class="radio"><input name="data5[data93]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data5[data93]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">94）家庭有能力对其监督教育</span>
+								<label for="" class="radio"><input name="data5[data94]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data5[data94]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">95）社区治安环境良好，或社区建设比较成熟，基础实施完善</span>
+								<label for="" class="radio"><input name="data5[data95]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data5[data95]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">96）派出所、司法所能实施有效监督和管理</span>
+								<label for="" class="radio"><input name="data5[data96]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data5[data96]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">97）社区积极协助监督机构实施监督管理和教育帮助</span>
+								<label for="" class="radio"><input name="data5[data97]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data5[data97]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">98）学校、工作单位愿意并有能力提供帮助</span>
+								<label for="" class="radio"><input name="data5[data98]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data5[data98]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">99）愿对受害人真诚道歉或赔偿，关系有所改善，或一定程度上取得受害者谅解</span>
+								<label for="" class="radio"><input name="data5[data99]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data5[data99]" type="radio" value="0">否</label>
+							</li>
+							<li>
+								<span class="cont-list-t">100）不可能对受害者实施新的伤害</span>
+								<label for="" class="radio"><input name="data5[data100]" type="radio" checked value="1" class="d">是</label>
+								<label for="" class="radio"><input name="data5[data100]" type="radio" value="0">否</label>
+							</li>
+						</ul>
+					</div>
+					<!-- sort-cont6 end -->
+				</li>
+				<!-- test-sort5 end -->
+
+			</ul>
+			<!-- test-cont end -->
+			<p class="test-note clearfix"><a href="testResult.html" class="btn">提交</a></p>
+		</div>
+	</div>
+<script type="text/javascript" charset="utf-8">
+$('.demos').click(function(){
+
+	$(".d").attr("checked","checked");
+	return false;
+});
+</script>
+
+<script type="text/javascript" src="js/bootstrap.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+<script type="text/javascript">
+var oTable = null;
+
+$(document).ready( function() {
+   $("#tdstatus").html( top.getCodeSelectHtml("RECOMMEND_STATUS","status",true) );
+   loadList();
+});
+ 
+ function loadList(){
+    var iaoColumns= [
+				{ "sTitle": "推荐时间", "mDataProp": "create_time", "sWidth": "15%", "sClass": "center",
+				   "fnRender": function ( oObj ) {
+                       return top.getTimeStr( oObj.aData.create_time );
+                    },
+				    "bUseRendered": false  },
+			    { "sTitle": "注册人手机号", "mDataProp": "cell_phone", "sWidth": "10%", "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "注册人姓名", "mDataProp": "regist_name", "sWidth": "10%", "bUseRendered": false , "bSortable":false},
+				{ "sTitle": "推荐人", "mDataProp": "recommend_name", "sWidth": "10%", 
+			       "fnRender": function ( oObj ) {
+				     return '<a href=\'javascript:void(0)\' onclick="doctorInfo(\''+oObj.aData.recommend_id+'\')" >'+oObj.aData.recommend_name+'</a>' ;
+                   },
+			       "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "奖励金额", "mDataProp": "amount", "sWidth": "10%","bSortable":false, "bUseRendered": false },
+			   { "sTitle": "状态", "mDataProp": "status", "sWidth": "10%",
+                   "fnRender": function ( oObj ) {
+				      var ht = top.getCodeName( "RECOMMEND_STATUS", oObj.aData.status );
+					  return ht;
+                   },
+                   "bUseRendered": false, "bSortable":false
+               }
+        ];
+ 	
+		oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": top.getUrlBase()+"/actions/Doctor.action?getRecommendRecdList",
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     aoData.push( { "name": "time1", "value": $("#q_time1").val() } );
+						 aoData.push( { "name": "time2", "value": $("#q_time2").val() } );
+					     aoData.push( { "name": "recommendRecd.cell_phone", "value": $("#cell_phone").val() } );
+						 aoData.push( { "name": "recommendRecd.recommend_name", "value": $("#recommend_name").val() } );
+						 aoData.push( { "name": "recommendRecd.regist_name", "value": $("#regist_name").val() } );
+						 aoData.push( { "name": "recommendRecd.status", "value": top.g_GetNumValue( $("#status").val(), -1 ) } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumns
+	   } );
+ }
+ 
+ function doQuery(){
+	oTable.fnDraw();
+ }
+ 
+ function doctorInfo(uid){
+	var xurl="pages/pro06/doctorInfo.html?opt=update&infoId="+uid;
+	top.openDialog("医生信息",xurl,true,600,500,doQuery);
+ }
+
+</script>
+</head>
+<body>
+            <div style='border: 1px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="130px">&nbsp;推荐奖励信息查询&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+                  <td align="right" width="10%">推荐状态:</td>
+				  <td align="left" width="15%" id="tdstatus"></td>				  
+                  <td align="right" width="10%">推荐人姓名:</td>
+				  <td align="left" width="15%"><input type="text" id="recommend_name" size="15" /></td>
+                  <td align="right" width="10%">注册人姓名:</td>
+				  <td align="left" width="15%"><input type="text" id="regist_name" size="15" /></td>
+				 </tr>
+				<tr class="tr_data">
+				 <td align="right" width="10%">注册人手机号:</td>
+				 <td align="left" width="15%"><input type="text" id="cell_phone" size="15" /></td>
+				 <td align="right">推荐时间:</td><td colspan="3" align="left" colspan="7"><input type="text" id="q_time1" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" />~<input type="text" id="q_time2" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" /></td>	
+				</tr>
+			 </table>
+			</div>
+<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+</body>
+</html> 

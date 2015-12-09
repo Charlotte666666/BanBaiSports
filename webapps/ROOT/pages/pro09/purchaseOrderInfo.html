@@ -1,0 +1,382 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css" media="print, projection, screen">
+<script src="../../js/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+<script type="text/javascript">
+ 
+   var isCreated=false;
+   var isSaveOK=false;
+   var optType="";
+   var infoId="";
+   var list=null;
+   var ids='';
+   var orderIds='';
+   var money=0;
+   var info=null;
+   var productSupplier="";
+   var date =top.getCurrentClientTime();
+   var g_allSupplier=[];
+   var type="";
+   var brand="";
+   var is_customized="";
+   $(document).ready(function() {
+      optType=top.getUrlParam(document.URL,"optType");
+	  
+	  
+	  if(optType=="insert"){
+      list = top.getTempValue();
+	  type=top.getUrlParam(document.URL,"type");
+	  brand=top.getUrlParam(document.URL,"brand");
+	  $("#printBtn").show();
+	  $("#button_table").show();
+	  $("#span_product_supplier").html(top.getSupplierNameById(brand));
+	  $("#product_supplier").val(brand);
+	  //$("#span_product_supplier").html(getAllSupplierSelect("product_supplier"));
+	  initData();
+	  }else if(optType=="check"){
+	   infoId=top.getUrlParam(document.URL,"order_id");
+	   is_customized=top.getUrlParam(document.URL,"is_customized");
+	   $("#button_table").hide();
+	   var aoData=[];
+	   aoData.push( { "name": "purInfo.order_id", "value":infoId} );
+	   top.sendAjaxRequest("/actions/ProductOrder.action?getPurchaseOrderById",aoData,getPurOrderCallback);
+	  }
+   } );
+   function getPurOrderCallback(obj){
+     info = obj.body;
+     var aoData=[];
+	 if(!is_customized){
+	    is_customized=info.is_customized;
+	 }
+	 if(is_customized=="1"){//订制产品
+	   xurl="/actions/ProductOrder.action?getProCustomizeByPurId";
+       aoData.push( { "name": "customize.purchase_id", "value":infoId} );
+	 }else{//非订制产品
+	   xurl="/actions/ProductOrder.action?getOrderDetailListByPurId";
+       aoData.push( { "name": "orderdetail.purchase_id", "value":infoId} );
+	 }
+	 top.sendAjaxRequest(xurl,aoData,getOrderDetailCallback);
+   }
+   function getOrderDetailCallback(obj){
+    list=obj.aaData;
+    var ht='';
+	ht+='<tbody>';
+    ht+='<tr class="firstRow" height="35px">';
+    ht+=' <td width="147" align="center" style=" border-width: 1px; border-style: solid;">';
+    ht+=' <span style="font-size: 10px;"> 品牌</span>';
+    ht+='</td>';
+    ht+='<td width="147"  align="center" style="word-break: break-all; border-width: 1px; border-style: solid;">';
+    ht+='  <span style="font-size: 10px;">产品名称</span>';
+    ht+=' </td>';
+    ht+=' <td width="100"  align="center" style="word-break: break-all; border-width: 1px; border-style: solid;">';
+    ht+='  <span style="font-size: 10px;"> 单位</span>';
+    ht+='</td>';
+	ht+=' <td width="100"  align="center" style="word-break: break-all; border-width: 1px; border-style: solid;">';
+    ht+='  <span style="font-size: 10px;"> 规格</span>';
+    ht+='</td>';
+	ht+=' <td width="100"  align="center" style="word-break: break-all; border-width: 1px; border-style: solid;">';
+    ht+='  <span style="font-size: 10px;"> 型号</span>';
+    ht+='</td>';
+    ht+='<td width="100"  align="center" style="word-break: break-all; border-width: 1px; border-style: solid;">';
+    ht+='   <span style="font-size: 10px;"> 数量</span>';
+    ht+=' </td>';
+    ht+=' <td width="100"  align="center" style="word-break: break-all; border-width: 1px; border-style: solid;">';
+    ht+='    <span style="font-size: 10px;"> 单价</span>';
+    ht+='</td>';
+    ht+='<td width="100"  align="center" style="word-break: break-all; border-width: 1px; border-style: solid;">';
+    ht+='   <span style="font-size: 10px;"> 金额</span>';
+    ht+='</td>';
+    ht+=' </tr>';
+	   for(var i=0;i<list.length;i++){
+	   money+=list[i].money;
+       ht+=' <tr height="35px">';
+           ht+=' <td width="147"  align="center" style="border-width: 1px; border-style: solid;"> <span style="font-size: 12px;">'+top.getSupplierNameById(list[i].product_brand)+'</span></td>';
+           ht+=' <td width="147"  align="center" style="border-width: 1px; border-style: solid;"> <span style="font-size: 12px;">'+list[i].product_name+'</span></td>';
+           ht+='<td width="147"  align="center" style="border-width: 1px; border-style: solid;"> <span style="font-size: 12px;">'+top.getCodeName("UNIT",list[i].unit)+'</span></td>';
+           ht+='<td width="147"  align="center" style="border-width: 1px; border-style: solid;"> <span style="font-size: 12px;">'+list[i].product_size+'</span></td>';
+           ht+='<td width="147"  align="center" style="border-width: 1px; border-style: solid;"> <span style="font-size: 12px;">'+list[i].product_model+'</span></td>';
+           ht+='<td width="147"  align="center" style="border-width: 1px; border-style: solid;"> <span style="font-size: 12px;">'+list[i].product_count+'</span></td>';
+           ht+='<td width="147"  align="center" style="border-width: 1px; border-style: solid;"> <span style="font-size: 12px;">'+list[i].price+'</span></td>';
+           ht+='<td width="147"  align="center" style="border-width: 1px; border-style: solid;"> <span style="font-size: 12px;">'+list[i].money+'</span></td>';
+           ht+='</tr>';
+		}
+        ht+='<tr height="35px">';
+            ht+='<td width="147"  align="center" style="word-break: break-all; border-width: 1px; border-style: solid;">';
+            ht+='   <span style="font-size: 10px;">  金额合计(大写)</span>';
+            ht+='</td>';
+           ht+=' <td width="147"  colspan="3"  align="center" style="border-width: 1px; border-style: solid;"><span id="Chinese_money" style="font-size: 10px;"/></span></td>';
+            ht+='<td width="147"  colspan="3" align="center" style="word-break: break-all; border-width: 1px; border-style: solid;">';
+            ht+='  <span style="font-size: 10px;">金额合计（小写）</span>';
+           ht+=' </td>';
+            ht+='<td width="147"  align="center" style="border-width: 1px; border-style: solid;"> <span id="money" style="font-size: 10px;"></span></td>';
+       ht+=' </tr>';
+        ht+='<tr height="60px">';
+           ht+=' <td width="147"  align="center" style="word-break: break-all; border-width: 1px; border-style: solid;">';
+             ht+='  <span style="font-size: 10px;"> 备注</span>';
+            ht+='</td>';
+            ht+='<td  align="left" colspan="7" style="border-width: 1px; border-style: solid;"><span style="font-size: 12px;" id="span_memo"></span><textarea id="memo" cols="90" rows="3"></textarea></td>';
+       ht+=' </tr>';
+    ht+='</tbody>';
+	$("#datable").html(ht);
+	$("#order_id").html(info.order_id);
+	$("#span_product_supplier").html(top.getSupplierNameById(info.product_supplier));
+	$("#memo").val(info.memo);
+	$("#span_memo").html(info.memo);
+	$("#memo").hide();
+	$("#opt_user").html(top.getUserNameByCode(info.opt_user));
+	$("#order_time").html(top.getTimeStr(info.order_time,false));
+	$("#money").html(money);
+	$("#Chinese_money").html(atoc(money));
+   }
+   function initData(){
+      var ht='';
+	   ht+='<tbody>';
+       ht+='<tr class="firstRow" height="35px">';
+       ht+=' <td width="147" align="center" style=" border-width: 1px; border-style: solid;">';
+       ht+=' <span style="font-size: 10px;"> 品牌</span>';
+       ht+='</td>';
+       ht+='<td width="147"  align="center" style="word-break: break-all; border-width: 1px; border-style: solid;">';
+       ht+='  <span style="font-size: 10px;">产品名称</span>';
+       ht+=' </td>';
+       ht+=' <td width="100"  align="center" style="word-break: break-all; border-width: 1px; border-style: solid;">';
+       ht+='  <span style="font-size: 10px;"> 单位</span>';
+       ht+='</td>';
+	   ht+=' <td width="100"  align="center" style="word-break: break-all; border-width: 1px; border-style: solid;">';
+       ht+='  <span style="font-size: 10px;"> 规格</span>';
+       ht+='</td>';
+	   ht+=' <td width="100"  align="center" style="word-break: break-all; border-width: 1px; border-style: solid;">';
+       ht+='  <span style="font-size: 10px;"> 型号</span>';
+       ht+='</td>';
+       ht+='<td width="100"  align="center" style="word-break: break-all; border-width: 1px; border-style: solid;">';
+       ht+='   <span style="font-size: 10px;"> 数量</span>';
+       ht+=' </td>';
+       ht+=' <td width="100"  align="center" style="word-break: break-all; border-width: 1px; border-style: solid;">';
+       ht+='    <span style="font-size: 10px;"> 单价</span>';
+       ht+='</td>';
+       ht+='<td width="100"  align="center" style="word-break: break-all; border-width: 1px; border-style: solid;">';
+       ht+='   <span style="font-size: 10px;"> 金额</span>';
+       ht+='</td>';
+       ht+=' </tr>';
+	   for(var i=0;i<list.length;i++){
+	   money+=list[i].money;
+	   ids+=list[i].order_id+",";
+	   orderIds+=list[i].memo+",";//产品订单id集合
+       ht+=' <tr height="35px">';
+           ht+='<td width="147"  align="center" style="border-width: 1px; border-style: solid;"> <span style="font-size: 12px;">'+top.getSupplierNameById(list[i].product_brand)+'</span></td>';
+           ht+='<td width="147"  align="center" style="border-width: 1px; border-style: solid;"> <span style="font-size: 12px;">'+list[i].product_name+'</span></td>';
+           ht+='<td width="100"  align="center" style="border-width: 1px; border-style: solid;"> <span style="font-size: 12px;">'+top.getCodeName("UNIT",list[i].unit)+'</span></td>';
+           ht+='<td width="100"  align="center" style="border-width: 1px; border-style: solid;"> <span style="font-size: 12px;">'+list[i].product_size+'</span></td>';
+           ht+='<td width="100"  align="center" style="border-width: 1px; border-style: solid;"> <span style="font-size: 12px;">'+list[i].product_model+'</span></td>';
+           ht+='<td width="100"  align="center" style="border-width: 1px; border-style: solid;"> <span style="font-size: 12px;">'+list[i].product_count+'</span></td>';
+           ht+='<td width="100"  align="center" style="border-width: 1px; border-style: solid;"> <span style="font-size: 12px;">'+list[i].price+'</span></td>';
+           ht+='<td width="100"  align="center" style="border-width: 1px; border-style: solid;"> <span style="font-size: 12px;">'+list[i].money+'</span></td>';
+           ht+='</tr>';
+		}
+        ht+='<tr height="35px">';
+            ht+='<td width="147"  align="center" style="word-break: break-all; border-width: 1px; border-style: solid;">';
+            ht+='   <span style="font-size: 10px;">  金额合计(大写)</span>';
+            ht+='</td>';
+           ht+=' <td width="147"  colspan="3"  align="center" style="border-width: 1px; border-style: solid;"><span id="Chinese_money" style="font-size: 10px;"/></span></td>';
+            ht+='<td width="147"  colspan="3" align="center" style="word-break: break-all; border-width: 1px; border-style: solid;">';
+            ht+='  <span style="font-size: 10px;">金额合计（小写）</span>';
+           ht+=' </td>';
+            ht+='<td width="147"  align="center" style="border-width: 1px; border-style: solid;"> <span id="money" style="font-size: 10px;"></span></td>';
+       ht+=' </tr>';
+        ht+='<tr height="60px">';
+           ht+=' <td width="147"  align="center" style="word-break: break-all; border-width: 1px; border-style: solid;">';
+             ht+='  <span style="font-size: 10px;"> 备注</span>';
+            ht+='</td>';
+            ht+='<td  align="left" colspan="7" style="border-width: 1px; border-style: solid;"><span id="span_memo" style="font-size: 12px;"></span><textarea id="memo" cols="90" rows="3"></textarea></td>';
+       ht+=' </tr>';
+    ht+='</tbody>';
+	$("#datable").html(ht);
+	$("#order_time").html(date);
+	$("#money").html(money);
+	$("#Chinese_money").html(atoc(money));
+	$("#opt_user").html(top.getCurrentUser().userCode);
+   }
+   function doSubmit(){
+   top.showConfirm("确定下采购单吗？", saveBaseInfo);
+   }
+   function saveBaseInfo(){
+    if($("#product_supplier").val()==''){
+	    top.showInfoWinWarn("请选择供应商！");
+			return;
+	}
+    var aoData=[];
+	aoData.push( { "name": "ids", "value":ids} );
+	aoData.push( { "name": "orderIds", "value":orderIds} );
+	aoData.push( { "name": "purInfo.money", "value":money} );
+	aoData.push( { "name": "purInfo.memo", "value":$("#memo").val()} );
+	aoData.push( { "name": "purInfo.opt_user", "value":top.getCurrentUser().userCode} );
+	aoData.push( { "name": "purInfo.order_time", "value":top.toTimestamp(date)} );
+	aoData.push( {"name": "purInfo.product_supplier_id","value": $("#product_supplier").val()});
+    var obj=document.getElementById('product_supplier');
+    var index=obj.selectedIndex; 
+	//for(var i=0;i<list.length;i++){
+	//   aoData.push({ });
+	//}
+	aoData.push( {"name": "purInfo.product_supplier","value":$("#span_product_supplier").html()});
+	aoData.push( {"name": "type","value":type} );
+	if(type=="1"){
+	  aoData.push({ "name":"purInfo.is_customized","value":"0"});
+	}else{
+	  aoData.push({ "name":"purInfo.is_customized","value":"1"});
+	}
+
+    top.sendAjaxRequest("/actions/ProductOrder.action?insertPurchaseOrder",aoData,optCallback);
+   }
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	        isSaveOK = true;
+	        top.showInfoWinOK("操作成功");
+			 
+			$("#order_id").html(obj.msg);
+			$("#okBtn").hide();
+			$("#span_memo").html($("#memo").val());
+			$("#memo").hide();
+			optType="check";
+			var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+           top.setTempValue(obj);
+		  
+	    }else{
+	    	isSaveOK = false;
+			 var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+           top.setTempValue(obj);
+	        top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		    top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+	   function doPrint(){
+			$("#printBtn").hide();
+			$("#button_table").hide();
+			if(optType=="insert"){
+			 var obj=document.getElementById('product_supplier');
+             var index=obj.selectedIndex; 
+			$("#span_product_supplier").hide();
+			$("#span_product_supplier2").html(obj.options[index].text);
+			}
+			window.print();
+			if(optType=="insert"){
+			$("#printBtn").show();
+			$("#button_table").show();
+			$("#span_product_supplier").show();
+			$("#span_product_supplier2").hide();
+			}
+		}
+		
+		function doCancel(){
+	         top.closeDialog();
+		}
+		function doBeforeClose(){
+		
+		}		
+	function atoc(numberValue){
+		var numberValue=new String(Math.round(numberValue*100)); // 数字金额
+		var chineseValue=""; // 转换后的汉字金额
+		var String1 = "零壹贰叁肆伍陆柒捌玖"; // 汉字数字
+		var String2 = "万仟佰拾亿仟佰拾万仟佰拾元角分"; // 对应单位
+		var len=numberValue.length; // numberValue 的字符串长度
+		var Ch1; // 数字的汉语读法
+		var Ch2; // 数字位的汉字读法
+		var nZero=0; // 用来计算连续的零值的个数
+		var String3; // 指定位置的数值
+		if(len>15){
+			alert("超出计算范围");
+			return "";
+		}
+		if (numberValue==0){
+			chineseValue = "零元整";
+			return chineseValue;
+		}
+		String2 = String2.substr(String2.length-len, len); // 取出对应位数的STRING2的值
+		for(var i=0; i<len; i++){
+		String3 = parseInt(numberValue.substr(i, 1),10); // 取出需转换的某一位的值
+		if ( i != (len - 3) && i != (len - 7) && i != (len - 11) && i !=(len - 15) ){
+			if ( String3 == 0 ){
+				Ch1 = "";
+				Ch2 = "";
+				nZero = nZero + 1;
+			}else if ( String3 != 0 && nZero != 0 ){
+				Ch1 = "零" + String1.substr(String3, 1);
+				Ch2 = String2.substr(i, 1);
+				nZero = 0;
+			}else{
+				Ch1 = String1.substr(String3, 1);
+				Ch2 = String2.substr(i, 1);
+				nZero = 0;
+			}
+		}else{ // 该位是万亿，亿，万，元位等关键位
+			if( String3 != 0 && nZero != 0 ){
+				Ch1 = "零" + String1.substr(String3, 1);
+				Ch2 = String2.substr(i, 1);
+				nZero = 0;
+			}else if ( String3 != 0 && nZero == 0 ){
+				Ch1 = String1.substr(String3, 1);
+				Ch2 = String2.substr(i, 1);
+				nZero = 0;
+			}else if( String3 == 0 && nZero >= 3 ){
+				Ch1 = "";
+				Ch2 = "";
+				nZero = nZero + 1;
+			}else{
+				Ch1 = "";
+				Ch2 = String2.substr(i, 1);
+				nZero = nZero + 1;
+			}
+			if( i == (len - 11) || i == (len - 3)){ // 如果该位是亿位或元位，则必须写上
+				Ch2 = String2.substr(i, 1);
+			}
+		}
+		chineseValue = chineseValue + Ch1 + Ch2;
+		}
+		if ( String3 == 0 ){ // 最后一位（分）为0时，加上“整”
+			chineseValue = chineseValue + "整";
+		}
+		return chineseValue;
+	}
+  </script> 
+</head>
+<body>
+<br/>
+<div width="100%" id="printBtn" style="margin_top:10px;font-size:20px;position:absolute;right:10px;top:5px"><center><a style="text-decoration: none"href="javascript:doPrint()"><span style="font-size: 10px;">[ 打印 ]</span></a></center></div>
+</div>
+   <p>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span style="font-size: 12px;"><strong>采购单</strong></span>
+</p>
+<p>
+    <strong><br/></strong>
+</p>
+<p>
+    &nbsp; &nbsp; &nbsp; &nbsp; 供货单位：<input id="product_supplier" type="hidden" /><span id="span_product_supplier"></span><span id="span_product_supplier2"></span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 开单日期：<span id="order_time"></span>&nbsp; &nbsp; &nbsp;
+	&nbsp; &nbsp;编号:<span id="order_id"></span> &nbsp; &nbsp;
+</p>
+<br>
+        <table cellpadding="0" width="100%" cellspacing="0" border="0" id="datable" ></table>
+		<br/>
+		<p>
+		开单人：<span id="opt_user"></span>
+		</p>
+		<p align="center" id="optBtnArea">
+		   <table id="button_table"><tr>
+					<td><span id="okBtn" class="buttonTwo"><a href="javascript:doSubmit()">提交</a></span></td>
+					<td><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+		   </tr></table>
+		</p>
+</body>
+</html>

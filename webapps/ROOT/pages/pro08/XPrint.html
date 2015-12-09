@@ -1,0 +1,190 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />	
+	<style type="text/css"> 
+	  table,table td,table th{border:1px solid black;border-collapse:collapse;text-align:center}
+	</style>
+	<script src="../../js/jquery-1.7.2.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+	<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+	<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+	<script type="text/javascript" language="JavaScript1.2" src="../../js/helpyouworkeasy-core.js"></script>
+	<script type="text/javascript">
+    var prisonInfo={};
+    $(document).ready(function() {
+	
+		prisonInfo=opener.getXValue();
+		$("#tdcorrect_category" ).html(opener.getCodeName('CORRECT_CATEGORY',prisonInfo.correct_category)); 
+		$("#tdcorrect_type").html(opener.getCodeName('CORRECT_TYPE',prisonInfo.correct_type)); 
+		$("#charges").html(prisonInfo.charges);
+		$("#trace_cell_id").html(prisonInfo.trace_cell_id);
+		$("#wrist_code").html(prisonInfo.wrist_code);
+		$("#x_1").html(prisonInfo.x_1);
+		$("#x_5").html(prisonInfo.x_5);
+		$("#x_6").html(prisonInfo.x_6);
+		$("#x_7").html(prisonInfo.x_7);
+		$("#x_8").html(prisonInfo.x_8);
+		$("#x_9").html(opener.getCodeName('CRIMINAL_TYPE',prisonInfo.x_9));
+		$("#x_10").html(prisonInfo.x_10);
+		$("#x_11").html(prisonInfo.x_11);
+		$("#x_13").html(prisonInfo.x_13);
+		$("#x_14").html(opener.getTimeStr(prisonInfo.x_14));
+		$("#x_25").html(opener.getTimeStr(prisonInfo.x_25));
+		$("#x_22").html(prisonInfo.x_22);
+		$("#x_23").html(prisonInfo.x_23);
+		$("#x_24").html(prisonInfo.x_24);
+		$("#x_27").html(prisonInfo.x_27);
+		$("#x_30").html(prisonInfo.x_30);
+		$("#tdx_15").html(opener.getCodeName( "YES_NO",prisonInfo.x_15)); 
+		$("#tdx_16").html(opener.getCodeName( "YES_NO",prisonInfo.x_16)); 
+		$("#tdx_17").html(opener.getCodeName( "YES_NO",prisonInfo.x_17)); 
+		$("#tdx_18").html(opener.getCodeName( "YES_NO",prisonInfo.x_18)); 
+		$("#tdx_19").html(opener.getCodeName( "YES_NO",prisonInfo.x_19)); 
+		$("#tdx_26").html(opener.getCodeName( "YES_NO",prisonInfo.x_26)); 
+		$("#tdx_28").html(opener.getCodeName( "YES_NO",prisonInfo.x_28)); 
+		$("#tdx_29").html(opener.getCodeName( "YES_NO",prisonInfo.x_29)); 
+		$("#x_date").html(opener.getTimeStr(prisonInfo.start_date)+"~"+opener.getTimeStr(prisonInfo.end_date)); 
+		$("#x_3_4").html(opener.getTimeStr(prisonInfo.x_3)+"~"+opener.getTimeStr(prisonInfo.x_4));
+		$("#x_2_12").html(opener.getTimeStr(prisonInfo.x_2)+"~"+opener.getTimeStr(prisonInfo.x_12));
+		$("#x_20_21").html(opener.getTimeStr(prisonInfo.x_20)+"~"+opener.getTimeStr(prisonInfo.x_21));
+		
+   } );
+	function doPrint(){
+		$("#printBtn").hide();
+		window.print();
+	}
+ </script> 
+</head>
+<body style="background-color:#7B7B7B">
+<div style="width:620px;margin-left:auto;margin-right:auto;background-color:white;padding-left:90px;padding-right:90px;padding-top:90px">
+	 <p style="text-align:center;line-height:33px">
+		<strong><span style="font-size:24px;font-family:宋体">服刑人员刑罚信息</span></strong>
+	</p>	
+	<table width="99%" cellpadding="0" cellspacing="0"  style="border-color:#C6DEFF" class="maintable" align="center" style=" table-layout:fixed;">
+		<tr>
+			<th width="20%" class="tbody_td" width="120" height="30px">矫正类别</th>
+			<td width="30%" class="tbody_td" align="left" colspan="2" id="tdcorrect_category"></td>
+			<th width="20%" class="tbody_td" width="100">矫正期限</th>
+			<td width="30%" id="x_8" class="tbody_td" align="left">
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="30px">矫正起止日</th>
+			<td id="x_date" class="tbody_td" align="left" colspan="2">
+			</td>
+			<th class="tbody_td" width="100" height="30px">犯罪类型</th>
+			<td id="x_9" class="tbody_td" align="left" id="tdx_9"></td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="30px">具体罪名</th>
+			<td style="text-align:left;padding-left:10px" id="charges" class="tbody_td" align="left" colspan="4">
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="30px">原判刑罚</th>
+			<td id="x_1" class="tbody_td" align="left" colspan="2"></td>
+			<th id="qixiandiv" class="tbody_td" width="100" height="30px">有期徒刑期限</th>
+			<td id="x_10" class="tbody_td" align="left"></td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="35">原判刑期<br />起止日</th>
+			<td id="x_3_4" class="tbody_td" align="left" colspan="2"></td>
+			<th id="xinqidiv" class="tbody_td" width="100" height="30px">原判刑期</th>
+			<td id="x_11" class="tbody_td" align="left"></td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="30px">附加刑</th>
+			<td style="text-align:left;padding-left:10px" id="x_5" class="tbody_td" align="left" colspan="4"></td>
+		</tr>
+		<tr id="boquandiv1">
+			<th class="tbody_td" width="100" height="35">剥夺政治<br />权利期限</th>
+			<td id="x_6" class="tbody_td" width="50" align="left">
+			</td>
+			<th class="tbody_td" width="200" colspan="2">接收剥夺政治权利<br />人员的公安机关名称</th>
+			<td id="x_7" class="tbody_td" align="left"></td>
+		</tr>
+		<tr id="boquandiv2">
+			<th class="tbody_td" width="100" height="35">剥夺政治<br />权利起止日</th>
+			<td style="text-align:left;padding-left:10px" id="x_2_12" class="tbody_td" align="left" colspan="4"></td>
+		</tr>
+		<tr id="boquandiv3">
+			<th class="tbody_td" width="100" height="30px">接收人</th>
+			<td id="x_13" class="tbody_td" align="left" colspan="2"></td>
+			<th class="tbody_td" width="100">移交日期</th>
+			<td id="x_14" class="tbody_td" align="left"></td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="30px">是否有“四史”</th>
+			<td class="tbody_td" align="left" colspan="2" id="tdx_15">
+			</td>
+			<th class="tbody_td" width="100">是否累犯</th>
+			<td class="tbody_td" align="left" id="tdx_16">
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="30px">是否三涉</th>
+			<td class="tbody_td" align="left" colspan="2" id="tdx_17">
+			</td>
+			<th class="tbody_td" width="100" height="30px">是否共同犯罪</th>
+			<td class="tbody_td" align="left"id="tdx_18">
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="30px">是否被宣<br />告禁止令</th>
+			<td class="tbody_td" align="left"id="tdx_19">
+			</td>
+			<th class="tbody_td" width="100" height="30px">禁止期限<br />起止日</th>
+			<td style="text-align:left;padding-left:10px" id="x_20_21" class="tbody_td" align="left" colspan="2"></td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="30px">禁止令内容</th>
+			<td style="text-align:left;padding-left:10px" id="x_22" class="tbody_td" align="left" colspan="4"></td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="30px">报到情况</th>
+			<td style="text-align:left;padding-left:10px" id="x_23" class="tbody_td" align="left" colspan="4"></td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="30px">接收方式</th>
+			<td id="x_24" class="tbody_td" align="left"></td>
+			<th class="tbody_td" width="100" height="30px">接收日期</th>
+			<td id="x_25" class="tbody_td" align="left" colspan="2">
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="120" height="30px">矫正管理等级</th>
+			<td style="text-align:left;padding-left:10px" class="tbody_td" align="left" colspan="4" id="tdcorrect_type"></td>
+			</tr>
+			<tr>
+			<th class="tbody_td" width="100" height="60">是否建立<br />矫正小组</th>
+			<td class="tbody_td" align="left"id="tdx_26"></td>
+			<th class="tbody_td" width="100">矫正小组人<br />员组成情况</th>
+			<td style="text-align:left;padding-left:10px" id="x_27" class="tbody_td" align="left" colspan="2">
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="40">是否实行信<br />息化管理</th>
+			<td class="tbody_td" align="left"id="tdx_28">
+			</td>
+			<th class="tbody_td" width="100">是否发放<br />定位手机</th>
+			<td style="text-align:left;padding-left:10px" class="tbody_td" align="left" colspan="2" id="tdx_29">
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="40">定位手机编号</th>
+			<td id="trace_cell_id" class="tbody_td" align="left"id="x_28">
+			</td>
+			<th class="tbody_td" width="100">腕带编号</th>
+			<td style="text-align:left;padding-left:10px" id="wrist_code" class="tbody_td" align="left" colspan="2" id="tdx_29"></td>
+		</tr>
+		<tr>
+			<th class="tbody_td" height="40" width="100">备注</th>
+			<td style="text-align:left;padding-left:10px" id="x_30" class="tbody_td" align="left" colspan="4"></td>
+		</tr>
+	</table>
+	<div width="100%" id="printBtn" style="margin_top:10px;font-size:20px;position:absolute;left:30pxx;top:50px"><center><a style="text-decoration: none"href="javascript:doPrint()"><span>[ 打印 ]</span></a></center></div>
+</div>
+</body>
+</html>

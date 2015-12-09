@@ -1,0 +1,879 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+			
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var currentOptTemplateId="";
+			var curObj={};
+			var fieldlist=[];
+			var field_id="";
+			var checkStr=""; 
+			var checkTitle="";
+			var checkLen="";
+			var currentOptTempStatus=0;
+			var currentArrangement_mode=1;
+			var isEnter=false;//用来判断是否换行
+			var tdNum=1;//用来判断是否在同一行
+			var totalCols=0;//总列数
+			var currentCol=0;//当前列
+			//是否传启用参数
+			var isEnabled=true;
+			$(document).ready(function() {
+			   $( "#tdtemplate_status" ).html( top.getCodeSelectHtml("TEMPLATE_STATUS","template_status",true,"",null,"全部","60px") );
+			   $( "#right_tdtemplate_status" ).html( top.getCodeSelectHtml("TEMPLATE_STATUS","right_template_status",false) );
+			   $( "#spanform_type" ).html( top.getCodeSelectHtml("FORM_TYPE","left_template_type",true,"",null,"全部","80px") );
+			  optType=top.getUrlParam(document.URL,"optType");
+			   var iaoColumns= [
+                              { "sTitle": "分类", "mDataProp": "template_type", "sWidth": "40%",
+							       "fnRender": function ( oObj ) {
+                                        return top.getCodeName( "FORM_TYPE", oObj.aData.template_type  );
+                                   },"bUseRendered": false},
+                              { "sTitle": "名称", "mDataProp": "template_name", "sWidth": "40%","bUseRendered": false},
+							  { "sTitle": "状态", "mDataProp": "template_status", "sWidth": "20%", "sClass": "center",
+                                   "fnRender": function ( oObj ) {
+                                        return top.getCodeName( "TEMPLATE_STATUS", oObj.aData.template_status  );
+                                   },
+                                   "bUseRendered": false  
+                              }
+               ];
+
+			   var surl=top.getUrlBase()+"/actions/WorkOrder.action?getWOTemplateList";
+			  
+
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+								var aTrs = oTable.fnGetNodes();
+								$(aTrs[0]).addClass("row_selected");
+								showTemplateField();
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+						aoData.push( { "name": "woTemplate.template_name", "value":$("#template_name").val() } );
+						if($("#template_status").val()!=null&&$("#template_status").val()!=''){
+							aoData.push( { "name": "woTemplate.template_status", "value":$("#template_status").val() } );
+						}else{
+							aoData.push( { "name": "woTemplate.template_status", "value":'-1'} );
+						}
+						if($("#left_template_type").val()!=""){
+						    aoData.push( { "name": "woTemplate.template_type", "value":$("#left_template_type").val()} );
+						}
+					},
+			    "sDom": "frtp",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+				
+				$('#dataTable tbody').click(function (e) {
+					$(oTable.fnSettings().aoData).each(function () {
+						$(this.nTr).removeClass("row_selected");
+                });
+                $(e.target.parentNode).addClass("row_selected");
+				showTemplateField();
+            });
+			 } );
+			
+			function showTemplateField(){
+			  var sel = fnGetSelected(oTable);
+			  if(sel!=null&&sel.length>0){
+				  currentOptTemplateId = oTable.fnGetData(sel[0]).template_id;
+				  if(oTable.fnGetData(sel[0].arrangement_mode)){
+				     currentArrangement_mode=oTable.fnGetData(sel[0]).arrangement_mode;
+					 
+				  }
+				   $("#right_template_name").val(oTable.fnGetData(sel[0]).template_name);
+				   currentOptTempStatus = oTable.fnGetData(sel[0]).template_status;
+				   $( "#tdform_type" ).html( top.getCodeSelectHtml("FORM_TYPE","template_type",true,oTable.fnGetData(sel[0]).template_type) );
+				   $( "#tdarrangement_mode" ).html( top.getCodeSelectHtml("ARRANGEMENT_MODE","arrangement_mode",false,oTable.fnGetData(sel[0]).arrangement_mode) );
+				  if ( currentOptTempStatus == 0 ) {
+				    $("#updateStatusTxt").html( "启用" );
+					totalCols=currentArrangement_mode*4;//设置表格总列数
+				  } else {
+				    $("#updateStatusTxt").html( "停用" );
+					totalCols=currentArrangement_mode*2;//设置表格总列数
+				  }
+				  if(oTable.fnGetData(sel[0]).template_status=='1'){
+					isEnabled=false;
+					$("#createBtn").hide();
+					$("#docBtn").hide();
+					$("#interfaceBtn").hide();
+					$("#defineBtn").hide();
+					$("#right_template_status").attr("disabled",true);
+				  }else{
+					$("#createBtn").show();
+					$("#docBtn").show();
+					$("#interfaceBtn").show();
+					$("#defineBtn").show();
+					isEnabled=true;
+				  }
+				  $("#arrangement_mode").attr("style","width:60px;");
+				 getFieldList();
+			   }
+		   } 
+			function fnGetSelected(oTable) {
+				var aReturn = new Array();
+				var aTrs = oTable.fnGetNodes();
+				
+				for (var i = 0; i < aTrs.length; i++) {
+					if ($(aTrs[i]).hasClass('row_selected')) {
+						aReturn.push(aTrs[i]);
+					}
+				}
+				return aReturn;
+			}
+			function doQuery(){
+				oTable.fnDraw();
+			}
+		//------------------模板操作------------------		
+			function createTemplate(){
+				top.showInputDialog("添加表单", "请输入表单名称", doCreateTemplate);
+			}
+			function doCreateTemplate(name){
+				   if ( name == '' ) {
+					 top.showInputDialog("请输入表单名称");
+					 return ;
+				   }
+				   var aoData=[];
+				   aoData.push( { "name": "woTemplate.template_name", "value":name } );
+				   aoData.push( { "name": "woTemplate.template_status", "value":0 } );
+				   top.showLoadingInfo(true);
+				   top.sendAjaxRequest("/actions/WorkOrder.action?insertWOTemplate",aoData,optCallback);
+			   }
+			  
+			// 弹出删除操作确认框
+			function deleteTemplate(){
+				top.showConfirm("您确定要删除当前表单吗？", doDeleteTemplate);
+			}
+				// 执行删除操作
+			function doDeleteTemplate(){
+				var aoData=[];
+				aoData.push( { "name": "woTemplate.template_id", "value":currentOptTemplateId } );
+				isNeedReloadUsers=true;
+				currentOptTemplateId = "";
+				top.showLoadingInfo(true);
+				top.sendAjaxRequest("/actions/WorkOrder.action?deleteWOTemplate",aoData,optCallback);
+			}
+			function updateTemplate(){
+				var name=$("#right_template_name").val();
+				if ( name == '' ) {
+					 top.showInputDialog("请输入表单名称");
+					 return ;
+				}
+				var aoData=[];
+				aoData.push( { "name": "woTemplate.template_name", "value":name } );
+				aoData.push( { "name": "woTemplate.template_status", "value":currentOptTempStatus} );
+				aoData.push( { "name": "woTemplate.template_id", "value":currentOptTemplateId } );
+				aoData.push( { "name": "woTemplate.template_type", "value":$("#template_type").val() } );
+				aoData.push( { "name": "woTemplate.arrangement_mode", "value":$("#arrangement_mode").val() } );
+				top.showLoadingInfo(true);
+				top.sendAjaxRequest("/actions/WorkOrder.action?updateWOTemplate",aoData,optCallback);
+			}
+			//启用模板
+			function updateStatus(){
+			     var status=0;
+			     if ( currentOptTempStatus == 0 ) status=1;
+		         var aoData=[];
+				  aoData.push( { "name": "woTemplate.template_name", "value":$("#right_template_name").val() } );
+				  aoData.push( { "name": "woTemplate.template_status", "value": status } );
+				  aoData.push( { "name": "woTemplate.template_id", "value": currentOptTemplateId } );
+				  top.sendAjaxRequest("/actions/WorkOrder.action?enableWOTemplate",aoData,optCallback);
+			}
+			   function optCallback(obj){
+				   top.showLoadingInfo(false);
+				   try{
+					if ( obj.status == true ){
+					  top.showInfoWinOK("操作成功");
+					  oTable.fnDraw();
+					 }else{
+					 if(obj.msg!=''){
+					 top.showInfoWinOK("操作失败:"+msg);
+					 }else{
+					  top.showInfoWinOK("操作失败");
+					  }
+					}
+				   }catch(e){
+					  top.showInfoWinError("处理异常:"+e.message);
+				   }
+			   }
+			   //------------------------模板字段操作------------------
+			//增加字段
+			function addField(){
+				var xurl="pages/oa/templateFieldInfo.html?template_id="+currentOptTemplateId;
+				top.openDialog("表单字段信息",xurl,true,560,450,getFieldList);
+			}
+			//添加文档附件
+			function addDoc(){
+				var xurl="pages/oa/templateDocInfo.html?template_id="+currentOptTemplateId;
+				top.openDialog("附件字段信息",xurl,true,560,250,getFieldList);
+			}
+			//添加接口
+			function addInterface(){
+				var xurl="pages/oa/templateInterfaceInfo.html?template_id="+currentOptTemplateId;
+				top.openDialog("接口信息",xurl,true,560,250,getFieldList);
+			}
+			//添加自定义页面
+			function addDefineHtml(){
+			    var xurl="pages/oa/templateDefineHtml.html?template_id="+currentOptTemplateId;
+				top.openDialog("自定义页面信息",xurl,true,560,400,getFieldList);
+			}
+			//删除  
+			function deleteTemplateField(id){
+				field_id=id;
+				top.showConfirm("您确定要删除该字段吗？", doDeleteTemplateField);
+			}
+			function doDeleteTemplateField(){
+				var aoData=[];
+				aoData.push( { "name": "woField.field_id", "value":field_id } );
+				field_id = "";
+				top.sendAjaxRequest("/actions/WorkOrder.action?deleteWOTemplateField",aoData,getFieldList);
+			}
+			//更新字段
+			function updateTemplateField(field_id){
+				var xurl="pages/oa/templateFieldInfo.html?field_id="+field_id;
+				top.openDialog("修改表单字段信息",xurl,true,560,450,getFieldList);
+			}
+			function updateTemplateDoc(field_id){
+				var xurl="pages/oa/templateDocInfo.html?field_id="+field_id;
+				top.openDialog("修改附件信息",xurl,true,560,250,getFieldList);
+			}
+			function updateTemplateInterface(field_id){
+				var xurl="pages/oa/templateInterfaceInfo.html?field_id="+field_id;
+				top.openDialog("修改接口信息",xurl,true,560,250,getFieldList);
+			}
+			function updateTemplateDefineHtml(field_id){
+			    var xurl="pages/oa/templateDefineHtml.html?field_id="+field_id;
+				top.openDialog("修改自定义页面信息",xurl,true,560,420,getFieldList); 
+			}
+			//查询某模板字段
+			function getFieldList(){
+				var aoData=[];
+				aoData.push( { "name": "woField.template_id", "value":currentOptTemplateId} );
+				top.sendAjaxRequest("/actions/WorkOrder.action?getWOTemplateFieldList",aoData,getFieldListCallBack);
+			}
+			function getFieldListCallBack(obj){
+				fieldlist=obj.aaData;
+				isEnter=false;
+			    tdNum=1;
+                currentCol=0;
+				var ht="";
+				if(fieldlist){
+				 var buttons=[];
+					for(var i=0;i<fieldlist.length;i++){
+					    if(fieldlist[i].field_type!="11"){//不为接口类型
+						    if(fieldlist[i].field_type!="12"){//不为自定义页面类型
+							   ifCheck(fieldlist[i]);
+							}
+							ht+=getFieldHtml(fieldlist[i]);
+						}else{
+						    buttons[buttons.length] = fieldlist[i];
+						}
+					}
+					if(buttons.length!=0){
+					   ht+=initInterfaceHtml(buttons); //接口按钮最后初始化
+					}
+				}
+				if(currentArrangement_mode>1 && (tdNum-1)%currentArrangement_mode!=0){
+				  var col=totalCols-currentCol%totalCols;
+				  for(var i=1;i<=col;i++){
+				      ht+="<td>&nbsp;</td>";
+				  }
+				  ht+="</tr>";
+				}
+				$("#fieldTable").html(ht);
+			}
+			function ifCheck(field){
+				if(field.isRequier=='1'){
+					checkStr+=field.map_col+";";
+					checkTitle+=field.field_title+";";
+					if(field.field_type=='4'){
+						checkLen+="2048;";
+					}else{
+						checkLen+="128;";
+					}
+				}
+			}
+			function initInterfaceHtml(buttons){
+			    var ht = "";
+			    if(currentArrangement_mode>1 && (tdNum-1)%currentArrangement_mode!=0){
+				  var col=totalCols-currentCol%totalCols;
+				  for(var i=1;i<=col;i++){
+				      ht+="<td>&nbsp;</td>";
+					  currentCol++;
+				  }
+				  ht+="</tr>";
+				}
+			    ht+="<tr class='tr_data'><td align='left' colspan='"+totalCols+"'>";
+			   for( var i=0;i<buttons.length;i++){
+				if(isEnabled){
+				ht+='<img src="../../img/delete.gif" style="cursor:pointer" onclick="deleteTemplateField(\''+buttons[i].field_id+'\')" />';
+				ht+='&nbsp;<img src="../../img/edit.gif" style="cursor:pointer" onclick="updateTemplateInterface(\''+buttons[i].field_id+'\')" />';
+				ht+="&nbsp;<input type='button' value='"+buttons[i].field_title+"'>&nbsp;&nbsp;&nbsp;";
+				}
+				else{
+				ht+="&nbsp;&nbsp;&nbsp;<input type='button' value='"+buttons[i].field_title+"'>&nbsp;&nbsp;&nbsp;";
+				}
+			   }
+			   ht+="</td></tr>";
+			   currentCol+=totalCols;
+			   return ht;
+			}
+			//显示字段样式
+			function getFieldHtml(field){
+				var ht="";
+				if(field.occupied_frames==1){//判断字段是否占用一行
+				    if((tdNum-1)%currentArrangement_mode!=0){
+					   var col=totalCols-currentCol%totalCols;
+					   if(col==0){
+				          ht+="</tr>";
+					   }else{
+					      for(var i=1;i<=col;i++){
+						    ht+="<td>&nbsp;</td>";
+							currentCol++;
+						  }
+						  ht+="</tr>";
+					   }
+					   isEnter=false;
+				    }
+				}
+				if(!isEnter){
+				    ht+="<tr class='tr_data'>";
+					isEnter=true;
+				}
+				if(isEnabled){
+				    ht+='<td valign="top"><img src="../../img/delete.gif" style="cursor:pointer" onclick="deleteTemplateField(\''+field.field_id+'\')" /></td>';currentCol++;
+					if(field.field_type=="10"){
+					  ht+='<td valign="top"><img src="../../img/edit.gif" style="cursor:pointer" onclick="updateTemplateDoc(\''+field.field_id+'\')" /></td>';currentCol++;
+					}else if(field.field_type=="12"){
+					  ht+='<td valign="top"><img src="../../img/edit.gif" style="cursor:pointer" onclick="updateTemplateDefineHtml(\''+field.field_id+'\')" /></td>';currentCol++;
+					}else{
+					  ht+='<td valign="top"><img src="../../img/edit.gif" style="cursor:pointer" onclick="updateTemplateField(\''+field.field_id+'\')" /></td>';currentCol++;
+					}
+				}
+				var options=[];
+				    if(field.field_type!="12"){
+						if(field.is_require=="1"){
+							ht+="<td valign='top' align='right'>"+field.field_title+"<span style='color:red'>(*)</span>:</td>";currentCol++;
+						}else{
+							ht+="<td valign='top' align='right'>"+field.field_title+":</td>";currentCol++;
+						}
+					}
+					//文本框
+					if(field.field_type=="0"){
+					    ht+='<td valign="top"  align="left" colspan="';
+					    if(field.occupied_frames==1){
+						   ht+=""+(totalCols-currentCol%totalCols);
+						   currentCol+=(totalCols-currentCol%totalCols);
+						}else{
+						    ht+=""+1;
+						    currentCol++;
+						}
+					    ht+='"><input id="'+field.map_col+'" type="text" style="width:120px;"/></td>';
+						if(currentArrangement_mode>1){
+						  if(tdNum%currentArrangement_mode==0 || field.occupied_frames==1){
+							ht+="</tr>";
+							isEnter=false;
+							tdNum=0;
+						  }
+						}else{
+						  isEnter=false;
+						  ht+="</tr>";
+						}
+					    tdNum++;
+						return ht;
+					}//下拉框
+					if(field.field_type=="1"){
+						ht+='<td valign="top"  align="left" colspan="';
+						if(field.occupied_frames==1){
+						    ht+=""+(totalCols-currentCol%totalCols);
+							currentCol+=(totalCols-currentCol%totalCols);
+						}else{
+						    ht+=""+1;
+						    currentCol++;
+						}
+						ht+='"><select id="'+field.map_col+'" style="width:120px;">';
+						options=field.field_options.split(";");
+						ht+='<option></option>';
+						for(var i=0;i<options.length;i++){
+						    if ( options[i] != '' ) ht+='<option>'+options[i]+'</option>';
+						}
+						ht+='</select></td>';
+						if(currentArrangement_mode>1){
+						  if(tdNum%currentArrangement_mode==0  || field.occupied_frames==1){
+							ht+="</tr>";
+							isEnter=false;
+							tdNum=0;
+						  }
+						}else{
+						  isEnter=false;
+						  ht+="</tr>";
+						}
+					    tdNum++;
+						return ht;
+					}//单选按钮
+					if(field.field_type=="2"){
+						options=field.field_options.split(";");
+						ht+='<td valign="top" align="left" colspan="'
+						if(field.occupied_frames==1){
+						    ht+=""+(totalCols-currentCol%totalCols);
+							currentCol+=(totalCols-currentCol%totalCols);
+						}else{
+						    ht+=""+1;
+						    currentCol++;
+						}
+						ht+='">';
+						for(var i=0;i<options.length;i++){
+						    if ( options[i] != '' ) {
+							 if(field.map_col!=null&&field.map_col!=""){
+							  ht+='<input type="radio" name="'+field.map_col+'" value="'+options[i]+'">'+options[i]+'</option>';
+							  }else{
+							   ht+='<input type="radio" name="'+field.field_id+'" value="'+options[i]+'">'+options[i]+'</option>';
+							  }
+							}
+						}
+						ht+="</td>";
+						if(currentArrangement_mode>1){
+						   if(tdNum%currentArrangement_mode==0  || field.occupied_frames==1){
+						    ht+="</tr>";
+						    isEnter=false;
+						    tdNum=0;
+						   }
+						}else{
+						  isEnter=false;
+						  ht+="</tr>";
+						}
+					    tdNum++;
+						return ht;
+					}//复选框
+					if(field.field_type=="3"){
+						options=field.field_options.split(";");
+						ht+='<td valign="top" align="left" colspan="';
+						if(field.occupied_frames==1){
+						    ht+=""+(totalCols-currentCol%totalCols);
+							currentCol+=(totalCols-currentCol%totalCols);
+						}else{
+						    ht+=""+1;
+						    currentCol++;
+						}
+						ht+='">';
+						for(var i=0;i<options.length;i++){
+						   if ( options[i] != '' ) {
+							ht+='<input type="checkbox" name="'+field.map_col+'" value="'+options[i]+'">'+options[i]+'</option>';
+						   }
+						}
+						ht+="</td>";
+						if(currentArrangement_mode>1){
+						   if(tdNum%currentArrangement_mode==0  || field.occupied_frames==1){
+							ht+="</tr>";
+							isEnter=false;
+							tdNum=0;
+						   }
+						}else{
+						  isEnter=false;
+						  ht+="</tr>";
+						}
+					    tdNum++;
+						return ht;
+					}//大文本框
+					if(field.field_type=="4"){
+					    ht+='<td valign="top" align="left" colspan="';
+						if(field.occupied_frames==1){
+						    ht+=""+(totalCols-currentCol%totalCols);
+							currentCol+=(totalCols-currentCol%totalCols);
+						}else{
+						    ht+=""+1;
+						    currentCol++;
+						}
+						ht+='"><textarea id="'+field.map_col+'" cols="35" rows="5"></textarea></td>';
+						if(currentArrangement_mode>1){
+						    if(tdNum%currentArrangement_mode==0  || field.occupied_frames==1){
+							  ht+="</tr>";
+							  isEnter=false;
+							  tdNum=0;
+						    }
+						}else{
+						  isEnter=false;
+						  ht+="</tr>";
+						}
+					    tdNum++;
+						return ht;
+					}//日期 yy-mm-dd
+					if(field.field_type=="5"){
+					    ht+='<td valign="top" align="left" colspan="';
+						if(field.occupied_frames==1){
+						    ht+=""+(totalCols-currentCol%totalCols);
+							currentCol+=(totalCols-currentCol%totalCols);
+						}else{
+						    ht+=""+1;
+							currentCol++;
+						}
+						ht+='"><input type="text" onclick="new Calendar().show(this);" id="'+field.map_col+'"/></td>';
+						if(currentArrangement_mode>1){
+						   if(tdNum%currentArrangement_mode==0  || field.occupied_frames==1){
+							  ht+="</tr>";
+							  isEnter=false;
+							  tdNum=0;
+						   }
+						}else{
+						  isEnter=false;
+						  ht+="</tr>";
+						}
+					    tdNum++;
+						return ht;
+					}//时间
+					if(field.field_type=="6"){
+						var hour='<select id="'+field.map_col+'_hour">';
+						for(var i=0;i<24;i++){
+							if(i<10){
+								hour+='<option value="0'+i+'">0'+i+'</option>'
+							}else{
+								hour+='<option value="'+i+'">'+i+'</option>'
+							}
+						}
+						hour+='</select>';
+						var minute='<select id="'+field.map_col+'_minute">';
+						for(var i=0;i<60;){
+							if(i<10){
+								minute+='<option value="0'+i+'">0'+i+'</option>'
+							}else{
+								minute+='<option value="'+i+'">'+i+'</option>'
+							}
+							i+=5;
+						}
+						minute+="</select>";
+						ht+='<td valign="top" align="left" colspan="';
+						if(field.occupied_frames==1){
+						    ht+=""+(totalCols-currentCol%totalCols);
+							currentCol+=(totalCols-currentCol%totalCols);
+						}else{
+						    ht+=""+1;
+						    currentCol++;
+						}
+						ht+='"><input type="text" onclick="new Calendar().show(this);" id="'+field.map_col+'"/>'+hour+'时'+minute+'分</td>';
+						if(currentArrangement_mode>1){
+						   if(tdNum%currentArrangement_mode==0  || field.occupied_frames==1){
+							  ht+="</tr>";
+							  isEnter=false;
+							  tdNum=0;
+						   }
+						}else{
+						  isEnter=false;
+						  ht+="</tr>";
+						}
+					    tdNum++;
+						return ht;
+					}
+					//复选框+其他
+					if(field.field_type=="9"){
+						options=field.field_options.split(";");
+						ht+='<td valign="top" align="left" colspan="';
+						if(field.occupied_frames==1){
+						    ht+=""+(totalCols-currentCol%totalCols);
+							currentCol+=(totalCols-currentCol%totalCols);
+						}else{
+						    ht+=""+1;
+						    currentCol++;
+						}
+						ht+='">';
+						for(var i=0;i<options.length;i++){
+						  if ( options[i] != '' ) {
+							 ht+='<input type="checkbox" name="'+field.map_col+'" value="'+options[i]+'">'+options[i]+'</option>';
+						  }
+						}
+						ht+="其他<input type='text' id='"+field.map_col+"_other'/></td>";
+						if(currentArrangement_mode>1){
+						   if(tdNum%currentArrangement_mode==0  || field.occupied_frames==1){
+							  ht+="</tr>";
+							  isEnter=false;
+							  tdNum=0;
+						   }
+						}else{
+						  isEnter=false;
+						  ht+="</tr>";
+						}
+					    tdNum++;
+						return ht;
+					}
+					//附件
+					if(field.field_type=="10"){
+					ht+="<td valign='top' align='left' colspan='";
+					if(field.occupied_frames==1){
+						ht+=""+(totalCols-currentCol%totalCols);
+						currentCol+=(totalCols-currentCol%totalCols);
+					}else{
+					    ht+=""+1;
+						currentCol++;
+					}
+					ht+="'><div class='buttonDivTwo'><a href='javascript:void(0)'>上传</a></div></td>";
+					if(currentArrangement_mode>1){
+					   if(tdNum%currentArrangement_mode==0  || field.occupied_frames==1){
+							ht+="</tr>";
+							isEnter=false;
+							tdNum=0;
+					   }
+					}else{
+					    isEnter=false;
+					    ht+="</tr>";
+					}
+					    tdNum++;
+					return ht;
+					}
+					//自定义页面
+					if(field.field_type=="12"){
+					   ht+="<td  align='left' colspan='";
+					   if(field.occupied_frames==1){
+					      ht+=""+(totalCols-currentCol%totalCols);
+						  currentCol+=(totalCols-currentCol%totalCols);
+					   }else{
+					      ht+=""+1;
+						  currentCol++;
+					   }
+					   ht+="'><iframe src='"+field.field_options+"' width='"+(field.width-40)+"' height='"+field.height+"' frameborder='0'></iframe></td>";
+					   if(currentArrangement_mode>1){
+					      if(tdNum%currentArrangement_mode==0  || field.occupied_frames==1){
+							  ht+="</tr>";
+							  isEnter=false;
+							  tdNum=0;
+						  }
+					    }else{
+						  isEnter=false;
+						  ht+="</tr>";
+						}
+					    tdNum++;
+					   return ht;
+					}
+					return "";
+			}
+			//得到页面字段的值
+			function getFieldValue(field,aoData){
+			//0,1,2 文本框 下拉列表 单选框 大文本
+				if(field.field_type=="0"||field.field_type=="1"||field.field_type=="4"){
+					aoData.push( { "name": "woDate."+field.map_col, "value":$("#"+field.map_col).val()} );
+					return aoData;
+				}
+				if(field.field_type=="2"){
+					var result=$("input[name='"+field.map_col+"']:checked").val();
+					aoData.push( { "name": "woDate."+field.map_col, "value":result} );
+					return aoData;
+				}
+			//复选框
+				if(field.field_type=="3"){
+					var values=top.getAllCheckedValue( document.getElementsByName(field.map_col) );
+					
+					aoData.push( { "name":"woDate."+field.map_col,"value":$("#"+field.map_col).val(values)} );
+					return aoData;
+				}
+				//复选框+其他
+				if(field.field_type=="9"){
+				//parseInt
+					var number=parseInt(field.map_col);
+					//ortherName=field.map_col.replace(number.toString(),(parseInt(number)+1).toString());
+					var values=top.getAllCheckedValue( document.getElementsByName(field.map_col) );
+					var other_value=$("#"+field.map_col+"_other").val();
+					values+="IELSEI"+other_value;
+					aoData.push( { "name":field.map_col,"value":values} );
+				}
+				//日期
+				if(field.field_type=="5"){
+					aoData.push( { "name": "woDate."+field.map_col, "value":top.toTimestamp($("#"+field.map_col).val())} );
+					return aoData;
+				}
+				//时间
+				if(field.field_type=="6"){
+					var hour=$("#"+field.map_col+"_hour").val();
+					var minute=$("#"+field.map_col+"_minute").val();
+					var t=$("#"+field.map_col).val();
+					aoData.push( { "name": "woDate."+field.map_col, "value":top.toTimestamp(t+" "+hour+";"+minute+";"+"00")} );
+					return aoData;
+				
+				}
+			}
+			//页面显示字段的值
+			function showFieldValue(field,data){
+				if(field.field_type=="0"||field.field_type=="1"||field.field_type=="4"){
+					$("#"+field.map_col).val(data[field.map_col]);
+				}
+				if(field.field_type=="2"){
+				top.initRadioValue( document.getElementsByName(field.map_col), data[field.map_col]);
+				}
+			    //复选框
+				if(field.field_type=="3"){
+					initCheckedValue( document.getElementsByName(field.map_col), data[field.map_col]);
+				}
+				//复选框+其他
+				if(field.field_type=="9"){
+					var strs=data[field.map_col].split("IELSEI");
+					if(strs.length<2) return ;
+					initCheckedValue( document.getElementsByName(field.map_col), strs[0]  );
+					//var number=parseInt(field.map_col);
+					//ortherName=field.map_col.replace(number.toString(),(parseInt(number)+1).toString());
+					$("#"+field.map_col+"_other").val(strs[0]);
+				}
+				//日期
+				if(field.field_type=="5"){
+					$("#"+field.map_col).val(top.getTimeStr(data[field.map_col]));
+		        }
+				//时间
+				if(field.field_type=="6"){
+					$("#"+field.map_col).val(top.getTimeStr(data[field.map_col]));
+					$("#"+field.map_col+"_hour").hide();
+					$("#"+field.map_col+"_minute").hide();
+				}
+			}
+			//初始化复选框
+			function initCheckedValue(boxes,values) {
+				if ( !values ) return ;
+				if ( values == null || values == '' ) return ;
+				for (var i = 0; i < boxes.length; i++) {
+					if ( values.indexOf(boxes[i].value+",") != -1 || values.indexOf(","+boxes[i].value) != -1 ) {
+						boxes[i].checked = true;
+					}
+				}
+			}
+			
+			function saveTemplateDate(){
+				var aoData=[];
+				checkSaveTemplateDate();
+				if(fieldlist){
+					for(var i=0;i<fieldlist.length;i++){
+						getFieldValue(fieldlist[i],aoData);
+					}
+				top.sendAjaxRequest("/actions/WorkOrder.action?insertWOTemplateData",aoData,optCallback);
+			  }
+			}
+			function queryTemplateDataById(){
+				top.sendAjaxRequest("/actions/WorkOrder.action?insertWOTemplateData",aoData,optCallback);
+			}
+			
+			//common
+			function checkSaveTemplateDate(){
+				var msg="";
+				if(checkStr){
+					var checkItem=checkStr.split(";");
+					var checkName=checkTitle.split(";");
+					var strLen=checkLen.split(";"); 
+					if(checkItem){
+						for(var i=0;i<checkItem.length;i++){
+							msg += checkString($("#"+checkItem[i]).val(),true,1024,checkName[i]);
+						}
+					}
+					return msg;
+				}
+			}
+		</script>
+	</head>
+	<body width="100%" height="100%">
+		<table style="margin:5 auto;" width="100%" height="100%">
+			<tr><td width="40%" height="100%" valign="top">
+				<div id="left">
+					 <div style='border: 1px solid #89A1B9;'>
+					 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+					 <tr bgcolor="#C6DEFF">
+						  <td align="left" width="90px">&nbsp;表单列表&nbsp;</td>
+						  <td align="left">
+							 <div class="buttonDivTwo"><a href="javascript:createTemplate()">创建</a></div>
+						  </td>
+						  <td align="right">
+							 <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+						  </td>
+						  <td width="2px">&nbsp;</td>
+					  </tr>
+					 </table>
+					</div>
+					<table width="100%" align="center" cellpadding="1px"
+							cellspacing="1px" border="0">
+						 <tr class="tr_data">
+						 <td width="10%" align="right">分类：</td><td align="left" width="20%" id="spanform_type"></td>
+						 <td width="10%" align="right">名称：</td><td align="left" width="20%"><input type="text" id="template_name" size="10" onkeydown="if(event.keyCode==13) doQuery();"/></td>
+						 <td width="10%" align="right">状态：</td><td align="left" width="20%" id="tdtemplate_status"></td>
+						 </tr>
+					</table>
+					<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+				</div>
+			</td>
+			<td style="margin:2 auto;border:1px solid #89A1B9;" width="60%" height="100%" valign="top">
+			        <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+					 <tr bgcolor="#C6DEFF">
+						 <td align="right" style="width:120px;">名称：</td>
+						 <td align="left"><input type="text" id="right_template_name" style="width:100px;"/></td>
+						 <td align="right"  style="width:120px;">分类：</td>
+						 <td align="left" id="tdform_type"></td>
+						 <td align="right"  style="width:230px;">排列方式：</td>
+						 <td align="left" id="tdarrangement_mode"></td>
+					    <td align="right" >
+							<div class="buttonDivTwo"><a href="javascript:updateTemplate()">保存</a></div>
+						</td>
+						<td align="right" >
+							<div class="buttonDivTwo"><a href="javascript:updateStatus()" id="updateStatusTxt">启用</a></div>
+						</td>
+						<td align="right">
+							<div class="buttonDivTwo"><a href="javascript:deleteTemplate()">删除</a></div>
+						</td> 
+					  </tr>
+					</table>
+				<br/>
+				<table  width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0">
+					<tr>
+						<td  width="25%" align="left">
+							<div id="createBtn" class="buttonDivSix">
+								<a href="javascript:addField()">添加普通字段</a>
+							</div>
+						</td>
+						<td  width="25%" align="left">
+							<div id="docBtn" class="buttonDivSix">
+								<a href="javascript:addDoc()">添加附件上传按钮</a>
+							</div>
+						</td>
+						<td  align="left">
+							<div id="interfaceBtn" class="buttonDivSix">
+								<a href="javascript:addInterface()">添加接口按钮</a>
+							</div>
+						</td>
+						<td align="left">
+						    <div id="defineBtn" class="buttonDivSix">
+								<a href="javascript:addDefineHtml()">添加自定义页面</a>
+							</div>
+						</td>
+					</tr>
+				</table>
+				<br/>
+				<table width="100%" id="fieldTable"></table>
+			</td>
+		</tr></table>
+	</body>
+</html>

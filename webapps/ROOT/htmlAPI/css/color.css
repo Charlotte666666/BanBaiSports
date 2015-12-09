@@ -1,0 +1,132 @@
+
+body {
+	background-color: #fff;
+}
+a {
+	color:#fff;
+}
+body h1,h4{
+	color: #18b4ed;
+}
+hr{
+	border: 1px solid #18b4ed;
+}
+#headline {
+	color: #18b4ed;
+}
+header .slogan {
+	color: #c8c8c8;
+}
+#downloadforfree .fonts {
+	color: #fff;
+}
+#morecontent .fonts {
+	color: #fff;
+}
+.location {
+	color: #18b4ed;
+}
+/***********************/
+.ranking table thead {
+	color: #fff;
+	background-color: #18b4ed;
+}
+/*************shareBadmitonFriends.html**************/
+#userstates .usercontent .name {
+	color: #18b4ed;
+}
+#userstates .usercontent .statetime {
+	color: #a2a1a1;
+}
+#userstates .usercontent .wordcontent p {
+	color: #303131;
+}
+.useroperation {
+	color: #c8c8c8;
+}
+/************shareCompetitionResultLiving.html*************/
+#competitionLiving .realscore {
+	color:#bb3b3b;
+}
+#competitionLiving #competitionStatus {
+	color: #fff;
+}
+#roundBefore table tbody tr .score {
+	color: #bb3b3b;
+}
+/************shareCompetitionAgainstInfo.html*************/
+#againstBaseInfo #firstTeam,#secondTeam {
+	color: #000;
+}
+#againstBaseInfo #againstBaseCenter{
+	color: #fff;
+}
+.againstDetailInfo .competitionType {
+	color: #18b4ed;
+}
+#againstScore {
+	color: #fff;
+}
+/************shareMyBaseInformation.html*************/
+#myBaseInfo {
+	color:#fff;
+	background-color: #18b4ed;
+}
+#myBaseInfo h1 {
+	color:#fff;
+}
+#underbase p.tag {
+	color: #18b4ed;
+}
+#underbase p.number {
+	color: #a6a6a6;
+}
+#detailinfo {
+	background-color: #ededed;
+}
+#detailinfo .content {
+	background-color: #fff;
+}
+#detailinfo .content table .tr {
+	color: #a6a6a6;
+}
+/************sharePlayerBaseInformation.html*************/
+#playerBaseInfo {
+	color: #fff;
+	background-color: #18b4ed;
+}
+#playerBaseInfo h1 {
+	color: #fff;
+}
+#playerSelf #palyerName {
+	color: #323a45;
+}
+#playerSelf #playerSignature,#playerNickName {
+	color: #a6a6a6;
+}
+#competitionName {
+	color: #fff;
+	background-color: #18b4ed;
+}
+#competitionName h1 {
+	color: #fff;
+}
+#teamName {
+	background-color: #ededed; 
+}
+#teamName div {
+	background-color: #fff; 
+}
+#competitionDetail {
+	background-color: #ededed;
+}
+#competitionDetail #VSinfo {
+	background-color: #fff;
+}
+#competitionDetail #competitionInfo {
+	background-color: #ff9126; 
+}
+#competitionDetail #competitionInfo h1 {
+	color: #fff; 
+}
+/************shareSmallCompetition.html*************/

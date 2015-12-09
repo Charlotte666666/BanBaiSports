@@ -1,0 +1,898 @@
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet"
+			type="text/css"/>
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css"
+			media="print, projection, screen"/>
+		<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+	
+<script type="text/javascript">
+	var isSaveOK=false;
+	var optType="";
+	var info_id=0;
+	var Meetingresulid=1;
+	var Meetingresultrnum=1;
+	var assisttrid=1;
+	var assisttrnum=0;
+	var meetingid=0;
+	var meetingresult="";
+	var assist="";
+	var trid="";
+	var result_id=0;
+	var assist_id=0;
+	var resultStr="";
+	var assistId=0;
+	var completeStatus=0;
+    var time1 = new Date().setDate((new Date().getDate())+1);
+    var time2 = new Date().setDate((new Date().getDate())+8);
+	var count=0;
+	var recvIds="";
+	var personStr = "";
+	var persons = [];
+	var person_names=[];
+	var absent_persons=[];
+	var absent_names=[];
+	var delete_file_id="";
+	var currentUserCodes="";
+	var currentUserNames="";
+	var currentDeptIds="";
+	var currentDeptNames="";
+	var fileId=0;
+   $(document).ready(function() {
+     initData();
+   });
+	function deleteMeetingResult(){
+		var aoData=[];
+		var xurl="/actions/Interview.action?deleteMeetingResult";
+		aoData.push( { "name": "meetingresult.meeting_id", "value": meetingid } );
+		top.sendAjaxRequest(xurl,aoData,doSubmit);
+	}
+	//添加会议结果
+	function doSubmit(){
+		if(meetingid==0){
+			 top.showInfoWinError("请先添加会议内容!");
+			 return;
+		}
+		var result_ids="";
+		var meeting_ids="";
+		var complete_dates="";
+		
+		var department="";
+		var superintendent="";
+		var work_content="";
+		var complete_condition="";
+		var manager="";
+		var complete_status="";
+		
+		for(var i=0;i<=count;i++){
+				var aoData=[];
+				if($("#work_content"+i).val()==null||$("#work_content"+i).val()==""){
+					continue;
+				}else{
+					if( $("#department"+i).val()==null|| $("#department"+i).val()==""){
+						top.showInfoWinError("请选择部门!");
+						return;
+					}
+					result_ids+=result_id+"ISPLITI";
+					meeting_ids+=meetingid+"ISPLITI";
+					complete_dates+=top.toTimestamp($("#complete_date"+i).val())+"ISPLITI";
+					
+					manager+=$("#manager"+i).val()+"ISPLITI";
+					department+=$("#deptId"+i).val()+"ISPLITI";
+					superintendent+=$("#superintendent"+i).val()+"ISPLITI";
+					work_content+=$("#work_content"+i).val()+"ISPLITI";
+					complete_condition+=$("#complete_condition"+i).val()+"ISPLITI";
+					complete_status+="0ISPLITI";
+				}
+		}
+		
+		aoData.push( { "name": "meetingresult.result_ids", "value": result_ids } );
+		aoData.push( { "name": "meetingresult.meeting_ids", "value": meeting_ids } );
+		aoData.push( { "name": "meetingresult.department", "value": department } );
+		aoData.push( { "name": "meetingresult.superintendent", "value": superintendent } );
+		aoData.push( { "name": "meetingresult.work_content", "value": work_content } );
+		aoData.push( { "name": "meetingresult.complete_condition", "value": complete_condition } );
+		aoData.push( { "name": "meetingresult.manager", "value": manager } );
+		aoData.push( { "name": "meetingresult.complete_dates", "value": complete_dates } );
+		aoData.push( { "name": "meetingresult.complete_status", "value": complete_status } );
+		top.showLoadingInfo(true);
+		var xurl="/actions/Interview.action?batchSaveMeetingResult";
+		top.sendAjaxRequest(xurl,aoData,batchSaveMeetingResultCallback);
+		
+	}
+	
+	function batchSaveMeetingResultCallback(obj){
+		try{
+        if ( obj.status == true ){
+            var aoData1=[];
+			aoData1.push( { "name": "assist.assist_id", "value": assistId } );
+			aoData1.push( { "name": "assist.week_start_date", "value": top.toTimestamp($("#week_start_date").val()) } );
+			aoData1.push( { "name": "assist.week_end_date", "value": top.toTimestamp($("#week_end_date").val()) } );
+			aoData1.push( { "name": "assist.meeting_id", "value": meetingid } );
+			aoData1.push( { "name": "assist.assist_content", "value": $("#assist_content").val() } );
+			aoData1.push( { "name": "assist.top_manager", "value": $("#top_manager").val() } );
+			var xurl="/actions/Interview.action?saveAssistInfo";
+			top.sendAjaxRequest(xurl,aoData1,saveMeetingResultoptCallback);
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	
+	//调用回调函数---添加会议结果
+	function saveMeetingResultoptCallback(obj){
+		try{
+		top.showLoadingInfo(false);
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+    function checkMsg(){
+	var msg='';
+	msg += checkString($("#meeting_addr").val(),true,20,"会议地点");
+	msg += checkString($("#meeting_name").val(),true,32,"会议名称");
+	msg += checkString($("#meeting_date").val(),true,20,"会议时间");
+	msg += checkString($("#meeting_hoster").val(),true,10,"主持人");
+	msg += checkString($("#meeting_recorder").val(),true,10,"记录人");
+	if($("#attendee").val()==""){
+	  msg +="请选择会议参加的人员或部门！";
+	}
+	return msg;
+	}
+	// 保存会议基本信息
+    function AddMeetingInfo(){
+		var msg = checkMsg();
+		if(msg!=""){
+		  top.showInfoWinWarn(msg);
+	      return;
+		}
+		var aoData=[];
+		aoData.push( { "name": "meeting.meeting_type", "value": $("#meeting_type").val() } );
+		aoData.push( { "name": "meeting.meeting_name", "value": $("#meeting_name").val() } );
+		aoData.push( { "name": "meeting.meeting_addr", "value": $("#meeting_addr").val() } );
+		aoData.push( { "name": "meeting.meeting_hoster", "value": $("#meeting_hoster").val() } );
+		aoData.push( { "name": "meeting.meeting_date", "value": top.toTimestamp($("#meeting_date").val()) } );
+		aoData.push( { "name": "meeting.meeting_recorder", "value": $("#meeting_recorder").val() } );
+		
+     if ( optType=='insert' ) {
+	    recvIds="";
+		var cs=currentUserCodes.split(",");
+		var ds=currentDeptIds.split(",");
+		if ( cs != null ) {
+			for ( var i=0;i<cs.length;i++ ) {
+			  if ( cs[i] == '' ) continue;
+			  recvIds+=cs[i]+",";
+			}
+		}
+		if ( ds != null ) {
+			for ( var i=0;i<ds.length;i++ ) {
+			  if ( ds[i] == '' ) continue;
+			  recvIds+="IdeptI"+ds[i]+",";
+			}
+        }
+		aoData.push( { "name": "meeting.meeting_id", "value": info_id} );
+		aoData.push( { "name": "meeting.attendee", "value": recvIds} );
+		aoData.push( { "name": "notice.sendee", "value": recvIds} );
+		//aoData.push( { "name": "notice.sendee_names", "value":  $("#attendee").val()} );
+	    xurl="/actions/Interview.action?insertMeetingInfo";
+	    top.showLoadingInfo(true);
+	 }else{
+		var person_str = "";
+		for(var i = 0;i<persons.length;i++){
+		if(persons[i]!=""){
+		  person_str+=persons[i]+",";
+		  }
+		}
+		var abs_person_str = "";
+		for(var i = 0;i<absent_persons.length;i++){
+		if(absent_persons[i]!=""){
+		  abs_person_str+=absent_persons[i]+",";
+		  }
+		}
+		aoData.push({"name":"meeting.meeting_id","value":info_id});
+		aoData.push( { "name": "meeting.attendee", "value":personStr} );
+		aoData.push( { "name": "meeting.sit_in_person", "value": person_str } );
+		aoData.push( { "name": "meeting.absent_person", "value": abs_person_str } );
+		aoData.push( { "name": "meeting.absent_reason", "value": $("#absent_reason").val() } );
+		aoData.push( { "name": "meeting.late_person", "value": $("#late_person").val() } );
+		aoData.push( { "name": "meeting.late_reason", "value": $("#late_reason").val() } );
+		aoData.push( { "name": "meeting.meeting_proceeding", "value": $("#meeting_proceeding").val() } );
+		aoData.push( { "name": "meeting.meeting_status", "value":'1' } );
+		var xurl="/actions/Interview.action?updateMeetingInfo";
+	
+	 }
+     top.sendAjaxRequest(xurl,aoData,AddMeetingoptCallback);
+   }
+	//调用回调函数---添加会议记录
+    function AddMeetingoptCallback(obj){
+       try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+			if ( optType == "insert" ) {
+			  top.showLoadingInfo(false);
+			   top.showInfoWinOK("操作成功");
+			  doCancel();
+			}else{
+				deleteMeetingResult();
+			}
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+ 	function infoCallback(obj){
+	   try{
+        if ( obj.status == true ){
+		  var o=obj.body;
+		   $("#a_dept").hide();
+		   $("#a_user").hide();
+			//订单信息
+			if(o)
+			{	 
+				meetingid=o.meeting_id;
+				selectAllUploadFile();
+				if(optType=='query'){
+					$("#base_info_table input").hide();
+					$("#base_info_table a").hide();
+					$("#base_info_table textarea").hide();
+					$("#tr_meet_result input").hide();
+					$("#tr_meet_result textarea").hide();
+					$("#addMeetingRowBtn").hide();
+					$("#uploadFileButton").hide();
+					$("#submitDiv").hide();
+					$("#meeting_name").parent().html(o.meeting_name);
+					$("#td_meeting_addr").html(o.meeting_addr);
+					$("#meeting_hoster").parent().html(o.meeting_hoster);
+					$("#meeting_recorder").parent().html(o.meeting_recorder);
+					$("#attendee").parent().html(getUserNameByCodes(o.attendee));
+					if(o.meeting_status=="1"){
+					$("#sit_in_person").parent().html(o.sit_in_person);
+					}
+					$("#absent_person").parent().html(o.absent_person);
+					$("#absent_reason").parent().html(o.absent_reason);
+					$("#late_person").parent().html(o.late_person);
+					$("#late_reason").parent().html(o.late_reason);
+					$("#meeting_proceeding").parent().html(o.meeting_proceeding);
+					$("#meeting_date").parent().html( top.getTimeStr( o.meeting_date, true ) );
+					$("#tdmeeting_type").html(top.getCodeName("MEETING_TYPE",o.meeting_type) );	
+				}else{
+				 persons = o.sit_in_person.split(",");
+			    absent_persons =o.absent_person.split(",");
+				initSitInPerson();
+				initAbsentPerson();
+				personStr = o.attendee;
+			    $("#meeting_name").val(o.meeting_name);
+			    $("#meeting_addr").val(o.meeting_addr);
+				$("#meeting_hoster").val(o.meeting_hoster);
+				$("#meeting_recorder").val(o.meeting_recorder);
+				$("#attendee").parent().html(getUserNameByCodes(personStr));
+				$("#absent_person").val(o.absent_person);
+				$("#absent_reason").val(o.absent_reason);
+				$("#late_person").val(o.late_person);
+				$("#late_reason").val(o.late_reason);
+				$("#meeting_proceeding").val(o.meeting_proceeding);
+				$("#meeting_date").val( top.getTimeStr( o.meeting_date, true ) );
+				$("#tdmeeting_type" ).html( top.getCodeSelectHtml("MEETING_TYPE","meeting_type",false,o.meeting_type) );
+				}
+				if(o.assistInfo){
+					if(optType=='query'){
+						assistId=o.assistInfo.assist_id;
+						$("#assist_content").parent().html(o.assistInfo.assist_content);
+						$("#top_manager").parent().html(o.assistInfo.top_manager);
+						$("#week_start_date").parent().html( top.getTimeStr( o.assistInfo.week_start_date, true ) );
+						$("#week_end_date").parent().html( top.getTimeStr( o.assistInfo.week_end_date, true ) );
+					}else{
+						assistId=o.assistInfo.assist_id;
+						$("#assist_content").val(o.assistInfo.assist_content);
+						$("#top_manager").val(o.assistInfo.top_manager);
+						$("#week_start_date").val( top.getTimeStr( o.assistInfo.week_start_date, true ) );
+						$("#week_end_date").val( top.getTimeStr( o.assistInfo.week_end_date, true ) );
+					}
+				}
+				 var ht='<tr class="tr_data" height="35px">';
+				ht+='<td width="10%">承办部门</td>';
+				ht+='<td width="20%">承办事项</td>';
+				ht+='<td width="30%">具体内容及要求</td>';
+				ht+='<td width="10%">监督人</td>';
+				ht+='<td width="10%">完成时间</td>';
+				ht+='<td width="10%">负责人</td>';
+				if(optType!='query'){
+					ht+='<td width="10%">操作</td>';
+				}
+				ht+='</tr>';
+		   if(o.resultList.length>0){
+			if(optType=='query'){
+			 for(var i=0;i<o.resultList.length;i++){
+		        count++;
+		        ht+='<tr class="tr_data" id="tr'+i+'">';
+				 ht+='<td id="department'+i+'"/></td>';
+				 ht+='<td id="work_content'+i+'"></td>';
+				 ht+='<td id="complete_condition'+i+'"></td>';
+				 ht+='<td id="span_manager'+i+'"></td>';
+				 ht+='<td type="text" id="complete_date'+i+'" </td>';
+				 ht+='<td id="span_superintendent'+i+'"></span></td>';
+			 ht+='</tr>';
+			}
+			}else{
+		       for(var i=0;i<o.resultList.length;i++){
+		        count++;
+		        ht+='<tr class="tr_data" id="tr'+i+'">';
+				 ht+='<td ><input type="text" id="department'+i+'"onclick="selectDept('+i+')"/><input type="hidden" id="deptId'+i+'" value="" /></td>';
+				 ht+='<td ><textarea id="work_content'+i+'"></textarea></td>';
+				 ht+='<td ><textarea id="complete_condition'+i+'"></textarea></td>';
+				 ht+='<td ><span id="span_manager'+i+'"></span></td>';
+				 ht+='<td ><input type="text" id="complete_date'+i+'" onclick="new Calendar().show(this);" readonly="true"/></td>';
+				 ht+='<td ><span id="span_superintendent'+i+'"></span></td>';
+				  ht+='<td ><a href="javascript:void(0)" onclick="removeMeetingRow(\''+i+'\')">删除</a></td>';
+			 ht+='</tr>';
+			}
+		 }
+		   $("#meetingresult").html(ht);
+		   if(optType=='query'){
+			for(var i=0;i<o.resultList.length;i++){
+			   $("#span_manager"+i).html(top.getUserNameByCode(o.resultList[i].manager));
+			   $("#span_superintendent"+i).html(top.getUserNameByCode(o.resultList[i].superintendent));
+			   $("#department"+i).html(top.getDeptPath( o.resultList[i].department));
+			   $("#deptId"+i).html(o.resultList[i].department);
+			   $("#work_content"+i).html(o.resultList[i].work_content); 
+			   $("#complete_condition"+i).html(o.resultList[i].complete_condition); 
+			   $("#manager"+i).html(o.resultList[i].manager); 
+			   $("#complete_date"+i).html(top.getTimeStr( o.resultList[i].complete_date, true )); 
+			   $("#superintendent"+i).html(o.resultList[i].superintendent);
+			   }
+		   }else{
+			   for(var i=0;i<o.resultList.length;i++){
+			   $("#span_manager"+i).html(top.getAllUserSelect("manager"+i));
+			   $("#span_superintendent"+i).html(top.getAllUserSelect("superintendent"+i));
+			   $("#department"+i).val(top.getDeptPath( o.resultList[i].department));
+			   $("#deptId"+i).val(o.resultList[i].department);
+			   $("#work_content"+i).val(o.resultList[i].work_content); 
+			   $("#complete_condition"+i).val(o.resultList[i].complete_condition); 
+			   $("#manager"+i).val(o.resultList[i].manager); 
+			   $("#complete_date"+i).val(top.getTimeStr( o.resultList[i].complete_date, true )); 
+			   $("#superintendent"+i).val(o.resultList[i].superintendent);
+			   }
+		   }
+		 }
+		 else{
+		   $("#meetingresult").html(ht);
+		 }
+		}else{
+          top.showInfoWinError("操作失败");
+        }
+       }
+	   }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	
+	function getUserNameByCodes(code_str){
+	   var codes=[];
+	   var user_codes = "";
+	   if(code_str==""||code_str==null) return user_codes;
+	   codes = code_str.split(",");
+	   for(var i=0;i<codes.length;i++){
+	   if(codes[i]!=""){
+	    user_codes+= top.getUserNameByCode(codes[i])+",";
+		}
+	   }
+	   return user_codes;
+	}
+	//初始化列席人员
+	function initSitInPerson(){
+	  var ht="";
+	  for(var i = 0;i<persons.length;i++){
+	  if(persons[i]!=""){
+	   ht+='<span>'+persons[i]+'<img src="image/delete_imag.jpg" width="15" height="15" onclick="deleteSitPerson(\''+i+'\')"></span>&nbsp&nbsp';
+	   }
+	  }
+	 $("#td_sit_in_person").html(ht);
+	}
+	function initAbsentPerson(){
+	  var ht="";
+	  for(var i = 0;i<absent_persons.length;i++){
+	  if(absent_persons[i]!=""){
+	   ht+='<span>'+absent_persons[i]+'<img src="image/delete_imag.jpg" width="15" height="15" onclick="deleteAbsentPerson(\''+i+'\')"></span>&nbsp&nbsp';
+	   }
+	  }
+	 $("#td_absent_person").html(ht);
+	}
+	function deleteSitPerson(index){
+	  absent_persons[absent_persons.length] =  persons[index];
+	  persons[index]="";
+	  initAbsentPerson();
+	  initSitInPerson();
+	}
+	function deleteAbsentPerson(index){
+	persons[persons.length] = absent_persons[index];
+	  absent_persons[index]="";
+	  initSitInPerson();
+	   initAbsentPerson();
+	
+	}
+	// 关闭当前页面前，页面框架自动调用的函数
+	function doBeforeClose(){
+     var obj={
+              "isSaveOK":isSaveOK
+            };
+     top.setTempValue(obj);
+   }
+	//初始化
+	function initData(){
+		optType=top.getUrlParam(document.URL,"optType");
+	    if ( optType=='update'|| optType=='query'){
+			if(optType=='query'){
+				$(".redStar").hide();
+			}
+			$("#save_meeting_base").hide();
+			$(".tr_meet_result").show();
+			$("#uploadFile").show();
+			info_id=top.getUrlParam(document.URL,"id");
+			var aoData=[];
+			aoData.push( { "name": "meeting.meeting_id", "value": info_id } );
+			top.sendAjaxRequest("/actions/Interview.action?getMeetingInfo",aoData,infoCallback);
+		}
+		else if(optType=='insert'){
+		 info_id = new Date().getTime();
+		$("#week_start_date").val(top.getTimeStr(time1,true));
+	    $("#week_end_date").val(top.getTimeStr(time2,true));
+		getMeetingInfoByTime();
+		}
+		$("#tdmeeting_type" ).html( top.getCodeSelectHtml("MEETING_TYPE","meeting_type",false) );
+    }
+	
+  function onDateSelectChanged(o){
+    try{
+	   getMeetingInfoByTime();
+	}catch(e){}
+  }
+	
+	function getMeetingInfoByTime(){
+	if(optType=="insert"){
+	  var aoData=[];
+	  if($("#week_start_date").val()!=""&&$("#week_end_date").val()!=""){
+	    if(time1!=$("#week_start_date").val()||$("#week_end_date").val()!=time2){
+	    aoData.push( { "name": "time1", "value":$("#week_start_date").val()} );
+	    aoData.push( { "name": "time2", "value":$("#week_end_date").val()} );
+        top.sendAjaxRequest("/actions/Interview.action?getPlanList",aoData,plansInfoCallback);
+	     time1 = $("#week_start_date").val();
+	     time2 = $("#week_end_date").val();
+	   }
+	  }
+	  }
+   }
+	
+	function plansInfoCallback(obj){
+	   try{
+	       count=0;
+		   var o = obj.aaData;
+		     var ht='<tr class="tr_data" height="35px">';
+				ht+='<td width="10%">承办部门</td>';
+				ht+='<td width="20%">承办事项</td>';
+				ht+='<td width="30%">具体内容及要求</td>';
+				ht+='<td width="10%">监督人</td>';
+				ht+='<td width="10%">完成时间</td>';
+				ht+='<td width="10%">负责人</td>';
+				ht+='<td width="10%">操作</td>';
+			    ht+='</tr>';
+		   if(o.length>0){
+		  for(var i=0;i<o.length;i++){
+		        count++;
+		        ht+='<tr class="tr_data" id="tr'+i+'">';
+				 ht+='<td ><input type="text" id="department'+i+'"onclick="selectDept('+i+')"/><input type="hidden" id="deptId'+i+'" value="" /></td>';
+				 ht+='<td ><textarea id="work_content'+i+'"></textarea></td>';
+				 ht+='<td ><textarea id="complete_condition'+i+'"></textarea></td>';
+				 ht+='<td ><span id="span_manager'+i+'"></span></td>';
+				 ht+='<td ><input type="text" id="complete_date'+i+'" onclick="new Calendar().show(this);" readonly="true"/></td>';
+				 ht+='<td ><span id="span_superintendent'+i+'"></span></td>';
+				  ht+='<td ><a href="javascript:void(0)" onclick="removeMeetingRow(\''+i+'\')">删除</a></td>';
+			 ht+='</tr>';
+		  }
+		   $("#meetingresult").html(ht);
+		   for(var i=0;i<o.length;i++){
+		   $("#span_manager"+i).html(top.getAllUserSelect("manager"+i));
+		   $("#span_superintendent"+i).html(top.getAllUserSelect("superintendent"+i));
+		   $("#department"+i).val(top.getDeptPath( o[i].dept_id));
+		   $("#deptId"+i).val(o[i].dept_id);
+		   $("#work_content"+i).val(o[i].work_content); 
+		   $("#complete_condition"+i).val(o[i].complete_condition); 
+		   $("#manager"+i).val(o[i].manager); 
+		   $("#complete_date"+i).val(top.getTimeStr( o[i].complete_date, true )); 
+		   $("#superintendent"+i).val(o[i].superintendent);
+		   }
+		 }
+		 else{
+		   $("#meetingresult").html(ht);
+		 }
+	   }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	   
+	}
+	function removeMeetingRow(index){
+	  $("#tr"+index).remove();
+	}
+	function AddMeetingRow(){
+	     count++;
+		 var ht='<tr class="tr_data" id="tr'+count+'">';
+			 ht+='<td ><input type="text" id="department'+count+'"onclick="selectDept('+count+')"/><input type="hidden" id="deptId'+count+'" value="" /></td>';
+			 ht+='<td ><textarea id="work_content'+count+'"></textarea></td>';
+			 ht+='<td ><textarea id="complete_condition'+count+'"></textarea></td>';
+			 ht+='<td ><span id="span_superintendent'+count+'"></span></td>';
+			 ht+='<td ><input type="text" id="complete_date'+count+'" onclick="new Calendar().show(this);" readonly="true"/></td>';
+			 ht+='<td ><span id="span_manager'+count+'"></span></td>';
+			 ht+='<td ><a href="javascript:void(0)" onclick="removeMeetingRow(\''+count+'\')">删除</a></td>';
+			 ht+='</tr>';
+         $("#meetingresult").append(ht);
+		 $("#span_manager"+count).html(top.getAllUserSelect("manager"+count));
+		 $("#span_superintendent"+count).html(top.getAllUserSelect("superintendent"+count));
+	}
+	//选择部门
+    function selectBeforMeetingDept(){
+       var xurl="pages/organization/selectTreeNode.html?type=dept";
+       top.openSelectDialog("选择部门",xurl,300,450,selectBeforMeetingDeptCallback);
+   }
+    function selectBeforMeetingDeptCallback(){
+       try{
+         var obj = top.getTempValue();
+         if ( obj.nodeId == -1 ) return ;
+         if ( obj.nodeId == -2 ) {
+             qDeptId = "";
+             qDeptName = "";
+         } else {
+             qDeptId = obj.nodeId;
+             qDeptName = obj.nodeName;
+         }
+		 
+		 currentDeptIds+=qDeptId+",";
+		 currentDeptNames+=qDeptName+",";
+		 
+		 var ns=$("#attendee").val();
+         $("#attendee").val( ns + qDeptName + ",");
+		 refreshSelectedObject();
+       }catch(e){
+       }
+   }
+   
+   function selectUser(){
+		var xurl="pages/organization/selectUser.html?opt=addRoleUser";
+		top.openSelectDialog("选择系统用户",xurl,1060,600,doSelectUser);
+  }
+  
+  function doSelectUser(){
+		var so = top.getTempValue();
+		if ( so.userCodes == '' ) return ;
+        $("#attendee").val( $("#attendee").val() + so.userNames );
+		currentUserCodes+=so.userCodes;
+		currentUserNames+=so.userNames;
+		refreshSelectedObject();
+  }
+  
+  function deleteSelectUser(code){
+       var cs=currentUserCodes.split(",");
+	   var ns=currentUserNames.split(",");
+	   currentUserCodes='';
+	   currentUserNames='';
+	   for (var i=0;i<cs.length;i++) {
+	     if ( cs[i] != code ) {
+		   currentUserCodes+=cs[i]+",";
+		   currentUserNames+=ns[i]+",";
+		 }
+	   }
+	   refreshSelectedObject();
+  }
+  
+  function deleteSelectDept(did){
+       var cs=currentDeptIds.split(",");
+	   var ns=currentDeptNames.split(",");
+	   currentDeptIds='';
+	   currentDeptNames='';
+	   for (var i=0;i<cs.length;i++) {
+	     if ( cs[i] != did ) {
+		   currentDeptIds+=cs[i]+",";
+		   currentDeptNames+=ns[i]+",";
+		 }
+	   }
+	   refreshSelectedObject();
+  }
+  
+  function refreshSelectedObject(){
+      var cs=currentUserCodes.split(",");
+	  var ns=currentUserNames.split(",");
+      var namesHt="";
+      for ( var i=0;i<cs.length;i++ ) {
+	      if ( cs[i] == '' ) continue;
+		  namesHt+="<span style='color:#E0EEE'>"+ns[i]+"&nbsp;<img src='../../img/delete.gif' style='cursor:pointer' onclick='deleteSelectUser(\""+cs[i]+"\")'></img></span>&nbsp;&nbsp;";
+	  }
+	  
+	  var dids=currentDeptIds.split(",");
+	  var dnames=currentDeptNames.split(",");
+	  for (var i=0;i<dids.length;i++) {
+	     if ( dids[i] == '' ) continue;
+		 namesHt+="<span style='color:#E0EEE'>"+dnames[i]+"&nbsp;<img src='../../img/delete.gif' style='cursor:pointer' onclick='deleteSelectDept(\""+dids[i]+"\")'></img></span>&nbsp;&nbsp;";
+	  }
+	   
+	  $("#attendeeTxt").html( namesHt );
+  }
+   
+	//选择部门
+    function selectDept(mid){
+		trid=mid;
+       var xurl="pages/organization/selectTreeNode.html?type=dept";
+       top.openSelectDialog("选择部门",xurl,300,450,selectDeptCallback);
+   }
+    function selectDeptCallback(){
+       try{
+         var obj = top.getTempValue();
+         if ( obj.nodeId == -1 ) return ;
+         if ( obj.nodeId == -2 ) {
+             qDeptId = "";
+             qDeptName = "";
+         } else {
+             qDeptId = obj.nodeId;
+             qDeptName = obj.nodeName;
+         }
+         document.getElementById("deptId"+trid+"").value = qDeptId;
+         document.getElementById("department"+trid+"").value = qDeptName;
+       }catch(e){
+       }
+   }
+   
+   function doCancel(){
+	   top.closeDialog();
+   }
+  //上传文件
+	function uploadFile(){
+		var xurl="../uploadFile.html?belong_id="+info_id+"&belong_type=0";
+		openDialog("上传文件",xurl,true,600,230,saveFileCallBack);
+	}
+	//调用回调函数---上传文件
+   	function saveFileCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) selectAllUploadFile();
+				}catch(e){
+				}
+	}
+	
+	//查询所有上传的附件
+	function selectAllUploadFile(){
+		var aoData=[];
+		aoData.push( { "name": "fileinfo.belong_id", "value": info_id} );
+	    top.sendAjaxRequest("/actions/File.action?getFileInfoList",aoData,FileinfoCallback);
+   }
+   
+   function FileinfoCallback(obj){
+     var o = obj.aaData;
+	   var ht = "";
+	 if(o.length>0){
+		for(var i = 0;i<o.length;i++){
+			ht+='<tr class="tr_data"><td align="left" width="50%">';
+			ht+='<a href="'+top.getUrlBase()+'/download?filePath='+o[i].file_path+'+"&fileName="'+o[i].file_name+'">'+o[i].file_name+'</a></td>';
+			if(optType!='query'){
+			ht+='<td align="left"><a href="javascript:void(0)" onclick="deleteFile(\''+o[i].file_id+'\')">删除</a></td>';
+			}
+			ht+='</tr>';
+		}
+	 }
+	 $('#filePathList').html(ht);
+   }
+   function deleteFile(file_id){
+   fileId = file_id;
+     top.showConfirm("确定删除该附件吗？",doDeleteFile);
+   }
+   function doDeleteFile(){
+      var aoData=[];
+     aoData.push( { "name": "fileinfo.file_id", "value":fileId } );
+	 var xurl="/actions/File.action?deleteFile";
+     top.sendAjaxRequest(xurl,aoData,selectAllUploadFile);
+   }
+ 
+	function openDialog(t,xurl,isModal,w,h,callback){
+		if ( isModal == undefined ) isModal=true;
+		if ( !h ) h=200;
+		if ( !w ) w=400;
+		$( "#dialog" ).dialog({
+			title: t,
+			height: h,
+			width: w,
+			modal: isModal,
+			resizable: false,
+		    beforeClose: function(event, ui) {
+		        try{
+		            document.getElementById("self_iframe").contentWindow.doBeforeClose();
+		            if ( callback ) callback.apply();
+		        }catch(e){
+		        }
+		        return true;
+		    }
+		});
+		document.getElementById("self_iframe").src = xurl;
+    }
+	
+	function closeDialog(){
+		$( "#dialog" ).dialog( "close" );
+	}
+	</script>
+	<style>
+		#meetingresult input{
+			width:99%;
+			height:99%;
+		}
+		#meetingresult textarea{
+			width:99%;
+			height:99%;
+		}
+		#meetingresult select{
+			width:99%;
+			height:99%;
+		}
+	</style>
+	</head>
+	<body>
+		<B>会议基本信息</B>
+		<table id="base_info_table" border="1" cellpadding="3" cellspacing="1" width="98%" align="center" style="background-color: #b9d8f3;">
+			<tr class="tr_data" height="35px">
+				<td width="15%" class="table_property_title">会议类型</td>
+				<td width="35%" align="left" id="tdmeeting_type"></td>
+				<td width="15%" class="table_property_title">会议地点<span class="redStar" style="color:red;">(*)</span></td>
+				<td width="35%" align="left" id="td_meeting_addr"><input type="text" id="meeting_addr"/></td>
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td width="15%" class="table_property_title">会议名称<span class="redStar" style="color:red;">(*)</span></td>
+				<td width="35%" align="left" id="td_meeting_name"><input type="text" id="meeting_name"/></td>
+				<td width="15%" class="table_property_title">时间<span class="redStar" style="color:red;">(*)</span></td>
+				<td width="35%" align="left" id="td_meeting_name"><input type="text" id="meeting_date" onclick="new Calendar().show(this);" readonly="true"/></td>
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td class="table_property_title">主持人<span class="redStar" style="color:red;">(*)</span></td>
+				<td align="left" id="td_meeting_hoster"><input type="text" id="meeting_hoster"/></td>
+				<td class="table_property_title">记录人<span class="redStar" style="color:red;">(*)</span></td>
+				<td align="left" id="td_meeting_recorder"><input type="text" id="meeting_recorder"/></td>
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td class="table_property_title">参加人员 
+				<br/><a href="javascript:void(0)" id ="a_dept" onclick="selectBeforMeetingDept()">选择部门</a>&nbsp;<a href="javascript:void(0)"  id ="a_user" onclick="selectUser()">选择人员</a></td>
+				<td width="80%" colspan="3" align="left" id="td_attendee">
+				  <textarea id="attendee" rows="3" style="display:none"></textarea>
+				  <span id="attendeeTxt"></span>
+				</td>
+			</tr>
+			<tr class="tr_data tr_meet_result" height="35px"  style="display:none">
+				<td class="table_property_title">列席人员</td>
+				<td align="left" colspan="3" id="td_sit_in_person"><textarea id="sit_in_person" rows="2" style="width:890px"></textarea></td>
+			</tr>
+			<tr class="tr_data tr_meet_result" height="35px"  style="display:none">
+				<td class="table_property_title">缺席人员</td>
+				<td align="left" colspan="3" id="td_absent_person"><textarea id="absent_person" rows="2" style="width:890px"></textarea></td>
+			</tr>
+			<tr class="tr_data tr_meet_result" height="35px"  style="display:none">
+				<td class="table_property_title">缺席原因</td>
+				<td align="left" colspan="3" id="td_absent_reason"><textarea id="absent_reason" rows="2" style="width:890px"></textarea></td>
+			</tr>
+				<tr class="tr_data tr_meet_result" height="35px"  style="display:none">
+				<td class="table_property_title">迟到人员</td>
+				<td align="left" colspan="3" id="td_late_person"><textarea id="late_person" rows="2" style="width:890px"></textarea></td>
+			</tr>
+			<tr class="tr_data tr_meet_result" height="35px"  style="display:none">
+				<td class="table_property_title">迟到原因</td>
+				<td align="left" colspan="3" id="td_late_reason"><textarea id="late_reason" rows="2" style="width:890px"></textarea></td>
+			</tr>
+			<tr class="tr_data tr_meet_result" height="35px" style="display:none">
+				<td class="table_property_title">会议进程</td>
+				<td align="left" colspan="3" id="td_meeting_proceeding"><textarea id="meeting_proceeding" rows="3" style="width:890px"></textarea></td>
+			</tr>
+			<tr id="uploadFile" class="tr_data" height="35px" >
+				<td>上传附件</td>
+				<td width="85%" align="left" colspan="3">
+					<table id="filePathList" class="display" cellpadding="0" width="100%" cellspacing="0" border="0" ></table>
+					<div id="uploadFileButton" class="buttonDivTwo">
+						<a href="javascript:uploadFile()">上传</a>
+					</div>
+				</td>
+			</tr>
+		</table>
+		<p align="center" id="save_meeting_base">
+		   <table><tr>
+					<td><span id="okBtn" class="buttonTwo"><a href="javascript:AddMeetingInfo()">提交</a></span></td>
+					<td><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">取消</a></span></td>
+		   </tr></table>
+		</p>
+		<!--<table width="98%" style="display:none" style="margin: 10px;">
+			<tr>
+				<td width="50%" align="center">
+					<div id="saveMeetingInfoBtn" class="buttonDivTwo">
+						<a href="javascript:void(0)" onclick="AddMeetingInfo()">保存</a>
+					</div>
+				</td>
+
+			</tr>
+		</table>!-->
+		<table id="filePathList" class="display" cellpadding="0" width="100%" cellspacing="0" border="0" ></table>
+        <br/>
+		<br/>
+		<table>
+		   <tr>
+		     <td>
+			    <B class="tr_meet_result" style="display:none">本周【<span><input type="text" style="width:100px;" onclick="new Calendar().show(this);" readonly="true" id="week_start_date"/></span>--<span><input type="text" style="width:100px;" onclick="new Calendar().show(this);" readonly="true" onchange="getMeetingInfoByTime();" id="week_end_date"/></span>】</B>
+			 </td>
+			 <td>
+			    <div class="tr_meet_result buttonDivSix" style="display:none" id="addMeetingRowBtn" >
+			       <a href="javascript:void(0)" onclick="AddMeetingRow()">添加承办部门</a>
+		        </div>	
+			 </td>
+		   </tr>
+		</table>
+		<table class="tr_meet_result" style="display:none" border="1" cellpadding="3" cellspacing="1" width="98%" align="center" id="meetingresult" style="background-color: #b9d8f3;" >		
+			<tr class="tr_data" height="35px">
+				<td width="10%">承办部门</td>
+				<td width="20%">承办事项</td>
+				<td width="30%">具体内容及要求</td>
+				<td width="10%">监督人</td>
+				<td width="15%">完成时间</td>
+				<td width="15%">负责人</td>
+			</tr>
+		</table>
+			
+			<br>
+			<table class="tr_meet_result" style="display:none" border="1" cellpadding="3" cellspacing="1" width="98%" align="center" style="background-color: #b9d8f3;" >	
+			<tr class="tr_data" height="35px">
+				<td width="150px">会议决议及部门协办事项汇总</td>
+				<td width="300px" style="word-break:break-all" colspan="5" align="left"><textarea id="assist_content" style="width:860px" rows="7"></textarea></td>
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td >总经理承办事项</td>
+				<td colspan="5" align="left"><textarea id="top_manager" style="width:860px" rows="7"></textarea></td>
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td >备注</td>
+				<td colspan="5" align="left">
+					1、各部门工作总结与计划会前上交;<br/>
+					2、上周工作承办事项必须闭环;<br/>
+					3、未完成事项须移交本周完成并注明时间;<br/>
+					4、本周工作计划须明确工作重点;<br/>
+					5、会议决议应交人力另附书面的通知下发;<br/>
+					6、会议纪要须总经理审核通过并下发各部门;<br/>
+				</td>
+			</tr>
+		</table>
+		<p align="center"id="submitDiv" class="tr_meet_result" style="display:none">
+		   <table><tr>
+					<td><span id="okBtn" class="buttonTwo"><a href="javascript:AddMeetingInfo()">提交</a></span></td>
+					<td><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+		   </tr></table>
+		</p>
+		<div id="dialog" title="" style="display: none; padding: 0 0 0 0; margin: 0 0 0 0; z-index: 10000">
+			<iframe id="self_iframe" src="about:blank" width="100%" height="96%"
+				frameborder="0"></iframe>
+		</div>
+	</body>
+</html>

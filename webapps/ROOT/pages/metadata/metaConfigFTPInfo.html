@@ -1,0 +1,221 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+ 
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var gcode = "";
+   var gstatus = "";
+   var gmonth = "";
+   var gday = "";
+   var ghour = "";
+   var gminute = "";
+   var greplace_month="";
+   var greplace_day="";
+   var greplace_hour="";
+   var gto_dir="";
+   var gserver_code="";
+   var gopt_server="";
+   var gtask_title="";
+ 
+   $(document).ready(function() {
+        $( "#gopt_server_td" ).html( top.getRunServerCodeSelectHtml("qopt_server") );
+        try{
+		  optType=top.getUrlParam(document.URL,"opt");
+		  gcode=top.getUrlParam(document.URL,"code");
+		  gserver_code= decodeURI( top.getUrlParam(document.URL,"server_code") );
+		  gfrom_path= top.getUrlParam(document.URL,"from_path");
+		  gto_dir= top.getUrlParam(document.URL,"to_dir");
+		  gstatus =top.getUrlParam(document.URL,"status");
+		  gmonth = top.getUrlParam(document.URL,"month");
+		  gday = top.getUrlParam(document.URL,"day");
+		  ghour = top.getUrlParam(document.URL,"hour");
+		  gminute = top.getUrlParam(document.URL,"minute");
+		  greplace_month = top.getUrlParam(document.URL,"replace_month");
+		  greplace_day = top.getUrlParam(document.URL,"replace_day");
+		  greplace_hour = top.getUrlParam(document.URL,"replace_hour");
+		  gopt_server= decodeURI( top.getUrlParam(document.URL,"opt_server") );
+		  gtask_title= decodeURI( top.getUrlParam(document.URL,"task_title") );
+ 		}catch(e){
+		}
+		if ( optType == 'create' ) {
+		  $( "#tdStatus" ).html( top.getCodeSelectHtml("USE_STATUS","qstatus",false) );
+		} else {
+		  $( "#tdStatus" ).html( top.getCodeSelectHtml("USE_STATUS","qstatus",false, gstatus) );
+		  $( "#qfrom_path" ).val( gfrom_path );
+		  $( "#qto_dir" ).val( gto_dir );
+		  $( "#qmonth" ).val( gmonth );
+		  $( "#qday" ).val( gday );
+		  $( "#qhour" ).val( ghour );
+		  $( "#qminute" ).val( gminute );
+		  $( "#replace_month" ).val( greplace_month );
+		  $( "#replace_day" ).val( greplace_day );
+		  $( "#replace_hour" ).val( greplace_hour );
+		  $( "#qopt_server" ).val( gopt_server );
+		  $( "#qtask_title" ).val( gtask_title );
+		}
+		top.sendAjaxRequest("/actions/Metadata.action?getMetaFTPList",[],optGetFTPListCallback);
+   } );
+ 
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   function doSubmit(){
+	 var aoData=[];
+	 var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+	 var sta=$("#qstatus").val();
+	 if ( sta == undefined || sta == '' ) sta = '0';
+ 
+	 aoData.push( { "name": "metaConfigFTP.code", "value": gcode } );
+	 aoData.push( { "name": "metaConfigFTP.server_code", "value": $("#qserver_code").val() } );
+     aoData.push( { "name": "metaConfigFTP.from_path", "value": $("#qfrom_path").val() } );
+     aoData.push( { "name": "metaConfigFTP.to_dir", "value": $("#qto_dir").val() } );
+     aoData.push( { "name": "metaConfigFTP.status", "value": sta } );
+     aoData.push( { "name": "metaConfigFTP.month", "value": $("#qmonth").val() } );
+	 aoData.push( { "name": "metaConfigFTP.day", "value": $("#qday").val() } );
+	 aoData.push( { "name": "metaConfigFTP.hour", "value": $("#qhour").val() } );
+	 aoData.push( { "name": "metaConfigFTP.minute", "value": $("#qminute").val() } );
+	 aoData.push( { "name": "metaConfigFTP.replace_month", "value": $("#replace_month").val() } );
+	 aoData.push( { "name": "metaConfigFTP.replace_day", "value": $("#replace_day").val() } );
+	 aoData.push( { "name": "metaConfigFTP.replace_hour", "value": $("#replace_hour").val() } );
+	 aoData.push( { "name": "metaConfigFTP.opt_server", "value": $("#qopt_server").val() } );
+	 aoData.push( { "name": "metaConfigFTP.task_title", "value": $("#qtask_title").val() } );
+	 var url = "/actions/Metadata.action?updateMetaConfigFTP";
+	 if ( optType == 'create' ) url = "/actions/Metadata.action?insertMetaConfigFTP";
+
+	 top.sendAjaxRequest(url,aoData,optCallback);
+   }
+
+   function checkForm(){
+     var msg = "";
+	 var temp = "";
+	 temp = $("#qfrom_path").val();
+	 if ( temp == '' ) {
+	   msg += "请输入文件路径<br>"; 
+	 }
+	 temp = $("#qto_dir").val();
+	 if ( temp == '' ) {
+	   msg += "请输入目标路径<br>"; 
+	 }
+	 msg += checkString($("#qtask_title").val(),true,32,"标题");
+     return msg;
+   }
+   
+   function optGetFTPListCallback(obj){
+     try{
+	   var str="<select id='qserver_code'>";
+	   var temp = "";
+	   for ( var i=0;i<obj.aaData.length;i++ ) {
+	     temp = obj.aaData[i].code;
+		 str += "<option value='"+temp+"'>"+temp+"</option>";
+	   }
+	   str+="</select>";
+	   $( "#gftp_code_td" ).html( str );
+	 }catch(e){}
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      isSaveOK = true;
+	      top.showInfoWinOK("操作成功");
+	    }else{
+	      isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+  </script> 
+</head>
+<body>
+<br>
+<table width="100%" border="0" padding="0" spacing="0">
+  <tr>
+    <td align="right">标题(<font color="red">*</font>):</td>
+    <td align="left"><input type="text" id="qtask_title" ></input></td>
+ </tr>
+ <tr>
+    <td align="right">文件(<font color="red">*</font>):</td>
+    <td align="left"><textarea id="qfrom_path" cols="55" rows="5"></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">目标路径(<font color="red">*</font>):</td>
+    <td align="left"><textarea id="qto_dir" cols="55" rows="5"></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">替换策略:</td>
+    <td align="left"><input id="replace_month" type="txt" value="0" size="3"/>月
+	<input type="txt" id="replace_day" value="0" size="3"/>日<input type="txt" id="replace_hour" value="0" size="3"/>时</td>
+ </tr>
+ <tr>
+    <td align="right">执行时间:</td>
+    <td align="left">
+	  <select id="qmonth">
+	    <option value="-1">每月</option>
+	    <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option><option value="5">5月</option>
+		<option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option>
+		<option value="11">11月</option><option value="12">12月</option>
+	  </select>
+	  <select id="qday">
+	    <option value="-1">每日</option>
+	    <option value="1">1日</option><option value="2">2日</option><option value="3">3日</option><option value="4">4日</option><option value="5">5日</option>
+		<option value="6">6日</option><option value="7">7日</option><option value="8">8日</option><option value="9">9日</option><option value="10">10日</option>
+		<option value="11">11日</option><option value="12">12日</option><option value="13">13日</option><option value="14">14日</option><option value="15">15日</option>
+		<option value="16">16日</option><option value="17">17日</option><option value="18">18日</option><option value="19">19日</option><option value="20">20日</option>
+		<option value="21">21日</option><option value="22">22日</option><option value="23">23日</option><option value="24">24日</option><option value="25">25日</option>
+		<option value="26">26日</option><option value="27">27日</option><option value="28">28日</option><option value="29">29日</option><option value="30">30日</option>
+		<option value="31">31日</option>
+	  </select>
+	  <select id="qhour">
+	    <option value="-1">每时</option><option value="0">0时</option>
+	    <option value="1">1时</option><option value="2">2时</option><option value="3">3时</option><option value="4">4时</option><option value="5">5时</option>
+		<option value="6">6时</option><option value="7">7时</option><option value="8">8时</option><option value="9">9时</option><option value="10">10时</option>
+		<option value="11">11时</option><option value="12">12时</option><option value="13">13时</option><option value="14">14时</option><option value="15">15时</option>
+		<option value="16">16时</option><option value="17">17时</option><option value="18">18时</option><option value="19">19时</option><option value="20">20时</option>
+		<option value="21">21时</option><option value="22">22时</option><option value="23">23时</option>
+	  </select>
+	  <select id="qminute">
+	    <option value="0">0分</option><option value="5">5分</option><option value="10">10分</option><option value="15">15分</option>
+		<option value="20">20分</option><option value="25">25分</option><option value="30">30分</option><option value="35">35分</option>
+		<option value="40">40分</option><option value="45">45分</option><option value="50">50分</option><option value="55">55分</option>
+	  </select>
+	</td>
+ </tr>
+ <tr>
+    <td align="right">状态:</td>
+    <td align="left" id="tdStatus"></td>
+ </tr>
+  <tr>
+    <td align="right">目标服务器:</td>
+    <td align="left" id="gftp_code_td" border="1"></td>
+ </tr>
+ <tr>
+    <td align="right">启用策略的服务器:</td>
+    <td align="left" id="gopt_server_td" border="1"></td>
+ </tr>
+</table>
+<p align="center">
+   <table><tr>
+		    <td><span id="okBtn" class="buttonTwo"><a href="javascript:doSubmit()">提交</a></span></td>
+		    <td><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+   </tr></table>
+</p>
+</body>
+</html>

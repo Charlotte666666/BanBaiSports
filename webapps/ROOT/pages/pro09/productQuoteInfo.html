@@ -1,0 +1,598 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+  <link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var infoId=0;
+   var oTable=null;
+   var opt="";
+   var currentOptId="";
+   var cust_code="";
+   var require_id=0;
+   var examine_status="";
+   var designerCode="";
+   var pro_designer="";
+   var remind_id=0;
+   var orderInfo={};
+   var product_num=0;
+   var total=0;
+   var orderdetail=[];
+   var typeList=[];
+   var productList=[];
+   
+   $(document).ready(function() {
+     top.showLoadingInfo(true);
+     getAllProductTypeList();
+   } );
+
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   
+   function checkForm(){
+     var msg = "";
+     var temp = "";
+	 
+     return msg;
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功");
+		 if ( optType == 'insert' ) {
+		  infoId=obj.msg;
+		  optType = 'update';
+		  $("#createBtn").show();
+		  $("#fieldTitle").show();
+		 }
+		 getDetailList();
+	    }else{
+	    	isSaveOK = false;
+	        top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+   function initData(){
+		optType=top.getUrlParam(document.URL,"optType");
+		$("#tdbox_designer").html(top.getUserListByRole('box_designer','box_designer',true));
+
+	    if ( optType=='update' ){
+			infoId=top.getUrlParam(document.URL,"id");
+			$("#id").html(infoId);
+			var aoData=[];
+			aoData.push( { "name": "quote_info.id", "value": infoId } );
+			top.sendAjaxRequest("/actions/ProductQuote.action?getProductQuoteInfoById",aoData,infoCallback);
+		}else if(optType=='insert'){
+		    top.showLoadingInfo(false);
+			var today=new Date();
+			$("#quote_date").html(top.getTimeStr(today.getTime(),true));
+			require_id=top.getUrlParam(document.URL,"require_id");
+			cust_code=top.getUrlParam(document.URL,"cust_code");
+			if(require_id!=''&&require_id!=null){
+				getProjectInfo();
+			}else if(cust_code!=null && cust_code!=null){
+				getProjectInfo();
+			}
+			$("#generateOrderBtn").hide();
+			$("#createDetailBtn").hide();
+		}
+   }
+   
+   function getAllProductTypeList(){
+	   top.sendAjaxRequest("/actions/ProductInfo.action?getProductTypeList",null,proTypeCallback);		
+	}
+	
+	function proTypeCallback(obj){
+	 typeList=obj.aaData;
+	 initData();
+	}
+   
+   function getProjectInfo(){
+			var aoData=[];
+		    aoData.push( { "name": "projectOrder.require_id", "value": require_id } );
+		    aoData.push( { "name": "projectOrder.cust_code", "value": cust_code } );
+			top.sendAjaxRequest("/actions/ProjectOrder.action?getProjectOrderinfo",aoData,getProjectInfoCallBack);
+	}
+	
+	function getProjectInfoCallBack(obj){
+				if(obj.status==true){
+					var o=obj.body;
+					if(o){
+						cust_code=o.cust_code;
+						require_id=o.require_id;
+						$("#project_order_id").html(o.project_order_id);
+					}
+					var aoData=[];
+					aoData.push( { "name": "custInfo.code", "value":cust_code } );
+					top.sendAjaxRequest("/actions/CustInfo.action?getFitmentCustInfo",aoData,custDetailCallback);
+				}else{
+					isSaveOK = false;
+					top.showInfoWinError("操作失败 "+obj.msg);
+				}
+	}
+	
+	function custDetailCallback(obj){
+	   try{
+			if ( obj.status == true ){
+			  var o=obj.body;
+			  if(o)
+				{
+					$("#cust_name").html(o.cust_name);
+					$("#cust_tel").html(o.cust_mobile);
+					if ( o.requireInfo ) {
+						$("#pro_address").html(top.getCodeName("DISTRICT",o.requireInfo.district)+o.requireInfo.project_addr);
+						designerCode=o.requireInfo.require_manager;
+						pro_designer=top.getProductDesignerByDesigner(designerCode);
+						$("#designerCode").html(top.getUserNameByCode(o.requireInfo.require_manager)); 	
+					    $("#tdpro_designer").text(top.getUserNameByCode(pro_designer)); //产品设计师			
+					}else{
+						$("#pro_address").html("");
+						$("#designerCode").html("");
+						$("#tdpro_designer").html("");
+					}
+				}else{
+					$("#cust_name").html("");
+					$("#cust_tel").html("");
+					$("#pro_address").html("");
+					$("#designerCode").html("");
+					$("#tdpro_designer").html("");
+				}
+		    }
+		}catch(e){}
+	}
+   
+   function infoCallback(obj){
+       top.showLoadingInfo(false);
+	   try{
+        if ( obj.status == true ){
+		  var o=obj.body;
+		  orderInfo=o;
+			//订单信息
+			if(o){	
+			    cust_code=o.cust_code;
+				require_id=o.require_id;
+				examine_status=o.examine_status;//产品报价审核状态
+				$("#id").html(infoId);
+				$("#quote_date").html(top.getTimeStr(o.quote_date,true));
+				$("#cust_name").html(o.cust_name);
+				$("#cust_tel").html(o.cust_tel);
+				$("#pro_address").html(o.pro_address);
+				$("#designerCode").html(top.getUserNameByCode(o.designerCode));
+				designerCode=o.designerCode;
+				pro_designer=o.pro_designer;
+				$("#tdpro_designer").html(o.pro_designer);
+				$("#box_designer").val(o.box_designer);
+				remind_id=o.remind_id;
+				$("#project_order_id").html( o.project_order_id);
+				$("#total").html( o.total);
+				$("#quote_person").html( o.quote_person);
+				//显示审核信息
+				$("#examine_user").html(top.getUserNameByCode(o.examine_user));
+				$("#examine_time").html(top.getTimeStr(o.examine_time,true));
+				$("#examine_opinion").html(o.examine_opinion);
+				$("#examine_status").html(top.getCodeName('EXAMINE_STATUS',o.examine_status));
+				examine_opinion=o.examine_opinion;
+				 
+				//判断产品报价审核状态 3：新建；0：待审核 1：通过；2：不通过
+				switch(o.examine_status){
+				  case "3":
+				     $("#examine_status").html( "未提交审核" );
+					 $("#generateOrderBtn").hide();
+				     break;
+				  case "0"://若审核状态为待审核 且当前用户为审核人
+						if(top.g_isPermit('09_pro_quote_examine')){
+							 $("#exam_line").show();
+						}
+						$("#generateOrderBtn").hide();
+						break;
+				  case "2"://审核不通过
+						$("#exam_line").hide();
+						$("#saveExamBtn").hide();
+						$("#generateOrderBtn").hide();
+					 break;
+				  case "1"://若审核状态为通过则显示审核信息，并且不能修改产品报价信息
+					 $("#saveExamBtn").hide();
+					 $("#saveCustBtn").hide();
+					 $("#generateOrderBtn").show();
+					 $("#createDetailBtn").hide();
+				     break;
+				}
+				//初始化报价信息
+				getDetailList();
+			}
+			if(o.status=="1"){//若该产品报价已经生成产品订单则不再显示生成产品订单按钮
+			   $("#generateOrderBtn").hide();
+			}
+        }else{
+          top.showInfoWinError("操作失败");
+        }
+		}catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+        }
+	}
+   
+   function getDetailList(){
+            var iaoColumns= [
+			                   { "sTitle": "产品类别","mDataProp": "type_id","sWidth": "15%", "sClass": "center", "bSortable":false ,
+								    "fnRender": function ( oObj ) {
+                                           return getProductType( oObj.aData.type_id );
+                                      },
+							        "bUseRendered": false },
+                               { "sTitle": "产品名称", "mDataProp": "product_name", "sWidth": "40%","bUseRendered": false, "bSortable":false  },
+							   { "sTitle": "单位","mDataProp": "unit","sWidth": "10%", "sClass": "center", "bSortable":false ,
+								    "fnRender": function ( oObj ) {
+									       product_num++;
+										   total+=Number( oObj.aData.price ) * Number( oObj.aData.amount );
+										   $("#total").html( total);
+										   orderdetail[orderdetail.length]=oObj.aData;
+                                           return top.getCodeName( "UNIT", oObj.aData.unit );
+                                      },
+							        "bUseRendered": false },
+							   { "sTitle": "价格(元)", "mDataProp": "price","sWidth": "10%","sClass": "center","bUseRendered": false , "bSortable":false  },
+                               { "sTitle": "数量", "mDataProp": "amount", "sWidth": "10%","sClass": "center", "bSortable":false ,
+							        "fnRender": function ( oObj ) {
+									       return '<input type="text" id="amount_'+oObj.aData.id+'" size="6" value="'+oObj.aData.amount+'" />';
+                                      },
+							      "bUseRendered": false },
+							   { "sTitle": "操作", "mDataProp": "id", "sWidth": "25%","sClass": "center", "bSortable":false ,
+							        "fnRender": function ( oObj ) {
+									       return '<input type="button" onclick="saveDetailAmount('+oObj.aData.id+')" value="保存" />&nbsp;&nbsp;<input type="button" onclick="deleteDetailAmount('+oObj.aData.id+')" value="删除" />';
+                                      },
+							      "bUseRendered": false }
+               ];
+			   
+			   var surl=top.getUrlBase()+"/actions/ProductQuote.action?getQuoteDetailList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":1000,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData.push( { "name": "quote_detail.order_id", "value": infoId } );
+			    },
+			    "sDom": "frt",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+   }
+   
+   function getProductType(pid){
+       for(var j=0;j<typeList.length;j++){
+			 if(typeList[j].type_id==pid){
+					return typeList[j].type_name;
+			 }
+       }
+       return "";
+   }
+   
+   function saveDetailAmount(did){
+       var aoData=[];
+	   aoData.push( { "name": "quote_detail.id", "value": did } );
+	   aoData.push( { "name": "quote_detail.amount", "value": $("#amount_"+did).val() } );
+	   var xurl="/actions/ProductQuote.action?updateQuoteDetail";
+	   top.sendAjaxRequest(xurl,aoData,addDetailCallback);
+   }
+   
+   function deleteDetailAmount(did){
+       var aoData=[];
+	   aoData.push( { "name": "quote_detail.id", "value": did } );
+	   aoData.push( { "name": "quote_detail.order_id", "value": infoId } );
+	   var xurl="/actions/ProductQuote.action?deleteQuoteDetail";
+	   top.sendAjaxRequest(xurl,aoData,addDetailCallback);
+   }
+   
+   function deleteField(did,dname){
+       currentOptId = did;
+       top.showConfirm("您确定要删除["+dname+"]吗？", doDeleteField);
+   }
+   
+   function doDeleteField(){
+           var aoData=[];
+           aoData.push( { "name": "field.field_id", "value":currentOptId } );
+           currentOptId = "";
+		   top.showLoadingInfo(true);
+           top.sendAjaxRequest("/actions/OAProject.action?deleteOAProjectTableField",aoData,optFieldCallback);
+   }
+   
+   function doQuery(){
+        product_num=0;
+		total=0;
+		orderdetail=[];
+	    oTable.fnDraw();
+   }
+			
+   function addInfo(){
+		openDialog("选择产品信息","selectProductWithType.html",true,700,520,selectProductInfoCallback);
+   }
+   
+   function selectProductInfoCallback(obj){
+        top.showLoadingInfo(false);
+		var obj=top.getTempValue();
+		if ( !obj ) return ;
+		if ( !obj.product_id ) return ;
+		//alert("selected "+obj.product_name);
+		product_num+=1;
+		total+=obj.price;
+		var aoData=[];
+			    aoData.push( { "name": "quote_detail.order_id", "value":infoId } );
+				aoData.push( { "name": "quote_detail.type_id", "value": obj.type_id} );
+				aoData.push( { "name": "quote_detail.product_id", "value": obj.product_id } );
+				aoData.push( { "name": "quote_detail.product_brand", "value": obj.product_brand } );
+				aoData.push( { "name": "quote_detail.product_name", "value": obj.product_name } );
+				aoData.push( { "name": "quote_detail.product_model", "value": obj.product_model  } );
+				aoData.push( { "name": "quote_detail.product_standard", "value": obj.product_standard } );
+				aoData.push( { "name": "quote_detail.unit", "value":obj.unit } );
+				aoData.push( { "name": "quote_detail.use_position", "value": "" } );
+				aoData.push( { "name": "quote_detail.price", "value": obj.price } );
+				aoData.push( { "name": "quote_detail.sale_price", "value": obj.price } );
+				aoData.push( { "name": "quote_detail.discount", "value": 1 } );
+				aoData.push( { "name": "quote_detail.amount", "value": 1 } );
+				aoData.push( { "name": "quote_info.product_num", "value": product_num } );
+				aoData.push( { "name": "quote_info.total", "value": total } );
+		var xurl="/actions/ProductQuote.action?insertOneQuoteDetail";
+		
+		top.setTempValue(null);
+		
+		top.sendAjaxRequest(xurl,aoData,addDetailCallback);
+   }
+   
+   function addDetailCallback(obj){
+        top.showInfoWinOK("操作成功");
+        doQuery();
+   }
+   
+   function saveProOrderInfo(){
+		var aoData=[];
+		aoData.push( { "name": "quote_info.id", "value": infoId } );
+		aoData.push( { "name": "quote_info.require_id", "value": require_id } );
+		aoData.push( { "name": "quote_info.cust_name", "value": $("#cust_name").html() } );
+		aoData.push( { "name": "quote_info.designerCode", "value":designerCode } );
+		aoData.push( { "name": "quote_info.pro_designer", "value": pro_designer } );
+		aoData.push( { "name": "quote_info.box_designer", "value": $("#box_designer").val() } );
+		aoData.push( { "name": "quote_info.cust_tel", "value": $("#cust_tel").html() } );
+		aoData.push( { "name": "quote_info.pro_address", "value": $("#pro_address").html() } );
+		aoData.push( { "name": "quote_info.quote_date", "value": top.toTimestamp($("#quote_date").html()) } );
+		aoData.push( { "name": "quote_info.project_order_id", "value": $("#project_order_id").html() } );
+		aoData.push( { "name": "quote_info.cust_code", "value":cust_code} );
+		
+		var xurl="/actions/ProductQuote.action?updateQuoteInfo";
+		if(infoId==0){
+			xurl="/actions/ProductQuote.action?insertQuoteInfo";
+		}
+		top.sendAjaxRequest(xurl,aoData,optSaveProOrderInfoCallback);
+	}
+	
+	
+	//生成产品订单
+   function generateOrder(){
+		var aoData=[];
+		var xurl="/actions/ProductQuote.action?createProductOrder";
+		aoData.push( { "name": "quote_detail.order_id", "value":infoId} );
+		//生成产品订单
+		aoData.push( { "name": "product_order.require_id", "value":require_id} );
+		aoData.push( { "name": "product_order.designerCode", "value":designerCode} );
+		aoData.push( { "name": "product_order.pro_add", "value":$("#pro_add").html()} );
+		aoData.push( { "name": "product_order.cust_code", "value":cust_code} );
+		aoData.push( { "name": "product_order.cust_name", "value":$("#cust_name").html()} );
+		aoData.push( { "name": "product_order.pro_designer", "value":pro_designer} );
+		aoData.push( { "name": "product_order.project_order_id", "value":$("#project_order_id").html()} );
+		aoData.push( { "name": "product_order.box_designer", "value":$("#box_designer").val()} );
+		aoData.push( { "name": "product_order.cust_tel", "value":$("#view_cust_tel").html()} );
+
+		top.sendAjaxRequest(xurl,aoData,generateOrderCallBack);
+   }
+   
+   //生成订单后回调函数
+   function generateOrderCallBack(obj){
+      if(obj.status==true){
+	     top.showInfoWinOK("生成订单成功！");
+		 $("#generateOrderBtn").hide();
+	  }else{
+	     top.showInfoWinError("生成订单失败！");
+	  }
+   }
+	
+	function optSaveProOrderInfoCallback(obj){
+		try{
+			if ( obj.status == true ){
+			    top.showInfoWinOK("操作成功");
+				isSaveOK = true;
+				if(obj.msg!=""){
+				    var result=obj.msg.split(",");
+					infoId=result[0];
+					$("#id").html(infoId);
+					if(result.length>=2){
+					   remind_id=result[1];
+					}
+					getDetailList();
+			        $("#createDetailBtn").show();
+				}
+			}else{
+				isSaveOK = false;
+				top.showInfoWinError("操作失败 "+obj.msg);
+			}
+		   }catch(e){
+			  top.showInfoWinError("处理异常:"+e.message);
+		   }
+	}
+	
+	function saveExamineInfo(status){
+		var aoData=[];
+		examine_status=status;
+		aoData.push( { "name": "quote_info.id", "value": infoId } );
+		aoData.push( { "name": "quote_info.examine_status", "value": status } );
+		aoData.push( { "name": "quote_info.examine_opinion", "value": "" } );
+		aoData.push( { "name": "quote_info.pro_designer", "value": pro_designer} );
+		aoData.push( { "name": "quote_info.remind_id", "value": remind_id} );
+		top.sendAjaxRequest("/actions/ProductQuote.action?saveExamineInfo",aoData,saveExamineCallback);
+	}
+	
+	function saveExamineCallback(obj){
+       try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+			$("#exam_line").hide();
+			var aoData=[];
+			aoData.push( { "name": "quote_info.id", "value": infoId } );
+			top.sendAjaxRequest("/actions/ProductQuote.action?getProductQuoteInfoById",aoData,infoCallback);
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+	
+	function printProductOrder(){
+		var xurl="proquoteInfoPrintPage.html?id="+infoId;
+		window.open(xurl,"_blank","width=900,height=800");
+	}
+	
+	function getTypeListValue(){
+		return typeList;
+	}
+	
+	function getProductListValue(){
+		return productList;
+	}
+	
+	function getOrderInfoValue(){
+		return orderInfo;
+	}
+	function getOrderdetailList(){
+		return orderdetail;
+	}
+	function getCodeName(codeName,codeValue){
+		return top.getCodeName(codeName,codeValue);
+	}
+	function getTimeStr(date){
+		return top.getTimeStr(date,true)
+	}
+	function getUserNameByCode(userCode){
+	    return top.getUserNameByCode(userCode);
+	}
+   
+   function openDialog(t,xurl,isModal,w,h,callback){
+		if ( isModal == undefined ) isModal=true;
+		if ( !h ) h=200;
+		if ( !w ) w=400;
+		$( "#dialog" ).dialog({
+			title: t,
+			height: h,
+			width: w,
+			modal: isModal,
+			resizable: false,
+		    beforeClose: function(event, ui) {
+		        try{
+		            document.getElementById("self_iframe").contentWindow.doBeforeClose();
+		            if ( callback ) callback.apply();
+		        }catch(e){
+		        }
+		        return true;
+		    }
+		});
+		document.getElementById("self_iframe").src = xurl;
+    }
+ 
+  function closeDialog(){
+		$( "#dialog" ).dialog( "close" );
+  }
+</script> 
+</head>
+<body>
+  <center>
+	<table border="1" cellpadding="2" cellspacing="1" width="99%" align="center" style="background-color: #b9d8f3;">
+	    <tr bgcolor="white">
+			<td align="left" colspan="8">
+				<table align="left" cellpadding="0px" cellspacing="0" border="0"><tr>
+					<td>
+					    <input type="button" id="printProBtn" onclick="printProductOrder()"  value="打印" />&nbsp;&nbsp;
+					    <input type="button" id="saveCustBtn" onclick="saveProOrderInfo()" value="保存" />&nbsp;&nbsp;
+						<input type="button" id="generateOrderBtn" onclick="generateOrder()"  value="生成订单" />&nbsp;&nbsp;
+						<input type="button" id="createDetailBtn" onclick="addInfo()" value="添加产品" />
+					</td>
+			</tr></table></td>
+		</tr>
+		<tr class="tr_data">
+			<td width="10%" align="right">报价单编号:</td><td width="15%" align="left" id="id" >系统自动生成</td>
+			<td width="10%" align="right">报价人:</td><td width="15%" align="left" id="quote_person"></td>
+			<td width="10%" align="right">工程订单编号:</td><td width="15%" align="left" id="project_order_id"></td>
+			<td width="10%" align="right">&nbsp;</td><td width="15%" align="left">&nbsp;</td>
+		</tr>
+		<tr class="tr_data">
+			<td width="10%" align="right">报价日期:</td><td width="15%" align="left" id="quote_date"></td>
+		    <td width="10%" align="right">客户姓名:</td><td width="15%" align="left" id="cust_name"></td>
+			<td width="10%" align="right">客户电话:</td><td width="15%" align="left" id="cust_tel"></td>
+			<td width="10%" align="right">设计师:</td><td width="15%" align="left" id="designerCode"></td>
+		</tr>
+		<tr class="tr_data">
+			<td width="10%" align="right">工程地址:</td><td width="15%" align="left" id="pro_address"></td>
+			<td width="10%" align="right">产品设计师:</td><td width="15%" align="left" id="tdpro_designer"></td>
+			<td width="10%" align="right">柜体设计师:</td><td width="15%" align="left" id="tdbox_designer"></td>
+			<td width="10%" align="right">报价金额:</td><td width="15%" align="left" id="total"></td>
+		</tr>
+		<tr class="tr_data">
+			<td width="10%" align="right">审核结果:</td><td width="15%" align="left" id="examine_status"></td>
+			<td width="10%" align="right">审核人:</td><td width="15%" align="left" id="examine_user"></td>
+			<td width="10%" align="right">审核意见:</td><td width="15%" align="left" id="examine_opinion"></td>
+			<td width="10%" align="right">审核时间:</td><td width="15%" align="left" id="examine_time"></td>
+		</tr>
+	</table>
+	<p id="exam_line" style="display:none" align="center">
+	    提交审核结果:<input type="button" id="saveExamBtn" onclick="saveExamineInfo(1)" value="通过"></input>&nbsp;&nbsp;
+		<input type="button" id="cancleExamBtn" onclick="saveExamineInfo(2)" value="不通过"></input>
+	</p>
+	<table cellpadding="0" width="99%" cellspacing="2" border="0" class="display" id="dataTable"></table>
+  </center>
+  
+ 		<div id="dialog" title="" style="display: none; padding: 0 0 0 0; margin: 0 0 0 0; z-index: 10000">
+			<iframe id="self_iframe" src="about:blank" width="100%" height="96%" frameborder="0"></iframe>
+		</div>
+</body>
+</html>

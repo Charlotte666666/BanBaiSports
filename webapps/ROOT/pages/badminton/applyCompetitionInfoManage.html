@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" language="JavaScript1.2"	src="../../js/Calendar3.js"></script>
+
+<script type="text/javascript">
+var oTable = null;
+var schoolList=[];
+var currentScheduleId=0;
+
+$(document).ready( function() {
+   top.sendAjaxRequest("/actions/CompetitionSchedule.action?getCompetitionScheduleList",[],getCompetitionScheduleListCallback);
+});
+
+ function getCompetitionScheduleListCallback(obj){
+     try{
+		  scheduleList=obj.aaData;
+		  $("#tdschedule").html( getScheduleSelectHtml('schedule_id') );
+		  if ( scheduleList.length > 0 ) {
+		     currentScheduleId=scheduleList[0].id;
+		  }
+	 }catch(e){
+	 }
+     
+	   var aoData=[];
+       aoData.push( { "name": "iDisplayStart", "value": 0 } );
+	   aoData.push( { "name": "iDisplayLength", "value": 500 } );
+	   top.sendAjaxRequest("/actions/BaseInfo.action?getSchoolInfoList",aoData,getSchoolInfoListCallback);
+ }
+ 
+  function getSchoolInfoListCallback(obj){
+       var ht="<select id='school_code' style='width:200px' >";
+	   ht+='<option value=""></option>';
+	   try{
+	     schoolList=obj.aaData;
+		 for ( var i=0;i<schoolList.length;i++  ) {
+		   ht+='<option value="'+schoolList[i].school_code+'">'+schoolList[i].school_name+'</option>';
+		 }
+	   }catch(e){
+	   }
+	   ht+='</select>';
+       $("#tdSchool").append( ht );
+	   
+	   loadList();
+   }
+   
+ function getScheduleSelectHtml(sid){
+    if ( !scheduleList ) return "";
+	var ht="<select id='"+sid+"' style='width:200px' >";
+	for(var i=0;i<scheduleList.length;i++){
+	  ht+="<option value='"+scheduleList[i].id+"'";
+	  ht+=">"+scheduleList[i].title+"</option>";
+	}
+	ht+="</select>";
+	return ht;
+ }
+ 
+ function loadList(){
+    var iaoColumns= [
+			   { "sTitle": "姓名", "mDataProp": "user_name", "sWidth": "8%", "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "手机号", "mDataProp": "cell_phone", "sWidth": "10%", "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "邮箱", "mDataProp": "email", "sWidth": "10%", "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "性别", "mDataProp": "sex", "sWidth": "8%",
+                   "fnRender": function ( oObj ) {
+				      return top.getCodeName( "SEX", oObj.aData.sex );
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "毕业院校", "mDataProp": "school_code", "sWidth": "14%",
+                   "fnRender": function ( oObj ) {
+				      if ( oObj.aData.school_code == 'else' ) {
+					    return "[其他]"+oObj.aData.school_else;
+					  } else {
+				        return getSchoolName(oObj.aData.school_code);
+					  }
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "学历", "mDataProp": "edu_level", "sWidth": "8%",
+                   "fnRender": function ( oObj ) {
+				      return top.getCodeName( "EDU_LEVEL", oObj.aData.edu_level );
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "毕业年份", "mDataProp": "graduate_year", "sWidth": "8%", "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "工作单位", "mDataProp": "unit", "sWidth": "10%", "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "职务", "mDataProp": "job", "sWidth": "8%", "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "球龄", "mDataProp": "play_year", "sWidth": "8%", "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "球服尺寸", "mDataProp": "fit_size", "sWidth": "8%", "bUseRendered": false , "bSortable":false}
+        ];
+ 	
+		oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": top.getUrlBase()+"/actions/CompetitionSchedule.action?getEnrollInfoList",
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     aoData.push( { "name": "enrollInfo.schedule_id", "value": $("#schedule_id").val()  } );
+						 aoData.push( { "name": "enrollInfo.cell_phone", "value": $("#cell_phone").val() } );
+						 aoData.push( { "name": "enrollInfo.school_code", "value": $("#school_code").val() } );
+						 aoData.push( { "name": "enrollInfo.user_name", "value": $("#user_name").val() } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumns
+	   } );
+ }
+ 
+ function getSchoolName(code){
+    if ( schoolList == null ) return "";
+	for ( var i=0;i<schoolList.length;i++ ) {
+	  if ( schoolList[i].school_code == code ) return schoolList[i].school_name;
+	}
+    return "";
+ }
+ 
+ function doQuery(){
+	oTable.fnDraw();
+ }
+
+</script>
+</head>
+<body>
+            <div style='border: 1px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="180px">&nbsp;报名信息查询&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+                  <td align="right" width="10%">赛程:</td><td align="left" width="15%" id="tdschedule"></td>
+                  <td align="right" width="10%">毕业院校:</td><td align="left" width="15%" id="tdSchool"></td>
+				  <td align="right" width="10%">手机号:</td><td align="left" width="15%"><input type="text" id="cell_phone" value="" /></td>
+				  <td align="right" width="10%">姓名:</td><td align="left" width="15%" ><input type="text" id="user_name" value="" /></td>
+			     </tr>
+			 </table>
+			</div>
+<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+</body>
+</html> 

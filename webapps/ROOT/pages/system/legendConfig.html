@@ -1,0 +1,228 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+    <title>图例配置</title>
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/colorPicker.js"></script>
+
+ <script type="text/javascript">
+     var legendLists={};
+	 var currentLegendNum=0;
+	 var legendType = 2;
+ 
+	 $(document).ready(function() {
+		  getLegendList();
+	 });
+	
+	function getLegendList(){
+	   top.sendAjaxRequest("/actions/ProCma.action?getLegendList",[],optGetListCallback);
+	}
+	
+	function optGetListCallback(o){
+	   if ( o.aaData ) {
+	     legendLists = o;
+	     onChangeEle();
+	   }
+	}
+	
+	function onChangeEle(){
+	    if ( legendLists.aaData ) {
+	     var str='';
+		 var eleValue = $("#ele").val();
+	     for (var i=0;i<legendLists.aaData.length;i++){
+		   if ( legendLists.aaData[i].ele == eleValue ) {
+		     str += toLegendTableHtml( i, legendLists.aaData[i].month, legendLists.aaData[i].day, legendLists.aaData[i].configStr, false );
+		   }
+		 }
+		 str += toLegendTableHtml( legendLists.aaData.length, 0, 0, legendType+"## ##,,0xFFFFFF,##,,0xFFFFFF,##,,0xFFFFFF,##,,0xFFFFFF,##,,0xFFFFFF,", true);
+		 $("#contentTable").html( str );
+	   }
+	}
+	
+	function toLegendTableHtml(n,month,day,str,isCreate){
+	   // 1##毫米##0,10,0x6AFB92,10##10,25,0x32CD32,25##25,50,0x000080,50##50,100,0xF87431,100##100,250,0xFF0033,
+	   var i=0;
+	   var temp = "";
+	   var rs=str.split("##");
+	   legendType = rs[0];
+	   var unit=rs[1];
+	   
+	   var ht='';
+	        ht+='<tr>';
+		    ht+=' <td style="width:220px;border:1px;border-style: none dotted dotted none;border-color: #A0CFEC;">';
+		    ht+='   从<select id="month_'+n+'">';
+			if ( isCreate ) ht+='<option value="0" selected>&nbsp;</option>';
+ 			for ( i=1;i<13;i++ ) {
+			  if ( i < 10 ) {
+			    temp = "0" + i;
+			  } else temp = i;
+			  ht+='<option value="'+i+'" ';
+              if ( month == i ) ht+=" selected "; 
+              ht+='>'+temp+'</option>';
+			}
+			ht+='</select>月';
+			ht+='<select id="day_'+n+'">';
+			if ( isCreate ) ht+='<option value="0" selected>&nbsp;</option>';
+			for ( i=1;i<32;i++ ) {
+			  if ( i < 10 ) {
+			    temp = "0" + i;
+			  } else temp = i;
+			  ht+='<option value="'+i+'" ';
+              if ( day == i ) ht+=" selected "; 
+              ht+='>'+temp+'</option>';
+			}
+			ht+='</select>日开始启用';
+		    ht+='</td>';
+		    ht+='<td style="width:300px;padding:2px;border:1px;border-style: none none dotted none;border-color: #A0CFEC;">';
+		    ht+='<table style="height:100%;padding:2px;spacing:10px;" >';
+			
+			var ls=[];
+			for ( i=2;i<rs.length;i++ ) {
+			  // 0,10,0x6AFB92,10
+			  if ( !rs[i] ) break;
+			  if ( rs[i] == '' ) break;
+			  try{
+			    ls=rs[i].split(",");
+				temp = ls[2].replace("0x","#");
+				ht+='  <tr id="tr_'+n+'_'+i+'">';
+				ht+='	   <td style="width:150px;" align="center">';
+				ht+='		  <img src="../../img/delete.gif" onclick="deleteColor(\'tr_'+n+'_'+i+'\')" />&nbsp;<input id="color_'+n+'_'+i+'" onclick="showColorPicker(event)" value="'+temp+'" style="width:60px;height:20px;background-color:'+temp+';"></input>';
+				ht+='	   </td>';
+				ht+='	   <td style="width:150px;padding:2px;">';
+				ht+='		  <input type="text" value="'+ls[0]+'" size="4" id="txt_'+n+'_'+i+'1" /> ~ <input type="text" value="'+ls[1]+'" size="4" id="txt_'+n+'_'+i+'2" />';
+				ht+='	   </td>';
+				ht+='   </tr>';
+			  }catch(e){}
+			}
+
+			    ht+='  <tr id="tr_'+n+'_'+i+'">';
+				ht+='	   <td style="width:150px;" align="center">';
+				ht+='		  <img src="../../img/add.gif" />&nbsp;<input id="color_'+n+'_'+i+'" onclick="showColorPicker(event)" value="" style="width:60px;height:20px;"></input>';
+				ht+='	   </td>';
+				ht+='	   <td style="width:150px;padding:2px;">';
+				ht+='		  <input type="text" value="" size="4" id="txt_'+n+'_'+i+'1" /> ~ <input type="text" value="" size="4" id="txt_'+n+'_'+i+'2" />';
+				ht+='	   </td>';
+				ht+='   </tr>';
+
+			ht+=' </table>';
+		    ht+='</td>';
+			ht+='<td style="width:120px;border:1px;border-style: none none dotted dotted;border-color: #A0CFEC;">';
+			ht+='单位：<input type="text" size="4" id="unit_'+n+'" value="'+unit+'" />';
+			ht+='</td>';
+			ht+='<td style="padding:5px;width:70px;border:1px;border-style: none none dotted dotted;border-color: #A0CFEC;">';
+			if ( isCreate ) {
+			  ht+='<div class="buttonDivTwo"><a href="javascript:doSaveLegend('+n+',true)">新增</a></div><br>';
+			} else ht+='<div class="buttonDivTwo"><a href="javascript:doSaveLegend('+n+',false)">保存</a></div><br>';
+			
+			if ( !isCreate ) ht+='<div class="buttonDivTwo"><a href="javascript:deleteLegend('+n+')">删除</a></div>';
+			ht+='</td>';
+		    ht+='</tr>';
+	   return ht;
+	}
+	
+	function deleteColor(trId){
+	    $("#"+trId).remove(); 
+	}
+	
+	function doSaveLegend(n,isCreate){
+	     var aoData=[];
+		 var str=legendType+"##"+$("#unit_"+n).val();
+		 //1##毫米##0,10,0x6AFB92,10##10,25,0x32CD32,25##25,50,0x000080,50##50,100,0xF87431,100##100,250,0xFF0033,
+		 var color="";
+		 var txt = "";
+		 for ( var i=1;i<30;i++ ) {
+		   try{
+		    color = $("#color_"+n+"_"+i).val();
+			color = color.replace("#","0x");
+		    if ( $("#txt_"+n+"_"+i+"1").val() != '' && $("#txt_"+n+"_"+i+"2").val() != '' ) {
+			 if ( $("#txt_"+n+"_"+i+"2").val() != '999999' ) {
+			  txt = $("#txt_"+n+"_"+i+"2").val();
+			 } else txt = "";
+		     str+="##"+$("#txt_"+n+"_"+i+"1").val()+","+$("#txt_"+n+"_"+i+"2").val()+","+color+","+txt;
+			}
+		   }catch(e){}
+		 }
+		 
+		 if ( isCreate ) {
+		    if ( $("#month_"+n).val() == '0' || $("#day_"+n).val() == '0' ) {
+			    top.showInfoWin("请输入启用月份和日期");
+			    return ;
+			}
+		 }
+		 
+		 if ( str.length < 10 || $("#unit_"+n).val() == '' || $("#unit_"+n).val() == ' ' ) {
+			top.showInfoWin("请设置图例和单位名称");
+			return ;
+		 }
+		 
+	     aoData.push( { "name": "legend.ele", "value": $("#ele").val() } );
+		 aoData.push( { "name": "legend.month", "value": $("#month_"+n).val() } );
+		 aoData.push( { "name": "legend.day", "value": $("#day_"+n).val() } );
+		 aoData.push( { "name": "legend.configStr", "value": str } );
+		 top.sendAjaxRequest("/actions/ProCma.action?"+(isCreate?"insertLegend":"updateLegend"),aoData,optCallback);
+
+	}
+	
+	function deleteLegend(n){
+	    currentLegendNum=n;
+	    top.showConfirm("您确定要删除选中的图例吗？", doDeleteLegend);
+	}
+	
+	function doDeleteLegend(){
+	     var aoData=[];
+	     aoData.push( { "name": "legend.ele", "value": $("#ele").val() } );
+		 aoData.push( { "name": "legend.month", "value": $("#month_"+currentLegendNum).val() } );
+		 aoData.push( { "name": "legend.day", "value": $("#day_"+currentLegendNum).val() } );
+		 top.sendAjaxRequest("/actions/ProCma.action?deleteLegend",aoData,optCallback);
+	}
+	
+	function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+           top.showInfoWin("操作成功");
+	       getLegendList();
+	    }else{
+	       top.showInfoWin("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWin("处理异常:"+e.message);
+	   }
+    }
+	
+	function showColorPicker(event){
+	   colorPicker(event);
+	   colorPicker.cP.style.zIndex = 1;
+	}
+
+	</script>
+</head>
+<body>
+    <p align="left" style="padding:10px 0 5px 0">
+	  选择元素：<select id="ele" onchange="onChangeEle()">
+	    <option value="V13019" selected>小时降水量</option>
+		<option value="V13019_pd">累计降水量</option>
+		<option value="V12001">小时气温</option>
+		<option value="V12211">小时最高气温</option>
+		<option value="V12212">小时最低气温</option>
+		<option value="V11002_002">2分钟平均风速</option>
+		<option value="V11042_010">10分钟平均风速</option>
+		<option value="V11042">最大风速</option>
+		<option value="V11041">极大风速</option>
+		<option value="V10004">本站气压</option>
+		<option value="V10201">最高本站气压</option>
+		<option value="V10202">最低本站气压</option>
+		<option value="V13003">相对湿度</option>
+		<option value="V13007">最小相对湿度</option>
+	  </select>
+	</p>
+    
+	    <table id="contentTable" style="height:100%;padding:0;spacing:0;border:1px;border-style: dotted dotted none dotted;border-color: #A0CFEC;">
+		</table>
+</body>
+</html>

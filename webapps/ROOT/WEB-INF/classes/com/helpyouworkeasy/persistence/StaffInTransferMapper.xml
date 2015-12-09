@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.helpyouworkeasy.persistence.StaffInTransferMapper">
+  <insert id="insertStaffInTransfer" parameterType="StaffInTransfer">
+    INSERT INTO tbl_staff_in_transfer (employee_code,employee_name,callin_dept,callin_job_title,callout_dept,callout_job_title,status,id,entry_time,apply_time,apply_transfer_time)
+    VALUES (#{employee_code}, #{employee_name}, #{callin_dept}, #{callin_job_title}, #{callout_dept}, #{callout_job_title}, #{status}, #{id}, #{entry_time}, #{apply_time}, #{apply_transfer_time})
+  </insert>
+
+  <update id="updateStaffInTransfer" parameterType="StaffInTransfer">
+    update tbl_staff_in_transfer set 
+    employee_code=#{employee_code},employee_name=#{employee_name},callin_dept=#{callin_dept},callin_job_title=#{callin_job_title},callout_dept=#{callout_dept},callout_job_title=#{callout_job_title},status=#{status},id=#{id},entry_time=#{entry_time},apply_time=#{apply_time},apply_transfer_time=#{apply_transfer_time}
+    where id=#{id}
+  </update>
+
+  <select id="getStaffInTransferListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_staff_in_transfer where 1=1 
+    <if test="o.employee_name != '' and o.employee_name != null" >
+      and employee_name=#{o.employee_name}
+    </if>
+    <if test="o.status != '' and o.status != null" >
+      and status=#{o.status}
+    </if>
+    <if test="time1 != -1" >
+      and apply_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=apply_time
+    </if>
+  </select>
+
+  <select id="getStaffInTransferPageList" parameterType="map" resultType="StaffInTransfer">
+    select 
+    employee_code,employee_name,callin_dept,callin_job_title,callout_dept,callout_job_title,status,id,entry_time,apply_time,apply_transfer_time
+    from tbl_staff_in_transfer where 1=1 
+        <if test="o.employee_name != '' and o.employee_name != null" >
+      and employee_name=#{o.employee_name}
+    </if>
+    <if test="o.status != '' and o.status != null" >
+      and status=#{o.status}
+    </if>
+    <if test="time1 != -1" >
+      and apply_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=apply_time
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+
+  <select id="getStaffInTransferByUserCode" parameterType="StaffInTransfer" resultType="StaffInTransfer">
+    select *
+    from tbl_staff_in_transfer
+    where 1=1
+       <if test="employee_code != '' and employee_code != null">
+          and employee_code=#{employee_code}
+       </if>
+       <if test="id != 0">
+          and id=#{id}
+       </if>
+  </select>
+
+  <update id="updateApplyStatus" parameterType="map">
+     update tbl_staff_in_transfer set status=#{status} where id=#{apply_id}
+  </update>
+  
+  <select id="getStaffInTransferById" parameterType="long" resultType="StaffInTransfer">
+    select *
+    from tbl_staff_in_transfer
+    where id=#{id}
+  </select>
+
+</mapper>

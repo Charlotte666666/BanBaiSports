@@ -1,0 +1,147 @@
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<script type="text/javascript" language="javascript" src="../../js/jquery-1.7.2.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+
+	<script type="text/javascript">
+		var prisonInfo={};
+		
+		$(document).ready(function() {
+			try{
+				prisonInfo=opener.getPrisonInfoObj();
+				correct_type=prisonInfo.correct_type;
+				if ( correct_type!="" ) {
+				  $("#correctType"+correct_type).show(); 
+				} else {
+				  $("#correctType2").show();
+				}
+				var part2=getCheckOption();
+				$("#select_solutions").html(part2);
+				$("#individuation_solutions").html(prisonInfo.individuation_solutions);
+			}catch(e){
+			}
+	   } );
+	   
+	   	function doPrint(){
+			$("#printBtn").hide();
+			window.print();
+		}
+		
+		function getCheckOption(){
+			var result="";
+			var cheks=prisonInfo.select_solutions.split(",");
+				for(var i=1;i<cheks.length;i++){
+					if(cheks[i]=='1'){
+						result+=i+"、保外就医的社区服刑人员，还应当每个月向司法所报告本人身体情况，每三个月向司法所提交病情复查情况。转院就医或进行治疗疾病以外的社会活动须经社区矫正机构批准</br>";
+						}
+					else if(cheks[i]=='2'){
+						result+=i+"、判处禁止令的社区服刑人员进入的特定区域或者场所,应当经县级司法行政机关批准。</br>";
+						}
+					else if(cheks[i]=='3'){
+						result+=i+"、对在校就读的未成年人社区服刑人员，根据实际情况可以减免教育学习时间和社区服务，可以在其假期集中安排教育学习时间和社区服务。</br>";
+						}
+					else if(cheks[i]=='4'){
+						result+=i+"、矫正小组成员每月走访服刑人员家庭一次。</br>";
+						}
+					else if(cheks[i]=='5')	{
+						result+=i+"、矫正小组成员每月走访服刑人员家庭两次。</br>";
+						}
+					else if(cheks[i]=='6'){
+						result+=i+"、矫正小组成员每月考核评议服刑人员一次。</br>";
+						}
+					else if(cheks[i]=='7'){
+						result+=i+"、矫正小组成员根据服刑人员每月的表现及考核情况及时调整管理等级。</br>";
+						}
+					else if(cheks[i]=='8'){
+						result+=i+"、发现服刑人员有脱管现象，矫正小组成员要及时向司法所报告。司法所要及时组织查找，并向县级司法行政机关报告。</br>";
+						}
+					else if(cheks[i]=='9'){
+						result+=i+"、对有心理疾病的服刑人员，采取有针对性的个别教育和心理辅导，矫正其违法犯罪心理。</br>";
+						}
+					else if(cheks[i]=='10'){
+						result+=i+"、发现服刑人员有违反社区矫正管理规定的行为或违法犯罪行为，矫正小组成员要及时向司法所报告。</br>";
+						}
+					else if(cheks[i]=='11')	{
+						result+=i+"、加强技能培训，提供就业信息。</br>";
+						}
+					else if(cheks[i]=='12'){
+						result+=i+"、协助办理最低生活保障和临时救助。</br>";
+						}
+						
+				}
+				return result;
+		}
+	</script>
+	
+	<style type="text/css">
+	.t1{font-size:20px;font-family:"黑体";font-weight:bold;line-height:35px}
+	.t2{font-size:20px;font-family:"楷体_GB2312";font-weight: bold;line-height:32px}
+	.tx{font-size:20px;font-family:"仿宋_GB2312";line-height:30px;letter-spacing:2px;font-weight: normal;  }
+	.tx input{display:block}
+	</style>
+</head>
+
+ <body style="background-color:#7B7B7B">
+  <div style="width:620px;margin-left:auto;margin-right:auto;background-color:white;;padding-left:90px;padding-right:90px;padding-top:90px;padding-bottom:20px">
+	<div id="correctType1" width="100%" style="display:none">
+		<div class="t1"><center>矫正方案之个性化矫正措施<div style="display:inline" class="tx">（严格管理等级）</div></center></div>
+
+		<div class="t2">（一）固定适用措施：</div>
+		<div class="tx">
+		1、每周向司法所口头或电话汇报情况两次。<br>
+		2、每半个月到司法所报到一次，并上交书面思想汇报材料一份。<br>
+		3、每半个月到司法所与工作人员见面谈话一次。<br>
+		4、每月参加教育学习达12小时以上。<br>
+		5、每月参加公益劳动12小时以上。<br>
+		6、实行请销假制度，服刑人员因病、因故等原因不能参加教育学习、社区公益劳动的要及时请假，否则给予警告处罚。<br>
+		7、服刑人员因就医、家庭重大变故等原因，确需离开所居住的市、县（区）在七日以内的，应当报请司法所批准。超过七日的，应当由司法所签署意见后报经县级司法行政机关批准。<br>
+		8、接受手机定位管理，遵守手机定位管理规定。违反规定将受到警告处罚。<br>
+		</div>
+	
+	</div>
+	<div id="correctType2" width="100%" style="display:none">
+		<div class="t1"><center>矫正方案之个性化矫正措施<div class="tx">（普通管理等级）</div></center></div>
+		<div class="t2">（一）固定适用措施：</div>
+		<div class="tx">
+		1、每周向司法所口头或电话汇报情况一次。
+		<br>2、每月到司法所报到一次，并上交书面思想汇报材料一份。
+		<br>3、每月到司法所与工作人员见面谈话一次。
+		<br>4、每月参加教育学习达10小时以上。
+		<br>5、每月参加公益劳动10小时以上。
+		<br>6、实行请销假制度，服刑人员因病、因故等原因不能参加教育学习、社区公益劳动的要及时请假，否则给予警告处罚。
+		<br>7、服刑人员因就医、家庭重大变故等原因，确需离开所居住的市、县（区）在七日以内的，应当报请司法所批准。超过七日的，应当由司法所签署意见后报经县级司法行政机关批准。
+		<br>8、接受手机定位管理，遵守手机定位管理规定。违反规定将受到警告处罚。
+		</div>
+		
+	</div>
+	<div id="correctType0"width="100%" style="display:none">
+		<div class="t1"><center>矫正方案之个性化矫正措施<div class="tx">（宽松管理等级）</div></center></div>
+		<div class="t2">（一）固定适用措施：</div>
+		<div class="tx">
+			1、每月向司法所口头或电话汇报情况一次。
+			<br>2、每两个月到司法所报到一次，并上交书面思想汇报材料一份。
+			<br>3、每两个月到司法所与工作人员见面谈话一次。
+			<br>4、每月参加教育学习达8小时以上。
+			<br>5、每月参加公益劳动8小时以上。
+			<br>6、实行请销假制度。服刑人员因病、家庭重大变故等原因不能参加教育学习、社区公益劳动的要及时请假，否则给予警告处罚。
+			<br>7、服刑人员因就医、家庭重大变故等原因，确需离开所居住的市、县（区）在七日以内的，应当报请司法所批准。超过七日的，应当由司法所签署意见后报经县级司法行政机关批准。
+			<br>8、接受手机定位管理，遵守手机定位管理规定。违反规定将受到警告处罚。
+
+		</div>
+		
+	</div>
+	
+	<div id="individual" width="100%">
+		<div class="t2">（二）因人而异措施：</div>
+		<div class="tx" id="select_solutions">
+		  
+		</div>
+	  <div class="t2">（三）其他个性化措施（手动填写）</div>
+	  <div id="individuation_solutions" class="tx"></div>
+	  <div width="100%" id="printBtn" style="margin_top:10px;font-size:20px;position:absolute;left:30pxx;top:50px"><center><a style="text-decoration: none"href="javascript:doPrint()"><span>[ 打印 ]</span></a></center></div>
+
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,173 @@
+@charset "UTF-8";
+
+.test-container,
+.cpg-container{
+	width: 100%;
+	background: #FFF;
+}
+.cpg-container{
+	min-height: 800px;
+}
+.container .test-main,
+.test-main{
+	width: 95%;
+	margin: 20px auto 0;
+	/*min-height:750px;*/
+}
+.obj,
+.test-time,
+.test-charge,
+.work-p,
+.place,
+.result-time{
+	color: #000;
+	margin-right: 20px;
+}
+.sort-t,
+.sort-pt,
+.info-way-t,
+.text-main-t{
+	display: block;
+	color: #000;
+}
+.sort-pt,
+.info-way-t,
+.cont-list-t{
+	display: block;
+	margin-bottom: 5px;
+	clear: both;
+}
+.test-sort{
+	clear: both;
+}
+.sort-cont,
+.sort-cont-list{
+	padding: 0 5px;
+}
+.test-cont label{
+	display: inline-block;
+	*display: inline;
+	*float: left;
+	margin-right: 10px;
+	margin-left: 20px;
+}
+.sort-cont-list li{
+	margin-bottom: 15px;
+}
+.test-note{
+	width: auto;
+	margin: 0 auto;
+	text-align: center;
+}
+.relult-name span{
+	display: block;
+}
+.test-result{
+	padding: 0 10px;
+}
+.test-result1 li{
+	line-height: 30px;
+}
+.test-result2 label{
+	display: block;
+}
+input.redress-name,
+input.redress-name:focus{
+	width: 50px;
+	border: none;
+	border-radius: 0;
+	-webkit-border-radius: 0;
+	box-shadow: none;
+	-webkit-box-shadow: none;
+	border-bottom: 1px solid #000;
+}
+.score{
+	width: 100px;
+	text-align: center;
+	padding: 0 50px;
+	border-bottom: 1px solid #646464;
+}
+/* 调查评估意见书 */
+.cont,
+.end-p{
+	text-indent: 2em;
+}
+.cont span{
+	margin-bottom: 10px;
+}
+input.situation-txt1,
+input.situation-txt1:focus{
+	width: 300px;
+}
+input.situation-txt2,
+input.situation-txt2:focus{
+	width: 700px;
+}
+input.txt-line,
+input.txt-line:focus{
+	width: 400px;
+}
+input.txt-line1,
+input.txt-line1:focus{
+	width: 140px;
+}
+input.text-w,
+input.text-w:focus{
+	width: 20px;
+}
+.info-tab .td-h{
+	min-height: 30px;
+}
+.info-txt{
+	padding-right: 100px;
+}
+.remark-p{
+	color: #646464;
+}
+.unit-p{
+	text-indent: 2em;
+}
+.part1{
+	margin-bottom: 100px;
+}
+.notice li{
+	width: 14%;
+	display: inline-block;
+	*display: inline;
+	float: left;
+	min-height: 800px;
+	border: 1px solid #000;
+	padding: 10px 10px;
+	margin-bottom: 20px;
+}
+.notice1 li{
+	width: 25%;
+}
+.notice .notice-img{
+	background: url(../images/notice-list-sid.png) left center no-repeat;
+	width: 48px;
+	border:none;
+	padding: 0;
+	position: relative;
+}
+.notice-s,
+.notice-n{
+	position: absolute;
+	width: 25px;
+	height: 55px;
+	line-height: 100%;
+	word-wrap: break-all;
+	word-break: break-word;
+	left: 8px;
+	top: 35%;
+	text-align: center;
+}
+.notice-s{
+	height: 30px;
+}
+.notice-n{
+	top: 54%;
+}
+.mgr0{
+	margin-right: 0;
+}

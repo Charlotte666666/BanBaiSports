@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+    <meta charset="utf-8">
+    <head>
+        <title>羽球达人</title>
+        <meta content="yes" name="apple-mobile-web-app-capable">
+        <meta name="format-detection" content="telephone=no"/>
+        <meta name="viewport" content="width=device-width,height=device-height,inital-scale=1.0,maximum-scale=1.0,user-scalable=no;">
+
+        <link rel="stylesheet" media="screen" href="css/base.css" />
+        <link rel="stylesheet" media="screen" href="css/color.css" />
+        <link rel="stylesheet" media="screen" href="css/layout.css" />
+        <link rel="stylesheet" media="screen" href="css/typography.css" />
+
+        <link rel="stylesheet" href="../css/themes/default/jquery.mobile-1.4.5.min.css">
+        <script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/jquery.mobile-1.4.5.min.js"></script>
+
+        <script type="text/javascript">
+            var schedule_id=1;
+            var g_UrlBase="";
+            var resultList=[];
+           
+            $(document).ready(function() {
+                schedule_id=0;
+                //getUrlParam(document.URL,"id");
+                try{
+                var ind=document.URL.indexOf("htmlAPI");
+                 if ( ind != -1 ) {
+                   g_UrlBase=document.URL.substring(0,ind);
+                 }
+               }catch(e){}
+               getResult();
+            } );
+           
+           function getResult(){
+               var aoData=[];
+               aoData.push( { "name": "competitionRank.schedule_id", "value": schedule_id } );
+               aoData.push( { "name": "competitionRank.team_id", "value":  -1 } );
+               aoData.push( { "name": "iDisplayStart", "value": 0 } );
+               aoData.push( { "name": "iDisplayLength", "value": 1000 } );
+               doSendAjaxRequest("/actions/CompetitionResult.action?getCompetitionRankListForShare",aoData,getCompetitionRankListCallback);
+           }
+           
+           function getCompetitionRankListCallback(obj){
+               try{
+                resultList=obj.aaData;
+
+                var ht = '';
+                var ht = obj.schedule_name;
+                $("#currentCompetitionName").text( ht );
+
+                ht='<table id="ranking" class="tc" width="100%" cellspacing="0" cellpadding="5px"><thead class="f1d2"><tr><td colspan="2">排行榜</td></tr></thead><tbody>';
+                var showMode=1;
+                if ( resultList.length > 0 && resultList[0].integration_rank > 0 ) {
+                  showMode=2;
+                }
+
+                var isOdd=true;
+                for ( var i=0;i<resultList.length;i++ ) {
+                    if ( isOdd ) {
+                        ht+='<tr height="30px" bgcolor="#ffffff">';
+                        isOdd=false;
+                    } else {
+                        ht+='<tr height="30px" bgcolor="#e7f8ff">';
+                        isOdd=true;
+                    }
+                  
+                    if ( showMode == 1 ) {
+                        ht+='<td width="30%">'+resultList[i].rank_name+'</td><td width="70">'+resultList[i].team_name+'</td>';
+                    } else {}
+                    ht+='</tr>';
+                }
+                ht+='</tbody></table>';
+                $("#resultListDiv").html( ht );
+
+                }catch(e){}
+            }
+           
+            function doSendAjaxRequest(xurl,param,fnCallback){
+                if ( xurl.indexOf('http://') == -1 ) xurl = g_UrlBase+xurl;
+                $.ajax( {
+                    "url":  xurl,
+                    "data": param,
+                    "timeout" : 10000,
+                    "contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+                    "success": function (json) {
+                        try{ fnCallback( json );}catch(e){}
+                    },
+                    "dataType": "json",
+                    "cache": false,
+                    "type": "POST",
+                    "error": function (xhr, error, thrown) {
+                        //alert("Fail");
+                    }
+                } );
+            }
+			function toDownload(){
+			    window.location.href='http://www.banbaisport.com/down.html';
+			}
+         </script> 
+    </head>
+
+    <body>
+        <header class="staticbanner p15" height="70px">
+            <table width="100%" class="pr15">
+                <tr>
+                    <td width="50px" rowspan=2><img src="img/logo.png" width="40px" height="40px" /></td>
+                    <td id="headline" class="f1d2">羽球达人</td>
+                    <td id="buttonimg" width="100px" class="tc" rowspan=2><a href="http://www.banbaisport.com/down.html" style="color:#fff">免费下载</a></td>
+                </tr>
+                <tr>
+                    <td class="f0d9 slogan">为祖国健康工作五十年！</td>
+                </tr>
+            </table>
+        </header>
+        <div class="ranking mt90">
+            <h3 id="currentCompetitionName" class="tc f1d2">第一届清华校友羽毛球比赛排行榜</h3>
+            <div id="resultListDiv" class="bc pr p20">
+                <!--rank infomation-->
+            </div>
+        </div>
+        <div id="morecontent" class="pr p20 tc">
+            <div class="tc">
+                <img src="img/pic-1.png" width="100%" height="50px"/ >
+            </div>
+            <div class="fonts f1d2 pr tc" width="100%" height="50px">上羽球达人,查看更多精彩内容
+            </div>
+        </div>
+    </body>
+    <!--
+    <script>
+        var trs = document.getElementsByTagName('tr');
+        for(var i = 1; i < trs.length; i++){
+            var tmp = trs[i].getElementsByTagName('td');
+            if(i < 4){
+                tmp[0].setAttribute('style','color: #bb3b3b; font-size: 1.4em; border-right: 1px solid #c8c8c8');
+            } else {
+                tmp[0].setAttribute('style','border-right: 1px solid #c8c8c8');
+            }
+        }
+        var morecontent = document.getElementById('morecontent');
+        morecontent.setAttribute('style','border-top: 1px solid #fff');
+    </script>-->
+</html>

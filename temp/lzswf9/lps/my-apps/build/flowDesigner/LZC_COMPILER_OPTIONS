@@ -1,0 +1,50 @@
+{$as2: false, $as3: true, $backtrace: false, $debug: false, $dhtml: false, $flexversion: 10.0, $j2me: false, $js1: false, $mobile: false, $profile: false, $runtime: swf10, $svg: false, $swf10: true, $swf7: false, $swf8: false, $swf9: false, SWF9MainClassName: LzApplication, SWF9WrapperClassName: LzSpriteApplication, SWF9applicationPreamble: {
+#pragma 'debug=false'
+#pragma 'debugSWF9=false'
+#pragma 'debugBacktrace=false'
+public class LzApplication extends LFCApplication {
+ #passthrough (toplevel:true) {  
+import flash.display.*;
+import flash.events.*;
+import flash.utils.*;
+import flash.text.*;
+import flash.system.*;
+import flash.net.*;
+import flash.ui.*;
+import flash.external.*;
+}#
+
+public function LzApplication(sprite:Sprite=null) {
+super(sprite);
+}
+}
+public class LzSpriteApplication extends Sprite {
+ #passthrough (toplevel:true) {  
+import flash.display.*;
+import flash.events.*;
+import flash.utils.*;
+import flash.text.*;
+import flash.system.*;
+import flash.net.*;
+import flash.ui.*;
+import flash.external.*;
+}#
+var app:LzApplication;
+function LzSpriteApplication() {app = new LzApplication(this);
+}
+}
+// based on http://www.ghost23.de/blogarchive/2008/04/as3-application-1.html
+ public class LzPreloader extends MovieClip {#passthrough (toplevel:true) {  
+import flash.display.*;
+import flash.events.*;
+import flash.utils.*;
+import flash.text.*;
+import flash.system.*;
+import flash.net.*;
+import flash.ui.*;
+import flash.external.*;
+}#
+public function LzPreloader() { var id = stage.loaderInfo.parameters.id; try{ ExternalInterface.call('lz.embed.applications.' + id + '._sendPercLoad', 0); } catch (e) {} stop(); root.loaderInfo.addEventListener(ProgressEvent.PROGRESS,loadProgress); addEventListener(Event.ENTER_FRAME, enterFrame); } public function enterFrame(event:Event):void { if (framesLoaded == totalFrames) { root.loaderInfo.removeEventListener(ProgressEvent.PROGRESS,loadProgress); nextFrame(); var mainClass:Class = Class(loaderInfo.applicationDomain.getDefinition('LzSpriteApplication')); if(mainClass) { var main:DisplayObject = DisplayObject(new mainClass()); if (main) { removeEventListener(Event.ENTER_FRAME, enterFrame); stage.addChild(main); stage.removeChild(this); } } } } private function loadProgress(event:Event):void { var percload:Number = Math.floor(root.loaderInfo.bytesLoaded / root.loaderInfo.bytesTotal * 100); var id = stage.loaderInfo.parameters.id; if (id) { try{ ExternalInterface.call('lz.embed.applications.' + id + '._sendPercLoad', percload); } catch (e) {} } } } // end of preloader
+
+}
+, allowRoot: true, catchFunctionExceptions: false, compileTimeConstants: {$runtime=swf10, $dhtml=false, $as3=true, $as2=false, $swf10=true, $j2me=false, $debug=false, $backtrace=false, $js1=false, $swf7=false, $flexversion=10.0, $swf9=false, $swf8=false, $svg=false, $mobile=false, $profile=false}, compileType: application, compilerInfo: {ScriptCompilerInfo: mainAppWorkDir=null, workDir=D:\tomcat\temp\lzswf9\lps\my-apps\build\flowDesigner buildDirPathPrefix=D:\lps\my-apps/build/flowDesigner}, debug: false, debugBacktrace: false, debugEval: false, debugSWF9: false, embedfonts: false, emitAS3Only: false, flex_version.default: 10.0, flexoptions: , generateFunction2: true, generateFunction2ForLZX: true, incremental: false, incrementalCompile: false, link: true, logdebug: false, lzconsoledebug: false, lzcopyresources: false, lzsourceannotations: false, nameFunctions: false, obfuscate: false, passthroughFormalInitializers: true, profile: false, proxied: false, remotedebug: false, runtime: swf10, runtime.default: swf10, runtime.dir: lps/includes/lfc, scache.enabled: false, sourcelocators: false, swf9.execflex: false, swf9.warnings: false, trackLines: false, validate: true}

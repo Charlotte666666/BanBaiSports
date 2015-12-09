@@ -1,0 +1,765 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>移植患者数据库系统</title>
+<link href="css/login_css.css" rel="stylesheet" type="text/css">
+<link href="css/comm.css" rel="stylesheet" type="text/css" />
+<link href="css/map_css.css" rel="stylesheet" type="text/css" />
+<link href="css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<script type="text/javascript" src="js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="js/SimpleMap.js"></script>
+<script type="text/javascript" src="js/helpyouworkeasy-core.js"></script>
+<script type="text/javascript" src="js/md5.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.16.custom.min.js"></script>
+
+<script type="text/javascript">
+var sysMenuIndex = 4;
+var adjustInter = -1;
+var userConfig = null;
+var interId = 0;
+var g_allFields=[];
+var g_objs=[];
+
+jQuery(document).ready(function() {
+    g_systemVersion = "v1.0.0";
+	g_FileResUrl="/fileRes/";
+    initGlobalData(true);
+	adjustPosition();
+	$("#userCode").focus();
+	window.onresize = function(){ adjustPosition(); };
+ });
+ 
+ function showSubMenu(n,index){
+    hideSubMenu();
+	if ( !index ) index = n;
+    $('#menu'+n).show();
+	$('#menu'+n).css({"left":(76*index)+"px","top":"67px"});
+	interId = setInterval("checkMouse()",4000);
+ }
+
+ function hideSubMenu(){
+   for ( var i=0;i<5;i++ ) {
+     if ( $('#menu'+i) ) $('#menu'+i).hide();
+   }
+   clearInterval( interId );
+ }
+
+ function checkMouse(){
+   hideSubMenu();
+ }
+
+ function adjustPosition(){
+	if ( adjustInter != -1 ) {
+	   clearInterval( adjustInter );
+	   adjustInter = -1;
+	}
+    var wh=$(window).height();
+	var ww=$(window).width();
+	
+	$('#versionInfo').css("top",wh - 18);
+	$('#versionInfoTxt').html( "<font color='white'>版本:&nbsp;"+g_systemVersion+"&nbsp;&nbsp;<span style='cursor:pointer' onclick='javascript:showHelpWin(400,220,\"pages/system/help.html\")'>系统帮助</span></font>" );
+    $('#loginMain').height(wh - 51);
+	var l = 120;
+
+	$('#main_footer').css("top",wh - 18);
+	$('#m_workbench').height(wh - 100);
+	$('#mainContent').height(wh - 100);
+	$('#workbenchFrame').height(wh - 100);
+	$('#loginResult').css({"left":(ww - 100)/2+"px"});
+ }
+
+ function loginSuccess(){
+    ininMenu();
+    $("body").css({"background-image":"url(img/bg2_body1.png)"});
+	$('#loginTop').hide();
+	$('#loginClear').hide();
+	$('#loginMain').hide();
+	$('#ind_footer').hide();
+	$('#loginResult').hide();
+	$('#main').show();
+	$("#userPass").val("");
+	$('#loginResult').html("");
+	adjustInter = setInterval("adjustPosition()",500);
+	userConfig = top.getUserConfig();
+	$("#workbenchContent").html( '<iframe id="workbenchFrame" src="pages/pro05/main.html" width="100%" height="100%" frameborder="0"></iframe>' );
+	
+	var uc = top.getUserConfig();
+	if ( !uc ) {
+	  uc = {};
+	  uc.c1="";
+	  uc.c2="";
+	  uc.c3="";
+	  uc.c4="";
+	  uc.c5="";
+	  uc.c6="";
+	}
+	if ( uc.c1=='' ) {
+	  uc.c1="c1101,c1102,c1109";
+	}
+	if ( uc.c2=='' ) {
+	  uc.c2="c1101,c1102,c1103,c1104,c1109";
+	}
+	if ( uc.c4=='' ) {
+	  uc.c4="c0001,c0002,c0004,c0033";
+	}
+	if ( uc.c5=='' ) {
+	  uc.c5="c0001,c0002,c0003,c0004";
+	}
+    updateUserConfig(uc);
+ }
+ 
+ function ininMenu(){
+	var last = "sysParameter";
+	$("#menu_td_userManage").addClass( "bottomLine" );
+	$("#menu_td_rightManage").addClass( "bottomLine" );
+	$("#menu_td_deptManage").addClass( "bottomLine" );
+	
+    if ( !g_isPermit('coreSys') ) {
+	   $('#menu_system').hide();
+	} else {
+	   $('#menu_system').show();
+	}
+	// 系统管理 
+	if ( !g_isPermit('userManage') ) {
+	   $('#menu_userManage').hide();
+	} else {
+	   $('#menu_userManage').show();
+	   last = "userManage";
+	}
+	
+	if ( !g_isPermit('rightManage') ) {
+	   $('#menu_rightManage').hide();
+	} else {
+	   $('#menu_rightManage').show();
+	   last = "rightManage";
+	}
+	
+	if ( !g_isPermit('deptManage') ) {
+	   $('#menu_deptManage').hide();
+	   first = "userManage";
+	} else {
+	   last = "deptManage";
+	   $('#menu_deptManage').show();
+	}
+
+	$("#menu_td_"+last).removeClass( "bottomLine" );
+	
+	if ( g_isPermit('bussSysImpFix') ) {
+	  $('#menu_afix').show();
+	  $('#menu_bfix').show();
+	} else {
+	  $('#menu_afix').hide();
+	  $('#menu_bfix').hide();
+	}
+ 
+	$("#menu_system").mouseover(function(){
+	   if ( g_isPermit('bussSysImpFix') ) {
+        showSubMenu( 3, 7 );
+	   } else {
+	    showSubMenu( 3, 4 );
+	   }
+    });
+ }
+ 
+ function loginFail(){
+    $("body").css({"background-image":"url(img/bg1_home2.jpg)"});
+	$('#loginTop').show();
+	$('#loginClear').show();
+	$('#loginMain').show();
+	$('#ind_footer').show();
+	$('#loginResult').show();
+	$("#mainContent").hide();
+    $("#m_workbench").show();
+	$('#main').hide();
+ }
+ 
+ function toSysTab(xurl){
+   hideSubMenu();
+   if ( xurl == 'workbench' ) {
+      $("#mainContent").hide();
+      $("#m_workbench").show();
+      return ;
+   }
+   $("#m_workbench").hide();
+   $("#mainContent").show();
+   $("#mainContent").html( '<iframe id="mainFrame" src="'+xurl+'" width="100%" height="100%" style="background-color:#ffffff" frameborder="0"></iframe>' );
+ }
+ 
+ function doLogin(){
+   	   var userCode = $("#userCode").val();
+   	   var pass = $("#userPass").val();
+   	   if ( userCode == '' || pass == '' ) {
+   	 	 showInfoWin("请输入登录账号和密码");
+   	 	 return ;
+   	   }
+	   $('#loginResult').html("");
+	   var aoData=[];
+       aoData.push( { "name": "user.userCode", "value": userCode } );
+       aoData.push( { "name": "user.password", "value": hex_md5(pass) } );
+	   top.showLoadingInfo(true);
+	   sendAjaxRequest("/actions/User.action?signon",aoData,loginCallback);
+ }
+ function loginCallback(obj){
+       top.showLoadingInfo(false);
+	   try{
+	    if ( obj.status == true ){
+	    	setCurrentUser(obj.body,obj.msg);
+			loginSuccess();
+	    }else{
+		  $('#loginResult').html("登录失败:"+obj.msg);
+	    }
+	   }catch(e){
+		  $('#loginResult').html("登录异常:"+e.message);
+	   }
+ }
+ 
+ function register(){
+    var xurl="pages/organization/userInfo.html?opt=register&isSys=no";
+	top.openDialog("用户注册",xurl,true,370,310,null);
+ }
+ 
+ function getAllFieldCallback(obj){
+    try{
+	  g_allFields=obj.aaData;
+	}catch(e){
+	}
+ }
+ 
+ function getAllFields(){
+   return g_allFields;
+ }
+ 
+ function addTempObjs(o){
+   g_objs[g_objs.length]=o;
+ }
+ 
+ function getTempObjs(){
+   return g_objs;
+ }
+ 
+ function emptyObjs(){
+   g_objs=[];
+ }
+ 
+  function getTableListHead(table){
+    var iaoColumns= [];
+	var configCols="";
+	var userConfig = top.getUserConfig();
+	if ( userConfig ) {
+	  if ( table == 'tbl_pro05_a' ) {
+	    configCols=userConfig.c2;
+	  } else if ( table == 'tbl_pro05_b' ) {
+	    configCols=userConfig.c5;
+	  }
+	}
+	if ( configCols == ''  ) return '';
+	configCols=configCols+",";
+	var isFirst=true;
+    for (var i=0;i<g_allFields.length;i++) {
+	  if ( g_allFields[i].table_name == table && configCols.indexOf(g_allFields[i].col_name+",") != -1 ) {
+	    switch( g_allFields[i].type ){
+		  case 'text': 
+		     iaoColumns[iaoColumns.length]={
+			   "isFirst" : isFirst,
+			   "col_name" : g_allFields[i].col_name,
+			   "sTitle": g_allFields[i].title, "mDataProp": g_allFields[i].col_name, "bUseRendered": false,
+			   "fnRender": function ( oObj ) {
+			      var str='';
+			      if ( this.isFirst ) {
+				    str='<img style="cursor:pointer" src="../../img/page_white_magnify.png" onclick="updateInfo('+oObj.aData['id']+')" />&nbsp;';
+				    top.addTempObjs(oObj.aData);
+				  }
+                  return str+oObj.aData[this.col_name];
+               }
+			 };
+		     break;
+		  case 'string': 
+		     iaoColumns[iaoColumns.length]={
+			   "isFirst" : isFirst,
+			   "col_name" : g_allFields[i].col_name,
+			   "sTitle": g_allFields[i].title, "mDataProp": g_allFields[i].col_name, "bUseRendered": false,
+			   "fnRender": function ( oObj ) {
+			      var str='';
+			      if ( this.isFirst ) {
+				    str='<img style="cursor:pointer" src="../../img/page_white_magnify.png" onclick="updateInfo('+oObj.aData['id']+')" />&nbsp;';
+				    top.addTempObjs(oObj.aData);
+				  }
+                  return str+oObj.aData[this.col_name];
+               }
+			 };
+		     break;
+		  case 'date': 
+		     iaoColumns[iaoColumns.length]={
+			   "isFirst" : isFirst,
+			   "col_name" : g_allFields[i].col_name,
+			   "sTitle": g_allFields[i].title, "mDataProp": g_allFields[i].col_name, "bUseRendered": false,
+			   "fnRender": function ( oObj ) {
+			      var str='';
+			      if ( this.isFirst ) {
+				    str='<img style="cursor:pointer" src="../../img/page_white_magnify.png" onclick="updateInfo('+oObj.aData['id']+')" />&nbsp;';
+				    top.addTempObjs(oObj.aData);
+				  }
+                  return str+top.getTimeStr( oObj.aData[this.col_name], true );
+               }
+			 };
+		     break;
+		  case 'number': 
+		     iaoColumns[iaoColumns.length]={
+			   "isFirst" : isFirst,
+			   "col_name" : g_allFields[i].col_name,
+			   "sTitle": g_allFields[i].title, "mDataProp": g_allFields[i].col_name, "bUseRendered": false,
+			   "fnRender": function ( oObj ) {
+			      var str='';
+			      if ( this.isFirst ) {
+				    str='<img style="cursor:pointer" src="../../img/page_white_magnify.png" onclick="updateInfo('+oObj.aData['id']+')" />&nbsp;';
+				    top.addTempObjs(oObj.aData);
+				  }
+                  return str+oObj.aData[this.col_name];
+               }
+			 };
+		     break; 
+		  case 'dic': 
+		     iaoColumns[iaoColumns.length]={
+			   "isFirst" : isFirst,
+			   "col_name" : g_allFields[i].col_name,
+			   "dic_type" : g_allFields[i].dic_type,
+			   "sTitle": g_allFields[i].title, "mDataProp": g_allFields[i].col_name, "bUseRendered": false,
+			   "fnRender": function ( oObj ) {
+			      var str='';
+			      if ( this.isFirst ) {
+				    str='<img style="cursor:pointer" src="../../img/page_white_magnify.png" onclick="updateInfo('+oObj.aData['id']+')" />&nbsp;';
+				    top.addTempObjs(oObj.aData);
+				  }
+                  return str+top.getCodeName( this.dic_type, oObj.aData[this.col_name] );
+               }
+			 };
+		     break;
+		  default: break;
+		}
+		
+		if ( isFirst ) isFirst=false;
+	  }
+	}
+	
+	return iaoColumns;
+ }
+  
+ function getQueryFieldHtml(table){
+    var ht='';
+	var c=0;
+	var configCols="";
+	var userConfig = top.getUserConfig();
+	if ( userConfig ) {
+	  if ( table == 'tbl_pro05_a' ) {
+	    configCols=userConfig.c1;
+	  } else if ( table == 'tbl_pro05_b' ) {
+	    configCols=userConfig.c4;
+	  }
+	}
+	if ( configCols == ''  ) return '';
+	configCols=configCols+",";
+    for (var i=0;i<g_allFields.length;i++) {
+	  if ( g_allFields[i].table_name == table && configCols.indexOf(g_allFields[i].col_name+",") != -1 ) {
+	    if ( c == 0 ) ht+='<tr>';
+	    c++;
+	    switch( g_allFields[i].type ){
+		  case 'text': 
+		     ht+='<td align="right">'+g_allFields[i].title+':</td><td align="left">';
+		     ht+='<input type="text" id="'+g_allFields[i].col_name+'" value="" /></td>';
+		     break;
+		  case 'string': 
+		     ht+='<td align="right">'+g_allFields[i].title+':</td><td align="left">';
+		     ht+='<input type="text" id="'+g_allFields[i].col_name+'" value="" /></td>';
+		     break;
+		  case 'date': 
+		     ht+='<td align="right">'+g_allFields[i].title+'从:</td><td align="left">';
+		     ht+='<input type="text" onclick="new Calendar().show(this);" style="width:80px" id="'+g_allFields[i].col_name+'_s" value="" />&nbsp;到:';
+			 ht+='<input type="text" onclick="new Calendar().show(this);" style="width:80px" id="'+g_allFields[i].col_name+'_e" value="" /></td>';
+		     break;
+		  case 'number': 
+		     ht+='<td align="right">'+g_allFields[i].title+'从:</td><td align="left">';
+		     ht+='<input type="text" style="width:50px" id="'+g_allFields[i].col_name+'_s" value="" />&nbsp;到:';
+			 ht+='<input type="text" style="width:50px" id="'+g_allFields[i].col_name+'_e" value="" /></td>';
+		     break; 
+		  case 'dic': 
+		     ht+='<td align="right">'+g_allFields[i].title+':</td><td align="left">';
+			 ht+=top.getCodeSelectHtml(g_allFields[i].dic_type, g_allFields[i].col_name, true,null,null,"全部");
+		     ht+='</td>';
+		     break;
+		  default: break;
+		}
+		if ( c == 4 ) {
+		 ht+='</tr>';
+		 c=0;
+		}
+	  }
+	}
+	for(var j=c;j<=4;j++){
+	  ht+='<td colspan="2">&nbsp;</td>';
+	}
+	return ht;
+ }
+
+ 
+/**
+ * 初始化项目个性化全局缓存数据
+ */
+function proInitGlobalData(){
+    sendAjaxRequest("/actions/Metadata.action?getConfigFieldAllList",[],getAllFieldCallback);
+
+	g_dictionary.put("EDIT_DIC_TYPEHLA_ALL", new Code("HLA_ALL","EDIT_DIC_TYPE","HLA","1"));
+    g_dictionary.put("EDIT_DIC_TYPEHLA", new Code("HLA","EDIT_DIC_TYPE","HLA是否相合","1"));
+	g_dictionary.put("EDIT_DIC_TYPEAGAIN_REASON", new Code("AGAIN_REASON","EDIT_DIC_TYPE","再次移植原因","1"));
+	g_dictionary.put("EDIT_DIC_TYPEFEI_BING", new Code("FEI_BING","EDIT_DIC_TYPE","肺病","1"));
+	g_dictionary.put("EDIT_DIC_TYPEHBV", new Code("HBV","EDIT_DIC_TYPE","乙肝五项","1"));
+	g_dictionary.put("EDIT_DIC_TYPETHERAPIES", new Code("THERAPIES","EDIT_DIC_TYPE","治疗方法","1"));
+	g_dictionary.put("EDIT_DIC_TYPECURATIVE_EFFECT", new Code("CURATIVE_EFFECT","EDIT_DIC_TYPE","疗效","1"));
+	g_dictionary.put("EDIT_DIC_TYPEA5_RESULT", new Code("A5_RESULT","EDIT_DIC_TYPE","结局","1"));
+	g_dictionary.put("EDIT_DIC_TYPEA5_REASON", new Code("A5_REASON","EDIT_DIC_TYPE","消化道出血原因","1"));
+	g_dictionary.put("EDIT_DIC_TYPECMV_TYPE", new Code("CMV_TYPE","EDIT_DIC_TYPE","CMV病种类","1"));
+	g_dictionary.put("EDIT_DIC_TYPEEFFECTIVE_DRUG", new Code("EFFECTIVE_DRUG","EDIT_DIC_TYPE","起效药物","1"));
+	g_dictionary.put("EDIT_DIC_TYPEA7_THERAPIES", new Code("A7_THERAPIES","EDIT_DIC_TYPE","复发后治疗","1"));
+	g_dictionary.put("EDIT_DIC_TYPEDLI_GVHD", new Code("DLI_GVHD","EDIT_DIC_TYPE","DLI后GVHD转归","1"));
+	g_dictionary.put("EDIT_DIC_TYPEIS_ALIVE", new Code("IS_ALIVE","EDIT_DIC_TYPE","生存情况","1"));
+	g_dictionary.put("EDIT_DIC_TYPEBLOOD_TYPE", new Code("BLOOD_TYPE","EDIT_DIC_TYPE","血型","1"));
+	g_dictionary.put("EDIT_DIC_TYPEYING_YANG", new Code("YING_YANG","EDIT_DIC_TYPE","阴阳","1"));
+	
+	g_dictionary.put("IS_HAVE1", new Code("1","IS_HAVE","有","1"));
+	g_dictionary.put("IS_HAVE0", new Code("0","IS_HAVE","无","1"));
+
+	g_dictionary.put("FIELD_BELONG1B", new Code("B","FIELD_BELONG1","血液科数据","1"));
+	g_dictionary.put("FIELD_BELONG1A1", new Code("A1","FIELD_BELONG1","一般情况","1"));
+	g_dictionary.put("FIELD_BELONG1A2", new Code("A2","FIELD_BELONG1","移植物组分及造血重建情况","1"));
+	g_dictionary.put("FIELD_BELONG1A3", new Code("A3","FIELD_BELONG1","急性移植物抗宿主病","1"));
+	g_dictionary.put("FIELD_BELONG1A4", new Code("A4","FIELD_BELONG1","慢性移植物抗宿主病","1"));
+	g_dictionary.put("FIELD_BELONG1A5", new Code("A5","FIELD_BELONG1","其他并发症","1"));
+	g_dictionary.put("FIELD_BELONG1A6", new Code("A6","FIELD_BELONG1","感染和膀胱炎","1"));
+	g_dictionary.put("FIELD_BELONG1A7", new Code("A7","FIELD_BELONG1","复发和生存","1"));
+	g_dictionary.put("FIELD_BELONG1A8", new Code("A8","FIELD_BELONG1","晚期效应","1"));
+	
+	g_dictionary.put("FIELD_BELONG2A11", new Code("1","FIELD_BELONG2A1","公共模块","1"));
+	g_dictionary.put("FIELD_BELONG2A12", new Code("2","FIELD_BELONG2A1","移植前疾病情况","1"));
+	g_dictionary.put("FIELD_BELONG2A13", new Code("3","FIELD_BELONG2A1","配型及供受者情况","1"));
+	g_dictionary.put("FIELD_BELONG2A14", new Code("4","FIELD_BELONG2A1","移植前治疗情况","1"));
+	g_dictionary.put("FIELD_BELONG2A15", new Code("5","FIELD_BELONG2A1","移植前合并症情况","1"));
+	g_dictionary.put("FIELD_BELONG2A16", new Code("6","FIELD_BELONG2A1","移植前供受者病毒情况","1"));
+	g_dictionary.put("FIELD_BELONG2A17", new Code("7","FIELD_BELONG2A1","预处理情况","1"));
+	
+	g_dictionary.put("FIELD_BELONG2A21", new Code("1","FIELD_BELONG2A2","移植物成分","1"));
+	g_dictionary.put("FIELD_BELONG2A22", new Code("2","FIELD_BELONG2A2","造血因子使用情况","1"));
+	g_dictionary.put("FIELD_BELONG2A23", new Code("3","FIELD_BELONG2A2","中性粒细胞植入情况","1"));
+	g_dictionary.put("FIELD_BELONG2A24", new Code("4","FIELD_BELONG2A2","血小板植入情况","1"));
+	g_dictionary.put("FIELD_BELONG2A25", new Code("5","FIELD_BELONG2A2","红细胞植入情况","1"));
+	g_dictionary.put("FIELD_BELONG2A26", new Code("6","FIELD_BELONG2A2","移植后30天植入情况","1"));
+	g_dictionary.put("FIELD_BELONG2A27", new Code("7","FIELD_BELONG2A2","移植后3月植入情况","1"));
+	g_dictionary.put("FIELD_BELONG2A27", new Code("8","FIELD_BELONG2A2","移植后4.5月植入情况","1"));
+	g_dictionary.put("FIELD_BELONG2A27", new Code("9","FIELD_BELONG2A2","移植后5月植入情况","1"));
+	g_dictionary.put("FIELD_BELONG2A27", new Code("10","FIELD_BELONG2A2","移植后6月植入情况","1"));
+	g_dictionary.put("FIELD_BELONG2A27", new Code("11","FIELD_BELONG2A2","移植后9月植入情况","1"));
+	g_dictionary.put("FIELD_BELONG2A27", new Code("12","FIELD_BELONG2A2","移植后12月植入情况","1"));
+	g_dictionary.put("FIELD_BELONG2A27", new Code("13","FIELD_BELONG2A2","免疫重建","1"));
+	g_dictionary.put("FIELD_BELONG2A27", new Code("14","FIELD_BELONG2A2","移植后2月植入情况","1"));
+	
+	g_dictionary.put("FIELD_BELONG2A31", new Code("1","FIELD_BELONG2A3","急性GVHD概述","1"));
+	g_dictionary.put("FIELD_BELONG2A32", new Code("2","FIELD_BELONG2A3","皮肤GVHD情况","1"));
+	g_dictionary.put("FIELD_BELONG2A33", new Code("3","FIELD_BELONG2A3","肠道GVHD情况","1"));
+	g_dictionary.put("FIELD_BELONG2A34", new Code("4","FIELD_BELONG2A3","肝脏GVHD情况","1"));
+	g_dictionary.put("FIELD_BELONG2A35", new Code("5","FIELD_BELONG2A3","激素和MTX情况","1"));
+	g_dictionary.put("FIELD_BELONG2A36", new Code("6","FIELD_BELONG2A3","二线治疗情况","1"));
+	g_dictionary.put("FIELD_BELONG2A37", new Code("7","FIELD_BELONG2A3","最终疗效评价","1"));
+	
+	g_dictionary.put("FIELD_BELONG2A41", new Code("1","FIELD_BELONG2A4","慢性GVHD一般情况","1"));
+	g_dictionary.put("FIELD_BELONG2A42", new Code("2","FIELD_BELONG2A4","皮肤慢性GVHD情况","1"));
+	g_dictionary.put("FIELD_BELONG2A43", new Code("3","FIELD_BELONG2A4","眼睛慢性GVHD情况","1"));
+	g_dictionary.put("FIELD_BELONG2A44", new Code("4","FIELD_BELONG2A4","口腔慢性GVHD情况","1"));
+	g_dictionary.put("FIELD_BELONG2A45", new Code("5","FIELD_BELONG2A4","肝脏慢性GVHD情况","1"));
+	g_dictionary.put("FIELD_BELONG2A46", new Code("6","FIELD_BELONG2A4","肺慢性GVHD情况","1"));
+	g_dictionary.put("FIELD_BELONG2A47", new Code("7","FIELD_BELONG2A4","消化道慢性GVHD情况","1"));
+	g_dictionary.put("FIELD_BELONG2A48", new Code("8","FIELD_BELONG2A4","肌肉慢性GVHD情况","1"));
+	g_dictionary.put("FIELD_BELONG2A49", new Code("9","FIELD_BELONG2A4","其他慢性GVHD情况","1"));
+	g_dictionary.put("FIELD_BELONG2A410", new Code("10","FIELD_BELONG2A4","治疗情况","1"));
+	
+	g_dictionary.put("FIELD_BELONG2A501", new Code("01","FIELD_BELONG2A5","排斥及植入综合征","1"));
+	g_dictionary.put("FIELD_BELONG2A502", new Code("02","FIELD_BELONG2A5","DAH","1"));
+	g_dictionary.put("FIELD_BELONG2A503", new Code("03","FIELD_BELONG2A5","BOS","1"));
+	g_dictionary.put("FIELD_BELONG2A504", new Code("04","FIELD_BELONG2A5","IPS","1"));
+	g_dictionary.put("FIELD_BELONG2A505", new Code("05","FIELD_BELONG2A5","TMA","1"));
+	g_dictionary.put("FIELD_BELONG2A506", new Code("06","FIELD_BELONG2A5","消化道出血及药物性肝损害","1"));
+	/**g_dictionary.put("FIELD_BELONG2A507", new Code("07","FIELD_BELONG2A5","冠心病和心衰","1"));
+	g_dictionary.put("FIELD_BELONG2A508", new Code("08","FIELD_BELONG2A5","中枢病变","1"));
+	g_dictionary.put("FIELD_BELONG2A509", new Code("09","FIELD_BELONG2A5","白内障","1"));
+	g_dictionary.put("FIELD_BELONG2A510", new Code("10","FIELD_BELONG2A5","骨骼并发症","1"));
+	g_dictionary.put("FIELD_BELONG2A511", new Code("11","FIELD_BELONG2A5","肾脏并发症","1"));
+	*/
+	g_dictionary.put("FIELD_BELONG2A61", new Code("1","FIELD_BELONG2A6","败血症","1"));
+	g_dictionary.put("FIELD_BELONG2A62", new Code("2","FIELD_BELONG2A6","CMV","1"));
+	g_dictionary.put("FIELD_BELONG2A63", new Code("3","FIELD_BELONG2A6","EBV血症及PTLD","1"));
+	g_dictionary.put("FIELD_BELONG2A64", new Code("4","FIELD_BELONG2A6","真菌","1"));
+	g_dictionary.put("FIELD_BELONG2A65", new Code("5","FIELD_BELONG2A6","出血性膀胱炎","1"));
+	
+	g_dictionary.put("FIELD_BELONG2A71", new Code("1","FIELD_BELONG2A7","免疫抑制剂情况","1"));
+	g_dictionary.put("FIELD_BELONG2A72", new Code("2","FIELD_BELONG2A7","预防性DLI","1"));
+	g_dictionary.put("FIELD_BELONG2A73", new Code("3","FIELD_BELONG2A7","干预性DLI","1"));
+	g_dictionary.put("FIELD_BELONG2A74", new Code("4","FIELD_BELONG2A7","复发及化疗","1"));
+	g_dictionary.put("FIELD_BELONG2A75", new Code("5","FIELD_BELONG2A7","治疗性DLI","1"));
+	g_dictionary.put("FIELD_BELONG2A76", new Code("6","FIELD_BELONG2A7","DLI相关并发症","1"));
+	g_dictionary.put("FIELD_BELONG2A77", new Code("7","FIELD_BELONG2A7","终点情况","1"));
+	
+	g_dictionary.put("FIELD_BELONG2A81", new Code("1","FIELD_BELONG2A8","晚期效应","1"));
+
+	g_dictionary.put("FIELD_BELONG2B1", new Code("1","FIELD_BELONG2B","血液科数据","1"));
+	
+	g_dictionary.put("FIELD_TYPEstring", new Code("string","FIELD_TYPE","字符串","1"));
+	g_dictionary.put("FIELD_TYPEdate", new Code("date","FIELD_TYPE","日期","1"));
+	g_dictionary.put("FIELD_TYPEnumber", new Code("number","FIELD_TYPE","数字","1"));
+	g_dictionary.put("FIELD_TYPEtime", new Code("time","FIELD_TYPE","时间","1"));
+	g_dictionary.put("FIELD_TYPEtext", new Code("text","FIELD_TYPE","文本","1"));
+	g_dictionary.put("FIELD_TYPEdic", new Code("dic","FIELD_TYPE","字典","1"));
+}
+
+function addBug(){
+  var xurl="pages/bug/bugInfo.html?opt=create&from=index";
+  top.openDialog("报告系统问题或建议",xurl,true,600,350,null);
+}
+
+function getTwoDateDis(t1,t2){
+  if ( t1 == '' || t2 == '' ) return "";
+  var t1l=top.toTimestamp(t1);
+  var t2l=top.toTimestamp(t2);
+  if ( t1l == -1 || t2l == -1 ) return "";
+  return Math.round( (t2l - t1l)/(1000*60*60*24) );
+}
+
+function getTwoDateDisStr(t1,t2){
+  var dis=getTwoDateDis(t1,t2);
+  if ( dis == '' ) return "";
+  return "("+dis+"天)";
+}
+
+function toDisplayNumber(v){
+  if ( v == null ) return "";
+  if ( v == -999999 ) return "";
+  return v;
+}
+
+</script>
+
+
+
+
+<style type="text/css">
+* {
+    font-family: Arial, "Free Sans";
+}
+#box {
+    margin-top: 45px;
+	margin-left: 12px;
+}
+.bt, .clicked {
+    height: 20px;
+    color: #666;
+    font-size: 13px;
+    padding: 4px 10px;
+    text-decoration: none;
+    background: #f9f9f9;
+}
+#box .bt {
+    background: -moz-linear-gradient(top,  #fff,  #f3f3f3);
+    background: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#f3f3f3));
+
+    /* For Internet Explorer 5.5 - 7 */
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#ffffff, endColorstr=#f3f3f3);
+    /* For Internet Explorer 8 */
+    -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#ffffff, endColorstr=#f3f3f3)";
+}
+#box .bt:hover {
+    background: #f3f3f3;
+    background: -moz-linear-gradient(top,  #fff,  #e9e9e9);
+    background: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#e9e9e9));
+
+    /* For Internet Explorer 5.5 - 7 */
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#ffffff, endColorstr=#e9e9e9);
+    /* For Internet Explorer 8 */
+    -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#ffffff, endColorstr=#e9e9e9)";
+}
+#box .bt:active, .clicked {
+    background: #e9e9e9;
+    background: -moz-linear-gradient(top,  #e9e9e9,  #fff);
+    background: -webkit-gradient(linear, left top, left bottom, from(#e9e9e9), to(#fff));
+
+    /* For Internet Explorer 5.5 - 7 */
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#e9e9e9, endColorstr=#ffffff);
+    /* For Internet Explorer 8 */
+    -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#e9e9e9, endColorstr=#ffffff)";
+}
+.btleft {
+    border: 1px solid #e3e3e3;
+    -webkit-border-radius: .5em 0 0 .5em;
+    -moz-border-radius: .5em 0 0 .5em;
+    border-radius: .5em 0 0 .5em;
+}
+.btleft span {
+    font-size: 15px;
+}
+.btmiddle {
+    border: 1px solid #e3e3e3;
+    border-width: 1px 0;
+    margin: 0 -4px;
+}            
+.btright {
+    border: 1px solid #e3e3e3;
+    -webkit-border-radius: 0 .5em .5em 0;
+    -moz-border-radius: 0 .5em .5em 0;
+    border-radius: 0 .5em .5em 0;
+}
+.btmiddle span, .btright span {
+    font-size: 9px;
+    position: relative;
+    top: -2px;
+}
+.subMenu {
+    display: none;
+	z-index: 99;
+	position: absolute; 
+	left:7px;
+	top:77px;
+}
+.tooltip_menu {
+    background: #fff;
+    -webkit-border-radius: .5em;
+    -moz-border-radius: .5em;
+    border-radius: .5em;
+    width: 120px;
+    -webkit-box-shadow: 0px 0px 3px rgba(0,0,0,.5);
+    -moz-box-shadow: 0px 0px 3px rgba(0,0,0,.5);
+    box-shadow: 0px 0px 3px rgba(0,0,0,.5);
+    padding: 2px;
+	z-index: 99;
+}
+.tooltip_menu a {
+    z-index: 2;
+    padding: 5px 5px 5px 18px;
+    display: block;
+    text-decoration: none;
+    color: #0066cc;
+    font-size: 13px;
+}
+.tooltip_menu a:hover {
+    background: #0066cc;
+    color: #fff;
+}
+.tooltip_menu a img {
+    position: relative;
+    top: 5px;
+    border: 0;
+}
+.menu_top {
+    -webkit-border-radius: .5em .5em 0 0;
+    -moz-border-radius: .5em .5em 0 0;
+    border-radius: .5em .5em 0 0;
+}
+.menu_bottom {
+    -webkit-border-radius: 0 0 .5em .5em;
+    -moz-border-radius: 0 0 .5em .5em;
+    border-radius: 0 0 .5em .5em;
+}
+
+.bottomLine {
+  border:1px solid blue;
+  border-style:none none dotted none;
+}
+
+#loginMain .ind_info {
+	background-image: url(img/bg1_info.png);
+	background-repeat: no-repeat;
+	margin-left: 360px;
+	height: 500px;
+}
+</style>
+
+</head>
+
+<body>
+	<div id="loginTop"></div>
+	<div id="loginClear" class="clear"></div>
+	<div id="loginMain">
+	  <div class="ind_logo" style="height:70px"><img src="pages/pro05/logo1.png" style="margin-left: 20px;margin-top: 30px;" ></div>
+	  <div class="ind_info" style="margin-top: 20px;background-image: url(img/bg1_info_none.png);">
+	    <ul style="padding-top: 20px;padding-left: 120px;"><li>
+	      <font size="5" color="#006096"><b>移植患者数据库系统</b></font>
+		</li>
+		</ul>
+		<ul class="user_1" style="padding-top: 20px;">
+		  <li class="u1_1"><img src="img/pic1_user.png" width="29" height="35"></li>
+		  <li class="u1_2">账&nbsp;&nbsp;号：</li>
+		  <li class="u1_3">
+			<input type="text" name="textfield" id="userCode" style="width:160px;" onkeydown="if(event.keyCode==13) doLogin();" >
+		  </li>
+		</ul><div class="clear"></div>
+		<ul class="user_2">
+		  <li class="u2_1"><img src="img/pic_1user2.png" width="24" height="30"></li>
+		  <li class="u2_2">密&nbsp;&nbsp;码：</li>
+		  <li class="u2_3">
+			<input type="password" name="textfield" id="userPass" style="width:160px;" onkeydown="if(event.keyCode==13) doLogin();" >
+		  </li>
+		</ul>
+		<ul class="user_3"><li class="u3_1" onclick="doLogin()"><a href="javascript:void(0)">登&nbsp;录</a></li><li class="u3_2" onclick="register()"><a href="javascript:void(0)" >注&nbsp;册</a></li></ul>
+	  </div>
+	</div>
+	<div id="loginResult"></div>
+	<div id="ind_footer" style="text-align:center"><font color="white">&nbsp;Copyright © 2013 北京大学血液病研究所 版权所有</font></div>
+<div id="main" style="display:none">
+  <div id="top" style="background-image: url(img/empty.gif);">
+    <div class="t_left">
+	    <div style="position: absolute; left:10px;top:5px;"><font size="5" color="#ffffff"><b>移植患者数据库系统</b></font></div>
+	    <div id="box">
+		    <span class="bt btleft"></span>
+			<a id="menu_main" href="javascript:toSysTab('workbench')" class="bt btmiddle">首页</a>
+			<a id="menu_a" href="javascript:toSysTab('pages/pro05/aManage.html')" class="bt btmiddle">移植数据管理</a>
+			<a id="menu_b" href="javascript:toSysTab('pages/pro05/bManage.html')" class="bt btmiddle">血液科数据管理</a>
+			<a id="menu_afix" href="javascript:toSysTab('pages/pro05/afixManage.html')" class="bt btmiddle">解决移植数据冲突</a>
+			<a id="menu_bfix" href="javascript:toSysTab('pages/pro05/bfixManage.html')" class="bt btmiddle">解决血液科数据冲突</a>
+			<a id="menu_system" href="javascript:void(0)" class="bt btmiddle">系统管理</a>
+			<span class="bt btright"></span>
+		</div>
+	</div>
+
+    <div class="t_right" style="width: 260px;">
+      <p id="currentUserInfo"></p>
+      <ul>
+	    <li class="u_0" style="background-image:url(img/empty.gif);">&nbsp;</li>
+        <li class="u_1" onclick="g_changepass()"><a href="javascript:void(0)">修改密码</a></li>
+        <li class="u_2" onclick="isLogout()"><a href="javascript:void(0)">注销</a></li>
+      </ul><div class="clear"></div>
+    </div>
+    <div class="clear"></div>
+  </div>
+
+  <div id="menu3" class="subMenu">
+			<div class="tooltip_menu">
+			  <table width="100%">
+			   <tr id="menu_userManage"><td id="menu_td_userManage" class="bottomLine"><a id="menu_a_userManage" href="javascript:toSysTab('pages/organization/userManage.html')" class="menu_top">用户管理</a></td></tr>
+			   <tr id="menu_rightManage"><td id="menu_td_rightManage" class="bottomLine"><a id="menu_a_rightManage" href="javascript:toSysTab('pages/organization/roleManage.html')">角色权限管理</a></td></tr>
+			   <tr id="menu_dicManage"><td class="bottomLine"><a href="javascript:toSysTab('pages/system/dicManage.html')">字典管理</a></td></tr>
+			   <tr id="menu_sysOperation"><td class="bottomLine"><a href="javascript:toSysTab('pages/system/operationManage.html')">操作日志</a></td></tr>
+			   <tr><td class="bottomLine"><a href="javascript:toSysTab('pages/metadata/fieldManage.html')">字段管理</a></td></tr>
+			   <tr id="menu_deptManage"><td id="menu_td_deptManage"><a id="menu_a_deptManage" href="javascript:toSysTab('pages/organization/deptManage.html')" class="menu_bottom">部门管理</a></td></tr>
+			  </table>
+			</div>
+  </div>
+  
+  <div id="mainContent"></div>
+
+  <div id="m_workbench" style="padding:0px;background-color:#C7EDCC;">
+	<div id="workbenchContent" style="padding:0px;background-color:#C7EDCC;"></div>
+  </div>
+  <div id="main_footer" style="text-align:center"><font color="white">Copyright © 2013 北京大学血液病研究所 版权所有</font></div>
+</div> <!-- end of main -->
+
+<div id="versionInfo" style="position: absolute;top:1000px;left:10px"><font color="white"><span id="versionInfoTxt" >v1.0.0</span></font></div>
+
+<script type="text/javascript" >writeCommonDiv();</script>
+
+</body>
+</html>

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+ 
+<style type="text/css">
+body {
+    font-size:13px;
+    height:100%;
+    margin:0px;
+    padding:0px;
+	background-color:#D9ECFC;
+}
+
+.boxTr {
+  padding:0px;
+  spacing:0px;
+  cellpadding:0px;
+  cellspacing:0px;
+}
+.boxLeft {
+  background-image: url(../../img/box1_left.png);
+  background-repeat: no-repeat;
+  width:54px;
+  height:100%;
+  padding:0px;
+  spacing:0px;
+  margin:0px;
+}
+.boxMiddle {
+  background-image: url(../../img/box1_middle.png);
+  background-repeat: repeat-x;
+  height:100%;
+  padding:0px;
+  spacing:0px;
+  margin:0px;
+}
+.boxRight {
+  background-image: url(../../img/box1_right.png);
+  background-repeat: no-repeat;
+  width:54px;
+  height:100%;
+  padding:0;
+  spacing:0;
+  margin:0;
+}
+.tabSelected {
+  background-image: url(../../img/tab1.gif);
+  background-repeat: no-repeat;
+  width:85px;
+  height:20px;
+  padding:2px 2px 2px 15px;
+  spacing:0px;
+  margin:0;
+  align: center;
+  valign: middle;
+  cursor: pointer;
+}
+.tabUnselected {
+  background-image: url(../../img/tab0.gif);
+  background-repeat: no-repeat;
+  width:85px;
+  height:20px;
+  padding:2px 2px 2px 15px;
+  spacing:0px;
+  margin:0;
+  align: center;
+  valign: middle;
+  cursor: pointer;
+}
+.tabContent {
+  width:100%;
+  height:387px;
+  padding:5px
+  spacing:0;
+  margin:0;
+  border: 2px solid #4CABE1;
+  background-color:#ffffff;
+}
+
+.bigButton_selected{
+  background-image: url(../../img/buttonBig_selected.png);
+  background-repeat: no-repeat;
+  width:173px;
+  height:30px;
+  spacing:0;
+  padding:12px 0 0 0;
+  margin:0;
+}
+.bigButton_unselected{
+  background-image: url(../../img/buttonBig_unselected.png);
+  background-repeat: no-repeat;
+  width:173px;
+  height:49px;
+  spacing:0;
+  padding:12px 0 0 0;
+  margin:0;
+}
+.banner {position:relative; width:586px; height:356px; border:1px solid #666; overflow:hidden;}
+.banner_list img {border:0px;}
+.banner_bg {position:absolute; bottom:0;background-color:#000;height:30px;filter: Alpha(Opacity=30);opacity:0.5;z-index:1000;width:278px; }
+.banner_info{position:absolute; bottom:0; left:5px;height:22px;color:#ffffff;z-index:1001;}
+.banner_text {position:absolute;width:200px;z-index:1002; right:3px; bottom:3px;}
+.banner ul {position:absolute;list-style-type:none;filter: Alpha(Opacity=80);opacity:0.8; border:1px solid #fff;z-index:1002;
+			margin:0; padding:0; bottom:3px; right:5px;}
+.banner ul li { padding:0px 8px;float:left;display:block;color:#FFF;border:#e5eaff 1px solid;background:#6f4f67;cursor:pointer}
+.banner ul li.on { background:#900}
+.banner_list a{position:absolute;}
+.banner ul li.on2 { background:#900}
+</style>
+
+<script type="text/javascript">
+ var latestYear = "2013";
+ var latestMonOrSea = "M10";
+ var t = 0 ;
+ var t2 = 0;
+ var n = 0;
+ var n2 = 0;
+ var count=0;
+ var count2=0;
+ var currentTabIndex = 0;
+ var pageSize = 13;
+ var i=0;
+ var currentPageNum = 0;
+ var isInited = false;
+ var qFileName = "";
+ $(document).ready( function() {
+	$("#td_left").width( $(window).width() - 750 );
+	$("#tbl_space1").width ( $(window).width() - 855 );
+	$("#tbl_space2").width ( $(window).width() - 855 );
+	getCmaFileList();
+ } );
+ 
+ function selectTab(id){
+     if ( currentTabIndex == id && id != 0) return ;
+	 if ( id < 2 ) {
+		 for ( i=0;i<2;i++  ) {
+			if ( i == id ) {
+			  $("#tab"+i).removeClass( "tabUnselected" );
+			  $("#tab"+i).addClass("tabSelected");
+			  $("#tab"+i+"content").show();
+			} else {
+			  $("#tab"+i).removeClass( "tabSelected" );
+			  $("#tab"+i).addClass("tabUnselected"); 
+			  $("#tab"+i+"content").hide();
+			}
+		 }
+	 } else {
+	     for ( i=2;i<4;i++  ) {
+			if ( i == id ) {
+			  $("#tab"+i).removeClass( "tabUnselected" );
+			  $("#tab"+i).addClass("tabSelected");
+			  $("#tab"+i+"content").show();
+			} else {
+			  $("#tab"+i).removeClass( "tabSelected" );
+			  $("#tab"+i).addClass("tabUnselected"); 
+			  $("#tab"+i+"content").hide();
+			}
+		 }
+	 }
+	 currentTabIndex = id;
+	 currentPageNum = 0;
+	 getCmaFileList();
+ }
+ 
+ function hideMonthFileList(){
+     if ( document.getElementById("isHideMonth").checked ) {
+	    qFileName = "季度";
+	 } else {
+	    qFileName = "";
+	 }
+	 selectTab(0);
+ }
+ 
+ function getCmaFileList(){
+	 var aoData=[];
+	 aoData.push( { "name": "file.fileType", "value": currentTabIndex } );
+	 aoData.push( { "name": "file.fileName", "value": qFileName } );
+	 aoData.push( { "name": "file.status", "value": "1" } );
+	 aoData.push( { "name": "iDisplayStart", "value": (currentPageNum * pageSize) } );
+	 aoData.push( { "name": "iDisplayLength", "value": pageSize } );
+	 aoData.push( { "name": "mDataProp_0", "value": "fileName" } );
+	 aoData.push( { "name": "mDataProp_1", "value": "fileType" } );
+	 aoData.push( { "name": "mDataProp_2", "value": "fileTime" } );
+	 aoData.push( { "name": "iSortingCols", "value": "1" } );
+	 aoData.push( { "name": "iSortCol_0", "value": "2" } );
+	 aoData.push( { "name": "sSortDir_0", "value": "desc" } );
+	 aoData.push( { "name": "bSortable_0", "value": true } );
+	 aoData.push( { "name": "bSortable_1", "value": true } );
+	 aoData.push( { "name": "bSortable_2", "value": true } );
+     top.sendAjaxRequest("/actions/ProCma.action?getCmaFileList",aoData,callbackGetFileList);
+ }
+ 
+ function getMore(d,indexC){
+     currentPageNum+=d;
+	 currentTabIndex = indexC;
+	 getCmaFileList();
+ }
+ 
+ function callbackGetFileList(obj){
+     var ht="";
+     if ( obj ) {
+	    var c = "#ffffff";
+		var n = 0;
+        for ( var i=0;i<obj.aaData.length;i++ ){
+		   if ( n == 0 ) {
+		      c = "#ffffff";
+			  n ++ ;
+		   } else {
+		      c = "#D9ECFC";
+			  n = 0;
+		   }
+		   ht+='<tr bgcolor="'+c+'"><td width="75%" align="left" valign="middle">&nbsp;<font color="#000000">'+ top.ellipsis( 36, obj.aaData[i].fileName );
+           ht+='</font>&nbsp;<a href="'+top.getDownloadServerUrl()+'download?filePath='+obj.aaData[i].filePath+'&fileName='+top.getDownloadFileName( obj.aaData[i].filePath )+'"><img src="../../img/down.png" border="0" title="下载附件" /></a></td>';
+		   ht+='<td width="25%" align="right"><font color="#000000">'+top.getTimeStr( obj.aaData[i].fileTime )+'</font></td></tr>';
+        }
+		ht += '<tr><td colspan="2" align="right">';
+		if ( currentTabIndex == 0 ) {
+		  ht += "<input type='checkbox' value='0' id='isHideMonth' onclick='hideMonthFileList()' ";
+		  if ( qFileName == "季度" ) ht += " checked ";
+		  ht += "/>隐藏所有月评估报告&nbsp;";
+		}
+		if ( currentPageNum > 0 ) {
+		   ht += '<font color="#000000"><span style="cursor:pointer" onclick="javascript:getMore(-1,'+currentTabIndex+')">上一页</span></font>&nbsp;';
+		}
+		if ( obj.iTotalRecords > (currentPageNum+1)*pageSize ) {
+		   ht += '<font color="#000000"><span style="cursor:pointer" onclick="javascript:getMore(1,'+currentTabIndex+')">下一页</span></font>';
+		}
+		ht += '</td></tr>';
+     }
+	 $("#tab"+currentTabIndex+"table").html( ht );
+	 
+	 if ( !isInited ) {
+	    currentTabIndex = 2;
+		getCmaFileList();
+		isInited = true;
+	 }
+ }
+ 
+</script>
+</head>
+<body>
+ <table width="100%"  height="166px" cellpadding="0" cellspacing="0" border="0">
+  <tr class="boxTr">
+   <td class="boxLeft">&nbsp;</td>
+   <td class="boxMiddle"><font color="#324C1D"><b>公告:</b><br>&nbsp;&nbsp;“气象观测资料质量综合管理平台”经过1年的建设，目前已经正式在国家气象信息中心投入业务试运行，欢迎大家提出意见和建议，以便我们进一步完善工作，谢谢！</font></td>
+   <td class="boxRight">&nbsp;</td>
+  </tr>
+ </table>
+<table width="98%" align="center" cellpadding="5px" cellspacing="5px" border="0"><tr>
+ <td id="td_left" width="45%" valign="top">
+ <table width="100%"  height="392px" cellpadding="0" cellspacing="0" border="0">
+  <tr class="boxTr" height="25px">
+   <td id="tab0" width="85px" class="tabSelected" align="left" valign="middle" onclick="selectTab(0)" ><font color="#000000" size="2"><b>评估报告</b></font></td>
+   <td id="tab1" width="85px" class="tabUnselected" align="left" valign="middle" onclick="selectTab(1)" ><font color="#000000" size="2"><b>评估台站</b></font></td>
+   <td id="tbl_space1" width="60%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td colspan="3" width="100%" height="100%" class="tabContent">
+	  <div id="tab0content" style="width:100%;height:100%;spacing:10px">
+	    <table id="tab0table" valign="top" width="100%" cellpadding="3px" cellspacing="0" border="0">
+		</table>
+	  </div>
+	  <div id="tab1content" style="width:100%;height:100%;spacing:10px;display:none">
+	    <table id="tab1table" valign="top" width="100%" cellpadding="3px" cellspacing="0" border="0">
+		</table>
+	  </div>
+	</td>
+  </tr>
+ </table>
+   </td>
+   <td width="690px" valign="top">
+	    <table width="100%"  height="392px" cellpadding="0" cellspacing="0" border="0">
+		  <tr class="boxTr" height="25px">
+		   <td id="tab2" width="85px" class="tabSelected" align="left" valign="middle" onclick="selectTab(2)" ><font color="#000000" size="2"><b>评估方法</b></font></td>
+		   <td id="tab3" width="85px" class="tabUnselected" align="left" valign="middle" onclick="selectTab(3)" ><font color="#000000" size="2"><b>相关发文</b></font></td>
+		   <td id="tbl_space2" width="60%">&nbsp;</td>
+		  </tr>
+		  <tr>
+			<td colspan="3" width="100%" height="100%" class="tabContent">
+			  <div id="tab2content" style="width:100%;height:100%;spacing:10px;">
+				<table id="tab2table" valign="top" width="100%" cellpadding="3px" cellspacing="0" border="0">
+				</table>
+			  </div>
+			  <div id="tab3content" style="width:100%;height:100%;spacing:10px;display:none">
+				<table id="tab3table" valign="top" width="100%" cellpadding="3px" cellspacing="0" border="0">
+				</table>
+			  </div>
+			</td>
+		  </tr>
+		 </table>
+    </td>
+ </tr>
+ 
+ </table>
+</body>
+</html>

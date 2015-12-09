@@ -1,0 +1,192 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var infoId="";
+
+   $(document).ready(function() {
+     initData();
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    	 };
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   function doSubmit(){
+	 var aoData=[];
+     var url = "/actions/ProCmaDataInfo.action?updateDataInfo2";
+	 var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+
+     aoData.push( { "name": "info.info_id", "value": infoId } );
+	 aoData.push( { "name": "info.info_desc", "value": $("#info_desc").val() } );
+	 aoData.push( { "name": "info.start_date", "value": $("#start_date").val() } );
+	 aoData.push( { "name": "info.end_date", "value": $("#end_date").val() } );
+	 aoData.push( { "name": "info.file_name", "value": $("#file_name").val() } );
+	 aoData.push( { "name": "info.info_count", "value": $("#info_count").val() } );
+	 aoData.push( { "name": "info.observed_frequency", "value": $("#observed_frequency").val() } );
+	 aoData.push( { "name": "info.space_resolution", "value": $("#space_resolution").val() } );
+	 aoData.push( { "name": "info.update_frequency", "value": $("#update_frequency").val() } );
+	 aoData.push( { "name": "info.data_quality", "value": $("#data_quality").val() } );
+	 aoData.push( { "name": "info.rule_desc", "value": $("#rule_desc").val() } );
+	 aoData.push( { "name": "info.decode_desc", "value": $("#decode_desc").val() } );
+	 aoData.push( { "name": "info.related_desc", "value": $("#related_desc").val() } );
+	 aoData.push( { "name": "info.service_type", "value": $("#service_type").val() } );
+	 aoData.push( { "name": "info.update_desc1", "value": $("#update_desc1").val() } );
+	 top.sendAjaxRequest(url,aoData,optCallback);
+   }
+   
+   function checkForm(){
+     var temp = "";
+	 temp += checkString($("#info_desc").val(),false,512,"资料描述");
+	 temp += checkString($("#start_date").val(),false,8,"开始时间");
+	 temp += checkString($("#end_date").val(),false,8,"结束时间");
+	 temp += checkString($("#file_name").val(),false,512,"文件名");
+	 temp += checkString($("#info_count").val(),false,128,"每日文件数和数据量");
+	 temp += checkString($("#rule_desc").val(),false,512,"文件名规则说明");
+	 temp += checkString($("#observed_frequency").val(),false,128,"观测频率");
+	 temp += checkString($("#space_resolution").val(),false,128,"空间分辨率");
+	 temp += checkString($("#data_quality").val(),false,128,"数据质量");
+	 temp += checkString($("#decode_desc").val(),false,512,"解码说明");
+	 temp += checkString($("#related_desc").val(),false,512,"相关说明");
+	 temp += checkString($("#service_type").val(),false,512,"服务方式");
+	 temp += checkString($("#update_desc1").val(),false,512,"更新说明");
+     return temp;
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      isSaveOK = true;
+	      top.showInfoWinOK("操作成功");
+	    }else{
+	      isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+   function initData(){
+	   try{
+	      var o=top.getTempValue();
+		  optType=top.getUrlParam(document.URL,"opt");
+		  infoId=top.getUrlParam(document.URL,"infoId");
+          $("#info_desc").val( o.info_desc );
+          $("#start_date").val( o.start_date );
+		  $("#end_date").val( o.end_date );
+		  $("#file_name").val( o.file_name );
+		  $("#rule_desc").val( o.rule_desc );
+		  $("#info_count").val( o.info_count );
+		  $("#observed_frequency").val( o.observed_frequency );
+		  $("#space_resolution").val( o.space_resolution );
+		  $("#update_frequency").val( o.update_frequency );
+		  $("#data_quality").val( o.data_quality );
+		  $("#decode_desc").val( o.decode_desc );
+		  $("#related_desc").val( o.related_desc );
+		  $("#service_type").val( o.service_type );
+		  $("#update_desc1").val( o.update_desc1 );
+		  $("#tdupdate_user1").html( o.update_user1 );
+		  $("#tdupdate_time1").html( top.getTimeStr( o.update_time1 ) );
+		  
+		   if ( optType == 'update' ) {
+		     $( "#submitBtn" ).show();
+	     	 $( "#closeBtn" ).show();
+		   } else {
+		     $( "#submitBtn" ).hide();
+	     	 $( "#closeBtn" ).hide();
+		   }
+	   }catch(e){
+		   top.showInfoWinError(e.message);
+	   }
+   }
+  </script> 
+</head>
+<body>
+<table width="100%" border="0" padding="0" spacing="0">
+ <tr>
+    <td width="25%" align="right">资料描述:</td>
+    <td width="75%" align="left" colspan="3"><textarea id="info_desc" cols="70" rows="3" ></textarea></td>
+ </tr>
+ <tr>
+    <td align="right" width="25%">资料开始时间:</td>
+    <td align="left"  width="30%"><input type="text" id="start_date" value="" size="10" />(YYYYMMDD)</td>
+    <td align="right" width="15%">结束时间:</td>
+    <td align="left"  width="30%"><input type="text" id="end_date" value="" size="10" />(YYYYMMDD)</td>
+ </tr>
+ <tr>
+    <td align="right">文件名:</td>
+    <td align="left" colspan="3"><textarea id="file_name" cols="70" rows="3" ></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">文件名规则说明:</td>
+    <td align="left" colspan="3"><textarea id="rule_desc" cols="70" rows="3" ></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">每日文件数和数据量:</td>
+	<td align="left"><input type="text" id="info_count" value="" size="25" /></td>
+    <td align="right">观测频率:</td>
+    <td align="left"><input type="text" id="observed_frequency" value="" size="24" /></td>
+ </tr>
+ <tr>
+    <td align="right">空间分辨率:</td>
+    <td align="left"><input type="text" id="space_resolution" value="" size="24" /></td>
+    <td align="right">更新频率:</td>
+    <td align="left"><select id="update_frequency">
+	  <option value="年">年</option><option value="侯">侯</option><option value="月">月</option><option value="旬">旬</option>
+	  <option value="日">日</option><option value="时">时</option>
+	  <option value="分">分</option><option value="秒">秒</option>
+	  <option value="不定时">不定时</option>
+	</select></td>
+ </tr>
+ <tr>
+    <td align="right">数据质量:</td>
+    <td align="left" colspan="3"><textarea id="data_quality" cols="70" rows="3" ></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">解码说明:</td>
+    <td align="left" colspan="3"><textarea id="decode_desc" cols="70" rows="3" ></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">相关说明:</td>
+    <td align="left" colspan="3"><textarea id="related_desc" cols="70" rows="3" ></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">服务方式:</td>
+    <td align="left" colspan="3"><textarea id="service_type" cols="70" rows="3" ></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">更新说明:</td>
+    <td align="left" colspan="3"><textarea id="update_desc1" cols="70" rows="3" ></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">上次更新时间:</td>
+    <td align="left" id="tdupdate_time1"></td>
+	<td align="right">更新人:</td>
+    <td align="left" id="tdupdate_user1"></td>
+ </tr>
+</table>
+<p align="center">
+   <table><tr>
+		    <td><span id="submitBtn" class="buttonTwo"><a href="javascript:doSubmit()">提交</a></span></td>
+		    <td><span id="closeBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+   </tr></table>
+</p>
+</body>
+</html>

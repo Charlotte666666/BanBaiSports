@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+    <link rel="stylesheet" type="text/css" href="../../css/drag-drop-folder-tree.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/context-menu.css"></link>
+    <link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+    <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js" ></script>
+	<script type="text/javascript" language="javascript" src="../../js/myDtree.js" ></script>
+	<script type="text/javascript" language="javascript" src="../../js/context-menu.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/drag-drop-folder-tree.js" ></script>
+	
+	<script type="text/javascript" >
+       var d=null;
+       var treeObj=null;
+       var currentBookTypeId=0;
+       var isNeedReloadUsers=false;
+
+       $(document).ready(function(){
+    	   loadBookTypeTree();
+		   $("#treeDetail").height( $(window).height() - 30 );
+       });
+       // 加载工具书类别数据
+       function loadBookTypeTree(){
+    	   top.sendAjaxRequest("/actions/ToolBook.action?getToolTypeList",[],initBookTypeTree);
+       }
+       // 初始化树
+       function initBookTypeTree(obj){
+    	   d=new dTree('d');
+           d.config.useSelection = true;
+           d.config.folderLinks = true;
+           d.config.useStatusText = false;
+           d.config.useLines = false;
+           
+            currentBookTypeId=0;
+
+           if( obj.aaData ){
+        	   for(var i=0;i<obj.aaData.length;i++){
+        		   d.add( obj.aaData[i].type_id, obj.aaData[i].parent_id, obj.aaData[i].type_name );
+				 }
+           }
+		$("#bookTypeTree").html( d.toString() );
+           treeObj = new JSDragDropTree();
+           treeObj.setTreeId('dhtmlgoodies_tree2');
+           treeObj.setMaximumDepth(20);
+           treeObj.setMessageMaximumDepthReached('已到达最大的层次'); 
+           treeObj.setRenameAllowed(true);
+           treeObj.setDeleteAllowed(true);
+           treeObj.initTree();
+           treeObj.expandAll();
+       }
+       // 选中部门节点后触发函数
+       function onSelectedNode(nid){
+		if ( currentBookTypeId == nid ) return ;
+    	   var name="";
+    	   currentBookTypeId = nid;
+    	   if ( nid == 0 ) {
+    		   nid="";
+    		   name="";
+    	   }else name=d.getNodePath(nid);
+    	   document.getElementById("ToolTypeDetailFrame").contentWindow.queryBySelectedToolType(nid,name);
+       }
+       function createToolType(){
+    	   top.showInputDialog("创建子级类别", "请输入类别名称", doCreateBookType);
+       }
+       // 执行新建工具书类别操作
+       function doCreateBookType(name){
+    	   var aoData=[];
+           aoData.push( { "name": "toolType.type_name", "value":name } );
+           aoData.push( { "name": "toolType.parent_id", "value":currentBookTypeId } );
+           aoData.push( { "name": "toolType.order_num", "value": (d.getSubNodesNum(currentBookTypeId)+1) } );
+           isNeedReloadUsers=false;
+           top.sendAjaxRequest("/actions/ToolBook.action?insertToolType",aoData,optCallback);
+       }
+       // 弹出删除操作确认框
+       function deleteToolType(){
+    	   if ( currentBookTypeId == 0 ) {
+    		   top.showInfoWinWarn("不允许删除根节点");
+           return ;
+    	   }
+    	   if ( d.getSubNodesNum( currentBookTypeId ) > 0 ) {
+    		   top.showInfoWinWarn("不允许删除还有下级节点的部门");
+           return ;
+    	   }
+    	   var num=document.getElementById("ToolTypeDetailFrame").contentWindow.getTypesNum();
+    	   if ( num == -1 ) return ;
+    	   if ( num > 0 ) {
+    		   top.showInfoWinWarn("不允许删除还有内容的类型");
+    		   return ;
+    	   }
+    	   top.showConfirm("您确定要删除选中的类型吗？", doDeleteBookType);
+       }
+       // 执行删除操作
+       function doDeleteBookType(){
+           var aoData=[];
+           aoData.push( { "name": "toolType.type_id", "value":currentBookTypeId } );
+           isNeedReloadUsers=true;
+           top.sendAjaxRequest("/actions/ToolBook.action?deleteToolType",aoData,optCallback);
+       }
+       // 弹出修改名称对话框
+       function editBookType(){
+    	   var node = top.getToolBookTypeById(currentBookTypeId );
+    	   if ( !node ) return ;
+    	   top.showInputDialog("修改类别名称", "请输入新类别名称", doEditToolType, node.type_name );
+       }
+       // 执行修改操作
+       function doEditToolType(name){
+    	   if ( name == '' ) {
+    		   top.showInfoWinWarn("请输入类别名称");
+               return ;
+    	   }
+           var aoData=[];
+           aoData.push( { "name": "toolType.type_id", "value":currentBookTypeId } );
+           aoData.push( { "name": "toolType.type_name", "value":name } );
+           isNeedReloadUsers=false;
+           top.sendAjaxRequest("/actions/ToolBook.action?updateToolType",aoData,optCallback);
+       }
+       // 新建、删除或修改操作回调函数
+       function optCallback(obj){
+           try{
+            if ( obj.status == true ){
+              loadBookTypeTree();
+              if ( isNeedReloadUsers ) onSelectedNode(0);
+              isNeedReloadUsers=false;
+              top.showInfoWinOK("操作成功");
+            }else{
+              top.showInfoWinError("操作失败");
+            }
+           }catch(e){
+              top.showInfoWinError("处理异常:"+e.message);
+           }
+       }
+       // 保存排序
+       function saveTreeOrder(){
+           var aoData=[];
+           aoData.push( { "name": "ids", "value": treeObj.getNodeOrders() } );
+           isNeedReloadUsers=false;
+           top.sendAjaxRequest("/actions/ToolBook.action?saveOrders",aoData,optCallback);
+       }
+    </script>
+</head>
+<body>
+<table style="width:100%;height:100%;padding:0;spacing:0;">
+  <tr class="tr_data" style="width:100%;height:100%;text-align:left">
+   <td style="width:25%;border:1px;border-style: dotted;border-color: #A0CFEC;" valign="top">
+		<div style="padding:3px;float:top;">
+	        <img src="../../img/folderopen.gif" style="cursor:pointer" title="全部展开" onclick="treeObj.expandAll()" />
+	        <img src="../../img/folder.gif" style="cursor:pointer" title="全部收缩" onclick="treeObj.collapseAll()" />
+	        <img src="../../img/add.gif" id="addToolTypeImg" style="cursor:pointer" title="创建下级节点" onclick="createToolType()" />
+          <img src="../../img/delete.gif" id="delToolTypeImg" style="cursor:pointer" title="删除选择的节点" onclick="deleteToolType()" />
+          <img src="../../img/edit.gif" id="editToolTypeImg" style="cursor:pointer" title="修改选择的节点" onclick="editBookType()" />
+          <img src="../../img/save.bmp" id="sortToolTypeImg" style="cursor:pointer" title="保存节点排序" onclick="saveTreeOrder()" />
+	    </div>
+		<div class="dtree" id="bookTypeTree" style="padding:3px;">
+		</div>
+   </td>
+   <td id="treeDetail" style="width:70%;border:1px;border-style: dotted dotted dotted none;border-color: #A0CFEC;" valign="top">
+      <iframe id="ToolTypeDetailFrame" src="toolbookManage.html?optType=fromDept" width="100%" height="100%" frameborder="0"></iframe>
+   </td>
+  </tr>	
+</table>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery.dataTables.min.js"></script>
+
+	<style type="text/css">
+	  v\:* { behavior: url(#default#VML)}
+	  .IntegrationTablesTD{
+	    text-align:center;
+		background-color:white;
+	  }
+	  .tablist-content {
+			width: 85%;
+			display: inline-block;
+			vertical-align: top;
+			margin-left: 5%;
+	  }
+	</style>
+<script type="text/javascript">
+var teamList=[];
+var scheduleList=[];
+var groupList=[];
+
+$(document).ready( function() {
+	
+	// 加载赛程信息
+	top.sendAjaxRequest("/actions/CompetitionSchedule.action?getCompetitionScheduleList",[],getCompetitionScheduleListCallback);
+	
+	$("#schedule").change(function(){
+	  getCompetitionResultList();
+	});
+});
+
+ function getCompetitionScheduleListCallback(obj){
+     try{
+		  scheduleList=obj.aaData;
+		  $("#tdschedule").html( getScheduleSelectHtml('schedule_id') );
+	 }catch(e){
+	 }
+	 var aoData=[];
+	 aoData.push( { "name": "iDisplayStart", "value": 0 } );
+	 aoData.push( { "name": "iDisplayLength", "value": 1000 } );
+	 top.sendAjaxRequest("/actions/Team.action?getTeamList",aoData,getTeamListCallback);
+ }
+ 
+  function getTeamListCallback(obj){
+     try{
+		  teamList=obj.aaData;
+	 }catch(e){
+	 }
+	 getCompetitionResultList();
+ }
+ 
+  function getTeamName(tid){
+    for(var i=0;i<teamList.length;i++){
+	  if ( teamList[i].id == tid ) return teamList[i].team_name;
+	}
+	return tid;
+ }
+ 
+ function getCompetitionResultList(){
+    var aoData=[];
+	aoData.push( { "name":"info.schedule_id","value": top.g_GetNumValue($("#schedule_id").val(),-1)} );
+	aoData.push( { "name":"info.phases","value":"0"} );
+	top.sendAjaxRequest("/actions/CompetitionResult.action?getCompetitionResultListForScore",aoData,getCompetitionResultListCallback);
+ }
+ 
+ function getCompetitionResultListCallback(obj){
+    if(obj.status==true){
+	  if(obj.body){
+	    var o=obj.body;
+	    var ht="";
+        for(var i=0;i<o.length;i++){
+		  ht+="<h3>"+o[i].group_name+"</h3>";
+		  var groupTeamList=o[i].groupUsers;
+		  ht+="<table style='width:100%;background-color:#F3F3F3'>";
+		  for(var j=0;j<=groupTeamList.length;j++){
+		    ht+="<tr height='30px'>";
+		    for(var k=0;k<=groupTeamList.length;k++){
+			    if(j==0 && k==0){
+				  ht+="<td style='background-color:white' align='center'></td>";
+				}else if(j==0 && k!=0){
+				  ht+="<td class='IntegrationTablesTD'>"+getTeamName(groupTeamList[k-1].team_id)+"</td>";
+				}else if(j!=0 && k==0){
+				  ht+="<td class='IntegrationTablesTD'>"+getTeamName(groupTeamList[j-1].team_id)+"</td>";
+				}else{
+				  ht+="<td class='IntegrationTablesTD' id='t_"+groupTeamList[j-1].team_id+"_"+groupTeamList[k-1].team_id+"'>";
+				  if(j!=0 && k!=0 && j==k){
+				    ht+="--";
+				  }else{
+				    ht+="0:0";
+				  }
+				  ht+="</td>";
+				}
+			}
+			if(j!=0){
+			  ht+="<td class='IntegrationTablesTD' id='s_"+groupTeamList[j-1].group_id+"_"+groupTeamList[j-1].team_id+"'>0</td>";
+			}else{
+			  ht+="<td class='IntegrationTablesTD'>积分</td>";
+			}
+			ht+="</tr>";
+		  }
+		  ht+="</table>";
+		}
+		$("#detail").html(ht);
+		for(var m=0;m<o.length;m++){
+		  var resultList=o[m].competition_score;
+		  var groupUsers=o[m].groupUsers;
+		  var score=new Array();
+		  for(var z=0;z<groupUsers.length;z++){
+		    score[z]=new Array();
+			score[z][0]=groupUsers[z].team_id;
+			score[z][1]=0;
+		  }
+		  for(var p=0;p<score.length;p++){
+             for(var q=0;q<resultList.length;q++){
+				   if(score[p][0]==resultList[q].team_1){
+					  if(resultList[q].score_1>resultList[q].score_2){
+						score[p][1]++;
+					  }
+				   }
+				   if(score[p][0]==resultList[q].team_2){
+					  if(resultList[q].score_1<resultList[q].score_2){
+						score[p][1]++;
+					  }
+				   }
+			  }
+		  }
+		  
+		  for(var x=0;x<score.length;x++){
+		    $("#s_"+groupUsers[0].group_id+"_"+score[x][0]).html(score[x][1]);
+		  }
+		    
+		  for(var n=0;n<resultList.length;n++){
+		      $("#t_"+resultList[n].team_1+"_"+resultList[n].team_2).html(resultList[n].score_1+":"+resultList[n].score_2); 
+			  $("#t_"+resultList[n].team_2+"_"+resultList[n].team_1).html(resultList[n].score_2+":"+resultList[n].score_1);  
+		  }
+		  
+		  //$(".same").each(function(){
+		     //var os=$(this).offset();
+			 //line(os.left,os.top,os.left+os.width,os.top+os.height,'#000000');
+			 // showLine(this);
+		  //});
+		}
+	  }else{
+	    $("#detail").html("<table><tr><td align='center'>暂无数据</td></tr></talbe>");
+	  }
+	}else{
+	  top.showInfoWinError("操作失败！");
+	}
+ }
+ 
+
+ function getScheduleSelectHtml(sid){
+    if ( !scheduleList ) return "";
+	var ht="<select id='"+sid+"' style='width:260px'>";
+	for(var i=0;i<scheduleList.length;i++){
+	  ht+="<option value='"+scheduleList[i].id+"'";
+	  ht+=">"+scheduleList[i].title+"</option>";
+	}
+	ht+="</select>";
+	return ht;
+ }
+ 
+ function doQuery(){
+	getCompetitionResultList();
+ }
+ 
+ function showLine(jqObj){
+    var comObj = $(jqObj)[0];
+    var fromStr = comObj.offsetLeft+","+comObj.offsetTop;
+    var toStr = (comObj.offsetLeft+comObj.offsetWidth)+","+(comObj.offsetTop+comObj.offsetHeight);
+    var lineStr = "<img border='0'  src='../../img/px.gif' width=1 height=1 />";
+    comObj.innerHTML = lineStr;
+}
+ 
+function a(x,y,color){
+   document.write("<img border='0' style='position: absolute; left: "+(x+18)+"; top: "+(y+18)+";background-color: "+color+"' src='px.gif' width=1 height=1>");
+}
+
+function line(x1,y1,x2,y2,color){
+	var tmp;
+	if(x1>=x2){
+		tmp=x1;
+		x1=x2;
+		x2=tmp;
+		tmp=y1;
+		y1=y2;
+		y2=tmp;
+	}
+	for(var i=x1;i<=x2;i++){
+		var x = i;
+		var y = (y2 - y1) / (x2 - x1) * (x - x1) + y1;
+		a(x,y,color);
+	}
+}
+ 
+</script>
+</head>
+<body>
+<div style='border: 1px solid #89A1B9;'>
+	<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+		<tr bgcolor="#C6DEFF">
+			<td align="left" width="180px">&nbsp;比赛积分&nbsp;</td>
+			<td align="right">
+				&nbsp;<!--<div class="buttonDivTwo"><a href="javascript:getCompetitionResultList()">查询</a></div>-->
+			</td>
+			<td width="2px">&nbsp;</td>
+		</tr>
+	</table>
+	<table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+		<tr class="tr_data">
+			<td align="right" width="20%">赛程:</td><td align="left" width="30%" id="tdschedule"></td>
+		</tr>
+	 </table>
+</div>
+<div id="detail" class="tablist-content">
+
+</div>
+</body>
+</html> 

@@ -1,0 +1,40 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>apTabs</title>
+<script type="text/javascript" src="js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript" src="js/prototype.js"></script>
+<script type="text/javascript" src="js/aptabs.js"></script>
+<link rel="stylesheet" type="text/css" href="css/aptabs.css" />
+<script type="text/javascript">
+var pageIds=[];
+pageIds[0]="00";
+var mainSrc="";
+
+function adjustPosition(){
+    if ( mainSrc == '' ) {
+	  mainSrc=top.getUrlParam(document.URL,"main");
+	  if ( !mainSrc ) return ;
+	}
+    var h=document.body.clientHeight;
+	var w=document.body.clientWidth;
+	document.getElementById("apTabs").style.width=w+"px";
+	document.getElementById("apTabs").style.height=h+"px";
+	document.getElementById("mainFrameDiv").innerHTML='<iframe id="mainFrame" src="'+mainSrc+'" width="'+(w-25)+'px" style="padding:0px;margin:0px;left:0px;top:0px;background-color:#ffffff;" height="'+(h-50)+'px" frameborder="0"></iframe>';
+}
+
+function openPage(title,url,id){
+		apTabs.add('apTabs', {title: title, iframe: url});	
+}
+</script>
+</head>
+<body style="width:100%;height:100%;padding:0px;margin:0px;">
+<div id="apTabs" class="apTabs" style="width:100%; height:600px;padding:0px;margin:0px;">
+   <h2 class="noclose">首页</h2>
+   <div id="mainFrameDiv" style="width:100%;height:100%;">
+   </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+    <meta charset="utf-8">
+    <head>
+        <title>羽球达人</title>
+        <meta content="yes" name="apple-mobile-web-app-capable">
+        <meta name="format-detection" content="telephone=no"/>
+        <meta name="viewport" content="width=device-width,height=device-height,inital-scale=1.0,maximum-scale=1.0,user-scalable=no;">
+
+        <link rel="stylesheet" media="screen" href="css/base.css" />
+        <link rel="stylesheet" media="screen" href="css/color.css" />
+        <link rel="stylesheet" media="screen" href="css/layout.css" />
+        <link rel="stylesheet" media="screen" href="css/typography.css" />
+
+        <link rel="stylesheet" href="../css/themes/default/jquery.mobile-1.4.5.min.css">
+        <script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/jquery.mobile-1.4.5.min.js"></script>
+
+        <script type="text/javascript">
+            var schedule_id=1;
+            var g_UrlBase="http://running.banbaisport.com";
+            var resultList=[];
+           
+            $(document).ready(function() {
+                schedule_id=0;
+                //getUrlParam(document.URL,"id");
+                try{
+                var ind=document.URL.indexOf("htmlAPI");
+                 if ( ind != -1 ) {
+                   g_UrlBase=document.URL.substring(0,ind);
+                 }
+               }catch(e){}
+               getResult();
+            } );
+           
+           function getResult(){
+               var aoData=[];
+               aoData.push( { "name": "info.id", "value": schedule_id } );
+               doSendAjaxRequest("/actions/CompetitionSchedule.action?getDetailScheduleInfo",aoData,getCompetitionRankListCallback);
+           }
+           
+           function getCompetitionRankListCallback(obj){
+               try{
+                var result=obj.body;
+                var ht='<h3 class="tc f1d5">'+result.title+'</h3>';
+                ht+='<div class="m20"><h4 class="f1d2">赛事</h4><hr class="mt5"></hr>';
+
+                ht+='<table class="lh200 mb10"><tr><td>赛程标题:'+result.title+'</td></tr>';
+                ht+='<tr><td>举办单位:'+result.sponsor+'</td></tr>';
+                ht+='<tr><td>举办场地:'+result.venue+'</td></tr>';
+                ht+='<tr><td>举办时间:</td></tr>';
+                ht+='</table>';
+
+                ht+='<h4 class="f1d2">赛制</h4><hr class="mt5"></hr>';
+                ht+='<table class="lh200 mb10"><tr><td>'+result.schedule_desc+'</td></tr></table>';
+
+                ht+='<h4 class="f1d2">赛程</h4><hr class="mt5"></hr>';
+                ht+='<table class="lh200 mb10"><tr><td>'+result.contest_rules+'</td></tr></table>';
+
+                $("#compeitionSchedule").html( ht );
+                }catch(e){}
+            }
+           
+            function doSendAjaxRequest(xurl,param,fnCallback){
+                if ( xurl.indexOf('http://') == -1 ) xurl = g_UrlBase+xurl;
+                $.ajax( {
+                    "url":  xurl,
+                    "data": param,
+                    "timeout" : 10000,
+                    "contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+                    "success": function (json) {
+                        try{ fnCallback( json );}catch(e){}
+                    },
+                    "dataType": "json",
+                    "cache": false,
+                    "type": "POST",
+                    "error": function (xhr, error, thrown) {
+                        //alert("Fail");
+                    }
+                } );
+            }
+         </script> 
+        <style type="text/css">
+            .ui-loader-default{ display:none}
+            .ui-mobile-viewport{ border:none;}
+            .ui-page {padding: 0; margin: 0; outline: 0}
+        </style>
+    </head>
+    <body>
+        <header class="staticbanner p15" height="70px">
+            <table width="100%" class="pr15">
+                <tr>
+                    <td width="50px" rowspan=2><img src="img/logo.png" width="40px" height="40px" /></td>
+                    <td id="headline" class="f1d2">羽球达人</td>
+                    <td id="buttonimg" width="100px" class="tc" rowspan=2><a href="http://www.banbaisport.com/down.html" style="color:#fff">免费下载</a></td>
+                </tr>
+                <tr>
+                    <td class="f0d9 slogan">为祖国健康工作五十年！</td>
+                </tr>
+            </table>
+
+        </header>
+        <div id="compeitionSchedule" class="mt90">
+            <!--<h3 class="tc f1d5">第一届清华校友羽毛球比赛</h3>
+
+            <div class="m20">
+                <h4 class="f1d2">赛事</h4>
+                <hr class="mt5"></hr>
+                <table class="lh200 mb10">
+                    <tr>
+                        <td>赛程标题:首届清华校友羽毛球联谊赛</td>
+                    </tr>
+                    <tr>
+                        <td>举办单位:清华校友总会清华校友羽毛球俱乐部</td>
+                    </tr>
+                    <tr>
+                        <td>举办场地:清华大学综合体育馆</td>
+                    </tr>
+                    <tr>
+                        <td>举办时间:2015.04.25~2015.04.25</td>
+                    </tr>
+                </table>
+                <h4 class="f1d2">赛制</h4>
+                <hr class="mt5"></hr>
+                <table class="lh200 mb10">
+                    <tr>
+                        <td>周六-校友联谊日（2015.04.25）</td>
+                    </tr>
+                    <tr>
+                        <td>8:30-9:00 运动员入场签到、开幕式、照相</td>
+                    </tr>
+                    <tr>
+                        <td>9:00-11:00 小组赛</td>
+                    </tr>
+                    <tr>
+                        <td>11:30-13:30 午餐</td>
+                    </tr>
+                    <tr>
+                        <td>13:00-18:00 小组赛</td>
+                    </tr>
+                    <tr>
+                        <td>18:30-19:00 比赛宣布结果</td>
+                    </tr>
+                </table>
+                <h4 class="f1d2">赛程</h4>
+                <hr class="mt5"></hr>
+                <table class="lh200 mb10">
+                    <tr>
+                        <td>（一）具体竞赛项目和出场顺序: 男双，混双，男单，女单，男双</td>
+                    </tr>
+                    <tr>
+                        <td>（二）比赛采用5盘3胜制，每盘1局，每局21分</td>
+                    </tr>
+                </table>
+            -->
+            </div>
+        </div>
+
+    </body>
+</html>

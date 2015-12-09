@@ -1,0 +1,180 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css" media="print, projection, screen">
+<script src="../../js/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+<script type="text/javascript">
+ 
+   var isCreated=false;
+   var isSaveOK=false;
+   var optType="";
+   var infoId="";
+   var user = top.getCurrentUser();
+   $(document).ready(function() {
+		optType = top.getUrlParam(document.URL,"optType");
+		infoId =top.getUrlParam(document.URL,"id");
+		$("#s_superintendent").html(top.getAllUserSelect("superintendent"));
+		$("#s_manager").html(top.getAllUserSelect("manager"));
+		$("#s_plan_status").html(top.getCodeSelectHtml("MY_PLAN_STATUS","plan_status",false));
+		if(optType=="insert"){
+		}else if(optType=="update"||optType=="query"){
+		var aoData=[];
+		aoData.push( { "name": "myPlan.id", "value": infoId } );
+		top.sendAjaxRequest("/actions/Interview.action?getMyPlanById",aoData,getInfoCallBack);
+		}
+   } );
+   function getInfoCallBack(obj){
+       try{
+	   var o=obj.body;
+        if (o!="" ){
+			if(optType==="query"){
+				$("#td_department").html(top.getDeptPath( o.dept_id));
+				$("#dept_id").val(o.dept_id);
+				$("#td_complete_date").html(top.getTimeStr(o.complete_date,true));
+				$("#td_work_content").html(o.work_content);
+				//$("#complete_condition").val(o.complete_condition);
+				$("#td_superintendent").html(top.getUserNameByCode(o.superintendent));
+				$("#td_manager").html( top.getUserNameByCode(o.manager));
+				$("#td_plan_status").html(top.getCodeName("MY_PLAN_STATUS",o.status));
+				//$("#optBtnArea").show();
+				$("input").hide();
+				$("select").hide();
+				$("textarea").hide();
+			}else{
+				$("#department").val(top.getDeptPath( o.dept_id));
+				$("#dept_id").val(o.dept_id);
+				$("#complete_date").val(top.getTimeStr(o.complete_date,true));
+				$("#work_content").val(o.work_content);
+				//$("#complete_condition").val(o.complete_condition);
+				$("#superintendent").val(o.superintendent);
+				$("#manager").val( o.manager);
+				$("#plan_status").val(o.status);
+				$("#optBtnArea").show();
+			}
+        }else{
+          top.showInfoWinError("操作失败");
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+    function checkFormDoSubmit(){
+		var msg="";
+		msg += checkString($("#dept_id").val(),true,128,"部门");
+		msg += checkString($("#work_content").val(),true,1024,"工作内容");
+		//msg += checkString($("#complete_condition").val(),true,1024,"具体要求");
+		msg += checkString($("#complete_date").val(),true,128,"完成时间");
+		msg += checkString($("#superintendent").val(),true,128,"监督人");
+		msg += checkString($("#manager").val(),true,128,"负责人");
+		return msg;
+	 }
+   function saveBaseInfo(){
+   var msg = checkFormDoSubmit();
+     if(msg!=''){
+	 top.showInfoWinWarn(msg);
+	 return;
+	 }
+	 var aoData=[];
+	     aoData.push( { "name": "myPlan.dept_id", "value": $("#dept_id").val() } );
+		 aoData.push( { "name": "myPlan.work_content", "value": $("#work_content").val() } );
+		 aoData.push( { "name": "myPlan.status", "value": $("#plan_status").val()} );
+		 aoData.push( { "name": "myPlan.complete_condition", "value": $("#complete_condition").val() } );
+		 aoData.push( { "name": "myPlan.complete_date", "value": top.toTimestamp($("#complete_date").val()) } );
+	     aoData.push( { "name": "myPlan.manager", "value": $("#manager").val() } );
+	     aoData.push( { "name": "myPlan.superintendent", "value":$("#superintendent").val() } );
+	if(optType=="insert"){
+	    var xurl="/actions/Interview.action?insertMyPlan";
+	   top.sendAjaxRequest(xurl,aoData,optCallback);
+	   }
+	   else if(optType=="update"){
+	    aoData.push( { "name": "myPlan.id", "value":infoId} );
+	    var xurl="/actions/Interview.action?updateMyPlan";
+	   top.sendAjaxRequest(xurl,aoData,optCallback);
+	   }
+   }
+   function doCancel(){
+     top.closeDialog();
+   }
+   
+   
+    function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	        isSaveOK = true;
+	        top.showInfoWinOK("操作成功");
+			 var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+           top.setTempValue(obj);
+		    top.closeDialog();
+	    }else{
+	    	isSaveOK = false;
+			 var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+           top.setTempValue(obj);
+	        top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		    top.showInfoWinError("处理异常:"+e.message);
+	   }
+	   }
+	   
+	  function selectDept(){
+       var xurl="pages/organization/selectTreeNode.html?type=dept";
+       top.openSelectDialog("选择部门",xurl,300,450,selectDeptCallback);
+   }
+    function selectDeptCallback(){
+       try{
+         var obj = top.getTempValue();
+         if ( obj.nodeId == -1 ) return ;
+         if ( obj.nodeId == -2 ) {
+             qDeptId = "";
+             qDeptName = "";
+         } else {
+             qDeptId = obj.nodeId;
+             qDeptName = obj.nodeName;
+         }
+         document.getElementById("dept_id").value = qDeptId;
+		
+         document.getElementById("department").value = qDeptName;
+       }catch(e){
+       }
+   }
+
+  </script> 
+</head>
+<body>
+<br/>
+  <table border="1" cellpadding="3" cellspacing="1" width="95%" align="center" style="margin:0px auto;background-color: #b9d8f3;">
+				<tr class="tr_data">
+				 <td width="25%" height="30">部门</td><td width="60%" align="left" id="td_department">&nbsp;<input type="text" id="department" onclick="selectDept()"/><input type="hidden" id="dept_id" value="" /></td></tr>
+				<tr class="tr_data">
+				<td height="30">完成时间</td><td align="left" id="td_complete_date">&nbsp;<input type="text" id="complete_date" onclick="new Calendar().show(this);" readonly="true"/></td></tr>
+				 <tr class="tr_data">
+				<td height="30">计划状态</td><td align="left" id="td_plan_status">&nbsp;<span id="s_plan_status"></span></td></tr>	
+				 <tr class="tr_data">
+				<td height="30">监督人</td><td align="left" id="td_superintendent">&nbsp;<span id="s_superintendent"></span></td></tr>
+				 <tr class="tr_data">
+				<td height="30">负责人</td><td align="left" id="td_manager">&nbsp;<span id="s_manager"></span></td></tr>
+				<tr class="tr_data">
+			    <td height="30">工作内容</td><td align="left" valign="top" id="td_work_content">&nbsp;<textarea width="100%" id="work_content" rows="5" style="margin: 2px; width: 427px; height: 79px;"></textarea></td><tr>
+				<!--<tr class="tr_data">
+				<td height="30">具体要求</td><td align="left">&nbsp;<textarea width="100%" id="complete_condition" rows="5" style="margin: 2px; width: 427px; height: 79px;"></textarea></td></tr>
+               !-->
+		</table>
+		<p align="center" style="display:none" id="optBtnArea">
+		   <table><tr>
+					<td><span id="okBtn" class="buttonTwo"><a href="javascript:saveBaseInfo()">保存</a></span></td>
+					<td><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+		   </tr></table>
+		</p>
+</body>
+</html>

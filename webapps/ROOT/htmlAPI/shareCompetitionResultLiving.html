@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+    <meta charset="utf-8">
+    <head>
+        <title>羽球达人</title>
+        <meta content="yes" name="apple-mobile-web-app-capable">
+        <meta name="format-detection" content="telephone=no"/>
+        <meta name="viewport" content="width=device-width,height=device-height,inital-scale=1.0,maximum-scale=1.0,user-scalable=no;">
+
+        <link rel="stylesheet" media="screen" href="css/base.css" />
+        <link rel="stylesheet" media="screen" href="css/color.css" />
+        <link rel="stylesheet" media="screen" href="css/layout.css" />
+        <link rel="stylesheet" media="screen" href="css/typography.css" />
+
+        <link rel="stylesheet" href="../js/jquery.mobile-1.4.5.min.css">
+        <script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/jquery.mobile-1.4.5.min.js"></script>
+
+        <script type="text/javascript">
+            var schedule_id=1446084510462;
+            var g_UrlBase="";
+            var resultList=[];
+            var gTimemer;
+
+            $(document).ready(function(){
+                //schedule_id=getUrlParam(document.URL,"id");
+                try{
+                    var ind=document.URL.indexOf("htmlAPI");
+                    if ( ind != -1 ) {
+                        g_UrlBase=document.URL.substring(0,ind);
+                    }
+                }catch(e){}
+                reflashResult();
+            });
+            /*******************functions*******************/
+            function reflashResult(){
+                getResult();
+                var score1 = parseInt($("#score_1").text());
+                var score2 = parseInt($("#score_2").text());
+                var higher = score1 > score2 ? score1 : score2; 
+                var lower  = score1 > score2 ? score2 : score1;
+                //var tmp = "score1:" + score1 +" socre2:" + score2 + " higher:" + higher + " lower:" + lower;
+                //alert(tmp);
+                if((higher == 21 && lower < 20) || (lower > 20 && (higher-lower) == 2) || (higher == 30)){
+                    try{
+                        clearTimeout( gTimemer );
+                    }catch(e){}
+                }
+                else{
+                    gTimemer = setTimeout(reflashResult, 5000);
+                }
+            }
+
+            function getResult(){
+               var aoData=[];
+               aoData.push( { "name": "competitionMatch.id", "value": schedule_id } );
+               aoData.push( { "name": "competitionMatch.rollback", "value":  0 } );
+               doSendAjaxRequest("/actions/CompetitionResult.action?getCompetitionMatchDetailForApp",aoData,getCompetitionRankListCallback);
+            }
+
+            function getCompetitionRankListCallback(obj){
+               try{
+                resultList=obj.data;
+                var ht='';
+
+                //set competition name
+                ht = resultList.schedule_name;
+                $("#scheduleName").html( ht );
+                // set current round
+                ht = resultList.current_inning.inning_position;
+                $("#currentRound").text( ht );
+
+                // set teams
+                ht = resultList.team_1_name;
+                $("#team_1").text( ht );
+                ht = resultList.team_2_name;
+                $("#team_2").text( ht );
+
+                // set competition type
+                ht = resultList.competition_type;
+                $("#competition_type").text( ht );
+
+                // set players
+                ht = resultList.team_1_a_name;
+                $("#player0").text( ht );
+                ht = resultList.team_1_b_name;
+                $("#player1").text( ht );
+                ht = resultList.team_2_a_name;
+                $("#player2").html( ht );
+                ht = resultList.team_2_b_name;
+                $("#player3").html( ht );
+
+                // set teamlogo
+                ht = '<br /><img src="http://banbaisport.oss-cn-beijing.aliyuncs.com/'+resultList.team_1_img_url+'" width="70px" height="70px" />';
+                $("#team1logo").html( ht );
+                ht = '<br /><img src="http://banbaisport.oss-cn-beijing.aliyuncs.com/'+resultList.team_2_img_url+'" width="70px" height="70px" />';
+                $("#team2logo").html( ht );
+
+                // set scores
+                ht = resultList.current_inning.score_1;
+                $("#score_1").text( ht );
+                ht = resultList.current_inning.score_2;
+                $("#score_2").text( ht );
+
+                // finished
+                ht = '';
+                for( var i=0; i<resultList.innings.length; i++){
+                    if(resultList.innings[i].score_1 > resultList.innings[i].score_2){
+                        ht += '<tr><td class="f1d4 score tr">'+resultList.innings[i].score_1+'</td>';
+                        ht += '<td class="f1d2" width="20%">'+resultList.innings[i].inning_position+'</td>';
+                        ht += '<td class="f1d4 score tl" style="color:#000">'+resultList.innings[i].score_2+'</td></tr>';
+                    } else {
+                        ht += '<tr><td class="f1d4 score tr" style="color:#000">'+resultList.innings[i].score_1+'</td>';
+                        ht += '<td class="f1d2" width="20%">'+resultList.innings[i].inning_position+'</td>';
+                        ht += '<td class="f1d4 score tl">'+resultList.innings[i].score_2+'</td></tr>';
+                    }
+                }
+                $("#finisedinnings").html( ht );
+
+                // deal score color
+                if(parseInt($("#score_1").text()) > parseInt($("#score_2").text()) ){
+                    $("#score_1").attr("style","color:#bb3b3b");
+                    $("#score_2").attr("style","color:#000");
+                } else {
+                    $("#score_1").attr("style","color:#000");
+                    $("#score_2").attr("style","color:#bb3b3b");
+                }
+
+                /************set table************/
+                var docWidth = $(document).width();
+                var docWidthStr = docWidth + 'px';
+                var tableTarget = $("#competitionStatus");
+                tableTarget.attr("width",docWidthStr);
+                var tdHeight = (docWidth-20) * 0.5 * 0.8 * 0.5;
+                var topValue = 75 + 50 + (docWidth-20) * 0.5 * 0.2 * 0.5;
+
+                ht  = '<table class="tc pa" style="top:'+topValue+'px"><thead><tr>';
+                ht +=       '<td style="width:12.5%;height:'+tdHeight+'px" rowspan=2></td>';
+                ht +=       '<td style="width:25%;height:'+tdHeight+'px">'+resultList.current_inning.p0.name+'</td>';
+                ht +=       '<td style="width:25%;height:'+tdHeight+'px" rowspan=2><img src="img/rightup.png" width="80%" /></td>';
+                ht +=       '<td style="width:25%;height:'+tdHeight+'px">'+resultList.current_inning.p2.name+'</td>';
+                ht +=       '<td style="width:12.5%;height:'+tdHeight+'px" rowspan=2></td>';
+                ht +=   '</tr>';
+                ht +=   '<tr>';
+                ht +=       '<td style="height:'+tdHeight+'px">'+resultList.current_inning.p1.name+'</td>';
+                ht +=       '<td style="height:'+tdHeight+'px">'+resultList.current_inning.p3.name+'</td>';
+                ht +=   '</tr></thead></table>';
+                tableTarget.html(ht);
+               }catch(e){
+
+               }
+            }
+
+            function doSendAjaxRequest(xurl,param,fnCallback){
+                if ( xurl.indexOf('http://') == -1 ) xurl = g_UrlBase+xurl;
+                $.ajax( {
+                    "url":  xurl,
+                    "data": param,
+                    "timeout" : 10000,
+                    "contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+                    "success": function (json) {
+                        try{
+                            fnCallback( json );
+                        }catch(e){}
+                    },
+                    "dataType": "json",
+                    "cache": false,
+                    "type": "POST",
+                    "error": function (xhr, error, thrown) {
+                    }
+                } );
+            }
+
+            function getUrlParam(xurl,name){
+                var para="";
+                if(xurl.lastIndexOf("?")>0){
+                    para=xurl.substring(xurl.lastIndexOf("?")+1,xurl.length);
+                    var arr=para.split("&");
+                    para="";
+                    for(var i=0;i<arr.length;i++){
+                       if(arr[i].split("=")[0]==name) return arr[i].split("=")[1];
+                    }
+                    return "";
+               }else{
+                    return "";
+               }
+            }
+
+        </script>
+        <style type="text/css">
+            .ui-loader-default{ display:none}
+            .ui-mobile-viewport{ border:none;}
+            .ui-page {padding: 0; margin: 0; outline: 0}
+        </style>
+    </head>
+    <body>
+        <header class="staticbanner p15 pr" height="70px">
+            <table width="100%" class="pr15">
+                <tr>
+                    <td width="50px" rowspan=2><img src="img/logo.png" width="40px" height="40px" /></td>
+                    <td id="headline" class="f1d2">羽球达人</td>
+                    <td id="buttonimg" width="100px" class="tc"rowspan=2><a href="http://www.banbaisport.com/down.html" style="color:#fff">免费下载</a></td>
+                </tr>
+                <tr>
+                    <td class="f0d9 slogan">为祖国健康工作五十年！</td>
+                </tr>
+            </table>
+        </header>
+        <div class="mt80 pt10">
+            <h3 id="scheduleName" class="tc f1d5"><!--第一届清华校友羽毛球比赛--></h3>
+            <h3 id="currentRound" class="tc f1d5 mt15"><!--current round--></h3>
+
+            <div id="competitionbar" class="mt20 mb20">
+                <table class="tc" width="100%">
+                    <tbody class="f1d1">
+                        <tr class="tc">
+                            <td width="45%" id="team_1" colspan=2><!--team1--></td>
+                            <td width="10%" id="competition_type"><!--competition type--></td>
+                            <td width="45%" id="team_2" colspan=2><!--team2--></td>
+                        </tr>
+                        <tr style="line-height:1.4em">
+                            <td class="teamlogo" id="team1logo"><!--<img src="img/VS_background_02.png" width="70px" height="70px">--></td>
+                            <td><span id="player0"><!--name0--></span><br /><span id="player1"><!--name1--></span></td>
+                            <td class="f2d0">VS</td>
+                            <td><span id="player2"><!--name2--></span><br /><span id="player3"><!--name2--></span></td>
+                            <td class="teamlogo" id="team2logo"><!--<img src="img/VS_background_02.png" width="70px" height="70px">--></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="competitionLiving" class="pr">
+                <table class="tc pr">
+                    <thead>
+                        <tr>
+                            <td class="scoreboard" style="text-align:right"><img src="img/scoreboard.png" width="40%" height="75px" /></td>
+                            <td class="f2d0" style="width:10%">:</td>
+                            <td class="scoreboard" style="text-align:left"><img src="img/scoreboard.png" width="40%" height="75px" /></td>
+                        </tr>
+                    </thead>
+                </table>
+                <table class="tc pa">
+                    <thead>
+                        <tr>
+                            <td style="width:27%"></td>
+                            <td class="realscore f2d4" id="score_1">0</td>
+                            <td style="width:10%"></td>
+                            <td class="realscore f2d4" id="score_2">0</td>
+                            <td style="width:27%"></td>
+                        </tr>
+                    </thead>
+                </table>
+                <div id="courtLiving" class="mt50 pl10 pr10">
+                    <img src="img/court.png" width="100%" />
+                </div>
+                <div id="competitionStatus" class="tc">
+                    <!--
+                    <table class="tc">
+                        <thead>
+                            <tr>
+                                <td style="width:12.5%" rowspan=2></td>
+                                <td style="width:25%">李宗伟</td>
+                                <td style="width:25%" rowspan=2><img src="img/rightup.png" width="80%" /></td>
+                                <td style="width:25%">李宗伟</td>
+                                <td style="width:12.5%" rowspan=2></td>
+                            </tr>
+                            <tr>
+                                <td>林丹</td>
+                                <td>林丹</td>
+                            </tr>
+                        </thead>
+                    </table>
+                -->
+                </div>
+                <div id="roundBefore" class="tc mt20">   
+                    <table>
+                        <tbody id="finisedinnings">
+                            <!--
+                            <tr>
+                                <td class="f1d4 score tr">31</td>
+                                <td class="f1d2" width="20%">第一局</td>
+                                <td class="f1d4 score tl">30</td>
+                            </tr>
+                            <tr>
+                                <td class="f1d4 score tr">32</td>
+                                <td class="f1d2" width="20%">第二局</td>
+                                <td class="f1d4 score tl">29</td>
+                            </tr>
+                        -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

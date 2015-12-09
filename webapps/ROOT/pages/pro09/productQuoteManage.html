@@ -1,0 +1,344 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css"
+			href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var queryCtlMark=0;//查询条件显示收缩标志变量
+			
+			$(document).ready(function() {
+			$("#spanexamine_status").html(top.getCodeSelectHtml("PRODUCT_STATUS","examine_status",true));
+			$("#spanpro_address").html(top.getCodeSelectHtml("DISTRICT","district",true));
+			 var iaoColumns= [
+			                { "sTitle": "订单编号", "mDataProp": "id", "sWidth": "8%","sClass": "center",
+							        "fnRender": function ( oObj ) {
+                                        return '<a href=\'javascript:void(0)\' onclick="updateInfo(\''+oObj.aData.id+'\')" >'+oObj.aData.id+'</a>';
+										
+                                  },
+								   "bUseRendered": false
+							},
+			                { "sTitle": "客户名称", "mDataProp": "cust_name", "sWidth": "8%","sClass": "center",
+								 "fnRender": function ( oObj ) {
+                                        return '<a href=\'javascript:void(0)\' onclick="top.openCustDetailPage(\''+oObj.aData.cust_code+'\',\'0-0\',\'query\',\'客户详细信息\')" >'+oObj.aData.cust_name+'</a>';
+										
+                                  },
+									"bUseRendered": false 
+							},
+			                { "sTitle": "工程地址", "mDataProp": "pro_address", "sWidth": "10%","sClass": "center","bUseRendered": false },
+			                { "sTitle": "设计师", "mDataProp": "designerCode", "sWidth": "8%","sClass": "center",
+							 "fnRender": function ( oObj ) {
+                                          return top.getUserNameByCode(oObj.aData.designerCode);
+                                     },
+							"bUseRendered": false},
+                            { "sTitle": "报价人", "mDataProp": "quote_person", "sWidth": "8%", "sClass": "center",
+							 "fnRender": function ( oObj ) {
+                                          return top.getUserNameByCode(oObj.aData.quote_person);
+                                     },
+							"bUseRendered": false},
+							{ "sTitle": "审批人", "mDataProp": "examine_user", "sWidth": "8%", "sClass": "center",
+							"fnRender": function ( oObj ) {
+                                          return top.getUserNameByCode(oObj.aData.examine_user);
+                                     },
+							"bUseRendered": false   },
+							{ "sTitle": "审批结果", "mDataProp": "examine_status", "sWidth": "9%", "sClass": "center",
+							"fnRender": function ( oObj ) {
+                                          return top.getCodeName("PRODUCT_STATUS",oObj.aData.examine_status);
+                                     },
+							"bUseRendered": false   },
+							{ "sTitle": "审批日期", "mDataProp": "quote_date", "sWidth": "9%", "sClass": "center",
+								 "fnRender": function ( oObj ) {
+                                           return top.getTimeStr(oObj.aData.quote_date ,true);
+                                  },
+							"bUseRendered": false},
+							{ "sTitle": "备注", "mDataProp": "demo", "sWidth": "12%", "sClass": "center",
+								 "fnRender": function ( oObj ) {
+                                           return oObj.aData.demo.substring(0,30) ;
+                                  },
+							"bUseRendered": false},
+							{ "sTitle": "产品报价状态", "mDataProp": "examine_status", "sWidth": "9%","sClass": "center",
+								"fnRender": function ( oObj ) {
+                                          return top.getCodeName("PRODUCT_STATUS",oObj.aData.examine_status);
+                                     },
+							"bUseRendered": false},
+							{ "sTitle": "操作", "mDataProp": "examine_status", "sWidth": "9%","sClass": "center","bSortable": false,
+								"fnRender": function ( oObj ) {
+                                          if(oObj.aData.examine_status=='3'){//新建
+												return '<a id="examine_status_'+oObj.aData.id+'" href="javascript:void(0)" onclick="updateProductStatus(\''+oObj.aData.id+'\')">申请审批</a>';
+											}else if(oObj.aData.examine_status=='1'){//通过
+												if(oObj.aData.status=='0'){
+												  return '<a href="javascript:void(0)" onclick="createProductOrder(\''+oObj.aData.id+'\',\''+oObj.aData.project_order_id+'\',\''+oObj.aData.cust_name+'\',\''+oObj.aData.pro_address+'\',\''+oObj.aData.cust_tel+'\',\''+oObj.aData.pro_designer+'\',\''+oObj.aData.box_designer+'\',\''+oObj.aData.designerCode+'\',\''+oObj.aData.require_id+'\',\''+oObj.aData.cust_code+'\')">生成产品订单</a>';
+												}else{
+												 return '<a href=\'javascript:void(0)\' onclick="updateInfo(\''+oObj.aData.id+'\')" >查看详情</a>';
+												}
+											}else if(oObj.aData.examine_status=='0'&&top.g_isPermit('09_pro_quote_examine')){
+												  return '<a href=\'javascript:void(0)\' onclick="updateInfo(\''+oObj.aData.id+'\')" >审批</a>';
+											}else{
+												 return '<a href=\'javascript:void(0)\' onclick="updateInfo(\''+oObj.aData.id+'\')" >查看详情</a>';
+											}
+                                     },
+									"bUseRendered": false 
+							}
+			   
+               ];			
+			   var surl=top.getUrlBase()+"/actions/ProductQuote.action?getQuoteInfoList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData=getParamDate(aoData);
+			    },
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			//提交审批 发送通知未修改
+			function updateProductStatus(productQouteId){
+				var aoData=[];
+				aoData.push( { "name": "quote_info.id", "value":productQouteId} );
+				aoData.push( { "name": "quote_info.examine_status", "value":'0'} );
+				var xurl="/actions/ProductQuote.action?updateProductStatus";
+				top.sendAjaxRequest(xurl,aoData,updateProductStatusCallBack);
+			}
+			function updateProductStatusCallBack(obj){
+				try{
+					if(obj.status==true){
+						top.showInfoWinOK("操作成功");
+						doQuery();
+					}else{
+						isSaveOK = false;
+						top.showInfoWinError("操作失败 "+obj.msg);
+					}
+			   }catch(e){
+					top.showInfoWinError("处理异常:"+e.message);
+			   }
+			}
+				//生成产品订单 
+			function createProductOrder(quoteOrderId,project_order_id,cust_name,pro_address,cust_tel,pro_designer,box_designer,designerCode,require_id,cust_code){
+				var aoData=[];
+				var xurl="/actions/ProductQuote.action?createProductOrder";
+				aoData.push( { "name": "quote_detail.order_id", "value":quoteOrderId} );
+				//生成产品订单
+				aoData.push( { "name": "product_order.require_id", "value":require_id} );
+				aoData.push( { "name": "product_order.designerCode", "value":designerCode} );
+				aoData.push( { "name": "product_order.pro_add", "value":pro_address} );
+				aoData.push( { "name": "product_order.cust_code", "value":cust_code} );
+				aoData.push( { "name": "product_order.cust_name", "value":cust_name} );
+				aoData.push( { "name": "product_order.project_order_id", "value":project_order_id} );
+				aoData.push( { "name": "product_order.cust_tel", "value":cust_tel} );
+				aoData.push( { "name": "product_order.pro_designer", "value":pro_designer} );
+				aoData.push( { "name": "product_order.box_designer", "value":box_designer} );
+				top.sendAjaxRequest(xurl,aoData,createProductOrderCallBack);
+			
+			}
+			
+			function createProductOrderCallBack(obj){
+				 if(obj.status==true){
+				 top.showInfoWinOK("生成订单成功！");
+				 doQuery();
+				}else{
+					 top.showInfoWinError("生成订单失败！");
+				}
+			}
+			function addInfo(){
+				var xurl="pages/pro09/productQuoteInfo.html?optType=insert";
+				top.openDialog("产品报价信息",xurl,true,1100,600,saveCallBack);
+			}
+			
+			function updateInfo(id){
+				var xurl="pages/pro09/productQuoteInfo.html?optType=update&id="+id;
+				top.openDialog("产品报价信息",xurl,true,1100,600,saveCallBack);
+			}
+
+			function saveCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				}
+			}
+			
+			function optCallback(obj){
+			       try{
+			        if ( obj.status == true ){
+			          top.showInfoWin("操作成功");
+			          doQuery();
+			        }else{
+			          top.showInfoWin("操作失败 "+obj.msg);
+			        }
+			       }catch(e){
+			          top.showInfoWin("处理异常:"+e.message);
+			       }
+		  }
+
+		    function getParamDate(aoData){
+			     	aoData.push( { "name": "quote_info.id", "value":$("#id").val() } );
+			     	aoData.push( { "name": "quote_info.cust_name", "value":$("#cust_name").val() } );
+					aoData.push( { "name": "quote_info.pro_designer", "value":$("#pro_designer").val() } );
+					aoData.push( { "name": "quote_info.quote_person", "value":$("#quote_person").val() } );
+					aoData.push( { "name": "quote_info.examine_status", "value":$("#examine_status").val() } );
+					aoData.push( { "name": "quote_kssj", "value":$("#quote_kssj").val() } );
+					aoData.push( { "name": "quote_jssj", "value":$("#quote_jssj").val() } );
+					aoData.push( { "name": "quote_info.emamine_user", "value":$("#examine_user").val() } );
+					aoData.push( { "name": "examine_kssj", "value":$("#examine_kssj").val() } );
+					aoData.push( { "name": "examine_jssj", "value":$("#examine_jssj").val() } );
+					aoData.push( { "name": "quote_info.pro_address", "value":top.getCodeName("DISTRICT",$("#district").val())+$("#pro_address").val() } );
+				return aoData;
+			}
+			 //查询条件的展开与收缩
+			 function dwOup(){
+				if(queryCtlMark==0){//展开
+					$("#queryCtlIcon").attr("src","../../img/icons/arrow-up.gif"); 
+					$("#queryTab").slideToggle();
+					queryCtlMark=1;
+				}else{//收缩
+					$("#queryCtlIcon").attr("src","../../img/icons/arrow-down.gif"); 
+					$("#queryTab").slideToggle();
+					queryCtlMark=0;
+				}
+			 }
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+			<div style='border: 1px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="150px">
+							&nbsp;产品报价查询&nbsp;
+						</td>
+						<td align="right">
+						  
+						</td>
+						<td align="right">
+							<span><image id="queryCtlIcon" src="../../img/icons/arrow-down.gif" alt="展开" onclick="javascript:dwOup();"/></span>
+						</td>
+						<td width="2px">
+							&nbsp;
+						</td>
+					</tr>
+				</table>
+				<table width="100%" align="center" cellpadding="1px" id="queryTab" style="display:none"
+					cellspacing="1px" border="0">
+					<tr class="tr_data">
+					    <td align="right">
+							产品报价单号
+						</td>
+						<td align="left">
+							<input type="text" id="id"  style="width:120px;" />
+						</td>
+						<td align="right">
+							客户名称
+						</td>
+						<td align="left" id="custId">
+							<input type="text" id="cust_name" value="" style="width:120px;" onkeydown="if(event.keyCode==13) doQuery();" />
+						</td>
+						<td align="right">报价日期</td>
+				       <td align="left"> <input type="text" id="quote_kssj" style="width:120px;" onclick="top.selectDate(this)" readonly="true"/>至<input type="text" id="quote_jssj" style="width:120px;" onclick="top.selectDate(this)" readonly="true"/></td>
+					   <td></td>
+					</tr>
+					<tr class="tr_data">
+					    <td align="right">产品设计师</td>
+						<td align="left">
+						<input type="text" id="pro_designer" style="width:120px;" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+					    <td align="right">报价人</td>
+						<td align="left"><input type="text" style="width:120px;" id="quote_person"/></td>
+						<td align="right">
+							工程地址
+						</td>
+						<td align="left">
+							<span id="spanpro_address"></span>&nbsp;&nbsp;&nbsp;<input type="text" id="pro_address"  style="width:120px;" />
+						</td>
+						<td></td>
+					</tr>
+					<tr class="tr_data">
+					   <td align="right">
+							审批人
+						</td>
+						<td align="left">
+							<input type="text" id="examine_user" style="width:120px;" onkeydown="if(event.keyCode==13) doQuery();" />
+						</td>
+						<td align="right">审批状态</td>
+						<td align="left"><span id="spanexamine_status"></span></td>
+						<td align="right">审批日期</td>
+					    <td align="left">
+							<input type="text" id="examine_kssj" style="width:120px;" onclick="top.selectDate(this)" readonly="true"/>至
+							<input type="text" id="examine_jssj" style="width:120px;" onclick="top.selectDate(this)" readonly="true"/>
+					    </td>
+						<td>
+						  <div class="buttonDivTwo">
+								<a href="javascript:doQuery()">查询</a>
+						  </div>
+						</td>
+					<tr/>
+				</table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0"
+				border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									&nbsp;查询结果列表&nbsp;
+								</td>
+								<!--<td>
+									<div id="createBtn" class="buttonDivTwo">
+										<a href="javascript:addInfo()">添加</a>
+									</div>
+								</td>-->
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<table cellpadding="0" width="100%" cellspacing="0" border="0"
+				class="display" id="dataTable"></table>
+		</div>
+		
+	</body>
+</html>

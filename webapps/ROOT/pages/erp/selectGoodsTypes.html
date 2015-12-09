@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+    <link rel="stylesheet" type="text/css" href="../../css/dtree.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+    <link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+    <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js" ></script>
+    <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+    <script type="text/javascript" src="../../js/tree.js"></script>
+    
+    <script type="text/javascript" >
+       var d=null;
+       var currentIds="";
+	   var currentNodeName="";
+	   var optType="";
+	   var dialogLevel = "1";
+	   
+ String.prototype.endWith=function(s){
+  if(s==null||s==""||this.length==0||s.length>this.length)
+     return false;
+  if(this.substring(this.length-s.length)==s)
+     return true;
+  else
+     return false;
+  return true;
+ }
+
+       $(document).ready(function(){
+    	   try{
+               optType=top.getUrlParam(document.URL,"type");
+			   dialogLevel=top.getUrlParam(document.URL,"dialogLevel");
+			   if ( dialogLevel == "" ) dialogLevel = "1";
+               initTree();
+			   loadRight( top.getUrlParam(document.URL,"ids") );
+           }catch(e){
+               top.showInfoWin(e.message);
+           }
+       });
+
+       function initTree(){
+           d=new Tree("d");
+           d.setImagePath("../../img");
+           d.useIcon(false);
+           d.useLine(true);
+           d.useControl(true);
+           d.setCheckParent(true);
+           d.setCheckBox(true,"node_id");
+           d.setRoot("0","商品分类");
+		   
+		   var typeArr=top.getCacheGoodsType();
+		   for (var i=0;i<typeArr.length;i++) {
+		       if ( typeArr[i].type_level >= 3 && optType == 'lev2') continue; 
+			   d.add( typeArr[i].type_id, typeArr[i].parent_id, typeArr[i].name,'','',true, typeArr[i].type_id );
+		   }
+           $("#nodeTree").html( d.toString() );
+       }
+       
+       function loadRight(ids){
+	       if ( !ids ) return ;
+       	   if ( !ids.endWith(",") ) ids=ids+",";
+		   currentIds=ids;
+    	   top.initCheckedValue(document.getElementsByName("node_id"),ids);
+       }
+	   
+	   function doBeforeClose(){
+	      currentNodeName = top.getLev2TypeNameByIds( currentIds );
+    	  var obj={
+    	        "nodeId":currentIds,
+				"nodeName":currentNodeName
+    	  };
+    	  top.setTempValue(obj);
+       }
+	   
+	   function selectOK(){
+	       currentIds=top.getAllCheckedValue( document.getElementsByName("node_id") )+",";
+		   if ( dialogLevel == "1" ) {
+             top.closeSelectDialog();
+		   } else top.closeSelectDialog2();
+	   }
+    </script>
+</head>
+<body>
+<table style="width:100%;height:100%;padding:0;spacing:0;">
+  <tr style="width:100%;height:100%;">
+   <td style="width:100%;height:100%;border:1px;border-style: dotted;border-color: #A0CFEC;" valign="top">
+        <div style="padding:3px;float:top;">
+		  <table><tr>
+		   <td>
+            <img src="../../img/folderopen.gif" style="cursor:pointer" title="全部展开" onclick="d.openAll()" />
+            <img src="../../img/folder.gif" style="cursor:pointer" title="全部收缩" onclick="d.closeAll()" />
+		   </td>
+		   <td><div class="buttonDivTwo"><a href="javascript:selectOK()">确定</a></div></td>
+		  </tr></table>
+        </div>
+        <div class="dtree" id="nodeTree" style="padding:3px;">
+        </div>
+   </td>
+  </tr> 
+</table>
+</body>
+</html>

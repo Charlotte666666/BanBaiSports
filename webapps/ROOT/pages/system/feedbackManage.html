@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" language="JavaScript1.2"	src="../../js/Calendar3.js"></script>
+
+<script type="text/javascript">
+var oTable = null;
+
+$(document).ready( function() {
+   loadList();
+});
+ 
+ function loadList(){
+    var iaoColumns= [
+	           { "sTitle": "创建时间", "mDataProp": "opt_time", "sWidth": "15%",
+                   "fnRender": function ( oObj ) {
+				      return top.getTimeStr(oObj.aData.opt_time);
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "评价内容", "mDataProp": "content", "sWidth": "40%","bUseRendered": false, "bSortable":false },
+			   { "sTitle": "联系方式", "mDataProp": "contact_info", "sWidth": "8%", "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "手机号码", "mDataProp": "cell_phone", "sWidth": "8%", "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "用户账号", "mDataProp": "user_code", "sWidth": "10%", "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "用户姓名", "mDataProp": "user_name", "sWidth": "9%", "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "操作", "mDataProp": "id", "sWidth": "10%","bSortable":false,
+                    "fnRender": function ( oObj ) {
+                       return '';
+                    },
+                    "bUseRendered": false
+               }
+        ];
+ 	
+		oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": top.getUrlBase()+"/actions/OMFeedback.action?getOMFeedbackList",
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     aoData.push( { "name": "time1", "value": $("#q_time1").val()} );
+		                 aoData.push( { "name": "time2", "value": $("#q_time2").val() } );
+						 aoData.push( { "name": "feedback.star", "value": top.g_GetNumValue( $("#star").val(), -1 ) } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumns
+	   } );
+ }
+ 
+ function doQuery(){
+	oTable.fnDraw();
+ }
+
+</script>
+</head>
+<body>
+            <div style='border: 1px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="180px">&nbsp;反馈信息查询&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+				  <td align="right" width="20%">评价星级:</td>
+				  <td align="left" width="20%"><input type="text" id="star" value="" size="5" /></td>
+                  <td align="right" width="10%">创建时间:</td>
+				  <td align="left" width="50%" >
+				  <input type="text" id="q_time1" value="" size="15" onclick="new Calendar().show(this);" readonly="true"/><b>&nbsp;--</b>
+				  <input type="text" id="q_time2" value="" size="15" onclick="new Calendar().show(this);" readonly="true"/>
+				  </td>
+			     </tr>
+			 </table>
+			</div>
+<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+</body>
+</html> 

@@ -1,0 +1,599 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+  <link rel="stylesheet" type="text/css" href="../../css/fileuploader.css">
+  <link rel="stylesheet" type="text/css" href="../../css/carousel.css">
+<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css" media="print, projection, screen">
+<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+<script src="../../js/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+  <script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+  <script type="text/javascript" src="../../js/fileuploader.js"></script>
+  <script type="text/javascript" src="../../js/bootstrap.js"></script>
+  <script type="text/javascript" src="js/houseInfo.js" charset="gbk"></script>
+  
+  <script type="text/javascript">
+   var oTable=null;
+   var isSaveOK=false;
+   var optType="";
+   var gInfoId="";
+   var roomIds=[];
+   var currentDeleteId="";
+   var hasEditRight=false;
+   var hasDeleteRoomRight=false;
+   var hasAddRoomRight=false;
+   var hasUpdateRoomRight=false;
+   var hasHouseContractViewRight=false;
+   var currentShowRoomId=0;
+   var timeStamp=0;
+   var picFileName="";
+   var saveFileNames="";
+   var KinSlideShowContent = '';
+   var roomList=null;
+   var saveRoomFileNames='';
+   var uploadType="housePic";
+   var itemCarouselContent="";
+   var itemCarouselContentRoom="";
+   var indicatorsCarouselContent="";
+   var indicatorsCarouselContentRoom="";
+   var rentIds=[];
+   var isHasOwnerContract=false;
+   var contractOptType="";
+   var contractCode="";
+   var category=0;
+
+   $(document).ready(function() {
+     $( "#tabs ul" ).tabs();
+     initData();
+	 if ( optType == 'insert' ) {
+	      if ( top.g_isPermit("house_addHouse") ) {
+			 hasEditRight=true;
+		  }
+	 } else if ( optType == 'update' ) {
+		   if ( top.g_isPermit("house_updateHouse") ) {
+		     hasEditRight=true;
+		   }
+	 }
+	 if ( !hasEditRight ) {
+	   $("input").attr("disabled",true);
+	   $("select").attr("disabled",true); 
+       $("textarea").attr("disabled",true);
+	   $("#saveHouseBtn").hide();
+	 }
+	 
+	 hasAddRoomRight=top.g_isPermit("house_addRoom");
+     hasUpdateRoomRight=top.g_isPermit("house_updateRoom");
+	 hasDeleteRoomRight=top.g_isPermit("house_deleteRoom");
+	 hasHouseContractViewRight=top.g_isPermit("houseContract_rentView");
+
+	 if ( !hasAddRoomRight ) {
+	   $("#createRoomBtn").hide();
+	 }
+	 if ( !top.g_isPermit("house_delPic") ) {
+		$("#deletePicBtn").hide();
+		$("#deleteRoomPicBtn").hide();
+		$("#HousePicTool").hide();
+		$("#HouseRoomPicTool").hide();
+	 }
+	 if ( !top.g_isPermit("houseContract_ownerView") ) {
+		$("#contractLiA").hide();
+	 }
+	 if ( top.g_isPermit("houseContract_ownerSave") ) $("#saveContractBtn").show();
+	 var d=new Date();
+	 timeStamp=d.getTime();
+	 
+	 if ( top.g_isPermit("house_uploadPic") ) {
+	    var uploadPic = new qq.FileUploader({
+                element: document.getElementById('uploadBtn'),
+                action: top.getUrlBase()+"/uploadFile",
+                debug: false,
+				disableDefaultDropzone: false,
+                extraDropzones: [qq.getByClass(document, 'qq-upload-extra-drop-area')[0]],
+				onUpload: function(id, fileName, xhr){
+				  $("#photo").val(fileName);
+				},
+				onProgress: function(id, fileName, loaded, total){
+				  setUploadFilePercent( loaded, total );
+				},
+				onComplete:function(id, fileName, responseJSON){
+				 try{
+				  setUploadFileStatus(responseJSON.success);
+				  if ( !responseJSON.success ) {
+				    var msg="";
+					if ( responseJSON.error == 'Exist' ) msg='文件已存在，请修改文件名后再上传。';
+					if ( msg != '' ) top.showInfoWinWarn("文件上传失败:"+msg);
+				  }
+				 }catch(e){}
+				},
+				onError: function(id, fileName, reason) {
+				 try{
+				  setUploadFileStatus(responseJSON.success);
+				  if ( !responseJSON.success ) {
+					top.showInfoWinWarn("文件上传失败:"+reason);
+				  }
+				 }catch(e){}
+				}
+        });
+
+		var uploadRoomPic = new qq.FileUploader({
+                element: document.getElementById('uploadRoomBtn'),
+                action: top.getUrlBase()+"/uploadFile",
+                debug: false,
+				disableDefaultDropzone: false,
+                extraDropzones: [qq.getByClass(document, 'qq-upload-extra-drop-area')[0]],
+				onUpload: function(id, fileName, xhr){
+				  $("#photoRoom").val(fileName);
+				},
+				onProgress: function(id, fileName, loaded, total){
+				  setUploadFilePercent( loaded, total );
+				},
+				onComplete:function(id, fileName, responseJSON){
+				 try{
+				  setRoomUploadFileStatus(responseJSON.success);
+				  if ( !responseJSON.success ) {
+				    var msg="";
+					if ( responseJSON.error == 'Exist' ) msg='文件已存在，请修改文件名后再上传。';
+					if ( msg != '' ) top.showInfoWinWarn("文件上传失败:"+msg);
+				  }
+				 }catch(e){}
+				},
+				onError: function(id, fileName, reason) {
+				 try{
+				  setRoomUploadFileStatus(responseJSON.success);
+				  if ( !responseJSON.success ) {
+					top.showInfoWinWarn("文件上传失败:"+reason);
+				  }
+				 }catch(e){}
+				}
+        });
+ 
+     }
+	  // 加载跟进记录
+      if ( optType != 'insert' ) { 
+	    getFollowList();
+	  }
+   });
+   
+   function getPerformanceList(){
+	 if ( contractCode == '' ) return ;
+	 var hasDeletePerformanceRight=top.g_isPermit("housePerformance_del");
+	 
+     var iaoColumns= [
+				 {"sTitle": "业绩类型", "mDataProp": "performance_type", "sWidth":"150px", "sClass": "center",
+                    "fnRender": function ( oObj ) {
+					  var ht ='';
+                      if ( hasDeletePerformanceRight ) {
+                          ht+='<img src="../../img/delete.gif" onclick="deletePerformance('+oObj.aData.id+')"/>&nbsp;';
+					  }
+					  ht+=top.getCodeName( "PERFORMANCE_TYPE", oObj.aData.performance_type );
+					  return ht;
+                    },
+                    "bUseRendered": false  
+                 },
+			     {"sTitle": "人员账号", "mDataProp": "user_code", "sWidth":"150px", "sClass": "center"},
+				 {"sTitle": "佣金(元)", "mDataProp": "commission", "sWidth":"100px", "sClass": "center"},
+				 {"sTitle": "备注", "mDataProp": "memo", "sWidth":"600px", "sClass": "left"}
+               ];
+			   
+			   var surl=top.getUrlBase()+"/actions/Performance.action?getTblPerformanceList";
+			   oTable = $('#performanceListTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":100,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+					aoData.push( { "name": "performance.contract_code", "value": contractCode } );
+					aoData.push( { "name": "performance.performance_type", "value": -1 } );
+			    },
+			    "sDom": "frt",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+   }
+   
+   function deletePerformance(did){
+	  currentDeleteId=did;
+	  top.showConfirm("您确定要删除选中的业绩吗？", doDeletePerformance);
+   }
+   
+   function doDeletePerformance(){
+	    var aoData=[];
+        aoData.push( { "name": "performance.id", "value": currentDeleteId } );
+        top.sendAjaxRequest("/actions/Performance.action?deleteTblPerformance",aoData,savePerformanceCallback);
+    }
+  
+    function addPerformance(){
+	    var msg = "";
+		if ( $("#performance_commission").val() == '') {
+		  msg += "请填写佣金<br>";
+		} else if ( !IsFloat( $("#performance_commission").val() )) {
+		  msg += "[佣金]应为数字类型<br>";
+		}
+		msg += checkString($("#performance_memo").val(),false,512,"备注");
+		msg += checkString($("#performance_user_code").val(),true,20,"人员账号");
+		msg += checkString($("#performance_type").val(),true,20,"业绩类型");
+		msg += checkString( contractCode,true,20,"合同编号");
+	    if ( msg != '' ) {
+	     top.showInfoWinWarn(msg);
+         return ;
+	    }
+
+	    var aoData=[];
+	    aoData.push( { "name": "performance.contract_code", "value": contractCode } );
+		aoData.push( { "name": "performance.performance_type", "value": $("#performance_type").val() } );
+		aoData.push( { "name": "performance.memo", "value": $("#performance_memo").val() } );
+		aoData.push( { "name": "performance.commission", "value": top.g_GetNumValue( $("#performance_commission").val() ) } );
+		aoData.push( { "name": "performance.user_code", "value": $("#performance_user_code").val() } );
+        top.sendAjaxRequest("/actions/Performance.action?insertTblPerformance",aoData,savePerformanceCallback);
+	}
+	
+	function savePerformanceCallback(obj){
+       try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+			getPerformanceList();
+			$("#performance_type").val("");
+			$("#performance_memo").val("");
+			$("#performance_commission").val("");
+			$("#performance_user_code").val("");
+        }else{
+          isSaveOK = false;
+          top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+
+   function showAddPerformanceTable(){
+	   $("#add_performance").show();
+	   $("#createPerformanceBtn").hide();
+	}
+</script>
+<style>
+body,td{
+ font-size: 13px;
+}
+.roomTd{
+  border:1px;
+  border-style:dotted none none none;
+  border-color: blue;
+  color:#000000;
+  padding-left:5px;
+}
+</style>  
+</head>
+<body>
+<div id="tabs" style="margin: 10px;">
+	<ul>
+		<li><a href="#tabs-0"><span>基本信息</span></a></li>
+		<li><a href="#tabs-1" id="roomLiA"><span>房间列表</span></a></li>
+		<li><a href="#tabs-2" id="followLiA"><span>跟进记录</span></a></li>
+		<li><a href="#tabs-3" id="contractLiA"><span>承租合同</span></a></li>
+	</ul>
+	<div id="tabs-0">
+	   <table border="1" cellpadding="5" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+	        <tr><td width="50%" valign="top">
+			   <table width="100%" border="0" cellpadding="5" cellspacing="1" width="100%">
+		            <tr class="tr_data">
+						<td width="20%">区域</td>
+						<td align="left" width="80%"><span id="code_district"></span>&nbsp;<span id="code_belong_area"></span></td>
+					</tr>
+					<tr class="tr_data">
+						<td>门牌号</td>
+						<td align="left"><input type="text" style="width:300px" id="house_number" /></td>
+					</tr>
+					<tr class="tr_data">
+					    <td>户型</td>
+						<td align="left">
+						 <input type="text" style="width:50px" id="num_bedroom"></input>室
+						 <input type="text" style="width:50px" id="num_livingroom"></input>厅
+						 <input type="text" style="width:50px" id="num_restroom"></input>卫
+						 <input type="text" style="width:50px" id="balcony"></input>阳台
+						</td>
+					</tr>
+					<tr class="tr_data">
+					    <td>楼层</td>
+						<td align="left">第<input type="text" style="width:60px" id="floor"></input>层/共<input type="text" style="width:60px" id="floor_tatal"></input>层</td>
+					</tr>
+                    <tr class="tr_data">
+					    <td>装修</td><td align="left" id="code_fitment"></td>
+					</tr>
+					<tr class="tr_data">
+					    <td>类型</td><td align="left" id="code_house_type"></td>
+					</tr>
+					<tr class="tr_data">
+					    <td>房屋面积</td><td align="left"><input type="text" style="width:100px" id="farea"></input>平米</td>
+					</tr>
+					<tr class="tr_data">
+					    <td>街道</td><td align="left"><input type="text" style="width:160px" id="street"></input></td>
+					</tr>
+					<tr class="tr_data">
+					    <td>备注</td><td align="left"><textarea cols="35" rows="3" id="public_memo"></textarea></td>
+					</tr>
+					<tr class="tr_data">
+					    <td>交通情况</td><td align="left"><textarea cols="35" rows="3" id="traffic"></textarea></td>
+					</tr>
+					<tr class="tr_data">
+					    <td>设施</td>
+						<td align="left" id="td_facility"></td>
+					</tr>
+					<tr class="tr_data">
+					    <td>来源</td><td align="left" id="code_source_from"></td>
+					</tr>
+					<tr class="tr_data">
+					 <td>房源状态</td><td align="left"><span id="code_status" ></span></td>
+					</tr>
+					<tr class="tr_data" id="tr_owner_1" style="display:none">
+					 <td>业主编号</td>
+					 <td align="left">
+					   <input type="text" size="10" id="h_owner_id" value="系统自动生成" disabled="true"></input><input type="button" value="选择" onclick="selectOwner('h')"></input>
+					 </td>
+					</tr>
+					<tr class="tr_data" id="tr_owner_2" style="display:none">
+					 <td>业主姓名</td>
+					 <td align="left">
+					   <input type="text" size="10" value="" id="h_owner_name"/>
+					   业主电话<input type="text" size="15" value="" id="h_owner_tel"/>
+					 </td>
+					</tr>
+					<tr class="tr_data" id="tr_house_id">
+					 <td>房源编号</td><td align="left"><input type="text" size="10" value="系统自动生成" readonly="true" id="house_id"/></td>
+					</tr>
+			    </table>
+		    </td>
+			<td width="50%" valign="top">
+			    <table width="100%" style="background-color: #b9d8f3;" id="HousePicTool">
+				  <tr>
+				   <td width="150px"><div class="mask"><div id="uploadBtn">上传</div></div></td>
+				   <td width="150px"><div id="deletePicBtn" class="buttonDivSix"><a href="javascript:void(0)" onclick="deletePic()">删除当前相片</a></div></td>
+				   <td>&nbsp;</td>
+				  </tr>
+				</table>
+				<table border="1" cellpadding="5" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+							<tr>
+								<td height="450px" width="100%" align="center" valign="top">
+								<!--Picture Carousel Begin-->
+								<div id="myCarousel" class="carousel slide" style="width:100%;overflow:hidden;margin-top:10px;">
+								<ol class="carousel-indicators" id="indicatorsCarousel">
+									<li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+								</ol>
+								<div class="carousel-inner" id="itemCarousel">
+									<div class="item active"><img src="images/house.jpg"></div>
+								</div>
+								<a class="left carousel-control" href="#myCarousel" data-slide="prev">
+									<span class="glyphicon glyphicon-chevron-left"></span></a>
+								  <a class="right carousel-control" href="#myCarousel" data-slide="next">
+									<span class="glyphicon glyphicon-chevron-right"></span></a>
+								</div>
+						<!--Picture Carousel End-->
+									<input type="hidden" id="photo" />
+								</td>
+							</tr>
+				</table>
+			</td>
+		   </tr>
+       </table>
+	   <table width="100%" style="margin: 10px;">
+		  <tr>
+		   <td width="50%" align="right"><div id="saveHouseBtn" class="buttonDivTwo"><a href="javascript:void(0)" onclick="doSubmit()">保存</a></div></td>
+		   <td width="50%" align="center" ><div id="showOwnerInfoBtn" class="buttonDivSix" style="display:none"><a id="showOwnerInfoBtnA" href="javascript:void(0)" onclick="showOwnerInfo()">显示业主信息</a></div></td>
+		  </tr>
+	   </table>
+	</div>
+<div id="tabs-1">
+<div id="createRoomBtn" class="buttonDivTwo"><a href="javascript:addHouseRoom()">添加</a></div>
+</br/>
+ <table border="1" cellpadding="5" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+   <tr class="tr_data"><td width="40%" valign="top" height="470px">
+	  <table id="tdRoomList" border="1" cellpadding="5" cellspacing="1" width="100%" align="center" style="background-color: #ffffff;"></table>
+    </td>
+	<td width="60%" valign="middle" align="center" style="background-color: #b9d8f3;">
+	     <table width="100%" style="background-color: #b9d8f3;" id="HouseRoomPicTool">
+				  <tr>
+				   <td width="150px"><div class="mask"><div id="uploadRoomBtn">上传</div></div></td>
+				   <td width="150px"><div id="deleteRoomPicBtn" class="buttonDivSix"><a href="javascript:void(0)" onclick="deleteRoomPic()">删除当前相片</a></div></td>
+				   <td>&nbsp;</td>
+				  </tr>
+				</table>
+				<table border="1" cellpadding="5" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+							<tr>
+								<td height="450px" width="100%" align="center" valign="top">
+								<!--Picture Carousel Begin-->
+								<div id="myCarouselRoom" class="carousel slide" style="width:100%;overflow:hidden;margin-top:10px;">
+								<ol class="carousel-indicators" id="indicatorsCarouselRoom">
+									<li data-target="#myCarouselRoom" data-slide-to="0" class="active"></li>
+								</ol>
+								<div class="carousel-inner" id="itemCarouselRoom">
+									<div class="item active"><img src="images/house.jpg"></div>
+								</div>
+								<a class="left carousel-control" href="#myCarouselRoom" data-slide="prev">
+									<span class="glyphicon glyphicon-chevron-left"></span></a>
+								  <a class="right carousel-control" href="#myCarouselRoom" data-slide="next">
+									<span class="glyphicon glyphicon-chevron-right"></span></a>
+								</div>
+						<!--Picture Carousel End-->
+									<input type="hidden" id="photoRoom" />
+								</td>
+							</tr>
+		 </table>
+	</td>
+  </tr>
+ </table>
+
+</div>
+
+<div id="tabs-2">
+	<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				    <td>&nbsp;查询结果列表&nbsp;</td>
+					<td><div class="buttonDivTwo"><a href="javascript:void(0)" onclick="addFollowInfo()">添加</a></div></td>
+			       </tr></table></td>
+			  </tr>
+	 </table>
+	 <div style="height:300px;width:100%">
+      <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="followDataTable">
+	  </table>
+	 </div>
+ </div>
+ <div id="tabs-3">
+	<table border="1" cellpadding="5px" cellspacing="1px" width="100%" align="center" style="background-color: #b9d8f3;">
+					<tr class="tr_data">
+					    <td width="10%">合同编号</td><td align="left"><input type="text" style="width:100px" id="contract_code"></input></td>
+						<td width="10%">开始日期</td><td align="left"><input type="text" id="contract_start_renttime" value="" onclick="new Calendar().show(this);" style="width:80px" /></td>
+					    <td width="10%">付款方式</td><td align="left" id="code_contract_pay_type"></td>
+						<td width="10%">免租期</td><td align="left"><input type="text" style="width:70px" id="contract_num_rentfreedays">天</input></td>
+					</tr>
+                    <tr class="tr_data">
+					    <td>签约日期</td><td align="left"><input type="text" id="contract_sign_date" value="" onclick="new Calendar().show(this);" style="width:80px"></input></td>
+						<td>到期日期</td><td align="left"><input type="text" id="contract_end_renttime" value="" onclick="new Calendar().show(this);" style="width:80px" /></td>
+					    <td>租金</td><td align="left"><input type="text" style="width:100px" id="contract_rent"></input>元/月</td>
+					    <td>前空置</td><td align="left"><input type="text" style="width:70px" id="contract_num_preunused"></input>天</td>
+				    </tr>
+					<tr class="tr_data">
+					    <td>合同状态</td><td align="left" id="code_contract_status"></td>
+						<td>更新时间</td><td align="left" id="td_update_time"></td>
+						<td>押金</td><td align="left"><input type="text" style="width:100px" id="contract_deposit_money"></input></td>
+						<td>后延期</td><td align="left"><input type="text" style="width:70px" id="contract_num_nextunused"></input>天</td>
+					</tr>
+					<tr class="tr_data">
+					<td>交租日期</td><td align="left" colspan="7">
+					  <input type="text" id="rentTime0" value="" onclick="new Calendar().show(this);" style="width:80px" />
+					  <input type="text" id="rentTime1" value="" onclick="new Calendar().show(this);" style="width:80px" />
+					  <input type="text" id="rentTime2" value="" onclick="new Calendar().show(this);" style="width:80px" />
+					  <input type="text" id="rentTime3" value="" onclick="new Calendar().show(this);" style="width:80px" />
+					  <input type="text" id="rentTime4" value="" onclick="new Calendar().show(this);" style="width:80px" />
+					  <input type="text" id="rentTime5" value="" onclick="new Calendar().show(this);" style="width:80px" />
+					  <input type="text" id="rentTime6" value="" onclick="new Calendar().show(this);" style="width:80px" />
+					  <input type="text" id="rentTime7" value="" onclick="new Calendar().show(this);" style="width:80px" /><br/>
+					  <input type="text" id="rentTime8" value="" onclick="new Calendar().show(this);" style="width:80px" />
+					  <input type="text" id="rentTime9" value="" onclick="new Calendar().show(this);" style="width:80px" />
+					  <input type="text" id="rentTime10" value="" onclick="new Calendar().show(this);" style="width:80px" />
+					  <input type="text" id="rentTime11" value="" onclick="new Calendar().show(this);" style="width:80px" />
+					  <input type="text" id="rentTime12" value="" onclick="new Calendar().show(this);" style="width:80px" />
+					  <input type="text" id="rentTime13" value="" onclick="new Calendar().show(this);" style="width:80px" />
+					  <input type="text" id="rentTime14" value="" onclick="new Calendar().show(this);" style="width:80px" />
+					  <input type="text" id="rentTime15" value="" onclick="new Calendar().show(this);" style="width:80px" />
+					  </td>
+					</tr>
+					<tr class="tr_data">
+					    <td>备注</td><td align="left" colspan="7"><textarea style="width:955px" rows="3" id="contract_comment"></textarea></td>
+					</tr>
+	</table>
+<br/>
+业主信息:<br/>
+<table border="1" cellpadding="10px" cellspacing="1px" width="100%" align="center" style="background-color: #b9d8f3;">
+		<tr class="tr_data">
+		    <td>业主编号</td><td align="left">
+			 <input type="text" size="10" id="owner_id" value="系统自动生成" disabled="true"></input><input type="button" value="选择" onclick="selectOwner('c')"></input>
+		    </td>
+			<td>业主姓名</td><td align="left"><input type="text" size="10" id="owner_name"/></td>
+			<td>业主电话</td><td align="left"><input type="text" size="20" id="owner_tel"/></td>
+		</tr>
+		<tr class="tr_data">
+			<td>身份证号</td><td align="left"><input type="text" size="30" id="card_no"/></td>
+			<td>开户银行</td><td align="left"><input type="text" size="30" id="owner_bank"/></td>
+			<td>银行卡号</td><td align="left"><input type="text" size="30" id="owner_bank_no"/></td>
+		</tr>
+</table>
+<br/>
+
+承租开始读数:<br/>
+<table border="1" cellpadding="1" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+  <tr class="tr_data">
+    <td align="right">水表</td><td align="left"><input id="start_water_num" value="" style="width:60px"></input></td>
+	<td align="right">电表</td><td align="left"><input id="start_ele_num" value="" style="width:60px"></input></td>
+	<td align="right">燃气</td><td align="left"><input id="start_gas_num" value="" style="width:60px"></input></td>
+	<td align="right">电视费</td><td align="left"><input id="start_tv_num" value="" style="width:60px"></input></td>
+	<td align="right">网费</td><td align="left"><input id="start_net_num" value="" style="width:60px"></input></td>
+	<td align="right">交接人</td><td align="left" id="td_start_man"></td>
+  </tr>
+</table>
+<br/>
+承租结束读数:<br/>
+<table border="1" cellpadding="1" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+  <tr class="tr_data">
+    <td align="right">水表</td><td align="left"><input id="end_water_num" value="" style="width:60px"></input></td>
+	<td align="right">电表</td><td align="left"><input id="end_ele_num" value="" style="width:60px"></input></td>
+	<td align="right">燃气</td><td align="left"><input id="end_gas_num" value="" style="width:60px"></input></td>
+	<td align="right">电视费</td><td align="left"><input id="end_tv_num" value="" style="width:60px"></input></td>
+	<td align="right">网费</td><td align="left"><input id="end_net_num" value="" style="width:60px"></input></td>
+	<td align="right">交接人</td><td align="left" id="td_end_man"></td>
+  </tr>
+</table>
+<br/>
+<table width="100%" style="margin: 5px;">
+  <tr>
+   <td width="35%" align="right"><div id="saveContractBtn" class="buttonDivTwo" style="display:none"><a href="javascript:void(0)" onclick="saveOwnerContract()">保存</a></div></td>
+   <td width="20%" align="center"><div id="endContractBtn" class="buttonDivSix" style="display:none"><a href="javascript:void(0)" onclick="endContract()">合同终止</a></div></td>
+   <td width="20%" align="left"><div id="delContractBtn" class="buttonDivTwo" style="display:none"><a href="javascript:void(0)" onclick="delContract()">作废</a></div></td>
+   <td width="20%" align="left"><div id="createPerformanceBtn" class="buttonDivSix" style="display:none"><a href="javascript:void(0)" onclick="showAddPerformanceTable()">添加业绩</a></div></td>
+  </tr>
+</table>
+<table id="add_performance" border="1" cellpadding="1" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;display:none">
+	  <tr class="tr_data">
+	     <td>业绩类型</td><td align="left" id="code_performance_type"></td>
+		 <td>业务员</td><td align="left" id="td_performance_user_code"></td>
+		 <td>佣金</td><td align="left" ><input type="text" id="performance_commission" style="width:100px"/>元</td>
+		 <td>&nbsp;</td>
+	  </tr>
+	  <tr class="tr_data">
+	     <td>备注</td><td align="left" colspan="5"><textarea id="performance_memo" cols="70" rows="2"></textarea></td>
+		 <td align="left"><div class="buttonDivTwo"><a href="javascript:addPerformance()">保存</a></div></td>
+	  </tr>
+	</table>
+	<br/>
+<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="performanceListTable">
+</table>
+	   
+ </div>
+ </div>
+ <div id="dialog" title="" style="display:none;padding: 0 0 0 0;margin: 0 0 0 0;z-index:10000">
+    <iframe id="self_iframe" src="about:blank" width="100%" height="96%" frameborder="0"></iframe>
+ </div>
+ <script type="text/javascript" src="../../js/jquery.KinSlideshow-1.2.1.min.js"></script>
+ <script type="text/javascript">
+ function showSlides(){
+ 	$("#KinSlideshow").KinSlideshow({
+        moveStyle:"left",
+        intervalTime:3600,
+        mouseEvent:"mouseover",
+        isHasTitleBar:false	
+    });
+ }
+</script>
+</body>
+</html>

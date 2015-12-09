@@ -1,0 +1,410 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>addIntegrationRule.html</title>
+	
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	
+	<script type="text/javascript" src="../../js/checkForm.js"></script>
+	<script type="text/javascript">
+	    var optType="";
+		var info_id=0;
+		var userCode=0;
+		var currentApprovalStage="";
+		var currentApprovalStatus="0";
+		var nowUser=null;
+		var date="";
+
+		
+		$(document).ready(function(){
+		   nowUser=top.getCurrentUser();
+		   date=new Date();
+		   optType=top.getUrlParam(document.URL,"optType");
+		   info_id=top.getUrlParam(document.URL,"id");
+		   $("#apply_date").val(top.getTimeStr(date.getTime(),true));
+		  
+		   if(info_id!=0){
+		     getLeaveApplyInfo();
+		   }
+
+		   
+		   $("#reason_to_leave").change(function(){
+		     if($(this).attr("checked")=="checked"){
+			    $("#tdother").show();
+			 }else{
+			    $("#tdother").hide();
+				$("#reason_other").val("");
+			 }
+		   })
+		   
+		});
+		
+		function getApprovalInfo(){
+		   var aoData=[];
+		   aoData.push( { "name":"info.apply_id","value":info_id} );
+		   top.sendAjaxRequest("/actions/ApprovalRecord.action?getApprovalRecordListByApplyId",aoData,getApprovalInfoCallback);
+		}
+		
+		function getApprovalInfoCallback(obj){
+		   var ht='<tr class="tr_data" id="approvalhead"><td align="center" style="font-weight:bold;" width="20%">审核阶段</td><td align="center" style="font-weight:bold;" width="20%">审核状态</td><td align="center" width="20%" style="font-weight:bold;">审核意见</td><td align="center" style="font-weight:bold;" width="20%">审核人</td><td align="center" style="font-weight:bold;" width="20%">审核时间</td></tr>';
+		   if(obj.status==true){
+		     var o=obj.body;
+			 if(o.length>0){
+			    for(var i=0;i<o.length;i++){
+				  
+				   if(i==o.length-1){
+				      currentApprovalStage=o[i].approval_stage;
+					  currentApprovalStatus=o[i].approval_status;
+				      if(!(o[i].approval_stage=="2" && o[i].approval_status=="1") && optType=="approval" && $("#status").val()!="3"){
+					    switch(currentApprovalStage){
+							case "0":
+								if(top.g_isPermit("oa_dept_check")){
+								  ht+='<tr class="tr_data"><td><input id="id" type="hidden" value="'+o[i].id+'"/><input id="approval_stage" type="hidden" value="'+o[i].approval_stage+'"/>'+top.getCodeName("APPROVAL_STAGE",o[i].approval_stage)+'</td><td>'+top.getCodeSelectHtml("APPROVAL_STATUS","approval_status",false)+'</td><td><textarea id="approval_opinion" style="width:100%;" rows="2" cols="8"/></textarea></td><td><input id="approver" type="hidden" value="'+nowUser.userCode+'"/>'+nowUser.userName+'</td><td><input id="approval_time" type="hidden" value="'+date.getTime()+'"/>'+top.getTimeStr(date.getTime(),true)+'</td></tr>';
+								}else{
+								  ht+='<tr class="tr_data"><td><input id="id" type="hidden" value="'+o[i].id+'"/><input id="approval_stage" type="hidden" value="'+o[i].approval_stage+'"/>'+top.getCodeName("APPROVAL_STAGE",o[i].approval_stage)+'</td><td>'+top.getCodeName("APPROVAL_STATUS",o[i].approval_status)+'</td><td></td><td>'+nowUser.userName+'</td><td>'+top.getTimeStr(date.getTime(),true)+'</td></tr>';
+								}
+								break;
+							case "1":
+							   if(top.g_isPermit("oa_personal_admin_check")){
+								  ht+='<tr class="tr_data"><td><input id="id" type="hidden" value="'+o[i].id+'"/><input id="approval_stage" type="hidden" value="'+o[i].approval_stage+'"/>'+top.getCodeName("APPROVAL_STAGE",o[i].approval_stage)+'</td><td>'+top.getCodeSelectHtml("APPROVAL_STATUS","approval_status",false)+'</td><td><textarea id="approval_opinion" style="width:100%;" rows="2" cols="8"/></textarea></td><td><input id="approver" type="hidden" value="'+nowUser.userCode+'"/>'+nowUser.userName+'</td><td><input id="approval_time" type="hidden" value="'+date.getTime()+'"/>'+top.getTimeStr(date.getTime(),true)+'</td></tr>';
+								}else{
+								  ht+='<tr class="tr_data"><td><input id="id" type="hidden" value="'+o[i].id+'"/><input id="approval_stage" type="hidden" value="'+o[i].approval_stage+'"/>'+top.getCodeName("APPROVAL_STAGE",o[i].approval_stage)+'</td><td>'+top.getCodeName("APPROVAL_STATUS",o[i].approval_status)+'</td><td></td><td>'+nowUser.userName+'</td><td>'+top.getTimeStr(date.getTime(),true)+'</td></tr>';
+								}
+								break;
+							case "2":
+							   if(top.g_isPermit("oa_general_manager_check")){
+								  ht+='<tr class="tr_data"><td><input id="id" type="hidden" value="'+o[i].id+'"/><input id="approval_stage" type="hidden" value="'+o[i].approval_stage+'"/>'+top.getCodeName("APPROVAL_STAGE",o[i].approval_stage)+'</td><td>'+top.getCodeSelectHtml("APPROVAL_STATUS","approval_status",false)+'</td><td><textarea id="approval_opinion" style="width:100%;" rows="2" cols="8"/></textarea></td><td><input id="approver" type="hidden" value="'+nowUser.userCode+'"/>'+nowUser.userName+'</td><td><input id="approval_time" type="hidden" value="'+date.getTime()+'"/>'+top.getTimeStr(date.getTime(),true)+'</td></tr>';
+								}else{
+								 ht+='<tr class="tr_data"><td><input id="id" type="hidden" value="'+o[i].id+'"/><input id="approval_stage" type="hidden" value="'+o[i].approval_stage+'"/>'+top.getCodeName("APPROVAL_STAGE",o[i].approval_stage)+'</td><td>'+top.getCodeName("APPROVAL_STATUS",o[i].approval_status)+'</td><td></td><td>'+nowUser.userName+'</td><td>'+top.getTimeStr(date.getTime(),true)+'</td></tr>';
+								}
+							   break;
+							default: 
+							   ht+='<tr class="tr_data"><td><input id="id" type="hidden" value="'+o[i].id+'"/><input id="approval_stage" type="hidden" value="'+o[i].approval_stage+'"/>'+top.getCodeName("APPROVAL_STAGE",o[i].approval_stage)+'</td><td>'+top.getCodeName("APPROVAL_STATUS",o[i].approval_status)+'</td><td></td><td>'+nowUser.userName+'</td><td>'+top.getTimeStr(date.getTime(),true)+'</td></tr>';
+							   break;
+					   }
+					  }else{
+					    ht+='<tr class="tr_data"><td>'+top.getCodeName("APPROVAL_STAGE",o[i].approval_stage)+'</td><td>'+top.getCodeName("APPROVAL_STATUS",o[i].approval_status)+'</td><td>'+o[i].approval_opinion+'</td><td>'+top.getUserNameByCode(o[i].approver)+'</td><td>'+top.getTimeStr(o[i].approval_time,true)+'</td></tr>';
+					  }
+				   }else{
+				       ht+='<tr class="tr_data"><td>'+top.getCodeName("APPROVAL_STAGE",o[i].approval_stage)+'</td><td>'+top.getCodeName("APPROVAL_STATUS",o[i].approval_status)+'</td><td>'+o[i].approval_opinion+'</td><td>'+top.getUserNameByCode(o[i].approver)+'</td><td>'+top.getTimeStr(o[i].approval_time,true)+'</td></tr>';
+				   } 
+				}
+				ht+='<tr class="tr_data nowapproval" style="display:none;"><td colspan="5" align="center"><div class="buttonDivTwo"><a href="javascript:void(0)" onclick="saveApproval()">保存</a></div></td></tr>';
+			 }
+		   }else{
+		     top.showInfoWinError("操作失败！");
+		   }
+		   $("#approvalrecordTable").html(ht);
+		   if(optType=="approval"){
+		       switch(currentApprovalStage){
+				case "0":
+					if(top.g_isPermit("oa_dept_check")){
+					  $(".nowapproval").show();
+					}else{
+					  $(".nowapproval").hide();
+					}
+					break;
+				case "1":
+				   if(top.g_isPermit("oa_personal_admin_check")){
+					  $(".nowapproval").show();
+					}else{
+					  $(".nowapproval").hide();
+					}
+					break;
+				case "2":
+				   if(top.g_isPermit("oa_general_manager_check")){
+					  $(".nowapproval").show();
+					}else{
+					  $(".nowapproval").hide();
+					}
+				   break;
+				default: 
+				   $(".nowapproval").hide();
+				   break;
+			   }
+			  if(currentApprovalStage=="2" && currentApprovalStatus=="1"){
+			    $(".nowapproval").hide();
+			  }
+		   }
+		  
+		   if($("#status").val()=="3"){
+		      $(".nowapproval").hide();
+		   }
+		}
+		
+		function getLeaveApplyInfo(){
+		  var aoData=[];
+		  aoData.push( { "name":"info.id","value":info_id } );
+		  top.sendAjaxRequest("/actions/LeaveApplication.action?getLeaveApplyAndApproval",aoData,getLeaveApplyInfoCallback);
+		}
+		
+		function  getLeaveApplyInfoCallback(obj){
+		   if(obj.status==true){
+			 if(obj.body){
+			     var leaveInfo=obj.body;
+				 info_id=leaveInfo.id;
+				 $("#tddept").html(top.getDeptPath(leaveInfo.dept));
+				 $("#dept").val(leaveInfo.dept);
+				 $("#tdemployee_code").val(leaveInfo.employee_name);
+				 $("#spanemployee_code").html(leaveInfo.employee_name);
+				 $("#employee_code").val(leaveInfo.employee_code);
+				 $("#tdentry_date").html(top.getTimeStr(leaveInfo.entry_date,true));
+				 $("#entry_date").html(leaveInfo.entry_date);
+				 $("#tdjob_title").html(top.getCodeName("SYS_POSITION",leaveInfo.job_title));
+				 $("#job_title").val(leaveInfo.job_title);
+				 if(leaveInfo.status=="3" && optType!="approval"){
+				     $("#spanemployee_code").hide();
+					 $("#tdemployee_code").show();
+					 $("#apply_date").val(top.getTimeStr(leaveInfo.apply_date,true));
+					 $("#last_work_date").val(top.getTimeStr(leaveInfo.last_work_date,true));
+					 $("input[name='reason_to_leave']").each(function(){
+						if(leaveInfo.reason_to_leave.indexOf($(this).val())!=-1){
+						  $(this).attr("checked","checked");
+						}
+					 
+					 })
+					 if($("#reason_to_leave").attr("checked")=="checked"){
+						$("#tdother").show();
+						$("#reason_other").val(leaveInfo.reason_other);
+					 }
+					 if(optType=="query"){
+					   $("#spanemployee_code").show();
+					   $("#tdemployee_code").hide();
+					   $("#tdreason").html(top.getAllCheckedValue( document.getElementsByName("reason_to_leave")));
+					   $("#buttonTR").hide();
+					 }
+					 $("#status").val(leaveInfo.status);
+				 }else{
+				     $("#spanemployee_code").show();
+					 $("#tdemployee_code").hide();
+				     $("#tdapply_date").html(top.getTimeStr(leaveInfo.apply_date,true));
+					 $("#tdlast_work_date").html(top.getTimeStr(leaveInfo.last_work_date,true));
+					 $("input[name='reason_to_leave']").each(function(){
+						if(leaveInfo.reason_to_leave.indexOf($(this).val())!=-1){
+						  $(this).attr("checked","checked");
+						}	 
+					 })
+					 if($("#reason_to_leave").attr("checked")=="checked"){
+						$("#tdother").show();
+						$("#reason_other").val(leaveInfo.reason_other);
+					 }
+					 $("#status").val(leaveInfo.status);
+					 $("#buttonTR").hide();
+					 $("#tdreason").html(top.getAllCheckedValue( document.getElementsByName("reason_to_leave")));
+				 }
+			 }
+		   }else{
+		     top.showInfoWinError("操作失败!");
+		   }	
+           if(info_id!=0){		   
+		      getApprovalInfo();
+		   }else{
+		      $("#approvalrecord").hide();
+			  if(optType=="approval"){
+			    $("#buttonTR").hide();
+			  }
+		   }
+		}
+		
+		function getUserDetailInfoCallback(obj){
+		  if(obj.status==true){
+		    var user=obj.body;
+		    $("#tddept").html(top.getDeptPath(user.deptId));
+			$("#dept").val(user.deptId);
+			$("#tdemployee_code").val(user.userName);
+			$("#employee_code").val(user.userCode);
+			$("#tdentry_date").html(top.getTimeStr(user.entry_date,true));
+			$("#entry_date").val(user.entry_date);
+			$("#tdjob_title").html(top.getCodeName("SYS_POSITION",user.job_title));
+			$("#job_title").val(user.job_title);
+		  }
+		}
+		
+		function checkMsg(){
+		  var message="";
+		  if($("#employee_code").val()==""){
+		    message+="请选择员工！<br>";
+		  }
+		  if($("#apply_date").val()==""){
+		    message+="申请日期不能为空!<br/>";
+		  }
+		  var reason=top.getAllCheckedValue( document.getElementsByName("reason_to_leave") );
+		  if(reason==""){
+		    message+="请选择离职原因!<br>";
+		  }
+		  return message;
+		}
+		
+		//保存离职申请信息
+		function doSubmit(){
+		   var msg=checkMsg();
+		   if(msg!=""){
+		     top.showInfoWinWarn(msg);return;
+		   }
+		   
+		   var aoData=[];
+		   aoData.push( { "name":"info.dept","value":$("#dept").val() } );
+		   aoData.push( { "name":"info.employee_code","value":$("#employee_code").val() } );
+		   aoData.push( { "name":"info.employee_name","value":$("#tdemployee_code").val() } );
+		   aoData.push( { "name":"info.job_title","value":$("#job_title").val() } );
+		   aoData.push( { "name":"info.entry_date","value":$("#entry_date").val() } );
+		   aoData.push( { "name":"info.apply_date","value":top.toTimestamp($("#apply_date").val()) } );
+		   aoData.push( { "name":"info.last_work_date","value":top.toTimestamp($("#last_work_date").val()) } );
+		   aoData.push( { "name":"info.status","value":"1" } );
+		   aoData.push( { "name":"info.reason_to_leave","value":top.getAllCheckedValue( document.getElementsByName("reason_to_leave") ) } );
+		   if($("#reason_to_leave").attr("checked")=="checked"){
+		     aoData.push( { "name":"info.reason_other","value":$("#reason_other").val() } );
+		   }
+		   
+		   var xurl="/actions/LeaveApplication.action?insertLeaveApplication";
+		   if(info_id!=0){
+		     aoData.push( { "name":"info.id","value":info_id } );
+		     xurl="/actions/LeaveApplication.action?updateLeaveApplication";
+		   }
+		   top.sendAjaxRequest(xurl,aoData,doSubmitCallback);
+		}
+		
+		function doSubmitCallback(obj){
+		  if(obj.status==true){
+		    top.showInfoWinOK("操作成功!");
+			top.closeDialog();
+		  }else{
+		    top.showInfoWinError("操作失败！");
+		  }
+		}
+		
+		//保存离职申请审核信息
+		function saveApproval(){
+		   if($("#approver").val()==""){
+		     top.showInfoWinWarn("请填写审核人!");return;
+		   }
+		   if($("#approval_time").val()==""){
+		     top.showInfoWinWarn("请填写审核时间!");return;
+		   }
+		   var aoData=[];
+		   aoData.push( { "name":"info.id","value":$("#id").val() } );
+		   aoData.push( { "name":"info.apply_id","value":info_id } );
+		   aoData.push( { "name":"info.approval_stage","value":$("#approval_stage").val() } );
+		   aoData.push( { "name":"info.approval_status","value":$("#approval_status").val() } );
+		   aoData.push( { "name":"info.approval_opinion","value":$("#approval_opinion").val() } );
+		   aoData.push( { "name":"info.approver","value":$("#approver").val() } );
+		   aoData.push( { "name":"info.approval_time","value":$("#approval_time").val() } );
+		   aoData.push( { "name":"info.approval_type","value":"0" });
+		   
+		   if($("#approval_status").val()=="2"){
+		      $("#status").val("3");
+		   }
+		   
+		   top.sendAjaxRequest("/actions/ApprovalRecord.action?updateApprovalRecord",aoData,saveApprovalCallback);
+		} 
+		
+		function saveApprovalCallback(obj){
+		   if(obj.status==true){
+		     top.showInfoWinOK("操作成功！"); 
+			 getApprovalInfo();
+		   }else{
+		     top.showInfoWinError("操作失败！");
+		   }
+		}
+		
+		function doBeforeClose(){
+		
+		}
+		
+		function cancle(){
+		   top.closeDialog();
+		}
+		
+		function selectUser(){
+			var xurl="pages/organization/selectUser.html?opt=addRoleUser";
+			top.openSelectDialog("选择员工",xurl,1060,600,doSelectUser);
+       }
+	   
+	    function doSelectUser(){
+			var so = top.getTempValue();
+			if ( so.userCodes == '' ) return ;
+			var aoData=[];
+		    aoData.push( { "name":"user.userCode","value": so.userCodes} );
+		    top.sendAjaxRequest("/actions/User.action?getDetailUserInfo",aoData,getUserDetailInfoCallback);
+       }
+		
+	</script>
+  </head>
+  
+  <body>
+    <div id="main" style="margin:8px;">
+		<div>
+		    <input id="status" type="hidden" value="0"/>
+		    <table  width="100%" border="1" cellpadding="3" cellspacing="1" style="background-color: #b9d8f3;">
+			   <tr class="tr_data" height="35px">
+			      <td align="right" width="10%" style="font-weight:bold;">姓名:<input id="employee_code" type="hidden"/></td>
+				  <td align="left" width="20%">
+                      <span id="spanemployee_code" style="display:none;"></span><input type="text" id="tdemployee_code" onclick="selectUser()" readonly />
+				  </td>
+			      <td align="right" width="10%" style="font-weight:bold;">所在部门:<input id="dept" type="hidden"/></td>
+				  <td align="left" width="25%" id="tddept"></td>
+			      <td align="right" width="15%" style="font-weight:bold;">职务:</td>
+				  <td align="left" width="20%">
+				      <label id="tdjob_title"></label><input type="hidden" id="job_title" size="20"/>
+				  </td>
+			   </tr>
+			   <tr class="tr_data" height="35px">
+			      <td align="right" width="10%" style="font-weight:bold;">入职日期:<input id="entry_date" type="hidden"/></td>
+				  <td align="left" width="25%" id="tdentry_date"></td>
+			      <td align="right" style="font-weight:bold;" width="10%">申请日期:</td>
+				  <td align="left" width="20%" id="tdapply_date"><input id="apply_date" type="text" size="10" onclick="top.selectDate(this)"/></td> 
+			      <td align="right" style="font-weight:bold;" width="15%">最后上班日期:</td>
+			      <td align="left" width="20%" id="tdlast_work_date"><input id="last_work_date" size="10" type="text" onclick="top.selectDate(this)"/></td>
+			   </tr>
+               <tr class="tr_data" height="50px">
+			      <td align="right" width="10%"  style="font-weight:bold;">离职原因:</td>
+				  <td align="left"  width="90%"  colspan="5" id="tdreason">
+				    <table width="100%">
+					  <tr class="tr_data">
+				        <td colspan="4" align="left">请选择(可选一项或多项)</td>
+					  </tr>
+					  <tr class="tr_data">
+						 <td align="left" width="20%"><input name="reason_to_leave" type="checkbox" value="晋升机会少"/>晋升机会少</td>
+						 <td align="left" width="20%"><input name="reason_to_leave" type="checkbox" value="薪资福利差"/>薪资福利差</td>
+						 <td align="left" width="20%"><input name="reason_to_leave" type="checkbox" value="工作压力大"/>工作压力大</td>
+						 <td align="left" width="20%"><input name="reason_to_leave" type="checkbox" value="工作不合志趣"/>工作不合志趣</td>
+				      </tr>
+					  <tr class="tr_data">
+						 <td align="left" width="20%"><input name="reason_to_leave" type="checkbox" value="企业效益低"/>企业效益低</td>
+						 <td align="left" width="20%"><input name="reason_to_leave" type="checkbox" value="工作环境差"/>工作环境差  </td>
+						 <td align="left" width="20%"><input name="reason_to_leave" type="checkbox" value="与同事矛盾"/>与同事矛盾</td>
+						 <td align="left" width="20%"><input name="reason_to_leave" type="checkbox" value="自行创业"/>自行创业</td>
+					  </tr>
+					  <tr class="tr_data">
+						 <td align="left" width="20%"><input name="reason_to_leave" type="checkbox" value="身体欠佳"/>身体欠佳</td>
+						 <td align="left" width="20%"><input name="reason_to_leave" type="checkbox" value="继续升学"/>继续升学</td>
+						 <td align="left" width="20%"><input name="reason_to_leave" type="checkbox" value="家庭因素"/>家庭因素 </td>
+						 <td align="left" width="20%">&nbsp;</td>
+					  </tr>
+					  <tr class="tr_data">
+						 <td align="left" width="20%" colspan="4">
+						     <input id="reason_to_leave" name="reason_to_leave" type="checkbox" onchange="isOtherShow()" value="其他"/>其他(请注明)
+							 <span id="tdother" style="display:none;"><input id="reason_other" type="text" size="50"/></span>
+						 </td>
+					  </tr>
+				    </table>
+				  </td>
+			   </tr>			  
+			   <tr class="tr_data" height="50px"  id="approvalrecord">
+			      <td colspan="6">
+				    <table width="100%" id="approvalrecordTable">
+				    </table>
+				  </td>
+			   </tr>
+			   <tr class="tr_data" id="buttonTR">
+			      <td align="right" width="40%" colspan="3"><div class="buttonDivTwo"><a href="javascript:void(0)" onclick="doSubmit()">提交</a></div></td>
+				  <td align="left" width="60%" colspan="3"><div class="buttonDivTwo"><a href="javascript:void(0)" onclick="cancle()">取消</a></div></td>
+			   </tr>
+			</table>
+		</div>
+	</div>
+  </body>
+</html>

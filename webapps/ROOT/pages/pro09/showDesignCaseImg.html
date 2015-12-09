@@ -1,0 +1,157 @@
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css" />
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css" />
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css"/>
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css"	media="print, projection, screen"/>
+<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+	    <script type="text/javascript" src="../../js/SimpleMap.js"></script>
+		<script type="text/javascript">
+		
+    var isSaveOK=false;
+    var optType="";
+	var case_id="";
+	var case_img_id="";
+	
+	$(document).ready(function(){
+	    case_id=top.getUrlParam(document.URL,"case_id");
+		var aoData=[];
+		aoData.push( {"name":"designCase.id","value":case_id} );
+		top.sendAjaxRequest("/actions/DesignPlan.action?getDesignCaseById",aoData,getDesignCaseByIdCallback);
+	});
+	
+	function getDesignCaseByIdCallback(obj){
+	   if(obj.status==true){
+	      var o=obj.body;
+		  $("#tddistrict").html(top.getCodeName("DISTRICT",o.building_name));
+	      $("#tddesigner").html(top.getUserNameByCode(o.designer));
+	      $("#tdtype").html(top.getCodeName("PRODESIGN_STYLE",o.style));
+		  $("#pro_addr").html(o.addr_province+o.addr_city+o.addr_area+o.addr_building+"楼"+o.addr_unit+"单元"+o.addr_floor+"层"+o.addr_door_num+"号"+o.pro_addr);
+		  $("#project_cost").html(o.project_cost);
+		  $("#room_style").html(o.room_count+"室"+o.hall_count+"厅"+o.bath_count+"卫");;
+		  $("#case_introduction").html(o.case_introduction);
+		  $("#main_material_memo").html(o.main_material_memo);
+		  $("#sub_material_memo").html(o.sub_material_memo);
+		  getCaseImgList();
+	   }else{
+	     top.showInfoWinError("操作失败！");
+	   }
+	}
+	
+	//获取该设计案例的图片
+	function getCaseImgList(){
+	    var aoData=[];
+		aoData.push( {"name":"caseImage.case_id","value":case_id} );
+		top.sendAjaxRequest("/actions/DesignPlan.action?getCaseImgList",aoData,getCaseImgListCallback);
+	}
+	//获取该设计案例图片回调函数
+	function getCaseImgListCallback(obj){
+	    var ht="";
+	    if(obj.status==true){
+		   if(obj.body.length>0){
+			   var o=obj.body;
+			   for(var i=0;i<o.length;i++){
+			      if(i==0){
+				    var content="<table>";
+					content+="<tr><td align='center'><img src='"+top.getUrlBase()+"/download?filePath="+o[i].img_path+"' height='200px' onclick='previewFile(\""+o[i].img_path+"\")'/><br/><span>"+o[i].img_memo+"</span></td></tr>";
+					content=="</table>";
+					$("#nowCaseImg").html(content);
+				  }
+				  if(i%2==0){
+					if(i>0){
+					  ht+="</tr>";
+					}
+					ht+="<tr class='tr_data'>";
+				  }
+				  ht+="<td align='center'><img src='"+top.getUrlBase()+"/download?filePath="+o[i].img_path+"' height='60px' title='"+o[i].img_memo+"' onclick='updateNowCaseImg(\""+o[i].img_path+"\",\""+o[i].img_memo+"\")'/></td>";
+			   }
+			   if(i%2!=0){
+				   for(var j=0;j<(2-i%2);j++){
+					  ht+="<td></td>";
+				   }
+				  ht+="</tr>";
+			   }
+		   }else{
+		       ht+="<tr class='tr_data'><td><img src='/img/no_picture1.jpg' height='120px' /></td><td><input type='image' src='/img/no_picture1.jpg' height='120px'/></td><td><input type='image' src='/img/no_picture1.jpg' height='120px'/></td></</</tr>";
+		   }
+		}else{
+		  ht+="<tr class='tr_data'><td><img src='/img/no_picture1.jpg' height='120px' /></td><td><input type='image' src='/img/no_picture1.jpg' height='120px'/></td><td><input type='image' src='/img/no_picture1.jpg' height='120px'/></td></</</tr>";
+		}
+		$("#caseImgList").html(ht);
+	}
+	
+	function updateNowCaseImg(img_path,img_memo){
+	  var content="<table>";
+	  content+="<tr><td align='center'><img src='"+top.getUrlBase()+"/download?filePath="+img_path+"' height='200px' onclick='previewFile(\""+img_path+"\")'/><br/><span>"+img_memo+"</span></td></tr>";
+	  content=="</table>";
+	  $("#nowCaseImg").html(content);
+	}
+	
+	//预览
+	function previewFile(filePath){
+		var xurl="pages/openFile.html?filePath="+filePath+"&fileName="+filePath;
+		top.openDialog("文件预览",xurl,true,700,650,null);
+	}
+  
+	</script>
+	</head>
+	<body width="97%">
+		<div id="tabs-0" style="margin-top:7px;" align="center">
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				    <tr class="tr_data"><td align="left" colspan="12" style="font-weight:bold;">基本信息</td></tr>
+				    <tr class="tr_data" height="30px">
+					    <td class="table_property_title" width="10%">小区名称</td>
+						<td align="left" id="tddistrict" width="10%"></td>
+						<td class="table_property_title" width="10%">地址</td>
+						<td align="left" width="20%"><span id="pro_addr" ></span></td>
+						<td class="table_property_title">户型</td>
+						<td align="left" id="room_style"></td>
+						
+					</tr>
+					<tr class="tr_data" height="30px">
+					    <td class="table_property_title">风格</td>
+						<td align="left" id="tdtype"></td>
+						<td class="table_property_title">工程造价</td>
+						<td align="left"><span id="project_cost" ></span>万元</td>
+					    <td class="table_property_title" width="6%">设计师</td>
+						<td align="left" id="tddesigner" width="10%"></td>
+					</tr>
+					<tr class="tr_data" height="30px">
+					    <td class="table_property_title">案例介绍</td>
+						<td colspan="5" align="left"><span id="case_introduction"  rows="8" style="width:100%;"></span></td>
+					</tr>
+					<tr class="tr_data" height="30px">
+					    <td class="table_property_title">主材说明</td>
+						<td colspan="5" align="left"><span id="main_material_memo"   rows="8" style="width:100%;"></span></td>
+					</tr>
+					<tr class="tr_data" height="30px">
+					    <td class="table_property_title">辅材说明</td>
+						<td colspan="5" align="left"><span id="sub_material_memo"  rows="8" style="width:100%;"></span></td>
+					</tr>
+				</table>
+				<table width="100%">
+				     <tr class="tr_data"><td colspan="6" style="font-weight:bold;" align="left">案例图片</td></tr>
+				     <tr class="tr_data">
+					    <td width="40%" valign="top">
+                            <table id="caseImgList"></table>						
+						</td>
+						<td width="60%" align="center">
+						   <div id="nowCaseImg">
+						   
+						   </div>
+						</td>
+					 </tr>
+				</table>
+		</div>
+		
+	</body>
+</html>

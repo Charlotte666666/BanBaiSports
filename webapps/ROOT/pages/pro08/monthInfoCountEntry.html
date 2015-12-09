@@ -1,0 +1,618 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var d=new Date();
+			var month=d.getMonth()+1;
+			var day = d.getDate();
+		    var optType="";
+			var qDeptId="";
+		    var qDeptName="";
+			var ht="";
+			var dept_id = '';
+			var rs=null;
+			$(document).ready(function() {
+			   optType=top.getUrlParam(document.URL,"optType");
+			   $( "#yearSpan" ).html( top.get5YearSelectHtml("q_year",false,null,"checkHasCountInfo()") );
+			   $( "#monthSpan" ).html(top.get12MonthSelectHtml("q_month",false,month,"checkHasCountInfo()") );
+			   $("#q_submit").hide();
+			   dept_id = top.getCurrentUser().deptId;
+			   checkHasCountInfo();
+			});
+		
+function checkHasCountInfo(){
+     $("#check_msg").html("");
+     var aoData=[];
+     aoData.push( { "name": "count.year", "value": $("#q_year").val() } );
+     aoData.push( { "name": "count.month", "value": $("#q_month").val()} );
+     aoData.push( { "name": "count.info_type", "value": 1} );
+     top.sendAjaxRequest("/actions/Pro08Report.action?checkCountIsExist",aoData,checkInfoCallback);
+}
+
+function checkInfoCallback(obj){
+    var o = obj.msg;
+	if(o>0){
+	$("#td_entry").hide();
+	  $("#checkSpan").show();
+	  $("#q_submit").hide();
+	  $("#CountInfotable").hide();
+	 $("#checkSpan").html("本报表已经存在！");
+	} /*else if(day<20){
+	 $("#td_entry").hide();
+	  $("#checkSpan").show();
+	 $("#q_submit").hide();
+	  $("#CountInfotable").hide();
+	 $("#checkSpan").html("每月20日后才可上报！");
+	} */
+	else{
+	 $("#td_entry").show();
+	 $("#checkSpan").hide();
+	}
+}
+function doQuery(){
+	var aoData=[];
+	aoData.push( { "name": "year", "value": $("#q_year").val() } );
+	aoData.push( { "name": "month", "value": $("#q_month").val()} );
+	aoData.push( { "name": "deptId", "value": dept_id } );
+	top.sendAjaxRequest("/actions/Pro08Report.action?infoCountEntry",aoData,infoCallback);
+ }  
+function infoCallback(obj){
+           try{
+		    $("#q_submit").show();
+			 $("#CountInfotable").show();
+			 rs=obj.aaData;
+			 ht='';
+			 ht+='<colgroup>'
+        +' <col style="width:120px"/><col width="32" style=";width:32px"/><col width="31" style=";width:31px"/><col width="21" span="5" style=";width:21px"/>'
+        +' <col style="width:39px"/><col width="21" span="6" style=";width:21px"/> <col width="34" style=";width:35px"/><col width="21" style=";width:21px"/>'
+         +'<col style="width:33px"/><col width="26" style=";width:27px"/><col width="28" style=";width:28px"/><col width="22" style=";width:23px"/><col width="21" span="13" style=";width:21px"/>'
+		 +'<col span="2" style="width:31px"/><col width="30" span="2" style=";width:31px"/> <col width="21" span="26" style=";width:21px"/><col width="38" style=";width:39px"/>'
+         +'<col span="3" style="width:21px"/><col width="41" style=";width:41px"/><col width="21" span="2" style=";width:21px"/><col width="45" style=";width:45px"/><col width="21" style=";width:21px"/>'
+         +'</colgroup><tbody><tr style="height:30px" class="firstRow"><td colspan="73" height="30" style="border-width: 1px; border-style: solid;" width="2680">'
+         +' <span style="font-size: 18px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;'
+		 +'&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;黑河市('+$("#q_year").val()+' 年'+ $("#q_month").val()+'月) 社区服刑人员信息情况统计表&nbsp;</span>'
+             +'</td></tr>'
+             +'<tr style="height:30px">'
+             +'<td width="120px" style="border-style: solid; border-width: 1px; text-align:center;" rowspan="6"><span style="font-size: 18px;">地</span></br><span style="font-size: 18px;">区</span></td>'
+             +'<td rowspan="4" width="32px" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">本月在册人数</span></td>'
+             +'<td rowspan="4" width="31px" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">上月在册人数</span></td>'
+            +' <td colspan="10" width="231px" style="border-width: 1px; border-right-color: black; border-style: solid;"><span style="font-size: 18px;">&nbsp; &nbsp; &nbsp;变动情况</span></td>'
+             +'<td colspan="8" width="159px" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">&nbsp; &nbsp; &nbsp;矫正类别</span></td>'
+             +'<td colspan="9" width="192px" style="border-width: 1px; border-right-color: black; border-style: solid;"><span style="font-size: 18px;">&nbsp; &nbsp; &nbsp;犯罪类型</span></td>'
+             +'<td colspan="4" width="85px" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">&nbsp; &nbsp;户籍</span></td>'
+             +'<td colspan="2" width="61px" style="border-width: 1px; border-right-color: black; border-style: solid;"><span style="font-size: 18px;">性别</span></td>'
+             +'<td colspan="2" width="61px" style="border-width: 1px; border-right-color: black; border-style: solid;"><span style="font-size: 18px;">民族</span></td>'
+            +' <td colspan="4" width="85px" style="border-width: 1px; border-right-color: black; border-style: solid;"><span style="font-size: 18px;">&nbsp; &nbsp;年龄</span></td>'
+             +'<td colspan="3" width="64px" style="border-width: 1px; border-right-color: black; border-style: solid;"><span style="font-size: 18px;">文化</span></td>'
+             +'<td colspan="5" width="107px" style="border-width: 1px; border-right-color: black; border-style: solid;"><span style="font-size: 18px;">就业就学</span></td>'
+             +'<td colspan="7" width="149px" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">&nbsp; &nbsp;本月统计</span></td>'
+            +' <td colspan="16" width="403px" style="border-width: 1px; border-right-color: black; border-style: solid;"><span style="font-size: 18px;">&nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;累计项目</span></td></tr>'
+            +' <tr height="40" style="height:40px">'
+             +'<td colspan="2" dir="LTR" width="43" style="border-width: 1px; border-right-color: black; border-style: solid;"><span style="font-size: 18px;">本月增加</span></td>'
+             +'<td colspan="8" width="188" style="border-width: 1px; border-right-color: black; border-style: solid;"><span style="font-size: 18px;">本月减少</span></td>'
+             +'<td colspan="2" width="43" style="border-width: 1px; border-right-color: black; border-style: solid;"><span style="font-size: 18px;">管制</span></td>'
+             +'<td colspan="2" width="56" style="border-width: 1px; border-right-color: black; border-style: solid;"><span style="font-size: 18px;">缓刑</span></td>'
+             +'<td width="33" style="border-style: solid; border-width: 1px;"> <span style="font-size: 18px;">假释</span></td>'
+             +'<td colspan="3" width="77" style="border-width: 1px; border-right-color: black; border-style: solid;"><span style="font-size: 18px;">暂予监外执行</span></td>'
+             +'<td rowspan="3" style="border-width: 1px; border-bottom-color: black; border-style: solid;" width="16"><span style="font-size: 18px;">危害国家安全</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">危害公共安全</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">破坏经济秩序</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">侵犯公民人身权利</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">侵犯财产</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">妨害社会管理秩序</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">贪污受贿</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">渎职</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">其他</span></td>'
+            +' <td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">城镇户籍</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">农村户籍</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">港澳台籍</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">外国籍及无国籍</span></td>'
+             +'<td rowspan="3" width="31" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">男性</span></td>'
+            +' <td rowspan="3" width="31" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">女性</span></td>'
+             +'<td rowspan="3" width="31" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">汉族</span></td>'
+             +'<td rowspan="3" width="31" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">少数民族</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">未满十八周岁</span> </td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">十八至四十五周岁</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">四十六至六十周岁</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">六十一周岁以上</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">大专及以上</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">高中或中专</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">初中及以下</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">就学</span> </td>'
+             +'<td colspan="3" width="64" style="border-width: 1px; border-right-color: black; border-style: solid;"><span style="font-size: 18px;">就业</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">无业</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"> <span style="font-size: 18px;">警告</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">治安处罚</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">裁定减刑</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">脱管</span></td>'
+            +' <td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"> <span style="font-size: 18px;">宣告禁止令</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">解除禁止令</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">再犯罪</span> </td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">警告</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">治安处罚</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">裁定减刑</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">脱管</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">宣告禁止令</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">解除禁止令</span></td>'
+             +'<td rowspan="3" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">再犯罪</span></td>'
+             +'<td rowspan="3" width="39" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">接收社区服刑人员</span></td>'
+             +'<td colspan="8" width="215" style="border-width: 1px; border-right-color: black; border-style: solid;"><span style="font-size: 18px;">解除社区服刑人员</span></td></tr>'
+             +'<tr height="25" style=";height:25px">'
+             +'<td rowspan="2" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">新增入矫</span></td>'
+             +'<td rowspan="2" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">居住地变更迁入</span> </td>'
+             +'<td rowspan="2" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">期满解除</span></td>'
+             +'<td colspan="4" width="104" style="border-width: 1px; border-right-color: black; border-style: solid;"><span style="font-size: 18px;">收监执行</span></td>'
+            +' <td colspan="2" width="52" style="border-width: 1px; border-right-color: black; border-style: solid;"> <span style="font-size: 18px;">死亡</span></td>'
+             +'<td rowspan="2" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">居住地变更迁出</span></td>'
+             +'<td rowspan="2" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">总数</span></td>'
+             +'<td rowspan="2" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">其中被宣告禁止令</span></td>'
+            +' <td rowspan="2" width="35" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">总数</span></td>'
+             +'<td rowspan="2" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">其中被宣告禁止令</span></td>'
+            +' <td rowspan="2" width="33" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">总数</span></td>'
+            +' <td rowspan="2" width="27" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">总数</span></td>'
+             +'<td colspan="2" width="51" style="border-width: 1px; border-right-color: black; border-style: solid;"><span style="font-size: 18px;">其中</span></td>'
+             +'<td rowspan="2" style="border-width: 1px; border-bottom-color: black; border-style: solid;" width="16"><span style="font-size: 18px;">总计</span></td>'
+             +'<td rowspan="2" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">城镇</span></td>'
+             +'<td rowspan="2" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">农村</span></td>'
+             +'<td rowspan="2" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">总数</span></td>'
+             +'<td rowspan="2" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">撤销缓刑</span></td>'
+            +' <td rowspan="2" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">撤销假释</span></td>'
+             +'<td rowspan="2" width="41" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">暂予监外执行罪犯收监执行</span></td>'
+             +'<td rowspan="2" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">居住地变更迁出</span></td>'
+             +'<td rowspan="2" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">死亡</span></td>'
+             +'<td rowspan="2" width="45" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">期满解除社区服刑人员</span></td>'
+            +' <td rowspan="2" width="21" style="border-width: 1px; border-bottom-color: black; border-style: solid;"><span style="font-size: 18px;">其他</span></td> </tr>'
+             +'<tr height="146" style=";height:146px">'
+             +'<td width="21" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">撤销缓刑</span></td>'
+             +'<td width="21" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">撤销假释</span></td>'
+            +' <td width="50" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">暂予监外执行罪犯决定收监</span></td>'
+             +'<td width="21" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">其他</span></td>'
+             +'<td width="21" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">正常死亡</span></td>'
+             +'<td width="21" style="border-style: solid; border-width: 1px; word-break: break-all;"><span style="font-size: 18px;">非正常死亡</span></td>'
+             +'<td width="17" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">当庭接收</span></td>'
+             +'<td width="15" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">监所押送</span></td> </tr>'
+             +'<tr height="25" style=";height:25px">'
+            +'<td width="32" align="center" style="border-style: solid; border-width: 1px;"> <span style="font-size: 18px;">人</span></td>'
+            +'<td width="31" align="center" style="border-style: solid; border-width: 1px;"> <span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+           +' <td width="22" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="15" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="35" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="33" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="27" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td style="border-style: solid; border-width: 1px;" align="center"  width="16"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="23" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span> </td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="31" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="31" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="31" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="31" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span> </td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span> </td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"> <span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+           +'<td width="21" align="center"  style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="39" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="41" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="45" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;">人</span></td></tr>'
+             +'<tr height="25" style=";height:25px">'
+            +'<td width="32" align="center" style="border-style: solid; border-width: 1px;"> <span style="font-size: 18px;color:#7B7B7B"><i>1</i></span></td>'
+            +'<td width="31" align="center" style="border-style: solid; border-width: 1px;"> <span style="font-size: 18px;color:#7B7B7B"><i>2</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>3</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>4</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>5</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>6</span></td>'
+           +' <td width="22" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>7</span></td>'
+            +'<td width="15" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>8</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>9</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>10</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>11</span></td>'
+			 +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>12</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>13</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>14</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>15</span></td>'
+            +'<td width="35" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>16</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>17</span></td>'
+            +'<td width="33" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>18</span></td>'
+            +'<td width="27" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>19</span></td>'
+            +'<td align="center" style="border-style: solid; border-width: 1px;" width="16"><span style="font-size: 18px;color:#7B7B7B"><i>20</span></td>'
+            +'<td width="23" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>21</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>22</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>23</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>24</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>25</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>26</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>27</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>28</span> </td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>29</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>30</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>31</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>32</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>33</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>34</span></td>'
+            +'<td width="31" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>35</span></td>'
+            +'<td width="31" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>36</span></td>'
+            +'<td width="31" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>37</span></td>'
+            +'<td width="31" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>38</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>39</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>40</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>41</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>42</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>43</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>44</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>45</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>46</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>47</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>48</span> </td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>49</span> </td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"> <span style="font-size: 18px;color:#7B7B7B"><i>50</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>51</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>52</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>53<span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>54</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>55</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>56</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>57</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>58</span></td>'
+           +'<td width="21" align="center"  style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>59</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>60</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>61</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>62</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>63</span></td>'
+            +'<td width="21" align="center"  style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>64</span></td>'
+            +'<td width="39" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>65</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>66</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>67</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>68</span></td>'
+            +'<td width="41" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>69</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>70</span></td>'
+            +'<td width="21" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>71</span></td>'
+            +'<td width="45" align="center" style="border-style: solid; border-width: 1px;"><span style="font-size: 18px;color:#7B7B7B"><i>72</span></td></tr>'
+			for(var i=0;i<rs.length;i++ )
+			{
+			ht+='<tr height="25" style=";height:25px">'
+           +'<td height="25" width="120" style="border-width: 1px; border-style: solid;">'+top.getDeptName(rs[i].dept_id)+'</td>'
+            +'<td width="32" style="border-style: solid; border-width: 1px;"> <input type="text" style="text-align:center" id="q_c_1" value="'+rs[i].c_1+'" size="1" /></td>'
+            +'<td width="31" style="border-style: solid; border-width: 1px;"> <input type="text" style="text-align:center" id="q_c_2" value="'+rs[i].c_2+'" size="1" /></td>'
+			 +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_3" value="'+rs[i].c_3+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_4" value="'+rs[i].c_4+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_5" value="'+rs[i].c_5+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_6" value="'+rs[i].c_6+'" size="1" /></td>'
+           +' <td width="22" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_7" value="'+rs[i].c_7+'" size="1" /></td>'
+            +'<td width="15" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_8" value="'+rs[i].c_8+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_9" value="'+rs[i].c_9+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_10" value="'+rs[i].c_10+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_11" value="'+rs[i].c_11+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_13" value="'+rs[i].c_13+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_14" value="'+rs[i].c_14+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_15" value="'+rs[i].c_15+'" size="1" /></td>'
+            +'<td width="35" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_16" value="'+rs[i].c_16+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_17" value="'+rs[i].c_17+'" size="1" /></td>'
+            +'<td width="33" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_18" value="'+rs[i].c_18+'" size="1" /></td>'
+            +'<td width="27" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_19" value="'+rs[i].c_19+'" size="1" /></td>'
+            +'<td style="border-style: solid; border-width: 1px;" width="16"><input type="text" style="text-align:center" id="q_c_20" value="'+rs[i].c_20+'" size="1" /></td>'
+            +'<td width="23" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_21" value="'+rs[i].c_21+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_22" value="'+rs[i].c_22+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_23" value="'+rs[i].c_23+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_24" value="'+rs[i].c_24+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_25" value="'+rs[i].c_25+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_26" value="'+rs[i].c_26+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_27" value="'+rs[i].c_27+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_28" value="'+rs[i].c_28+'" size="1" /> </td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_29" value="'+rs[i].c_29+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_30" value="'+rs[i].c_30+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_31" value="'+rs[i].c_31+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_32" value="'+rs[i].c_32+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_33" value="'+rs[i].c_33+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_34" value="'+rs[i].c_34+'" size="1" /></td>'
+            +'<td width="31" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_35" value="'+rs[i].c_35+'" size="1" /></td>'
+            +'<td width="31" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_36" value="'+rs[i].c_36+'" size="1" /></td>'
+            +'<td width="31" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_37" value="'+rs[i].c_37+'" size="1" /></td>'
+            +'<td width="31" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_38" value="'+rs[i].c_38+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_39" value="'+rs[i].c_39+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_40" value="'+rs[i].c_40+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_41" value="'+rs[i].c_41+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_42" value="'+rs[i].c_42+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_43" value="'+rs[i].c_43+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_44" value="'+rs[i].c_44+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_45" value="'+rs[i].c_45+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_46" value="'+rs[i].c_46+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_47" value="'+rs[i].c_47+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_48" value="'+rs[i].c_48+'" size="1" /> </td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_49" value="'+rs[i].c_49+'" size="1" /> </td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_50" value="'+rs[i].c_50+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_51" value="'+rs[i].c_51+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_52" value="'+rs[i].c_52+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_53" value="'+rs[i].c_53+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_54" value="'+rs[i].c_54+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_55" value="'+rs[i].c_55+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_56" value="'+rs[i].c_56+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_57" value="'+rs[i].c_57+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_58" value="'+rs[i].c_58+'" size="1" /></td>'
+           +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_59" value="'+rs[i].c_59+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_60" value="'+rs[i].c_60+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_61" value="'+rs[i].c_61+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_62" value="'+rs[i].c_62+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_63" value="'+rs[i].c_63+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_64" value="'+rs[i].c_64+'" size="1" /></td>'
+            +'<td width="39" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_65" value="'+rs[i].c_65+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_66" value="'+rs[i].c_66+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_67" value="'+rs[i].c_67+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_68" value="'+rs[i].c_68+'" size="1" /></td>'
+            +'<td width="41" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_69" value="'+rs[i].c_69+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_70" value="'+rs[i].c_70+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_71" value="'+rs[i].c_71+'" size="1" /></td>'
+            +'<td width="45" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_72" value="'+rs[i].c_72+'" size="1" /></td>'
+            +'<td width="21" style="border-style: solid; border-width: 1px;"><input type="text" style="text-align:center" id="q_c_73" value="'+rs[i].c_73+'" size="1" /></td></tr>';
+			}
+			$("#CountInfotable").html(ht);
+		}catch(e)
+		{
+			//alert(e.message);
+		}
+
+}
+
+function checkData(){
+   var c_1 = parseInt($("#q_c_1").val());  var c_2 =  parseInt($("#q_c_2").val());  var c_3 =  parseInt($("#q_c_3").val());  var c_4 =  parseInt($("#q_c_4").val());  var c_5 =  parseInt($("#q_c_5").val());  var c_6 =  parseInt($("#q_c_6").val()); 
+   var c_7 =  parseInt($("#q_c_7").val());  var c_8 =  parseInt($("#q_c_8").val());  var c_9 =  parseInt($("#q_c_9").val());  var c_10 =  parseInt($("#q_c_10").val());  var c_11 =  parseInt($("#q_c_11").val());  var c_13 =  parseInt($("#q_c_13").val());
+   var c_14 = parseInt($("#q_c_14").val());  var c_16 = parseInt($("#q_c_16").val());  var c_18 = parseInt($("#q_c_18").val());  var c_19 = parseInt($("#q_c_19").val());  var c_20 = parseInt($("#q_c_20").val()); var c_21 = parseInt($("#q_c_21").val());
+   var c_22 = parseInt($("#q_c_22").val());  var c_23 = parseInt($("#q_c_23").val());  var c_24 = parseInt($("#q_c_24").val());  var c_25 = parseInt($("#q_c_25").val());
+   var c_26 = parseInt($("#q_c_26").val());  var c_27 = parseInt($("#q_c_27").val()); var c_28 = parseInt($("#q_c_28").val()); var c_29 = parseInt($("#q_c_29").val());  var c_30 = parseInt($("#q_c_30").val());
+   var c_31 = parseInt($("#q_c_31").val());  var c_32 = parseInt($("#q_c_32").val());  var c_33 = parseInt($("#q_c_33").val());  var c_34 = parseInt($("#q_c_34").val());  var c_35 = parseInt($("#q_c_35").val());
+   var c_36= parseInt($("#q_c_36").val());  var c_37 = parseInt($("#q_c_37").val());  var c_38 = parseInt($("#q_c_38").val());  var c_39 = parseInt($("#q_c_39").val());
+   var c_40 = parseInt($("#q_c_40").val()); var c_41 = parseInt($("#q_c_41").val()); var c_42 = parseInt($("#q_c_42").val()); var c_43 = parseInt($("#q_c_43").val()); var c_44 = parseInt($("#q_c_44").val()); var c_45 = parseInt($("#q_c_45").val());
+   var c_46 = parseInt($("#q_c_46").val()); var c_47 = parseInt($("#q_c_47").val()); var c_50 = parseInt($("#q_c_50").val()); var c_66 = parseInt($("#q_c_66").val()); var c_67 = parseInt($("#q_c_67").val()); var c_68 = parseInt($("#q_c_68").val());
+   var c_69 = parseInt($("#q_c_69").val()); var c_70 = parseInt($("#q_c_70").val()); var c_71 = parseInt($("#q_c_71").val()); var c_72 = parseInt($("#q_c_72").val()); var c_73 = parseInt($("#q_c_73").val());
+var str="";
+   //alert(c_2+c_3+c_4-c_5-c_6-c_7-c_8-c_9-c_10-c_11-c_13);
+   if(c_1!=c_2+c_3+c_4-c_5-c_6-c_7-c_8-c_9-c_10-c_11-c_13){
+      str+="1=2+3+4-5-6-7-8-9-10-11-12&nbsp;&nbsp;";
+   }
+   if(c_1!=c_14+c_16+c_18+c_19){
+   str+="1=13+15+17+18&nbsp;&nbsp;";
+   }
+   if(c_19!=c_20+c_21){
+   str+="18=19+20&nbsp;&nbsp;";
+   }
+   if(c_1!=c_22+c_23+c_24+c_25+c_26+c_27+c_28+c_29+c_30){
+   str+="1=21+22+23+24+25+26+27+28+29&nbsp;&nbsp;";
+   }
+   if(c_1!=c_31+c_32+c_33+c_34){
+   str+="1=30+31+32+33&nbsp;&nbsp;";
+   }
+   str+="<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+   if(c_1!=c_35+c_36){
+   str+="1=34+35&nbsp;&nbsp;";
+   }
+   if(c_1!=c_37+c_38){
+   str+="1=36+37&nbsp;&nbsp;";
+   }
+   if(c_1!=c_39+c_40+c_41+c_42){
+   str+="1=38+39+40+41&nbsp;&nbsp;";
+   }
+   if(c_1!=c_43+c_44+c_45){
+   str+="1=42+43+44&nbsp;&nbsp;";
+   }
+   if(c_1!=c_46+c_47+c_50){
+   str+="1=45+46+49&nbsp;&nbsp;";
+   }
+   if(c_66!=c_67+c_68+c_69+c_70+c_71+c_72+c_73){
+   str+="65=66+67+68+69+70+71+72&nbsp;&nbsp;"
+   }
+   return str;
+}
+function saveBaseInfo(){
+   
+    var str = checkData();
+	 if(str.indexOf("1")!=-1||str.indexOf("65")!=-1){
+	  str="<b><font color='red'>数据有误：</font>"+str+"</b>";
+	  $("#check_msg").html(str);
+	  return;
+	 }
+	  $("#check_msg").html(str);
+     var aoData=[];
+	  aoData.push( { "name": "count.c_1", "value": $("#q_c_1").val()});
+	  aoData.push( { "name": "count.c_2", "value": $("#q_c_2").val()});
+	  aoData.push( { "name": "count.c_3", "value": $("#q_c_3").val()});
+	  aoData.push( { "name": "count.c_4", "value": $("#q_c_4").val()});
+	  aoData.push( { "name": "count.c_5", "value": $("#q_c_5").val()});
+	  aoData.push( { "name": "count.c_6", "value": $("#q_c_6").val()});
+	  aoData.push( { "name": "count.c_7", "value": $("#q_c_7").val()});
+	  aoData.push( { "name": "count.c_8", "value": $("#q_c_8").val()});
+	  aoData.push( { "name": "count.c_9", "value": $("#q_c_9").val()});
+	  aoData.push( { "name": "count.c_10", "value": $("#q_c_10").val()});
+	  aoData.push( { "name": "count.c_11", "value": $("#q_c_11").val()});
+	  aoData.push( { "name": "count.c_13", "value": $("#q_c_13").val()});
+	  aoData.push( { "name": "count.c_14", "value": $("#q_c_14").val()});
+	  aoData.push( { "name": "count.c_15", "value": $("#q_c_15").val()});
+	  aoData.push( { "name": "count.c_16", "value": $("#q_c_16").val()});
+	  aoData.push( { "name": "count.c_17", "value": $("#q_c_17").val()});
+	  aoData.push( { "name": "count.c_18", "value": $("#q_c_19").val()});
+	  aoData.push( { "name": "count.c_20", "value": $("#q_c_20").val()});
+	  aoData.push( { "name": "count.c_21", "value": $("#q_c_21").val()});
+	  aoData.push( { "name": "count.c_22", "value": $("#q_c_22").val()});
+	  aoData.push( { "name": "count.c_23", "value": $("#q_c_23").val()});
+	  aoData.push( { "name": "count.c_24", "value": $("#q_c_24").val()});
+	  aoData.push( { "name": "count.c_25", "value": $("#q_c_25").val()});
+	  aoData.push( { "name": "count.c_26", "value": $("#q_c_26").val()});
+	  aoData.push( { "name": "count.c_27", "value": $("#q_c_27").val()});
+	  aoData.push( { "name": "count.c_28", "value": $("#q_c_28").val()});
+	  aoData.push( { "name": "count.c_29", "value": $("#q_c_29").val()});
+	  aoData.push( { "name": "count.c_30", "value": $("#q_c_30").val()});
+	  aoData.push( { "name": "count.c_31", "value": $("#q_c_31").val()});
+	  aoData.push( { "name": "count.c_32", "value": $("#q_c_32").val()});
+	  aoData.push( { "name": "count.c_34", "value": $("#q_c_33").val()});
+	  aoData.push( { "name": "count.c_35", "value": $("#q_c_35").val()});
+	  aoData.push( { "name": "count.c_36", "value": $("#q_c_36").val()});
+      aoData.push( { "name": "count.c_37", "value": $("#q_c_37").val()});
+	  aoData.push( { "name": "count.c_38", "value": $("#q_c_38").val()});
+	  aoData.push( { "name": "count.c_39", "value": $("#q_c_39").val()});
+	  aoData.push( { "name": "count.c_40", "value": $("#q_c_40").val()});
+	  aoData.push( { "name": "count.c_41", "value": $("#q_c_41").val()});
+	  aoData.push( { "name": "count.c_42", "value": $("#q_c_42").val()});
+	  aoData.push( { "name": "count.c_43", "value": $("#q_c_43").val()});
+	  aoData.push( { "name": "count.c_44", "value": $("#q_c_44").val()});
+	  aoData.push( { "name": "count.c_45", "value": $("#q_c_45").val()});
+	  aoData.push( { "name": "count.c_46", "value": $("#q_c_46").val()});
+	  aoData.push( { "name": "count.c_47", "value": $("#q_c_47").val()});
+	  aoData.push( { "name": "count.c_48", "value": $("#q_c_48").val()});
+	  aoData.push( { "name": "count.c_49", "value": $("#q_c_49").val()});
+	  aoData.push( { "name": "count.c_50", "value": $("#q_c_50").val()});
+	  aoData.push( { "name": "count.c_51", "value": $("#q_c_51").val()});
+	  aoData.push( { "name": "count.c_52", "value": $("#q_c_52").val()});
+	  aoData.push( { "name": "count.c_53", "value": $("#q_c_53").val()});
+	  aoData.push( { "name": "count.c_54", "value": $("#q_c_54").val()});
+	  aoData.push( { "name": "count.c_55", "value": $("#q_c_55").val()});
+	  aoData.push( { "name": "count.c_56", "value": $("#q_c_56").val()});
+	  aoData.push( { "name": "count.c_57", "value": $("#q_c_57").val()});
+	  aoData.push( { "name": "count.c_58", "value": $("#q_c_58").val()});
+	  aoData.push( { "name": "count.c_59", "value": $("#q_c_59").val()});
+	  aoData.push( { "name": "count.c_60", "value": $("#q_c_60").val()});
+	  aoData.push( { "name": "count.c_61", "value": $("#q_c_61").val()});
+	  aoData.push( { "name": "count.c_62", "value": $("#q_c_62").val()});
+	  aoData.push( { "name": "count.c_63", "value": $("#q_c_63").val()});
+	  aoData.push( { "name": "count.c_64", "value": $("#q_c_64").val()});
+	  aoData.push( { "name": "count.c_65", "value": $("#q_c_65").val()});
+	  aoData.push( { "name": "count.c_66", "value": $("#q_c_66").val()});
+	  aoData.push( { "name": "count.c_67", "value": $("#q_c_67").val()});
+	  aoData.push( { "name": "count.c_68", "value": $("#q_c_68").val()});
+	  aoData.push( { "name": "count.c_69", "value": $("#q_c_69").val()});
+	  aoData.push( { "name": "count.c_70", "value": $("#q_c_70").val()});
+	  aoData.push( { "name": "count.c_71", "value": $("#q_c_71").val()});
+	  aoData.push( { "name": "count.c_72", "value": $("#q_c_72").val()});
+	  aoData.push( { "name": "count.c_73", "value": $("#q_c_73").val()});
+	  aoData.push( { "name": "count.year", "value": $("#q_year").val()});
+	  aoData.push( { "name": "count.month", "value": $("#q_month").val()});
+	  aoData.push( { "name": "count.dept_id", "value":dept_id });
+	  top.sendAjaxRequest("/actions/Pro08Report.action?insertCountInfo",aoData,optCallback);
+	  
+}
+ function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	        isCreated = true;
+	        top.showInfoWinOK("操作成功");
+		    top.closeDialog();
+			 $("#td_entry").hide();
+	         $("#checkSpan").show();
+	         $("#q_submit").hide();
+	         $("#checkSpan").html("本报表已经存在！");
+			
+	    }else{
+	    	isCreated = false;
+	        top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		    top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   </script>
+	</head>
+	<body>
+	 <input type="hidden" id="deptId" value="" />
+		<div width="100%">
+		    <div style='border: 2px solid #89A1B9;'>
+			 <table  width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="200px">&nbsp;社区服刑人员信息情况统计表 &nbsp;</td>			
+				  <!--<td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>-->
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+				 <td align="right" width="5%">年份:</td><td align="center" width="5%"><span id="yearSpan" ></span></td>
+			      <td align="right" width="5%">月份:</td><td align="center" width="5%"><span id="monthSpan" ></span></td>
+				  <td align="center"  width="10%" id="td_entry">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">录入</a></div>
+				  </td>
+				   <td align="left"  width="15%">
+				    <span id="checkSpan" ></span>
+				  </td>
+				  <!--<td align="right" width="15%">区域名称:</td><td align="left" width="50%">
+				  <input type="text" id="deptName" value="" style="width:300px" readonly onclick="selectDept()" />
+				  (选择统计区域后点击查询按钮)
+				  </td>
+				   <td width="20%" align="left" style="margin-right:10px"><div class="buttonTwo"><a href="javascript:openPrintView()">打印</a></div></td>-->
+				   <td  width="65%"></td>
+			     </tr>
+			 </table>
+			</div>
+		</div>
+		<table id="CountInfotable" cellpadding="0" cellspacing="0" style="background-color:#ffffff;margin:20px;">
+		</table>
+		<table cellpadding="0" cellspacing="0" style="margin:20px;">
+		<tr><td id="check_msg"></td></tr>
+		</table>
+		<p align="center" id="optBtnArea">
+		   <table><tr  id="q_submit">
+					<td  align="center" width="2680px"><span id="okBtn" class="buttonTwo"><a href="javascript:saveBaseInfo()">提交</a></span></td>
+		   </tr></table>
+		</p>
+<p>
+    <br/>
+</p>
+	</body>
+</html>

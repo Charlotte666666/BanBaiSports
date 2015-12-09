@@ -1,0 +1,375 @@
+<html>
+  <head>
+    <title>施工图打分</title>
+
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css"/>
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+	<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css"/>
+	<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css" media="print, projection, screen"/>    
+    
+	<script src="../../js/jquery-1.7.2.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+	<script text="text/javascript">
+	   var check_id="";//施工图id
+	   var order_id="";//工程订单id
+	   
+	  $(document).ready(function(){
+
+	      var optType=top.getUrlParam(document.URL,"optType");
+		  check_id=top.getUrlParam(document.URL,"id");
+		  order_id=top.getUrlParam(document.URL,"order_id");
+	      if(optType=="insert"){//打分
+		     $("#viewCheckContent").hide();
+		  }else{//查看打分情况
+		     queryConstructionDrawing();
+		  }
+	  
+	  
+	  })
+	  
+	  //获取施工图信息
+	function queryConstructionDrawing(){
+		   var aoData=[];
+		   aoData.push({ "name":"conDrawing.check_id","value":check_id});
+           top.sendAjaxRequest("/actions/ProjectOrder.action?getConstructionDrawing",aoData,queryConstructionDrawingCallBack);
+	}
+	
+	function queryConstructionDrawingCallBack(obj){
+	      $("#optBtnTable").hide();
+		  $("#message").hide();
+		  $("input").attr("disabled",false);
+	      $("input").attr("style","background-color:#f4faff;border:0px;width:100%;text-align:center;");
+	     if(obj.status==true){
+		    var o=obj.body.conDrawing[0];
+			
+			$("#total_deduct_marks").html(o.total_deduct_marks); 
+			$("#total_score").html(o.total_score);
+			$("#construct_pro1_score").val(o.check_pro1_score) ;
+			$("#construct_pro2_score").val(o.check_pro2_score);
+			$("#construct_pro3_score").val(o.check_pro3_score);
+			$("#construct_pro4_score").val(o.check_pro4_score);
+			$("#construct_pro5_score").val(o.check_pro5_score);
+			$("#construct_pro6_score").val(o.check_pro6_score);
+			$("#construct_pro7_score").val(o.check_pro7_score);
+			$("#construct_pro8_score").val(o.check_pro8_score);
+			$("#construct_pro9_score").val(o.check_pro9_score);
+			$("#construct_pro10_score").val(o.check_pro10_score);
+			$("#construct_pro11_score").val(o.check_pro11_score);
+			$("#construct_pro12_score").val(o.check_pro12_score);
+			$("#construct_pro13_score").val(o.check_pro13_score);
+			$("#construct_pro14_score").val(o.check_pro14_score);
+			$("#construct_pro15_score").val(o.check_pro15_score);
+			$("#construct_pro16_score").val(o.check_pro16_score);
+			$("#construct_pro17_score").val(o.check_pro17_score);
+			$("#construct_pro18_score").val(o.check_pro18_score);
+			$("#construct_pro19_score").val(o.check_pro19_score);
+			$("#construct_pro20_score").val(o.check_pro20_score);
+			$("#construct_pro1_num").val(o.check_pro1_num);
+			$("#construct_pro2_num").val(o.check_pro2_num);
+			$("#construct_pro3_num").val(o.check_pro3_num);
+			$("#construct_pro4_num").val(o.check_pro4_num);
+			$("#construct_pro5_num").val(o.check_pro5_num);
+			$("#construct_pro6_num").val(o.check_pro6_num);
+			$("#construct_pro7_num").val(o.check_pro7_num);
+			$("#construct_pro8_num").val(o.check_pro8_num);
+			$("#construct_pro9_num").val(o.check_pro9_num)
+			$("#construct_pro10_num").val(o.check_pro10_num);
+			$("#construct_pro11_num").val(o.check_pro11_num);
+			$("#construct_pro12_num").val(o.check_pro12_num);
+			$("#construct_pro13_num").val(o.check_pro13_num);
+			$("#construct_pro14_num").val(o.check_pro14_num);
+			$("#construct_pro15_num").val(o.check_pro15_num);
+			$("#construct_pro16_num").val(o.check_pro16_num);
+			$("#construct_pro17_num").val(o.check_pro17_num);
+			$("#construct_pro18_num").val(o.check_pro18_num);
+			$("#construct_pro19_num").val(o.check_pro19_num);
+			$("#construct_pro20_num").val(o.check_pro20_num);
+		 }else{
+		    top.showInfoWinWarn("获取信息失败！");
+		 }
+	}
+	  
+	  
+	  //计算分数
+	function computeScore(index){
+		var deductMarks=0;
+		var score=[5,5,2,1,1,0.5,0.5,1,5,1,5,10,0.5,1,2,0.5,5,2,0.5,2];
+		var num=$("#construct_pro"+index+"_num").val();
+		deductMarks=Number(score[index-1]*num);
+		$("#construct_pro"+index+"_score").val( deductMarks );
+		
+		computeDeductMarks();
+	}
+	
+	function computeDeductMarks(){
+		var totalDeductMarks=0;
+		var deductMarks=0;
+		var totalScore=0;
+		for(var i=0;i<20;i++){
+			deductMarks=Number($("#construct_pro"+(i+1)+"_score").val());
+			totalDeductMarks=Number(totalDeductMarks+deductMarks);
+		}
+		$("#total_deduct_marks").html(totalDeductMarks);
+		if(totalDeductMarks>100){
+			$("#total_score").html('0');
+		}else{
+			totalScore=Number(100-totalDeductMarks);
+			$("#total_score").html(totalScore);
+		}
+		
+	}
+	 
+	 	//保存施工图审核信息
+	  function saveCheck(){
+	        //验证
+	  
+	        if($("#construct_pro1_num").val().length<1){top.showInfoWinWarn("请填写"+$("#construct_pro1_num").attr("title")+"扣分情况！");return false;}
+	        if(!IsNumber($("#construct_pro1_num").val())){top.showInfoWinWarn($("#construct_pro1_num").attr("title")+"应为数字类型，请重新填写！");return false;}
+			if($("#construct_pro2_num").val().length<1){top.showInfoWinWarn("请填写"+$("#construct_pro2_num").attr("title")+"扣分情况！");return false;}
+	        if(!IsNumber($("#construct_pro2_num").val())){top.showInfoWinWarn($("#construct_pro2_num").attr("title")+"应为数字类型，请重新填写！");return false;}
+			if($("#construct_pro3_num").val().length<1){top.showInfoWinWarn("请填写"+$("#construct_pro3_num").attr("title")+"扣分情况！");return false;}
+	        if(!IsNumber($("#construct_pro3_num").val())){top.showInfoWinWarn($("#construct_pro3_num").attr("title")+"应为数字类型，请重新填写！");return false;}
+			if($("#construct_pro4_num").val().length<1){top.showInfoWinWarn("请填写"+$("#construct_pro4_num").attr("title")+"扣分情况！");return false;}
+	        if(!IsNumber($("#construct_pro4_num").val())){top.showInfoWinWarn($("#construct_pro4_num").attr("title")+"应为数字类型，请重新填写！");return false;}
+			if($("#construct_pro5_num").val().length<1){top.showInfoWinWarn("请填写"+$("#construct_pro5_num").attr("title")+"扣分情况！");return false;}
+	        if(!IsNumber($("#construct_pro5_num").val())){top.showInfoWinWarn($("#construct_pro5_num").attr("title")+"应为数字类型，请重新填写！");return false;}	
+			if($("#construct_pro6_num").val().length<1){top.showInfoWinWarn("请填写"+$("#construct_pro6_num").attr("title")+"扣分情况！");return false;}
+	        if(!IsNumber($("#construct_pro6_num").val())){top.showInfoWinWarn($("#construct_pro6_num").attr("title")+"应为数字类型，请重新填写！");return false;}
+			if($("#construct_pro7_num").val().length<1){top.showInfoWinWarn("请填写"+$("#construct_pro7_num").attr("title")+"扣分情况！");return false;}
+	        if(!IsNumber($("#construct_pro7_num").val())){top.showInfoWinWarn($("#construct_pro7_num").attr("title")+"应为数字类型，请重新填写！");return false;}
+			if($("#construct_pro8_num").val().length<1){top.showInfoWinWarn("请填写"+$("#construct_pro8_num").attr("title")+"扣分情况！");return false;}
+	        if(!IsNumber($("#construct_pro8_num").val())){top.showInfoWinWarn($("#construct_pro8_num").attr("title")+"应为数字类型，请重新填写！");return false;}
+			if($("#construct_pro9_num").val().length<1){top.showInfoWinWarn("请填写"+$("#construct_pro9_num").attr("title")+"扣分情况！");return false;}
+	        if(!IsNumber($("#construct_pro9_num").val())){top.showInfoWinWarn($("#construct_pro9_num").attr("title")+"应为数字类型，请重新填写！");return false;}
+			if($("#construct_pro10_num").val().length<1){top.showInfoWinWarn("请填写"+$("#construct_pro10_num").attr("title")+"扣分情况！");return false;}
+	        if(!IsNumber($("#construct_pro10_num").val())){top.showInfoWinWarn($("#construct_pro10_num").attr("title")+"应为数字类型，请重新填写！");return false;}
+			if($("#construct_pro11_num").val().length<1){top.showInfoWinWarn("请填写"+$("#construct_pro11_num").attr("title")+"扣分情况！");return false;}
+	        if(!IsNumber($("#construct_pro11_num").val())){top.showInfoWinWarn($("#construct_pro11_num").attr("title")+"应为数字类型，请重新填写！");return false;}
+			if($("#construct_pro12_num").val().length<1){top.showInfoWinWarn("请填写"+$("#construct_pro12_num").attr("title")+"扣分情况！");return false;}
+	        if(!IsNumber($("#construct_pro12_num").val())){top.showInfoWinWarn($("#construct_pro12_num").attr("title")+"应为数字类型，请重新填写！");return false;}
+			if($("#construct_pro13_num").val().length<1){top.showInfoWinWarn("请填写"+$("#construct_pro13_num").attr("title")+"扣分情况！");return false;}
+	        if(!IsNumber($("#construct_pro13_num").val())){top.showInfoWinWarn($("#construct_pro13_num").attr("title")+"应为数字类型，请重新填写！");return false;}
+			if($("#construct_pro14_num").val().length<1){top.showInfoWinWarn("请填写"+$("#construct_pro14_num").attr("title")+"扣分情况！");return false;}
+	        if(!IsNumber($("#construct_pro14_num").val())){top.showInfoWinWarn($("#construct_pro14_num").attr("title")+"应为数字类型，请重新填写！");return false;}
+			if($("#construct_pro15_num").val().length<1){top.showInfoWinWarn("请填写"+$("#construct_pro15_num").attr("title")+"扣分情况！");return false;}
+	        if(!IsNumber($("#construct_pro15_num").val())){top.showInfoWinWarn($("#construct_pro15_num").attr("title")+"应为数字类型，请重新填写！");return false;}
+			if($("#construct_pro16_num").val().length<1){top.showInfoWinWarn("请填写"+$("#construct_pro16_num").attr("title")+"扣分情况！");return false;}
+	        if(!IsNumber($("#construct_pro16_num").val())){top.showInfoWinWarn($("#construct_pro16_num").attr("title")+"应为数字类型，请重新填写！");return false;}
+			if($("#construct_pro17_num").val().length<1){top.showInfoWinWarn("请填写"+$("#construct_pro17_num").attr("title")+"扣分情况！");return false;}
+	        if(!IsNumber($("#construct_pro17_num").val())){top.showInfoWinWarn($("#construct_pro17_num").attr("title")+"应为数字类型，请重新填写！");return false;}
+			if($("#construct_pro18_num").val().length<1){top.showInfoWinWarn("请填写"+$("#construct_pro18_num").attr("title")+"扣分情况！");return false;}
+	        if(!IsNumber($("#construct_pro18_num").val())){top.showInfoWinWarn($("#construct_pro18_num").attr("title")+"应为数字类型，请重新填写！");return false;}
+			if($("#construct_pro19_num").val().length<1){top.showInfoWinWarn("请填写"+$("#construct_pro19_num").attr("title")+"扣分情况！");return false;}
+	        if(!IsNumber($("#construct_pro19_num").val())){top.showInfoWinWarn($("#construct_pro19_num").attr("title")+"应为数字类型，请重新填写！");return false;}
+			if($("#construct_pro20_num").val().length<1){top.showInfoWinWarn("请填写"+$("#construct_pro20_num").attr("title")+"扣分情况！");return false;}
+	        if(!IsNumber($("#construct_pro20_num").val())){top.showInfoWinWarn($("#construct_pro20_num").attr("title")+"应为数字类型，请重新填写！");return false;}
+			
+			if($("#total_score").html()==""){
+			   $("#total_score").html("100");
+			   $("#total_deduct_marks").html("0");
+			}
+	        var aoData=[];
+			aoData.push( { "name": "conDrawing.check_id", "value": check_id } );
+			aoData.push( { "name": "conDrawing.order_id", "value": order_id } );
+			aoData.push( { "name": "conDrawing.total_deduct_marks", "value": $("#total_deduct_marks").html() } );
+			aoData.push( { "name": "conDrawing.total_score", "value": $("#total_score").html() } );
+			aoData.push( { "name": "conDrawing.check_pro1_score", "value": $("#construct_pro1_score").val() } );
+			aoData.push( { "name": "conDrawing.check_pro2_score", "value": $("#construct_pro2_score").val() } );
+			aoData.push( { "name": "conDrawing.check_pro3_score", "value": $("#construct_pro3_score").val() } );
+			aoData.push( { "name": "conDrawing.check_pro4_score", "value": $("#construct_pro4_score").val() } );
+			aoData.push( { "name": "conDrawing.check_pro5_score", "value": $("#construct_pro5_score").val() } );
+			aoData.push( { "name": "conDrawing.check_pro6_score", "value": $("#construct_pro6_score").val() } );
+			aoData.push( { "name": "conDrawing.check_pro7_score", "value": $("#construct_pro7_score").val() } );
+			aoData.push( { "name": "conDrawing.check_pro8_score", "value": $("#construct_pro8_score").val() } );
+			aoData.push( { "name": "conDrawing.check_pro9_score", "value": $("#construct_pro9_score").val() } );
+			aoData.push( { "name": "conDrawing.check_pro10_score", "value": $("#construct_pro10_score").val() } );
+			aoData.push( { "name": "conDrawing.check_pro11_score", "value": $("#construct_pro11_score").val() } );
+			aoData.push( { "name": "conDrawing.check_pro12_score", "value": $("#construct_pro12_score").val() } );
+			aoData.push( { "name": "conDrawing.check_pro13_score", "value": $("#construct_pro13_score").val() } );
+			aoData.push( { "name": "conDrawing.check_pro14_score", "value": $("#construct_pro14_score").val() } );
+			aoData.push( { "name": "conDrawing.check_pro15_score", "value": $("#construct_pro15_score").val() } );
+			aoData.push( { "name": "conDrawing.check_pro16_score", "value": $("#construct_pro16_score").val() } );
+			aoData.push( { "name": "conDrawing.check_pro17_score", "value": $("#construct_pro17_score").val() } );
+			aoData.push( { "name": "conDrawing.check_pro18_score", "value": $("#construct_pro18_score").val() } );
+			aoData.push( { "name": "conDrawing.check_pro19_score", "value": $("#construct_pro19_score").val() } );
+			aoData.push( { "name": "conDrawing.check_pro20_score", "value": $("#construct_pro20_score").val() } );
+			aoData.push( { "name": "conDrawing.check_pro1_num", "value": $("#construct_pro1_num").val() } );
+			aoData.push( { "name": "conDrawing.check_pro2_num", "value": $("#construct_pro2_num").val() } );
+			aoData.push( { "name": "conDrawing.check_pro3_num", "value": $("#construct_pro3_num").val() } );
+			aoData.push( { "name": "conDrawing.check_pro4_num", "value": $("#construct_pro4_num").val() } );
+			aoData.push( { "name": "conDrawing.check_pro5_num", "value": $("#construct_pro5_num").val() } );
+			aoData.push( { "name": "conDrawing.check_pro6_num", "value": $("#construct_pro6_num").val() } );
+			aoData.push( { "name": "conDrawing.check_pro7_num", "value": $("#construct_pro7_num").val() } );
+			aoData.push( { "name": "conDrawing.check_pro8_num", "value": $("#construct_pro8_num").val() } );
+			aoData.push( { "name": "conDrawing.check_pro9_num", "value": $("#construct_pro9_num").val() } );
+			aoData.push( { "name": "conDrawing.check_pro10_num", "value": $("#construct_pro10_num").val() } );
+			aoData.push( { "name": "conDrawing.check_pro11_num", "value": $("#construct_pro11_num").val() } );
+			aoData.push( { "name": "conDrawing.check_pro12_num", "value": $("#construct_pro12_num").val() } );
+			aoData.push( { "name": "conDrawing.check_pro13_num", "value": $("#construct_pro13_num").val() } );
+			aoData.push( { "name": "conDrawing.check_pro14_num", "value": $("#construct_pro14_num").val() } );
+			aoData.push( { "name": "conDrawing.check_pro15_num", "value": $("#construct_pro15_num").val() } );
+			aoData.push( { "name": "conDrawing.check_pro16_num", "value": $("#construct_pro16_num").val() } );
+			aoData.push( { "name": "conDrawing.check_pro17_num", "value": $("#construct_pro17_num").val() } );
+			aoData.push( { "name": "conDrawing.check_pro18_num", "value": $("#construct_pro18_num").val() } );
+			aoData.push( { "name": "conDrawing.check_pro19_num", "value": $("#construct_pro19_num").val() } );
+			aoData.push( { "name": "conDrawing.check_pro20_num", "value": $("#construct_pro20_num").val() } );
+			
+			var xurl="/actions/ProjectOrder.action?updateConstructionDrawing";
+			top.sendAjaxRequest(xurl,aoData,saveConstructCheckCallback);
+	  }
+	  
+	  //保存完施工图打分信息回调函数
+	  function saveConstructCheckCallback(obj){
+	     if(obj.status==true){
+		    $("#optBtnTable").hide();
+			$("#message").hide();
+		    $("input").attr("disabled",false);
+	        $("input").attr("style","background-color:#f4faff;border:0px;width:100%;text-align:center;");
+		 }
+	  }
+	  
+	  function doBeforeClose(){
+	     top.setTempValue();
+	  }
+	 
+	  //重置
+	  function doCancle(){
+	     $("input").attr("value","");
+	  }
+	</script>
+  </head>
+  
+  <body>
+    <div id="checkContent" style="margin:3px;">
+	        <div id="message" style="color:red;font-weight:bold;">若没有扣分情况，请在错项一栏中填写0</div>
+			<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				<tr class="tr_data" height="35px">
+					<td align="left" width="60%" style="font-weight:bold;">审核项目</td>
+					<td align="center" width="15%" style="font-weight:bold;">错&nbsp;&nbsp;&nbsp;&nbsp;项</td>
+					<td align="center" width="15%" style="font-weight:bold;">扣&nbsp;&nbsp;&nbsp;&nbsp;分</td>
+				</tr>
+				<tr class="tr_data" height="35px">
+					<td align="left">未按七天工作流程按时上交图纸扣5分</td>
+					<td align="center"><input type="text" size="5" id="construct_pro1_num" onChange="computeScore(1)" value="0"  class="num" title="未按七天工作流程按时上交图纸"/></td>
+					<td align="center"><input type="text" size="5" id="construct_pro1_score" disabled value="0"  class="num"/></td>
+				</tr>
+				<tr class="tr_data" height="35px">
+					<td align="left">未按预交底会议要求按时修改补充图纸扣5分</td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro2_num" onChange="computeScore(2)" class="num" title="未按预交底会议要求按时修改补充图纸"/></td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro2_score" disabled /></td>
+				</tr>
+				<tr class="tr_data" height="35px">
+					<td align="left">特殊造型部分，有报价但未出图的每项扣2分</td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro3_num" onChange="computeScore(3)" class="num" title="特殊造型部分，有报价但未出图"/></td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro3_score" disabled /></td>
+				</tr>
+				<tr class="tr_data" height="35px">
+					<td align="left">立面、装饰详图未注材料做法、尺寸的每处扣1分</td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro4_num" onChange="computeScore(4)" class="num" title="立面、装饰详图未注材料做法、尺寸"/></td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro4_score" disabled /></td>
+				</tr>
+				<tr class="tr_data" height="35px">
+					<td align="left">家具制作缺平、立、剖面图的，每缺一项扣1分</td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro5_num" onChange="computeScore(5)" class="num" title="家具制作缺平、立、剖面图"/></td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro5_score" disabled /></td>
+				</tr>
+				<tr class="tr_data" height="35px">
+					<td align="left">电位图插座、开关不合点位规定的每处扣0.5分</td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro6_num" onChange="computeScore(6)" class="num" title="电位图插座、开关不合点位规定"/></td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro6_score" disabled /></td>
+				</tr>
+				<tr class="tr_data" height="35px">
+					<td align="left">电位图灯具控制连线标注错误的，每处扣0.5分</td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro7_num" onChange="computeScore(7)" class="num" title="电位图灯具控制连线标注错误"/></td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro7_score" disabled /></td>
+				</tr>
+				<tr class="tr_data" height="35px">
+					<td align="left">施工图中未标明灯具、开关插座图例的每处扣1分</td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro8_num" onChange="computeScore(8)" class="num" title="施工图中未标明灯具、开关插座图例分"/></td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro8_score" disabled /></td>
+				</tr>
+				<tr class="tr_data" height="35px">
+					<td align="left">设计不符合施工规范，不具可施工性的每处扣5分</td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro9_num" onChange="computeScore(9)" class="num" title="设计不符合施工规范，不具可施工性的每处扣5分"/></td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro9_score" disabled /></td>
+				</tr>
+				<tr class="tr_data" height="35px">
+					<td align="left">图纸尺寸、标注及未使用统一图框，每一项扣1分</td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro10_num" onChange="computeScore(10)" class="num" title="图纸尺寸、标注及未使用统一图框"/></td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro10_score" disabled /></td>
+				</tr>
+					<tr class="tr_data" height="35px">
+					<td align="left">变更图纸未按时交客户确认扣5分</td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro11_num" onChange="computeScore(11)" class="num" title="变更图纸未按时交客户确认"/></td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro11_score" disabled /></td>
+				</tr>
+				<tr class="tr_data" height="35px">
+					<td align="left">按规范要求的图纸项目每缺一项扣10分</td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro12_num" onChange="computeScore(12)" class="num" title="按规范要求的图纸项目"/></td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro12_score" disabled /></td>
+				</tr>
+				<tr class="tr_data" height="35px">
+					<td align="left">图纸目录缺图号、内容的每缺一项扣0.5分</td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro13_num" onChange="computeScore(13)" class="num" title="图纸目录缺图号、内容"/></td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro13_score" disabled /></td>
+				</tr>
+				<tr class="tr_data" height="35px">
+					<td align="left">工程项目表中内容反映不全的，每缺一项扣1分</td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro14_num" onChange="computeScore(14)" class="num" title="工程项目表中内容反映不全的"/></td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro14_score" disabled /></td>
+				</tr>
+				<tr class="tr_data" height="35px">
+					<td align="left">项目表中未标注推荐主材品牌，每缺一项扣2分</td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro15_num" onChange="computeScore(15)" class="num" title="项目表中未标注推荐主材品牌"/></td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro15_score" disabled /></td>
+				</tr>
+				<tr class="tr_data" height="35px">
+					<td align="left">原始平面图未标注室内细部尺寸的每处扣0.5分</td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro16_num" onChange="computeScore(16)" class="num" title="原始平面图未标注室内细部尺寸"/></td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro16_score" disabled /></td>
+				</tr>
+				<tr class="tr_data" height="35px">
+					<td align="left">拆改平面图未标明前后改动位置的扣5分</td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro17_num" onChange="computeScore(17)" class="num" title="拆改平面图未标明前后改动位置"/></td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro17_score" disabled /></td>
+				</tr>
+				<tr class="tr_data" height="35px">
+					<td align="left">平面布置图未标注推荐主材品牌，每缺一项扣2分</td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro18_num" onChange="computeScore(18)" class="num" title="平面布置图未标注推荐主材品牌"/></td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro18_score" disabled /></td>
+				</tr>
+				<tr class="tr_data" height="35px">
+					<td align="left">吊顶图未注用材、标高及细部尺寸的每处扣0.5分</td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro19_num" onChange="computeScore(19)" class="num" title="吊顶图未注用材、标高及细部尺寸"/></td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro19_score" disabled /></td>
+				</tr>
+				<tr class="tr_data" height="35px">
+					<td align="left">图纸设计师或设计部经理未签字扣2分</td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro20_num" onChange="computeScore(20)" class="num" title="图纸设计师或设计部经理未签字"/></td>
+					<td align="center"><input type="text" value="0" size="5" id="construct_pro20_score" disabled /></td>
+				</tr>
+				<tr class="tr_data" height="35px">
+					<td align="left">总计</td>
+					<td align="center" id="total_score"></td>
+					<td id="total_deduct_marks" align="center"></td>
+				</tr>
+			</table>
+			<table  style="margin-left:40%;" align="center" id="optBtnTable">
+			  <tr>
+			    <td>
+				   <div id="saveCheckBtn" class="buttonDivTwo">
+				      <a href="javascript:saveCheck();" >提交</a>
+				   </div>
+				</td>
+				<td>
+				   <div id="saveCheckBtn" class="buttonDivTwo">
+				      <a href="javascript:doCancle();" >重置</a>
+				   </div>
+				</td>
+			  </tr>
+			</table>
+		</div>
+  </body>
+</html>

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.helpyouworkeasy.persistence.FileMapper">
+	<!-- 添加附件信息 -->
+	 <insert id="insertFileInfo" parameterType="FileInfo">
+    INSERT INTO tbl_file_info (belong_type,belong_id,belong_id0,file_source,belong_id2,file_path,file_name,file_type,upload_time,upload_user,file_id,is_delete)
+    VALUES (#{belong_type}, #{belong_id},#{belong_id0},#{file_source},#{belong_id2} ,#{file_path}, #{file_name}, #{file_type}, #{upload_time}, #{upload_user}, #{file_id},#{is_delete})
+  </insert>
+
+
+	<!-- 修改附件信息 -->
+  <update id="updateFileInfo" parameterType="FileInfo">
+    update tbl_file_info set 
+    belong_type=#{belong_type},belong_id=#{belong_id},belong_id2==#{belong_id2},file_path=#{file_path},file_name=#{file_name},file_type=#{file_type},upload_time=#{upload_time},upload_user=#{upload_user}
+    where file_id=#{file_id}
+  </update>
+
+<!-- 得到所有附件的总数 -->
+  <select id="getFileInfoListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_file_info where 1=1 
+   <if test="o.belong_type != '' and o.belong_type != null" >
+      and belong_type=#{o.belong_type}
+    </if>
+    <if test="o.file_name != '' and o.file_name != null" >
+      and file_name like '%${o.file_name}%'
+    </if>
+     <if test="o.belong_id0 != '' and o.belong_id0 != null" >
+      and belong_id0 =#{o.belong_id0}
+    </if>
+     <if test="o.file_source != '' and o.file_source != null" >
+      and file_source =#{o.file_source}
+    </if>
+     <if test="o.belong_id != '' and o.belong_id != null" >
+      and belong_id =#{o.belong_id}
+    </if>
+     <if test="o.belong_id2 != '' and o.belong_id2 != null" >
+      and belong_id2 =#{o.belong_id2}
+    </if>
+    <if test="o.file_type != '' and o.file_type != null" >
+      and file_type=#{o.file_type}
+    </if>
+    <if test="o.is_delete != '' and o.is_delete != null">
+    and  is_delete=#{o.is_delete}
+    </if>
+  </select>
+  
+<!-- 分页查询所有附件类型 -->
+ <select id="getFileInfoPageList" parameterType="map" resultType="FileInfo">
+    select 
+    belong_type,belong_id,belong_id0,file_source,belong_id2,file_path,file_name,file_type,upload_time,upload_user,file_id,is_delete
+    from tbl_file_info where is_delete=0 
+   <if test="o.belong_type != '' and o.belong_type != null" >
+      and belong_type=#{o.belong_type}
+    </if>
+    <if test="o.file_name != '' and o.file_name != null" >
+      and file_name like '%${o.file_name}%'
+    </if>
+     <if test="o.belong_id0 != '' and o.belong_id0 != null" >
+      and belong_id0 =#{o.belong_id0}
+    </if>
+     <if test="o.file_source != '' and o.file_source != null" >
+      and file_source =#{o.file_source}
+    </if>
+     <if test="o.belong_id != '' and o.belong_id != null" >
+      and belong_id =#{o.belong_id}
+    </if>
+     <if test="o.belong_id2 != '' and o.belong_id2 != null" >
+      and belong_id2 =#{o.belong_id2}
+    </if>
+    <if test="o.file_type != '' and o.file_type != null" >
+      and file_type=#{o.file_type}
+    </if>
+     <if test="o.is_delete != '' and o.is_delete != null">
+    and  is_delete=#{o.is_delete}
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+  
+  <!-- 删除附件信息 -->
+  <update id="deleteFileInfo" parameterType="map">
+  update tbl_file_info  set is_delete=1
+   where 1=1
+   <if test="belong_id!=null and belong_id!=''">and belong_id=#{belong_id}</if>
+   <if test="belong_type!=null and belong_type!=''">and belong_type=#{belong_type}</if>
+   <if test="file_id!=null and file_id!=''">and file_id=#{file_id}</if>
+  </update>
+  
+</mapper>

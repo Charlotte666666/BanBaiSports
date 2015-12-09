@@ -1,0 +1,123 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var infoId=0;
+   
+   $(document).ready(function() {
+     initData();
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   function doSubmit(){
+     var aoData=[];
+	 var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+     aoData.push( { "name": "info.notes_desc", "value": $("#notes_desc").val() } );
+     aoData.push( { "name": "info.notes_id", "value": infoId } );
+	 var temp=$("#remind_time_str").val();
+	 if ( temp == '') {
+	   temp=0;
+	 } else {
+	   temp =temp+" "+top.getTwoNumberStr( $("#remind_time_hour").val() )+":"+$("#remind_time_min").val()+":00";
+	   temp=top.toTimestamp( temp );
+	 }
+     aoData.push( { "name": "info.remind_time", "value": temp } );
+     aoData.push( { "name": "info.status", "value": (document.getElementById("status").checked?"0":"1") } );
+	 top.sendAjaxRequest("/actions/Notes.action?"+(optType=='create'?'insertNotesInfo':'updateNotesInfo'),aoData,optCallback);
+   }
+   
+   function checkForm(){
+     var msg = "";
+	 msg += checkString($("#notes_desc").val(),true,1024,"备忘录内容");
+     return msg;
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功！");
+		 top.closeDialog();
+	    }else{
+	     isSaveOK = false;
+	     top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		 top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   function initData(){
+	   try{
+		   optType=top.getUrlParam(document.URL,"opt");
+  	       infoId=top.getUrlParam(document.URL,"infoId");
+		   $("#remindTimeHour").html( top.get24HourSelectHtml("remind_time_hour",false,"09",null) );
+		   if ( optType != 'create' ) {
+			   var o=top.getTempValue();
+			   $("#notes_desc").val(o.notes_desc);
+			   document.getElementById("status").checked = ((o.status==0)?true:false);
+			   var str=top.getTimeStr( o.remind_time );
+			   var date="";
+			   var hour="00";
+			   var min="00";
+			   if ( str != '' ) {
+			     date = str.substring(0,10);
+				 hour = str.substring(11,13);
+				 min = str.substring(14,16);
+			   }
+			   $("#remind_time_str").val( date );
+			   $("#remind_time_hour").val( Number(hour) );
+			   $("#remind_time_min").val( min );
+		   }
+	   }catch(e){
+		   top.showInfoWinError(e.message);
+	   }
+   }
+  </script> 
+</head>
+<body>
+<br>
+<table width="100%" border="0" padding="0" spacing="0">
+ <tr>
+    <td align="right" width="20%">是否提醒:</td>
+    <td align="left" width="80%"><input type="checkbox" value="1" id="status" checked ></input>&nbsp;&nbsp;提醒时间:
+      <input type="text" id="remind_time_str" value="" onclick="new Calendar().show(this);" style="width:70px" />
+	  &nbsp;<span id="remindTimeHour"></span>:<select id="remind_time_min">
+	    <option value="00">00</option><option value="05">05</option><option value="10">10</option><option value="15">15</option>
+		<option value="20">20</option><option value="25">25</option><option value="30">30</option><option value="35">35</option>
+		<option value="40">40</option><option value="45">45</option><option value="50">50</option><option value="55">55</option>
+	  </select>
+	</td>
+ </tr>
+ <tr>
+    <td align="right">备忘内容:</td>
+    <td align="left"><textarea id="notes_desc" cols="55" rows="15" ></textarea></td>
+ </tr>
+</table>
+<p align="center">
+   <table><tr>
+		    <td><span id="submitBtn" class="buttonTwo"><a href="javascript:doSubmit()">保存</a></span></td>
+		    <td><span id="closeBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+   </tr></table>
+</p>
+</body>
+</html>

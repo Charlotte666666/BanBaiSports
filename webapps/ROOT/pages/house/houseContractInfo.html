@@ -1,0 +1,531 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+  <link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css"/>
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css" media="print, projection, screen">
+<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+  <script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+  <script src="../../js/ui.tabs.js" type="text/javascript"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType='';
+   var code='';
+   var roomId=0;
+   var houseId=0;
+   var rentIds=[];
+   var custcontractStatus=0;
+   var currentDeleteId="";
+   
+   $(document).ready(function() {
+     initData();
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+              "isSaveOK":isSaveOK
+            };
+     top.setTempValue(obj);
+   }
+   
+   function doSubmit(){
+     var aoData=[];
+     var checkMsg = checkForm();
+     if ( checkMsg != '' ) {
+         top.showInfoWinWarn(checkMsg);
+         return ;
+     }
+     aoData.push( { "name": "custcontract.code", "value": $("#code").val() } );
+	 aoData.push( { "name": "custcontract.house_id", "value": houseId } );
+	 aoData.push( { "name": "custcontract.room_id", "value": roomId } );
+	 aoData.push( { "name": "custcontract.comment", "value": $("#comment").val() } );
+	 aoData.push( { "name": "custcontract.pay_type", "value": $("#pay_type").val() } );
+     aoData.push( { "name": "custcontract.start_man", "value": $("#start_man").val() } );
+	 aoData.push( { "name": "custcontract.end_man", "value": $("#end_man").val() } );
+	 aoData.push( { "name": "custcontract.cust_id", "value": top.g_GetNumValue($("#cust_id").val()) } );
+	 aoData.push( { "name": "custcontract.end_renttime", "value": top.toTimestamp($("#end_renttime").val()) } );
+	 aoData.push( { "name": "custcontract.sign_date", "value": top.toTimestamp($("#sign_date").val()) } ); 
+	 aoData.push( { "name": "custcontract.start_renttime", "value": top.toTimestamp($("#start_renttime").val()) } );
+	 aoData.push( { "name": "custcontract.rent", "value": top.g_GetNumValue($("#rent").val()) } );
+	 aoData.push( { "name": "custcontract.cash_pledge", "value": top.g_GetNumValue($("#cash_pledge").val()) } );
+	 aoData.push( { "name": "custcontract.re_cash_pledge", "value": top.g_GetNumValue($("#re_cash_pledge").val()) } );
+	 aoData.push( { "name": "custcontract.start_water_num", "value": top.g_GetNumValue($("#start_water_num").val()) } );
+	 aoData.push( { "name": "custcontract.start_ele_num", "value": top.g_GetNumValue($("#start_ele_num").val()) } );
+	 aoData.push( { "name": "custcontract.start_gas_num", "value": top.g_GetNumValue($("#start_gas_num").val()) } );
+	 aoData.push( { "name": "custcontract.start_tv_num", "value": top.g_GetNumValue($("#start_tv_num").val()) } );
+	 aoData.push( { "name": "custcontract.start_net_num", "value": top.g_GetNumValue($("#start_net_num").val()) } );
+	 aoData.push( { "name": "custcontract.end_water_num", "value": top.g_GetNumValue($("#end_water_num").val()) } );
+	 aoData.push( { "name": "custcontract.end_ele_num", "value": top.g_GetNumValue($("#end_ele_num").val()) } );
+	 aoData.push( { "name": "custcontract.end_gas_num", "value": top.g_GetNumValue($("#end_gas_num").val()) } );
+	 aoData.push( { "name": "custcontract.end_tv_num", "value": top.g_GetNumValue($("#end_tv_num").val()) } );
+	 aoData.push( { "name": "custcontract.end_net_num", "value": top.g_GetNumValue($("#end_net_num").val()) } );
+	 aoData.push( { "name": "custcontract.commission", "value": top.g_GetNumValue($("#commission").val()) } );
+	 aoData.push( { "name": "rentStr", "value": getRentStr() } );
+	 
+	 aoData.push( { "name": "cust.id", "value": top.g_GetNumValue($("#cust_id").val()) } );
+	 aoData.push( { "name": "cust.cust_name", "value": $("#cust_name").val() } );
+	 aoData.push( { "name": "cust.cust_tel", "value": $("#cust_tel").val() } );
+	 aoData.push( { "name": "cust.card_no", "value": $("#card_no").val() } );
+	 aoData.push( { "name": "cust.cust_status", "value": '1' } );
+	 
+	 var xurl="/actions/Contract.action?insertTblCustContract";
+	 if ( optType == 'update' ) {
+	    xurl="/actions/Contract.action?updateTblCustContract";
+	 } else if ( optType == 'end' ) {
+	    xurl="/actions/Contract.action?endCustContract";
+	 } else if ( optType == 'del' ) {
+	    xurl="/actions/Contract.action?delCustContract";
+	 } 
+	 
+     top.sendAjaxRequest(xurl,aoData,optCallback);
+   }
+   
+   function getRentStr(){
+     // id,date;id,date;   rentTime0 -- rentTime11
+	 var str='';
+	 for (var i=0;i<12;i++) {
+	   str+=rentIds[i]+','+$("#rentTime"+i).val()+';';
+	 }
+	 return str;
+   }
+
+   function checkForm(){
+     var msg = "";
+     msg += checkString($("#code").val(),true,20,"合同编号");
+	 msg += checkString($("#cust_name").val(),true,20,"租客姓名");
+	 msg += checkString($("#sign_date").val(),true,20,"签约日期");
+	 msg += checkString($("#start_renttime").val(),true,20,"合同开始日期");
+	 msg += checkString($("#end_renttime").val(),true,20,"合同结束日期");
+     return msg;
+   }
+   
+   function endContract(){
+      top.showConfirm("您确定要执行合同终止操作吗？", doEndContract);
+   }
+   
+   function doEndContract(){
+      optType='end';
+	  doSubmit();
+   }
+   
+   function delContract(){
+      top.showConfirm("您确定要执行合同作废操作吗？", doDelContract);
+   }
+   
+   function doDelContract(){
+      optType='del';
+	  doSubmit();
+   }
+   
+   function optCallback(obj){
+       try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+			code = $("#code").val();
+			if ( optType == 'del' || optType == 'end'  ) {
+			  custcontractStatus = -1;
+			}
+			optType == 'update';
+			if ( optType == 'insert' ) {
+			 getPerformanceList();
+			}
+			getContractDetail();
+        }else{
+            isSaveOK = false;
+          top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+   
+   function initData(){
+        $( "#tabs ul" ).tabs();
+        $("#code_status").html( top.getCodeName( "CONTRACT_STATUS", 0 ) );
+		$("#code_pay_type").html( top.getCodeSelectHtml("HOUSE_PAY_TYPE","pay_type",true,'103') );
+		$("#code_performance_type").html( top.getCodeSelectHtml("PERFORMANCE_TYPE","performance_type",true) );
+		
+		optType = top.getUrlParam(document.URL,"opt");
+		houseId = top.getUrlParam(document.URL,"houseId");
+		roomId = top.getUrlParam(document.URL,"roomId");
+		custcontractStatus = top.getUrlParam(document.URL,"status");
+		var price=top.getUrlParam(document.URL,"price");
+		if ( price == null ) price="";
+		if ( roomId == null ) roomId="";
+		if ( houseId == null ) houseId="";
+		if ( custcontractStatus == null ) custcontractStatus=0;
+		code = top.getUrlParam(document.URL,"code");
+		if ( code == null ) code = "";
+		$("#houseId").html( houseId );
+		$("#roomId").html( roomId );
+		
+		$("#rent").val( price );
+		$("#cash_pledge").val( price );
+		$("#commission").val( price );
+		
+		for ( var i=0;i<12;i++) {
+		  rentIds[i]=0;
+		}
+		getContractDetail();
+		if ( top.g_isPermit("houseContract_rentSave") ) $("#saveBtn").show();
+		if ( top.g_isPermit("housePerformance_add") ) $("#createPerformanceBtn").show();
+		
+		$("#td_start_man").html( top.getAllUserSelect("start_man") );
+		$("#td_end_man").html( top.getAllUserSelect("end_man") );
+		$("#td_performance_user_code").html( top.getAllUserSelect("performance_user_code") );
+    }
+	
+	function getContractDetail(){
+	    var aoData=[];
+		if ( roomId == '' ) {
+		 aoData.push( { "name": "custcontract.room_id", "value": -1 } );
+		} else {
+		 aoData.push( { "name": "custcontract.room_id", "value": roomId } );
+		}
+		aoData.push( { "name": "custcontract.status", "value": custcontractStatus } );
+	    aoData.push( { "name": "custcontract.code", "value": code } );
+        top.sendAjaxRequest("/actions/Contract.action?getCustContractDetail",aoData,infoCallback);
+	}
+	
+   function infoCallback(obj){
+       try{
+        if ( obj.status == true ){
+		    optType = 'update';
+            var o=obj.body;
+code = o.code;
+$("#code").val(code);
+roomId=o.room_id;
+houseId=o.house_id;
+$("#houseId").html( houseId );
+$("#roomId").html( roomId );
+$("#code").attr("disabled",true);
+$("#code_status").html( top.getCodeName( "CONTRACT_STATUS", o.status ));
+$("#sign_date").val( top.getTimeStr( o.sign_date, true ) );
+$("#cust_id").val(o.cust_id);
+$("#cust_name").val(o.custInfo.cust_name);
+$("#cust_tel").val(o.custInfo.cust_tel);
+$("#card_no").val(o.custInfo.card_no);
+$("#start_renttime").val( top.getTimeStr(o.start_renttime, true) );
+$("#end_renttime").val( top.getTimeStr(o.end_renttime, true) );
+$("#rent").val(o.rent);
+$("#cash_pledge").val( o.cash_pledge);
+$("#commission").val( o.commission);
+$("#pay_type").val( o.pay_type);
+$("#re_cash_pledge").val( o.re_cash_pledge);
+$("#comment").val( o.comment);
+$("#start_water_num").val( o.start_water_num);
+$("#start_ele_num").val( o.start_ele_num);
+$("#start_gas_num").val( o.start_gas_num);
+$("#end_man").val( o.end_man);
+$("#end_water_num").val( o.end_water_num);
+$("#end_ele_num").val( o.end_ele_num);
+$("#end_gas_num").val( o.end_gas_num);
+$("#end_man").val( o.end_man);
+
+ // 显示交租记录
+ if ( o.rentList ) {
+   for ( var i=0;i<12;i++ ) {
+     if ( i<o.rentList.length ) {
+	   rentIds[i]=o.rentList[i].id;
+	   $("#rentTime"+i).val( top.getTimeStr(o.rentList[i].pay_date, true) );
+	   $("#rentTime"+i).attr("disabled", (o.rentList[i].status==1)?true:false);
+	 } else {
+	   $("#rentTime"+i).val("");
+	   $("#rentTime"+i).attr("disabled",false);
+	 }
+   }
+ } else {
+   for ( var i=0;i<12;i++ ) {
+     $("#rentTime"+i).attr("disabled",false);
+   }
+ }
+ 
+ if ( o.status == 0 ) {
+   if ( top.g_isPermit("houseContract_rentEnd") ) $("#endBtn").show();
+   if ( top.g_isPermit("houseContract_rentDel") ) $("#delBtn").show();
+ } else {
+   $("#endBtn").hide();
+   $("#delBtn").hide();
+   $("#saveBtn").hide();
+   $("input").attr("disabled",true);
+   $("select").attr("disabled",true);
+   $("textarea").attr("disabled",true);
+ }
+
+         getPerformanceList();
+        }else{
+		  optType = 'insert';
+		  var d=new Date();
+		  var str = d.getFullYear()+"-"+top.getTwoNumberStr(d.getMonth()+1)+"-"+top.getTwoNumberStr(d.getDate());
+		  $("#sign_date").val( str );
+		  $("#start_renttime").val( str );
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+	
+	function selectCust(){
+	   var xurl="pages/house/selectHouseCust.html";
+       top.openSelectDialog("选择租客信息",xurl,600,450,selectCustCallback);
+	}
+	
+	function selectCustCallback(){
+		 try{
+		   var obj = top.getTempValue();
+		   if ( !obj ) return ;
+		   $("#cust_id").val(obj.id);
+		   $("#cust_name").val(obj.cust_name);
+		   $("#cust_tel").val(obj.cust_tel);
+		   $("#card_no").val(obj.card_no);
+		   $("#cust_name").attr("disabled",true);
+		   $("#cust_tel").attr("disabled",true);
+		   $("#card_no").attr("disabled",true);
+		 }catch(e){
+		 }
+	}
+	
+	function getPerformanceList(){
+	 if ( code == '' ) return ;
+	 var hasDeletePerformanceRight=top.g_isPermit("housePerformance_del");
+     var iaoColumns= [
+				 {"sTitle": "业绩类型", "mDataProp": "performance_type", "sWidth":"150px", "sClass": "center",
+                    "fnRender": function ( oObj ) {
+					  var ht ='';
+                      if ( hasDeletePerformanceRight ) {
+                          ht+='<img src="../../img/delete.gif" onclick="deletePerformance('+oObj.aData.id+')"/>&nbsp;';
+					  }
+					  ht+=top.getCodeName( "PERFORMANCE_TYPE", oObj.aData.performance_type );
+					  return ht;
+                    },
+                    "bUseRendered": false  
+                 },
+			     {"sTitle": "人员账号", "mDataProp": "user_code", "sWidth":"150px", "sClass": "center"},
+				 {"sTitle": "佣金(元)", "mDataProp": "commission", "sWidth":"100px", "sClass": "center"},
+				 {"sTitle": "备注", "mDataProp": "memo", "sWidth":"600px", "sClass": "left"}
+               ];
+			   
+			   var surl=top.getUrlBase()+"/actions/Performance.action?getTblPerformanceList";
+			   oTable = $('#performanceListTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":100,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+					aoData.push( { "name": "performance.contract_code", "value": code } );
+					aoData.push( { "name": "performance.performance_type", "value": -1 } );
+			    },
+			    "sDom": "frt",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+   }
+   
+   function deletePerformance(did){
+	  currentDeleteId=did;
+	  top.showConfirm("您确定要删除选中的业绩吗？", doDeletePerformance);
+   }
+   
+   function doDeletePerformance(){
+	    var aoData=[];
+        aoData.push( { "name": "performance.id", "value": currentDeleteId } );
+        top.sendAjaxRequest("/actions/Performance.action?deleteTblPerformance",aoData,savePerformanceCallback);
+    }
+  
+    function addPerformance(){
+	    var msg = "";
+		if ( $("#performance_commission").val() == '') {
+		  msg += "请填写佣金<br>";
+		} else if ( !IsFloat( $("#performance_commission").val() )) {
+		  msg += "[佣金]应为数字类型<br>";
+		}
+		msg += checkString($("#performance_memo").val(),false,512,"备注");
+		msg += checkString($("#performance_user_code").val(),true,20,"人员账号");
+		msg += checkString($("#performance_type").val(),true,20,"业绩类型");
+		msg += checkString( code,true,20,"合同编号");
+	    if ( msg != '' ) {
+	     top.showInfoWinWarn(msg);
+         return ;
+	    }
+
+	    var aoData=[];
+	    aoData.push( { "name": "performance.contract_code", "value": code } );
+		aoData.push( { "name": "performance.performance_type", "value": $("#performance_type").val() } );
+		aoData.push( { "name": "performance.memo", "value": $("#performance_memo").val() } );
+		aoData.push( { "name": "performance.commission", "value": top.g_GetNumValue( $("#performance_commission").val() ) } );
+		aoData.push( { "name": "performance.user_code", "value": $("#performance_user_code").val() } );
+        top.sendAjaxRequest("/actions/Performance.action?insertTblPerformance",aoData,savePerformanceCallback);
+	}
+	
+	function savePerformanceCallback(obj){
+       try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+			getPerformanceList();
+			$("#performance_type").val("");
+			$("#performance_memo").val("");
+			$("#performance_commission").val("");
+			$("#performance_user_code").val("");
+        }else{
+          isSaveOK = false;
+          top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+	
+	function showAddPerformanceTable(){
+	   $("#add_performance").show();
+	   $("#createPerformanceBtn").hide();
+	}
+  </script> 
+</head>
+<body>
+
+<div id="tabs" style="margin: 10px;">
+	<ul>
+		<li><a href="#tabs-0"><span>合同信息</span></a></li>
+		<li><a href="#tabs-1"><span>业绩列表</span></a></li>
+	</ul>
+	<div id="tabs-0">
+	<table border="1" cellpadding="1" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+	<tr class="tr_data">
+	<td>房源编号</td><td align="left" id="houseId"></td>
+	<td>房间编号</td><td align="left" id="roomId"></td>
+	</tr>
+	<tr class="tr_data">
+	<td>合同编号</td><td align="left"><input id="code" value=""></input></td>
+	<td>合同状态</td><td align="left" id="code_status"></td>
+	</tr>
+    <tr class="tr_data">
+	<td>签约日期</td><td align="left"><input type="text" id="sign_date" value="" onclick="new Calendar().show(this);" style="width:80px" /></td>
+	<td>租客编号</td><td align="left"><input id="cust_id" value="系统自动生成" disabled="true"></input><input type="button" value="选择" onclick="selectCust()"></input></td>
+	</tr>
+    <tr class="tr_data">
+	<td>合同期限</td><td align="left"><input type="text" id="start_renttime" value="" onclick="new Calendar().show(this);" style="width:80px" />-<input type="text" id="end_renttime" value="" onclick="new Calendar().show(this);" style="width:80px" /></td>	
+	<td>租客姓名</td><td align="left"><input id="cust_name" value=""></input></td>
+	</tr>
+	<tr class="tr_data">
+	<td>租金</td><td align="left"><input id="rent" value="" style="width:60px"></input>元/月</td>
+    <td>租客电话</td><td align="left"><input id="cust_tel" value=""></input></td>
+	</tr>
+	<tr class="tr_data">
+	<td>押金</td><td align="left"><input id="cash_pledge" width="15%" value="" style="width:60px"></input>元</td>
+	<td>租客身份证</td><td align="left"><input id="card_no" value=""></input></td>
+    </tr>
+	<tr class="tr_data">
+	<td>佣金</td><td align="left"><input id="commission" value="" style="width:60px"></input>元</td>
+	<td>交租方式</td><td align="left" id="code_pay_type">&nbsp;</td>
+    </tr>
+	<tr class="tr_data">
+	 <td>退还押金</td><td align="left" colspan="3">
+	   <input id="re_cash_pledge" width="15%" value="" style="width:60px"></input>元&nbsp;<font color='green' size='-1'>(办理退房手续时填写)</font>
+	 </td>
+    </tr>
+	<tr class="tr_data">
+	<td>收租日期</td><td align="left" colspan="3">
+	  <input type="text" id="rentTime0" value="" onclick="new Calendar().show(this);" style="width:80px" />
+	  <input type="text" id="rentTime1" value="" onclick="new Calendar().show(this);" style="width:80px" />
+	  <input type="text" id="rentTime2" value="" onclick="new Calendar().show(this);" style="width:80px" />
+	  <input type="text" id="rentTime3" value="" onclick="new Calendar().show(this);" style="width:80px" />
+	  <input type="text" id="rentTime4" value="" onclick="new Calendar().show(this);" style="width:80px" />
+	  <input type="text" id="rentTime5" value="" onclick="new Calendar().show(this);" style="width:80px" /><br/>
+	  <input type="text" id="rentTime6" value="" onclick="new Calendar().show(this);" style="width:80px" />
+	  <input type="text" id="rentTime7" value="" onclick="new Calendar().show(this);" style="width:80px" />
+	  <input type="text" id="rentTime8" value="" onclick="new Calendar().show(this);" style="width:80px" />
+	  <input type="text" id="rentTime9" value="" onclick="new Calendar().show(this);" style="width:80px" />
+	  <input type="text" id="rentTime10" value="" onclick="new Calendar().show(this);" style="width:80px" />
+	  <input type="text" id="rentTime11" value="" onclick="new Calendar().show(this);" style="width:80px" />
+	</td>
+    </tr>
+	<tr class="tr_data">
+	<td>备注</td><td align="left" colspan="3"><textarea id="comment" cols="70" rows="2"></textarea></td>
+    </tr>
+</table>
+<br/>
+租房开始读数:<br/>
+<table border="1" cellpadding="1" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+  <tr class="tr_data">
+    <td align="right">水表</td><td align="left"><input id="start_water_num" value="" style="width:60px"></input></td>
+	<td align="right">电表</td><td align="left"><input id="start_ele_num" value="" style="width:60px"></input></td>
+	<td align="right">燃气</td><td align="left"><input id="start_gas_num" value="" style="width:60px"></input></td>
+	<td align="right">交接人</td><td align="left" id="td_start_man"></td>
+  </tr>
+</table>
+<br/>
+租房结束读数:<br/>
+<table border="1" cellpadding="1" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+  <tr class="tr_data">
+    <td align="right">水表</td><td align="left"><input id="end_water_num" value="" style="width:60px"></input></td>
+	<td align="right">电表</td><td align="left"><input id="end_ele_num" value="" style="width:60px"></input></td>
+	<td align="right">燃气</td><td align="left"><input id="end_gas_num" value="" style="width:60px"></input></td>
+	<td align="right">交接人</td><td align="left" id="td_end_man"></td>
+  </tr>
+</table>
+  
+  <table width="100%" style="margin: 10px;">
+	 <tr>
+	  <td width="35%" align="right"><div id="saveBtn" class="buttonDivTwo" style="display:none"><a href="javascript:void(0)" onclick="doSubmit()">保存</a></div></td>
+	  <td width="30%" align="center"><div id="endBtn" class="buttonDivSix" style="display:none"><a href="javascript:void(0)" onclick="endContract()">合同终止</a></div></td>
+	  <td width="35%" align="left"><div id="delBtn" class="buttonDivTwo" style="display:none"><a href="javascript:void(0)" onclick="delContract()">作废</a></div></td>
+	 </tr>
+  </table>
+
+	</div>
+	<div id="tabs-1">
+	
+	<div id="createPerformanceBtn" class="buttonDivTwo" style="display:none"><a href="javascript:showAddPerformanceTable()">添加</a></div>
+    </br/>
+	<table id="add_performance" border="1" cellpadding="1" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;display:none">
+	  <tr class="tr_data">
+	     <td>业绩类型</td><td align="left" id="code_performance_type"></td>
+		 <td>业务员</td><td align="left" id="td_performance_user_code"></td>
+		 <td>佣金</td><td align="left" ><input type="text" id="performance_commission" style="width:100px"/>元</td>
+		 <td>&nbsp;</td>
+	  </tr>
+	  <tr class="tr_data">
+	     <td>备注</td><td align="left" colspan="5"><textarea id="performance_memo" cols="70" rows="2"></textarea></td>
+		 <td align="left"><div class="buttonDivTwo"><a href="javascript:addPerformance()">保存</a></div></td>
+	  </tr>
+	</table>
+	<br/>
+<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="performanceListTable">
+</table>
+	</div>
+</div>
+
+</body>
+</html>

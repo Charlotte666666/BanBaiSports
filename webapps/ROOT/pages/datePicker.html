@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="../css/base/ui.all.css">
+	<script src="../js/jquery-1.7.2.min.js"></script>
+	<script src="../js/ui/jquery.ui.core.js"></script>
+	<script src="../js/ui/jquery.ui.widget.js"></script>
+	<script src="../js/jquery.ui.datepicker-zh-CN2.js"></script>
+	<script src="../js/ui/jquery.ui.datepicker.js"></script>
+	<script>
+	$(function() {
+	    var d=top.getUrlParam(document.URL,"date");
+	    $.datepicker.setDefaults( $.datepicker.regional[ "zh-CN2" ] );
+		$( "#datepicker" ).datepicker({changeMonth: true,changeYear: true});
+		if ( d && d != '' ) $( "#datepicker" ).datepicker( "setDate", d );
+		$( "#datepicker" ).datepicker("option", "onSelect", getDateValue );
+	});
+	
+	function getDateValue(){
+	    var d = $( "#datepicker" ).datepicker( "getDate" );
+		var obj={
+    	   "date":top.getTimeStr( d.getTime(), true )
+    	};
+        top.setTempValue(obj);
+		top.closeSelectDialog();
+	}
+	
+	function doBeforeClose(){}
+	</script>
+</head>
+<body>
+<div>
+<div id="datepicker"></div>
+</div>
+</body>
+</html>

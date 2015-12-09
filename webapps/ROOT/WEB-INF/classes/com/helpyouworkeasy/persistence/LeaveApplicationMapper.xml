@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.helpyouworkeasy.persistence.LeaveApplicationMapper">
+  <insert id="insertLeaveApplication" parameterType="LeaveApplication">
+    INSERT INTO tbl_leave_application (dept,employee_code,employee_name,job_title,reason_to_leave,status,id,entry_date,apply_date,last_work_date,reason_other)
+    VALUES (#{dept}, #{employee_code}, #{employee_name}, #{job_title}, #{reason_to_leave}, #{status}, #{id}, #{entry_date}, #{apply_date}, #{last_work_date},#{reason_other})
+  </insert>
+
+  <update id="updateLeaveApplication" parameterType="LeaveApplication">
+    update tbl_leave_application set 
+    dept=#{dept},employee_code=#{employee_code},employee_name=#{employee_name},job_title=#{job_title},reason_to_leave=#{reason_to_leave},status=#{status},entry_date=#{entry_date},apply_date=#{apply_date},last_work_date=#{last_work_date},reason_other=#{reason_other}
+    where id=#{id}
+  </update>
+
+  <select id="getLeaveApplicationListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_leave_application where 1=1 
+    <if test="o.employee_name != '' and o.employee_name != null" >
+      and employee_name like '%${o.employee_name}%'
+    </if>
+    <if test="o.status != '' and o.status != null" >
+      and status=#{o.status}
+    </if>
+    <if test="time1 != -1" >
+      and apply_date>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=apply_date
+    </if>
+  </select>
+
+  <select id="getLeaveApplicationPageList" parameterType="map" resultType="LeaveApplication">
+    select 
+    dept,employee_code,employee_name,job_title,reason_to_leave,status,id,entry_date,apply_date,last_work_date,reason_other
+    from tbl_leave_application where 1=1 
+       <if test="o.employee_name != '' and o.employee_name != null" >
+      and employee_name like '%${o.employee_name}%'
+    </if>
+    <if test="o.status != '' and o.status != null" >
+      and status=#{o.status}
+    </if>
+    <if test="time1 != -1" >
+      and apply_date>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=apply_date
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+
+  <select id="getLeaveApplication" parameterType="LeaveApplication" resultType="LeaveApplication">
+    select *
+    from tbl_leave_application
+    <where>
+       <if test="employee_code != '' and employee_code != null">
+         employee_code=#{employee_code}
+       </if>
+       <if test="id != 0">
+         id=#{id}
+       </if>
+    </where>
+    order by apply_date
+  </select>
+  
+  <update id="updateApplyStatus" parameterType="map">
+     update tbl_leave_application set status=#{status} where id=#{apply_id}
+  </update>
+
+  <select id="getleaveApplicationById" parameterType="long" resultType="LeaveApplication">
+    select *
+    from tbl_leave_application
+    where id=#{value}
+  </select>
+
+</mapper>

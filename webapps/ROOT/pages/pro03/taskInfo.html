@@ -1,0 +1,208 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+  <script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+<script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var infoId=0;
+   var data_ids="none";
+   var dataList=[];
+   var leftHts=[];
+   var codeList=[];
+   var nextTaskTime="";
+   var nextDataEnd="";
+   var gtitle="";
+   var config_code=0;
+
+   $(document).ready(function() {
+     initData();
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    	 };
+     top.setTempValue(obj);
+   }
+   
+   function doCancel(){
+	   top.closeDialog();
+   }
+   
+   function doSubmit(){
+	 var aoData=[];
+     var url = "/actions/ProCmaDataInfo.action?updatePro03Task";
+	 var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+	 aoData.push( { "name": "task.id", "value": infoId } );
+	 aoData.push( { "name": "task.title", "value": gtitle } );
+	 aoData.push( { "name": "task.config_code", "value": config_code } );
+	 aoData.push( { "name": "task.save_medium", "value": $("#save_medium").val() } );
+	 aoData.push( { "name": "task.data_ids", "value": data_ids} );
+	 aoData.push( { "name": "task.mark", "value": $("#mark").val() } );
+	 aoData.push( { "name": "task.data_size", "value": $("#data_size").val() } );
+	 aoData.push( { "name": "task.data_start", "value": top.toTimestamp( $("#data_start").val() ) } );
+	 aoData.push( { "name": "task.data_end", "value": top.toTimestamp( $("#data_end").val() ) } );
+	 aoData.push( { "name": "nextTaskTime", "value": $("#nextTaskTime").val() } );
+	 aoData.push( { "name": "nextDataEnd", "value": $("#nextDataEnd").val() } );
+	 top.sendAjaxRequest(url,aoData,optCallback);
+   }
+   
+   function checkForm(){
+     var msg = "";
+	 
+     return msg;
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      isSaveOK = true;
+	      top.showInfoWinOK("操作成功");
+		  top.closeDialog();
+	    }else{
+	      isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+
+   function initData(){
+	   try{
+	       $("#checkYesBtn").hide();
+		   $("#checkNoBtn").hide();
+		   $("#checkYesBtn").hide();
+		   $("#okBtn").hide();
+	       optType=top.getUrlParam(document.URL,"opt");
+		   if ( optType == 'update' ) {
+		       infoId = top.getUrlParam(document.URL,"infoId");
+			   var o=top.getTempValue();
+			   $("#data_start").val( top.getTimeStr( o.data_start, true ) );
+			   $("#data_end").val( top.getTimeStr( o.data_end, true ) );
+			   $("#td_task_time").html( top.getTimeStr( o.task_time, true ) );
+			   $("#td_save_medium").html( top.getCodeSelectHtml("SAVE_MEDIUM","save_medium",false,o.save_medium) );
+			   $("#td_status").html( top.getCodeName( "03_TASK_STATUS", o.status ) );
+			   $("#td_deal_user").html( o.deal_user );
+			   $("#td_done_time").html( top.getTimeStr( o.done_time, false ) );
+			   $("#data_size").val( o.data_size );
+			   $("#mark").val( o.mark );
+			   config_code=o.config_code;
+			   gtitle=o.title;
+			   data_ids=o.data_ids;
+		       if ( o.status == 0 ) {
+		           $("#tr_deal_user").hide();
+			       $("#tr_done_time").hide();
+				   
+				   if ( top.g_isPermit( "DataSaveSys_doTask" ) ) {
+					 $("#okBtn").show();
+				   }
+		       } else {
+			       $("#tr_nextTaskTime").hide();
+			       $("#tr_nextDataEnd").hide();
+				   if ( o.status == 1 ) {
+				     if ( top.g_isPermit( "DataSaveSys_taskCheck" ) ) {
+					   $("#checkYesBtn").show();
+					   $("#checkNoBtn").show();
+				     }
+				   }
+			   }
+		   }
+	   }catch(e){
+		   top.showInfoWinError(e.message);
+	   }
+	   top.sendAjaxRequest("/actions/ProCmaDataInfo.action?getAllSimpleDataInfoList",[],optGetAllListCallback);
+   }
+   
+   function optGetAllListCallback(obj){
+       try{
+	    dataList=obj.aaData;
+		computList();
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+   function computList(){
+		var hadHt='';
+		if ( dataList ) {
+		  for ( var i=0;i<dataList.length;i++ ) {
+		    if ( data_ids.indexOf( dataList[i].info_id + "," ) != -1 ) {
+			  hadHt+=dataList[i].info_name+'<hr/>';
+			}
+		  }
+		}
+		$("#hadList").html( hadHt );
+   }
+   
+   function doCheck(t){
+        var aoData=[];
+        aoData.push( { "name": "task.id", "value": infoId } );
+	    aoData.push( { "name": "task.status", "value": t } );
+	    top.sendAjaxRequest("/actions/ProCmaDataInfo.action?checkPro03Task",aoData,optCallback);
+   }
+
+  </script>
+<style type="text/css">
+.rounded{
+	margin: 0px 10px 0px 10px;
+	padding: 10px;
+	width:450px;
+	height:320px;
+	background-color : #F3F3F3;
+	border: 2px solid #89A1B9;
+	-moz-border-radius: 12px;
+	-webkit-border-radius: 12px;
+	border-radius: 12px;
+	overflow: auto;
+}
+</style>
+</head>
+<body>
+<table width="100%" border="0" cellpadding="1px" cellspacing="10px">
+<tr>
+<td colspan="4" width="50%" align='center'>&nbsp;</td>
+<td colspan="4" width="50%" align='left'>&nbsp;&nbsp;数据资料列表:</td>
+</tr><tr>
+<td colspan="4" valign="top">
+  <table width="100%" border="1" cellpadding="1px" cellspacing="5px">
+    <tr class="tr_data"><td  align='right' width="40%">状态:</td><td width="60%" align='left' id="td_status"></td></tr>
+	<tr class="tr_data"><td  align='right'>执行归档日期:</td><td align='left' id="td_task_time"></td></tr>
+	<tr class="tr_data"><td  align='right'>资料开始日期:</td><td align='left'><input type="text" id="data_start" value="" onclick="new Calendar().show(this);" /></td></tr>
+    <tr class="tr_data"><td  align='right'>资料结束日期:</td><td align='left'><input type="text" id="data_end" value="" onclick="new Calendar().show(this);" /></td></tr>
+    <tr class="tr_data"><td  align='right'>存储介质:</td><td align='left' id="td_save_medium"></td></tr>
+	<tr class="tr_data"><td  align='right'>数据量大小:</td><td align='left'><input type="text" id="data_size" value="" />Mb</td></tr>
+    <tr class="tr_data"><td  align='right'>磁带编码:</td><td align='left'><input type="text" id="mark" value="" size="30" /></td></tr>
+	<tr id="tr_nextTaskTime" class="tr_data"><td  align='right'>下次归档日期:</td><td align='left'><input type="text" id="nextTaskTime" value="" onclick="new Calendar().show(this);" /></td></tr>
+	<tr id="tr_nextDataEnd" class="tr_data"><td  align='right'>下次归档数据结束日期:</td><td align='left'><input type="text" id="nextDataEnd" value="" onclick="new Calendar().show(this);" /></td></tr>
+	<tr id="tr_deal_user" class="tr_data"><td  align='right'>处理人:</td><td align='left' id="td_deal_user"></td></tr>
+    <tr id="tr_done_time" class="tr_data"><td  align='right'>完成时间:</td><td align='left' id="td_done_time"></td></tr>
+  </table>
+</td>
+<td colspan="4" height="350px">
+  <div id="hadList" class="rounded"></div>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<p align="center">
+   <table><tr>
+		    <td><span id="okBtn" class="buttonTwo"><a href="javascript:doSubmit()">提交</a></span></td>
+			<td><div id="checkYesBtn" class="buttonDivSix"><a href="javascript:doCheck(2)">审核通过</a></div></td>
+			<td><div id="checkNoBtn" class="buttonDivSix"><a href="javascript:doCheck(0)">审核不通过</a></div></td>
+   </tr></table>
+</p>
+</body>
+</html>

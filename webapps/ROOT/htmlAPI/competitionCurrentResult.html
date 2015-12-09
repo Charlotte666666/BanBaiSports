@@ -1,0 +1,160 @@
+<html>
+<head>
+    <meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>比赛实况</title>
+	<link rel="stylesheet" href="../css/themes/default/jquery.mobile-1.4.5.min.css">
+	<script src="../js/jquery-1.10.2.min.js"></script>
+	<script src="../js/jquery.mobile-1.4.5.min.js"></script>
+
+  <script type="text/javascript">
+   var schedule_id=1;
+   var g_UrlBase="";
+   var resultList=[];
+   var area_count=9;
+   var interMesResult=0;
+   
+   $(document).ready(function() {
+       schedule_id=getUrlParam(document.URL,"id");
+	   area_count=getUrlParam(document.URL,"area_count");
+	   if ( !area_count ) area_count=9;
+	   try{
+	     var ind=document.URL.indexOf("htmlAPI");
+		 if ( ind != -1 ) {
+		   g_UrlBase=document.URL.substring(0,ind);
+		 }
+	   }catch(e){}
+	   
+	   var ht='<table width="100%" cellspacing="0" cellpadding="2px" border="0" style="background-color: #ffffff;margin:5px auto;">';
+		 ht+='<td width="8%" align="center" ><font color="#18b4ed" size="5"><b>场地号</b></font></td>';
+		 ht+='<td width="8%" align="center" ><font color="#18b4ed" size="5"><b>项目</b></font></td>';
+		 ht+='<td width="35%" align="center" ><font color="#18b4ed" size="5"><b>队伍名称</b></font></td>';
+		 ht+='<td width="14%" align="center" ><font color="#18b4ed" size="5"><b>比分</b></font></td>';
+		 ht+='<td width="35%" align="center" ><font color="#18b4ed" size="5"><b>队伍名称</b></font></td>';
+		 ht+='</tr>';
+	   ht+='</table>';
+	   
+	   ht+='<table width="100%" cellspacing="0" cellpadding="2px" border="0" style="background-color: #ffffff;margin:5px auto;">';
+	   var isOdd=true;
+	   for ( var i=1;i<=area_count;i++ ) {
+		  if ( isOdd ) {
+		    ht+='<tr height="50px" bgcolor="#ffffff">';
+			isOdd=false;
+		  } else {
+		    ht+='<tr height="50px" bgcolor="#e7f8ff">';
+			isOdd=true;
+		  }
+		 
+		 ht+='<td width="8%" align="center" ><font size="5">'+i+'</font></td>';
+		 ht+='<td width="8%" align="center" id="type_'+i+'" ><font color="#333333" size="18">&nbsp;</font></td>';
+		 ht+='<td width="35%" align="center" id="team_1_name_'+i+'" ><font color="#333333" size="18">&nbsp;</font></td>';
+		 ht+='<td width="14%" align="center" id="score_'+i+'" ><font color="#333333" size="18">&nbsp;</font>&nbsp;</td>';
+		 ht+='<td width="35%" align="center" id="team_2_name_'+i+'" ><font color="#333333" size="18">&nbsp;</font>&nbsp;</td>';
+		 ht+='</tr>';
+	   }
+	   ht+='</table>';
+	   $("#areaList").html( ht );
+	   
+	   getResult();
+   } );
+   
+   function getResult(){
+       var aoData=[];
+	   aoData.push( { "name": "info.schedule_id", "value": schedule_id } );
+	   doSendAjaxRequest("/actions/CompetitionResult.action?getCurrentCompetitionResultBySchedule",aoData,getScheduleInfoListCallback);
+   }
+   
+   function getScheduleInfoListCallback(obj){
+       try{
+           resultList=obj.aaData;
+		   var ht='';
+		   
+	   // clear data
+	   /**for ( var i=1;i<=area_count;i++ ) {
+		     $("#team_1_name_"+i).html( "<font color='#333333' size='18'>&nbsp;</font>" );
+			 $("#team_2_name_"+i).html( "<font color='#333333' size='18'>&nbsp;</font>" );
+			 $("#score_"+i).html( "" );
+	   } */
+		   
+		   
+		   for ( var i=0;i<resultList.length;i++ ) {
+		     $("#team_1_name_"+resultList[i].area_code).html( "<font color='#333333' size='18'><b>" + resultList[i].team_1_name +"</b></font>" );
+			 $("#team_2_name_"+resultList[i].area_code).html( "<font color='#333333' size='18'><b>"+ resultList[i].team_2_name + "</b></font>" );
+			 $("#type_"+resultList[i].area_code).html( "<font color='#333333' size='18'>" + resultList[i].currentMatchType + "</font>" );
+			 
+			 if ( resultList[i].currentMatchScore1 > resultList[i].currentMatchScore2 ) {
+			   ht="<font size='18'><b>("+resultList[i].score_1+")</b></font><font color='red' size='18'>&nbsp;&nbsp;";
+			   if ( resultList[i].currentMatchScore1 < 10 ) ht+='&nbsp;';
+			   ht+= resultList[i].currentMatchScore1+"&nbsp;</font><font color='#000000' size='15'>VS</font><font color='#000000' size='18'>&nbsp;"+resultList[i].currentMatchScore2 + "&nbsp;</font>&nbsp;&nbsp;";
+			   if ( resultList[i].currentMatchScore2 < 10 ) ht+='&nbsp;';
+			   ht+="<font size='18'><b>("+resultList[i].score_2+")</b></font>";
+			 } else if ( resultList[i].currentMatchScore1 < resultList[i].currentMatchScore2 ) {
+			   ht="<font size='18'><b>("+resultList[i].score_1+")</b></font><font color='#000000' size='18'>&nbsp;&nbsp;";
+			   if ( resultList[i].currentMatchScore1 < 10 ) ht+='&nbsp;';
+			   ht+= resultList[i].currentMatchScore1+"&nbsp;</font><font color='#000000' size='15'>VS</font><font color='red' size='18'>&nbsp;"+resultList[i].currentMatchScore2 + "&nbsp;</font>&nbsp;&nbsp;";
+			   if ( resultList[i].currentMatchScore2 < 10 ) ht+='&nbsp;';
+			   ht+="<font size='18'><b>("+resultList[i].score_2+")</b></font>";
+			 } else {
+			   ht="<font size='18'><b>("+resultList[i].score_1+")</b></font><font color='#000000' size='18'>&nbsp;&nbsp;";
+			   if ( resultList[i].currentMatchScore1 < 10 ) ht+='&nbsp;';
+			   ht+= resultList[i].currentMatchScore1+"&nbsp;<font color='#000000' size='15'>VS</font>&nbsp;"+resultList[i].currentMatchScore2 + "&nbsp;</font>&nbsp;&nbsp;";
+			   if ( resultList[i].currentMatchScore2 < 10 ) ht+='&nbsp;';
+			   ht+="<font size='18'><b>("+resultList[i].score_2+")</b></font>";
+			 }
+			 $("#score_"+resultList[i].area_code).html( ht );
+		   }
+		   
+		   clearInterval( interMesResult );
+	       interMesResult=self.setInterval("getResult()",3000);
+	   }catch(e){
+	   }
+   }
+   
+  function doSendAjaxRequest(xurl,param,fnCallback){
+	    if ( xurl.indexOf('http://') == -1 ) xurl = g_UrlBase+xurl;
+		$.ajax( {
+			"url":  xurl,
+			"data": param,
+			"timeout" : 10000,
+			"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+			"success": function (json) {
+				try{ fnCallback( json );}catch(e){}
+			},
+			"dataType": "json",
+			"cache": false,
+			"type": "POST",
+			"error": function (xhr, error, thrown) {
+			}
+		} );
+ }
+ 
+ function getUrlParam(xurl,name){
+	    var para="";
+	    if(xurl.lastIndexOf("?")>0){
+	        para=xurl.substring(xurl.lastIndexOf("?")+1,xurl.length);
+			var arr=para.split("&");
+			para="";
+			for(var i=0;i<arr.length;i++){
+			   if(arr[i].split("=")[0]==name) return arr[i].split("=")[1];
+			}
+			return "";
+	   }else{
+	        return "";
+	   }
+	}
+ 
+ </script> 
+</head>
+<body >
+<p align="center">
+   <font size="10">首届高校校友羽毛球联谊赛</font>
+</p>
+<p style="margin:1px" id="areaList">
+  
+</p>
+<p align="center">
+ <table cellspacing="0" cellpadding="2px" border="0"><tr>
+ <td valign="middle"><img src="../pages/badminton/img/competion20151101_b.png"></img></td></tr></table>
+</table>
+</body>
+</html>

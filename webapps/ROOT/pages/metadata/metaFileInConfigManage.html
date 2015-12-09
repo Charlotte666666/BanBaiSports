@@ -1,0 +1,190 @@
+<!DOCTYPE HTML>
+<html>
+ <head>
+ <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+ <link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+ <link rel="stylesheet" type="text/css" href="../../css/redmond/jquery.ui.all.css">
+ <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+ <link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+ <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+ <script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+ <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+
+ <script type="text/javascript" charset="utf-8">
+  var oTable=null;
+  var objs=[];
+  var currentDeleteCode="";
+  
+  $(document).ready(function() {
+			   $( "#tdStatus" ).html( top.getCodeSelectHtml("USE_STATUS","q_status",true) );
+			   $( "#gopt_server_td" ).html( top.getRunServerCodeSelectHtml("qopt_server") );
+			   var tempStr = "";
+			   var iaoColumns= [
+							   { "sTitle": "文件", "mDataProp": "from_path", "sWidth": "35%","sClass": "left","bSortable":false,
+                                      "fnRender": function ( oObj ) {
+									       objs[objs.length]=oObj.aData;
+										   tempStr = '<img src="../../img/delete.gif" onclick="deleteConfig('+oObj.aData.code+')" />&nbsp;<a href=\'javascript:void(0)\' onclick="updateMetaConfig(\''+oObj.aData.code+'\')" >';
+										   tempStr += oObj.aData.from_path+"</a>";
+                                           return tempStr;
+                                      },
+                                      "bUseRendered": false 
+                               },
+                               { "sTitle": "标题", "mDataProp": "task_title", "sWidth": "30%","sClass": "left","bSortable":false},
+	                           { "sTitle": "数据库", "mDataProp": "db_codes", "sWidth": "15%","sClass": "center","bSortable":false,"bUseRendered": false},
+                               { "sTitle": "状态", "mDataProp": "status", "sWidth": "10%", "sClass": "center","bSortable":false,
+                                   "fnRender": function ( oObj ) {
+                                        return top.getCodeName( "USE_STATUS", oObj.aData.status );
+                                   },
+                                   "bUseRendered": false  
+                               }
+               ];
+ 
+			   var surl=top.getUrlBase()+"/actions/Metadata.action?getMetaConfigFileList";
+
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					    var dbcode = $("#q_db_codes").val();
+						if ( !dbcode ) dbcode = '';
+						var sta=$("#q_status").val();
+	                    if ( sta == undefined || sta == '' ) sta = '-1';
+						aoData.push( { "name": "metaConfigFile.db_codes", "value": dbcode } );
+						aoData.push( { "name": "metaConfigFile.status", "value": sta } );
+						aoData.push( { "name": "metaConfigFile.opt_server", "value": $("#qopt_server").val() } );
+			      },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumns
+				} );
+                top.sendAjaxRequest("/actions/Metadata.action?getMetaDBList",[],optGetDBListCallback);
+  } );
+
+  function doQuery(){
+    objs=[];
+	oTable.fnDraw();
+  }
+  
+  function deleteConfig(code){
+    currentDeleteCode=code;
+    top.showConfirm("您确定要删除选中的策略配置吗？", doDeleteConfig);
+  }
+  
+  function doDeleteConfig(){
+	  var aoData=[];
+      aoData.push( { "name": "metaConfig.code", "value": currentDeleteCode } );
+      top.sendAjaxRequest("/actions/Metadata.action?deleteMetaConfigFile",aoData,optCallback);
+  }
+  
+  function getObj(code){
+	  for ( var i=0;i<objs.length;i++ ) {
+		 if ( objs[i].code == code ) return objs[i];
+	 }
+	 return null;
+  }
+	
+  function addMetaConfig(){
+	var xurl="pages/metadata/metaConfigFileInfo.html?opt=create";
+	top.openDialog("添加文件导入配置",xurl,true,600,600,saveCallBack);
+  }
+			
+  function updateMetaConfig(code){
+    var o=getObj(code);
+    top.setTempValue( o );
+	var xurl="pages/metadata/metaConfigFileInfo.html?opt=update&code="+code;
+	top.openDialog("修改文件导入配置",xurl,true,600,600,saveCallBack);
+  }
+
+  function saveCallBack(){
+	try{
+		var obj = top.getTempValue();
+		if(obj.isSaveOK) doQuery();
+	}catch(e){
+	}
+  }
+			
+  function optCallback(obj){
+		try{
+			if ( obj.status == true ){
+			   top.showInfoWin("操作成功");
+			   doQuery();
+			}else{
+			   top.showInfoWin("操作失败 "+obj.msg);
+			}
+		}catch(e){
+		    top.showInfoWin("处理异常:"+e.message);
+		}
+  }
+		  
+  function optGetDBListCallback(obj){
+     try{
+	   var str="<select id='q_db_codes'><option value=''></option>";
+	   var temp = "";
+	   for ( var i=0;i<obj.aaData.length;i++ ) {
+	     temp = obj.aaData[i].code;
+		 str += "<option value='"+temp+"'>"+temp+"</option>";
+	   }
+	   str+="</select>";
+	   $( "#q_db_codesTD" ).html( str );
+	 }catch(e){}
+   }
+ </script>
+ </head>
+ <body>
+		<div width="100%">
+		   <div style='border: 2px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="110px">&nbsp;文件导入配置&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0" >
+			     <tr class="tr_data">
+			      <td align="right" width="15%">启用策略的服务器:</td><td align="left" width="15%" id="gopt_server_td"></td>
+				  <td align="right" width="10%">数据库:</td><td align="left" width="20%" id="q_db_codesTD"></td>
+			      <td align="right" width="10%">状态:</td><td align="left" width="30%" id="tdStatus"></td>
+				 </tr>
+			 </table>
+			 </div>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				    <td>&nbsp;查询结果列表&nbsp;</td>
+					<td><div id="createBtn" class="buttonDivTwo"><a href="javascript:addMetaConfig()">添加</a></div></td>
+			       </tr></table></td>
+			  </tr>
+			</table>
+	        <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

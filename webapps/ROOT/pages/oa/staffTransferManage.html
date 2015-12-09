@@ -1,0 +1,332 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css" media="print, projection, screen">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"  src="../../js/Calendar3.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var oTable=null;
+			var queryCtlMark=0;//查询条件显示收缩标志变量
+			var approval_type="0";
+			
+			$(document).ready(function() {
+			  if(top.g_isPermit("oa_transfer_apply")){
+			    $("#applyBtn").show();
+			  }else{
+			    $("#applyBtn").hide();
+			  }
+			  $("#tabs ul").tabs();
+			  $( "#tdstatus" ).html( top.getCodeSelectHtml("APPLY_STATUS","status",true,null,null,"全部") );
+			  var iaoColumns= [
+			                { "sTitle": "员工编号", "mDataProp": "employee_code", "sWidth": "8%","sClass": "left",
+									"bUseRendered": false
+								},
+								{ "sTitle": "员工姓名", "mDataProp": "employee_name", "sWidth": "8%","sClass": "left",
+									"bUseRendered": false
+								},
+								{ "sTitle": "所在分公司", "mDataProp": "filiale", "sWidth": "15%","sClass": "left",
+									"fnRender":function(oObj){
+									   return top.getDeptPath( oObj.aData.filiale );
+									},
+									"bUseRendered": false
+								},
+								{ "sTitle": "所在部门", "mDataProp": "dept", "sWidth": "15%","sClass": "left",
+									"fnRender":function(oObj){
+									   return top.getDeptPath( oObj.aData.dept );
+									  },
+									"bUseRendered": false
+								},
+								{ "sTitle": "职务", "mDataProp": "job_title", "sWidth": "8%","sClass": "center",
+									   "fnRender":function(oObj){
+										  return top.getCodeName("SYS_POSITION",oObj.aData.job_title);
+									   },
+									  "bUseRendered": false
+								},	
+								{ "sTitle": "申请日期", "mDataProp": "apply_time", "sWidth": "8%","sClass": "center",
+								   "fnRender":function(oObj){
+									  return top.getTimeStr(oObj.aData.apply_time,true);
+								   },
+								  "bUseRendered": false
+								},
+								{ "sTitle": "希望调动日期", "mDataProp": "apply_transfer_time", "sWidth": "8%","sClass": "center",
+								   "fnRender":function(oObj){
+									  return top.getTimeStr(oObj.aData.apply_transfer_time,true);
+								   },
+								  "bUseRendered": false
+								},
+								{ "sTitle": "操作", "mDataProp": "id", "sWidth": "8%","sClass": "center",
+								   "fnRender":function(oObj){
+									  if(oObj.aData.status=="3" || oObj.aData.status=="2" || !top.g_isPermit("oa_general_manager_check") ||  !top.g_isPermit("oa_parent_dept_check") || !top.g_isPermit("oa_BU_manager_check")  || !top.g_isPermit("oa_run_dept_check") || !top.g_isPermit("oa_in_dept_check")){
+										return "<a href='javascript:void(0)' onclick='approval(\"query\",\""+oObj.aData.id+"\",\"1\",\""+oObj.aData.dept+"\")'>查看</a>";
+									  }
+									  return "<a href='javascript:void(0)' onclick='approval(\"approval\",\""+oObj.aData.id+"\",\"1\",\""+oObj.aData.dept+"\")'>审核</a>";
+								   },
+								  "bUseRendered": false
+								}
+               ];	
+			   var surl=top.getUrlBase()+"/actions/StaffTransfer.action?getStaffTransferList";
+			   oTable = $('#staffTransferTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData=getParamDate(aoData);
+			    },
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+				
+				var surl1=top.getUrlBase()+"/actions/StaffInTransfer.action?getStaffInTransferList";
+				var	iaoColumns1= [
+								{ "sTitle": "员工编号", "mDataProp": "employee_code", "sWidth": "8%","sClass": "left",
+									"bUseRendered": false
+								},
+								{ "sTitle": "员工姓名", "mDataProp": "employee_name", "sWidth": "8%","sClass": "left",
+									"bUseRendered": false
+								},
+								{ "sTitle": "所在部门", "mDataProp": "callout_dept", "sWidth": "15%","sClass": "left",
+									"fnRender":function(oObj){
+									   return top.getDeptPath( oObj.aData.callout_dept );
+								},
+									   "bUseRendered": false
+								},
+								{ "sTitle": "职务", "mDataProp": "callout_job_title", "sWidth": "8%","sClass": "center",
+									   "fnRender":function(oObj){
+										  return top.getCodeName("SYS_POSITION",oObj.aData.callout_job_title);
+									   },
+									  "bUseRendered": false
+								},	
+								{ "sTitle": "申请日期", "mDataProp": "apply_time", "sWidth": "8%","sClass": "center",
+								   "fnRender":function(oObj){
+									  return top.getTimeStr(oObj.aData.apply_time,true);
+								   },
+								  "bUseRendered": false
+								},
+								{ "sTitle": "希望调动日期", "mDataProp": "apply_transfer_time", "sWidth": "8%","sClass": "center",
+								   "fnRender":function(oObj){
+									  return top.getTimeStr(oObj.aData.apply_transfer_time,true);
+								   },
+								  "bUseRendered": false
+								},
+								{ "sTitle": "操作", "mDataProp": "id", "sWidth": "8%","sClass": "center",
+								   "fnRender":function(oObj){
+									  if(oObj.aData.status=="3" || oObj.aData.status=="2"){
+										return "<a href='javascript:void(0)' onclick='approval(\"query\",\""+oObj.aData.id+"\",\"0\",\""+oObj.aData.callout_dept+"\")'>查看</a>";
+									  }
+									  return "<a href='javascript:void(0)' onclick='approval(\"approval\",\""+oObj.aData.id+"\",\"0\",\""+oObj.aData.callout_dept+"\")'>审核</a>";
+								   },
+								  "bUseRendered": false
+								}
+				        ];	
+				oTable1 = $('#staffInTransferTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl1,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData=getParamDate(aoData);
+			    },
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns1
+				} );
+				
+			} );
+			
+			function doQuery(){
+			    if(approval_type=="1"){
+				  oTable.fnDraw();
+				}else{
+				  oTable1.fnDraw();
+				}
+			}
+
+		    function getParamDate(aoData){
+			    aoData.push( { "name": "info.employee_name", "value":$("#employee_name").val() } );
+			    aoData.push( { "name": "time1", "value":top.toTimestamp($("#time1").val()) } );
+			    aoData.push( { "name": "time2", "value":top.toTimestamp($("#time2").val()) } );
+			    aoData.push( { "name": "info.status", "value":$("#status").val() } );
+				return aoData;
+			}
+		 //查询条件的展开与收缩
+		 function dwOup(){
+		   if(queryCtlMark==0){//展开
+			 $("#queryCtlIcon").attr("src","../../img/icons/arrow-up.gif"); 
+			 $("#queryTab").slideToggle();
+			 queryCtlMark=1;
+		   }else{//收缩
+			 $("#queryCtlIcon").attr("src","../../img/icons/arrow-down.gif"); 
+			 $("#queryTab").slideToggle();
+			 queryCtlMark=0;
+		   }
+		 }
+		 
+		 function approval(type,id,transfer_type,dept){
+		    top.openDialog("调动信息","pages/oa/staffTransferApply.html?optType="+type+"&id="+id+"&transferType="+transfer_type+"&dept_id="+dept,true,800,400,doQuery);
+		 }
+		 
+		 function changeBtn(n){
+		    approval_type=n;
+		 }
+		 
+		 //员工调动申请
+			function transferApply(code,dept){
+			  $( "#staffTransferDiv" ).dialog({
+				  resizable: false,
+				  height:180,
+				  modal: true,
+				  buttons: {
+					"确定": function() {
+					  var type=$("#transferType option:selected");
+					  $("#staffTransferDiv").dialog("close");
+					  approval_type=type.val();
+					  top.openDialog(type.text()+"申请","pages/oa/staffTransferApply.html?optType=apply&transferType="+type.val(),true,800,400,query);
+					},
+					"取消": function() {
+					  $("#staffTransferDiv").dialog("close");
+					}
+				  }
+				 
+			   });
+			}
+			
+			function query(){
+			  doQuery();
+			}
+			
+			
+		 
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+			<div style='border: 1px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="150px">
+							&nbsp;
+							调动申请管理&nbsp;
+						</td>
+						<td align="right">
+							<span><image id="queryCtlIcon" src="../../img/icons/arrow-down.gif" alt="展开" onclick="javascript:dwOup();"/></span>
+						</td>
+						<td width="2px">
+							&nbsp;
+						</td>
+					</tr>
+				</table>
+
+				<table width="100%" align="center" cellpadding="1px" id="queryTab" style="display:none"
+					cellspacing="1px" border="0">
+					<tr class="tr_data">
+						<td align="right">申请人姓名:</td>
+						<td align="left"><input id="employee_name" type="text" size="20"/></td>
+					    <td align="right">状态:</td>
+						<td align="left" id="tdstatus">
+						</td>
+						<td align="right">时间:</td>
+						<td align="left"><input id="time1" type="text" onclick="top.selectDate(this)" size="15"/>--<input id="time2" type="text" onclick="top.selectDate(this)" size="15"/></td>
+						<td align="center" width="10%">
+						   <div class="buttonDivTwo">
+								<a href="javascript:doQuery()">查询</a>
+						   </div>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0"
+				border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									&nbsp;查询结果列表&nbsp;
+								</td>
+								<td>
+								  <div class="buttonDivTwo" id="applyBtn">
+								    <a href="javascript:void(0)" onclick="transferApply()">申请</a>
+								  </div>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<div id="tabs" style="margin-top:4px;">
+				   <ul>
+				      <li><a href="#staffIn" onclick="changeBtn(0)"><span>员工内部调动申请</span></a></li>
+				      <li><a href="#staff" onclick="changeBtn(1)"><span>分公司员工调动申请</span></a></li>
+				   </ul>
+			</div>
+			<div id="staffIn">
+			   <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="staffInTransferTable"></table>
+			</div>
+			<div id="staff">
+			  <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="staffTransferTable"></table>
+		    </div>
+		</div>
+		<div id="staffTransferDiv" style="display:none;font-size:12px;" title="选择调动类型">
+		    <label>选择调动类型：</label><select id="transferType" style="width:120px;"><option value="0">员工内部调动</option><option value="1">分公司员工调动</option></select>
+		</div>
+	</body>
+</html>

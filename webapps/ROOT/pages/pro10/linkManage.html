@@ -1,0 +1,150 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var objs=[];
+		
+			$(document).ready(function() {
+			   $( "#tdstatus" ).html( top.getCodeSelectHtml("LINK_STATUS","status",true,null,null,"全部") );
+
+			   var iaoColumns= [
+								{ "sTitle": "标题", "mDataProp": "link_title", "sWidth": "35%","sClass": "left", 
+									  "fnRender": function ( oObj ) {
+											   return '<a href=\'javascript:void(0)\' onclick="updateInfo(\''+oObj.aData.link_id+'\')" >'+oObj.aData.link_title+"</a>";
+									  },
+									  "bUseRendered": false},
+								{ "sTitle": "URL", "mDataProp": "xurl", "sWidth": "40%", "bUseRendered": false  },
+								{ "sTitle": "发布日期","mDataProp": "publish_date","sWidth": "15%", "sClass": "center",
+									  "fnRender": function ( oObj ) {
+										   return top.getTimeStr( oObj.aData.publish_date, true );
+									  },
+									  "bUseRendered": false 
+								},
+                                { "sTitle": "状态", "mDataProp": "link_id", "sWidth": "10%", "sClass": "center","bSortable":false,
+								  "fnRender": function ( oObj ) {
+								       objs[objs.length]=oObj.aData;
+                                       return top.getCodeName( "LINK_STATUS", oObj.aData.status );
+                                  },
+								  "bUseRendered": false  }
+               ];
+
+			   var surl=top.getUrlBase()+"/actions/CmaTable.action?getUrlLinkList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"aaSorting": [[ 2, "desc" ]],
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+							aoData.push( { "name": "link.link_title", "value": $("#link_title").val() } );
+							aoData.push( { "name": "link.status", "value": $("#status").val() } );
+							aoData.push( { "name": "time1", "value": $("#q_time1").val() } );
+						    aoData.push( { "name": "time2", "value": $("#q_time2").val() } );
+					},
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+			} );
+		
+			function doQuery(){
+			    objs=[];
+				oTable.fnDraw();
+			}
+			
+			function getObj(infoId){
+			   for ( var i=0;i<objs.length;i++ ) {
+			     if ( objs[i].link_id == infoId ) return objs[i];
+			   }
+			   return null;
+			}
+			
+			
+			function updateInfo(code){
+			    top.setTempValue(getObj(code));
+			    var xurl="pages/pro10/linkInfo.html?optType=update";
+				top.openDialog("修改链接信息",xurl,true,500,300,saveCallBack);
+			}
+			
+			function addInfo(){
+				var xurl="pages/pro10/linkInfo.html?optType=insert";
+				top.openDialog("添加链接信息",xurl,true,500,300,saveCallBack);
+			}
+
+			function saveCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				}
+			}
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+		    <div style='border: 2px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="300px">&nbsp;<span id="ctitle"></span>公告链接信息管理&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+                  <td align="right">标题:</td><td align="left"><input type="text" id="link_title" value="" onkeydown="if(event.keyCode==13) doQuery();" /></td>				
+			      <td align="right">状态:</td><td align="left" id="tdstatus"></td>
+				  <td align="right">发布日期:</td><td align="left">
+				   <input type="text" id="q_time1" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" />~<input type="text" id="q_time2" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" />
+				  </td>
+				 </tr>
+			 </table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				    <td>&nbsp;查询结果列表&nbsp;</td>
+					<td><div id="createBtn" class="buttonDivTwo"><a href="javascript:addInfo()">添加</a></div></td>
+			       </tr></table></td>
+			  </tr>
+			</table>
+	        <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

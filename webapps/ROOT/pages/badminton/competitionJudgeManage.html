@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery.dataTables.min.js"></script>
+
+<script type="text/javascript">
+var oTable = null;
+var scheduleList=[];
+var currentSelectId=0;
+
+$(document).ready( function() {
+    // 加载赛程信息
+	top.sendAjaxRequest("/actions/CompetitionSchedule.action?getCompetitionScheduleList",[],getCompetitionScheduleListCallback);
+});
+
+function selectMember(jid){
+    currentSelectId=jid;
+    var xurl="pages/badminton/selectMember.html";
+	top.openSelectDialog("选择会员账户",xurl,600,500,doAddMember);
+}
+
+function doAddMember(){
+	var so = top.getTempValue();
+	if ( so.userIds == '' ) return ;
+	$("#judge_code_"+currentSelectId).val( so.userIds );
+	$("#judge_name_"+currentSelectId).val( so.userNames );
+}
+ 
+ function loadList(){
+    var iaoColumns= [
+               { "sTitle": "裁判ID", "mDataProp": "judge_code", "sWidth": "40%", 
+			       "fnRender": function ( oObj ) {
+                     return '<input type="text" style="width:50%" disabled="false" id="judge_code_'+oObj.aData.id+'" value="'+oObj.aData.judge_code+'" />&nbsp;&nbsp;<input type="button" onclick="selectMember(\''+oObj.aData.id+'\')" value="选择" ></input>';
+                   },
+                   "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "裁判姓名", "mDataProp": "judge_name", "sWidth": "40%",
+                   "fnRender": function ( oObj ) {
+				      return '<input type="text" style="width:100%" id="judge_name_'+oObj.aData.id+'" value="'+oObj.aData.judge_name+'" />' ;
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "操作", "mDataProp": "id", "sWidth": "20%","bSortable":false,
+                    "fnRender": function ( oObj ) {
+                       return '<span align="center" style="cursor:pointer;" onclick="saveInfo(\''+oObj.aData.id+'\')"><img src="../../img/save.bmp" />&nbsp;保存修改</span>';
+                    },
+                    "bUseRendered": false
+               }
+        ];
+ 	
+		oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": top.getUrlBase()+"/actions/BaseInfo.action?getCompetitionJudgeList",
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     aoData.push( { "name": "competitionJudge.judge_name", "value": $("#judge_name").val() } );
+						 aoData.push( { "name": "optType", "value": "addRow" } );
+						 aoData.push( { "name": "competitionJudge.schedule_id", "value": top.g_GetNumValue( $("#schedule_id").val(), -1 ) } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumns
+	   } );
+ }
+ 
+ function getCompetitionScheduleListCallback(obj){
+     try{
+		  scheduleList=obj.aaData;
+		  $("#tdschedule").html( top.getScheduleSelectHtml(scheduleList,'schedule_id') );
+	 }catch(e){
+	 }
+	 loadList();
+ }
+
+ function saveInfo(code){
+    var aoData=[];
+	aoData.push( { "name": "competitionJudge.id", "value": code } );
+	aoData.push( { "name": "competitionJudge.judge_name", "value": $("#judge_name_"+code).val() } );
+    aoData.push( { "name": "competitionJudge.judge_code", "value": $("#judge_code_"+code).val() } );
+	aoData.push( { "name": "competitionJudge.schedule_id", "value": top.g_GetNumValue( $("#schedule_id").val(), -1 ) } );
+	var xurl="/actions/BaseInfo.action?updateCompetitionJudge";
+	if ( code == 0 ) {
+	  xurl="/actions/BaseInfo.action?insertCompetitionJudge";
+	}
+    top.sendAjaxRequest(xurl,aoData,optCallback);
+ }
+ 
+ function doQuery(){
+	oTable.fnDraw();
+ }
+ 
+ function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      top.showInfoWinOK("操作成功");
+		  doQuery();
+	    }else{
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+ }
+
+</script>
+</head>
+<body>
+            <div style='border: 1px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="180px">&nbsp;裁判信息查询&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+				  <td align="right" width="20%">赛程:</td><td align="left" width="30%" id="tdschedule"></td>
+			      <td align="right" width="20%">裁判姓名:</td><td align="left" width="30%" >
+				    <input type="text" id="judge_name" value="" size="20" />
+				  </td>			  		  
+			     </tr>
+			 </table>
+			</div>
+<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+</body>
+</html> 

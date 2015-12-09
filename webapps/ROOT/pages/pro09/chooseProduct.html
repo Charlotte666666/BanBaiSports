@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+    <link rel="stylesheet" type="text/css" href="../../css/drag-drop-folder-tree.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/context-menu.css"></link>
+    <link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+    <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js" ></script>
+	<script type="text/javascript" language="javascript" src="../../js/myDtree.js" ></script>
+	<script type="text/javascript" language="javascript" src="../../js/context-menu.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/drag-drop-folder-tree.js" ></script>
+	<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+	<script type="text/javascript" >
+       var d=null;
+       var treeObj=null;
+       var currentProId=0;
+
+       $(document).ready(function(){
+    	   loadProTree();	   
+		   $("#treeDetail").height( $(window).height() - 30 );
+       });
+       // 加载产品类型数据
+       function loadProTree(){
+    	   top.sendAjaxRequest("/actions/ProductInfo.action?getProductTypeList",[],initProductTypeTree);
+       }
+       // 初始化产品类型树
+       function initProductTypeTree(obj){
+    	   d=new dTree('d');
+           d.config.useSelection = true;
+           d.config.folderLinks = true;
+           d.config.useStatusText = false;
+           d.config.useLines = false;
+           
+           top.setDeptData( obj.aaData );
+           
+           currentProId=0;
+
+           if( obj.aaData ){
+        	   for(var i=0;i<obj.aaData.length;i++){
+        		   d.add( obj.aaData[i].type_id,obj.aaData[i].parent_type,obj.aaData[i].type_name );
+        	   }
+           }
+
+           $("#ProTypeTree").html( d.toString() );
+           treeObj = new JSDragDropTree();
+           treeObj.setTreeId('dhtmlgoodies_tree2');
+           treeObj.setMaximumDepth(20);
+           treeObj.setMessageMaximumDepthReached('已到达最大的层次'); 
+           treeObj.setRenameAllowed(true);
+           treeObj.setDeleteAllowed(true);
+           treeObj.initTree();
+           treeObj.expandAll();
+       }
+       // 选中产品了类型节点后触发函数
+       function onSelectedNode(nid){
+    	   if ( currentProId == nid ) return ;
+    	   var name="";
+    	   currentProId = nid;
+    	   if ( nid == 0 ) {
+    		   nid="";
+    		   name="";
+    	   }else name=d.getNodePath(nid);
+		    document.getElementById("ProductDetailFrame").contentWindow.queryBySelectedPro(nid,name);
+       }
+	   
+	   function doBeforeClose(){
+	     
+	   }
+	   
+	   function closeDialog(){
+	     parent.closeDialog();
+	   }
+
+    </script>
+</head>
+<body>
+<table style="width:100%;height:100%;padding:0;spacing:0;">
+  <tr class="tr_data" style="width:100%;height:100%;text-align:left">
+   <td style="width:30%;border:1px;border-style: dotted;border-color: #A0CFEC;" valign="top">
+		<div class="dtree" id="ProTypeTree" style="padding:3px;">
+		</div>
+   </td>
+	<td id="treeDetail" style="width:70%;border:1px;border-style: dotted dotted dotted none;border-color: #A0CFEC;" valign="top">
+      <iframe id="ProductDetailFrame" src="orderAddProduct.html" width="100%" height="100%" frameborder="0"></iframe>
+   </td>
+  </tr>	
+</table>
+</body>
+</html>

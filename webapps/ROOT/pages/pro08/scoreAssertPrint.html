@@ -1,0 +1,1035 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css" media="print, projection, screen">
+  <style type="text/css"> 
+	table,table td,table th{border:1px solid black;border-collapse:collapse;}
+   </style>
+	<script src="../../js/jquery-1.7.2.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+	<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+	<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+	<script type="text/javascript" language="JavaScript1.2" src="../../js/helpyouworkeasy-core.js"></script>
+	<script type="text/javascript">
+		var assertScore={};
+		var delegateInfo={};
+		$(document).ready(function() {
+			try{
+				delegateInfo=opener.getDelegateValue();
+				$("#delegate_unit_name").html( delegateInfo.delegate_unit_name );
+				$("#defendant_name").html(delegateInfo.defendant_name );
+				//$("#defendant_sex").html(delegateInfo.defendant_sex );
+				//$("#criminal_type").html(delegateInfo.criminal_type );
+				
+				$("#defendant_sex").html( opener.getCodeName("SEX",delegateInfo.defendant_sex) );
+				$("#criminal_type").html(opener.getCodeName("CRIMINAL_TYPE",delegateInfo.criminal_type) );
+				$("#addr").html( delegateInfo.addr );
+				$("#domicile_place").html( delegateInfo.domicile_place);
+				$("#defendant_id").html(delegateInfo.defendant_id);
+				
+				assertScore=opener.getScoreValue();
+			$("#memo1").html(assertScore.memo1);
+			$("#memo2").html(assertScore.memo2);
+			$("#memo3").html(assertScore.memo3);
+			$("#memo4").html(assertScore.memo4);
+			$("#memo5").html(assertScore.memo5);
+			$("#memo6").html(assertScore.memo6);
+			$("#memo7").html(assertScore.memo7);
+			$("#memo8").html(assertScore.memo8);
+			$("#memo9").html(assertScore.memo9);
+			$("#memo10").html(assertScore.memo10);
+			$("#memo11").html(assertScore.memo11);
+			$("#memo12").html(assertScore.memo12);
+			$("#memo13").html(assertScore.memo13);
+			$("#memo14").html(assertScore.memo14);
+			$("#memo15").html(assertScore.memo15);
+			$("#memo16").html(assertScore.memo16);
+			$("#memo17").html(assertScore.memo17);
+			$("#memo18").html(assertScore.memo18);
+			$("#memo19").html(assertScore.memo19);
+			$("#memo20").html(assertScore.memo20);
+			$("#memo21").html(assertScore.memo21);
+			$("#memo22").html(assertScore.memo22);
+			$("#memo23").html(assertScore.memo23);
+			$("#memo24").html(assertScore.memo24);
+			$("#memo25").html(assertScore.memo25);
+			$("#memo26").html(assertScore.memo26);
+			$("#memo27").html(assertScore.memo27);
+			$("#memo28").html(assertScore.memo28);
+			$("#memo29").html(assertScore.memo29);
+			$("#memo30").html(assertScore.memo30);
+			$("#memo31").html(assertScore.memo31);
+			$("#total_score").html(assertScore.total_score);
+			$("#total_memo").html(assertScore.total_memo);
+			$("#opinion1").html("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+assertScore.opinion1);
+			$("#opinion2").html("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+assertScore.opinion2);
+			$("#opinion3").html("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+assertScore.opinion3);
+			$("#opinion4").html("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+assertScore.opinion4);
+			$("#opinion5").html("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+assertScore.opinion5);
+			$("#opinion6").html("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+assertScore.opinion6);
+			$("#score1").html( assertScore.score1);
+			$("#score2").html( assertScore.score2);
+			$("#score3").html( assertScore.score3);
+			$("#score4").html( assertScore.score4);
+			$("#score5").html( assertScore.score5);
+			$("#score6").html( assertScore.score6);
+			$("#score7").html( assertScore.score7);
+			$("#score8").html( assertScore.score8);
+			$("#score9").html( assertScore.score9);
+			$("#score10").html( assertScore.score10);
+			$("#score11").html( assertScore.score11);
+			$("#score12").html( assertScore.score12);
+			$("#score13").html( assertScore.score13);
+			$("#score14").html( assertScore.score14);
+			$("#score15").html( assertScore.score15);
+			$("#score16").html( assertScore.score16);
+			$("#score17").html( assertScore.score17);
+			$("#score18").html( assertScore.score18);
+			$("#score19").html( assertScore.score19);
+			$("#score20").html( assertScore.score20);
+			$("#score21").html( assertScore.score21);
+			$("#score22").html( assertScore.score22);
+			$("#score23").html( assertScore.score23);
+			$("#score24").html( assertScore.score24);
+			$("#score25").html( assertScore.score25);
+			$("#score26").html( assertScore.score26);
+			$("#score27").html( assertScore.score27);
+			$("#score28").html( assertScore.score28);
+			$("#score29").html( assertScore.score29);
+			$("#score30").html( assertScore.score30);
+			$("#score31").html( assertScore.score31);
+				var tempDay=assertSuggest.start_date;
+				var days=tempDay.split("-");
+				$("#Y").html("&nbsp;"+days[0]+"&nbsp;");
+				$("#M").html("&nbsp;"+days[1]+"&nbsp;");
+				$("#D").html("&nbsp;"+days[2]+"&nbsp;");
+				tempDay=assertSuggest.end_date;
+				days=tempDay.split("-");
+				$("#eM").html("&nbsp;"+days[1]+"&nbsp;");
+				$("#eD").html("&nbsp;"+days[2]+"&nbsp;");
+			}catch(e){}
+	   } );
+	   function doPrint(){
+			$("#printBtn").hide();
+			window.print();
+		}
+	</script>
+</head>
+ <body style="background-color:#7B7B7B">
+  <div style="width:620px;margin-left:auto;margin-right:auto;background-color:white;;padding-left:90px;padding-right:90px;padding-top:90px;padding-bottom:20px">
+	<p style="text-align:center;line-height:33px">
+    <strong><span style="font-size:24px;font-family:宋体">社区矫正适用前调查评估分值表</span></strong>
+	</p>
+    <table style="padding-bottom:30px">
+        <tr style=";height:16px" class="firstRow">
+            <td width="44" rowspan="4" style="border-color: windowtext; border-width: 1px; padding: 0px 7px;" height="16">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size:19px;font-family:黑体">委 托单 位情 况</span>
+                </p>
+            </td>
+            <td width="372" colspan="5" style="border-top-color: windowtext; border-right-color: windowtext; border-bottom-color: windowtext; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-style: none; padding: 0px 7px; word-break: break-all;" height="16">
+                <p style="text-align:center;line-height:33px">
+                    <strong><span style="font-size:19px;font-family:仿宋_GB2312">委托单位名称</span></strong>
+                </p>
+            </td>
+            <td id="delegate_unit_name" width="406" colspan="13" style="border-top-color: windowtext; border-right-color: windowtext; border-bottom-color: windowtext; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-style: none; padding: 0px 7px;" height="16"></td>
+        </tr>
+        <tr style=";height:5px">
+            <td width="133" colspan="5" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="text-align:center;line-height:33px">
+                    <strong><span style="font-size:19px;font-family:仿宋_GB2312">委托单位地址</span></strong>
+                </p>
+            </td>
+            <td width="406" colspan="13" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5"></td>
+        </tr>
+        <tr style=";height:5px">
+            <td width="210" colspan="8" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="text-align:center;line-height:33px">
+                    <strong><span style="font-size:19px;font-family:仿宋_GB2312">委托人姓名或联系方式</span></strong>
+                </p>
+            </td>
+            <td width="329" colspan="10" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5"></td>
+        </tr>
+        <tr style=";height:8px">
+            <td width="112" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="8">
+                <p style="text-align:center;line-height:33px">
+                    <strong><span style="font-size:19px;font-family:仿宋_GB2312">委托函编号</span></strong>
+                </p>
+            </td>
+            <td id="delegate_code" width="162" colspan="7" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="8"></td>
+            <td width="160" colspan="5" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="8">
+                <p style="text-align:center;line-height:33px">
+                    <strong><span style="font-size:19px;font-family:仿宋_GB2312">委托函收到时间</span></strong>
+                </p>
+            </td>
+            <td id="" width="105" colspan="2" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="8"></td>
+        </tr>
+        <tr style=";height:5px">
+            <td width="50" rowspan="4" style="border-right-color: windowtext; border-bottom-color: windowtext; border-left-color: windowtext; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-style: none; padding: 0px 7px;" height="5">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size:19px;font-family:黑体">被调查人基本情况</span>
+                </p>
+            </td>
+            <td width="32" colspan="2" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="text-align:center;line-height:33px">
+                    <strong><span style="font-size:19px;font-family:仿宋_GB2312">姓名</span></strong>
+                </p>
+            </td>
+            <td id="defendant_name" width="363" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5"></td>
+            <td width="56" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="text-align:center;line-height:33px">
+                    <strong><span style="font-size:19px;font-family:仿宋_GB2312">性别</span></strong>
+                </p>
+            </td>
+            <td id="defendant_sex"  width="69" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5"></td>
+            <td width="102" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="text-align:center;line-height:33px">
+                    <strong><span style="font-size:19px;font-family:仿宋_GB2312">身份证号</span></strong>
+                </p>
+            </td>
+            <td id="defendant_id" width="144" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5"></td>
+        </tr>
+        <tr style=";height:5px">
+            <td width="95" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="text-align:center;line-height:33px">
+                    <strong><span style="font-size:19px;font-family:仿宋_GB2312">犯罪类型</span></strong>
+                </p>
+            </td>
+            <td id="criminal_type" width="279" colspan="6" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5"></td>
+            <td width="211" colspan="7" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="text-align:center;line-height:33px">
+                    <strong><span style="font-size:19px;font-family:仿宋_GB2312">拟适用社区矫正类型</span></strong>
+                </p>
+            </td>
+            <td width="105" colspan="2" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5"></td>
+        </tr>
+        <tr style=";height:5px">
+            <td width="112" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="text-align:center;line-height:33px">
+                    <strong><span style="font-size:19px;font-family:仿宋_GB2312">户籍所在地</span></strong>
+                </p>
+            </td>
+            <td id="domicile_place" width="276" colspan="10" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5"></td>
+            <td width="133" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="text-align:center;line-height:33px">
+                    <strong><span style="font-size:19px;font-family:仿宋_GB2312">是否未成年人</span></strong>
+                </p>
+            </td>
+            <td id="" width="18" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5"></td>
+        </tr>
+        <tr style=";height:21px">
+            <td width="112" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="21">
+                <p style="text-align:center;line-height:33px">
+                    <strong><span style="font-size:19px;font-family:仿宋_GB2312">经常居住地</span></strong>
+                </p>
+            </td>
+            <td id="addr" width="427" colspan="14" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="21"></td>
+        </tr>
+        <tr style=";height:14px">
+            <td width="324" colspan="11" style="border-right-color: windowtext; border-bottom-color: windowtext; border-left-color: windowtext; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-style: none; padding: 0px 7px;" height="14">
+                <p style="text-align:center;line-height:33px">
+                    <strong><span style="font-size:19px;font-family:仿宋_GB2312">调 查 内 容</span></strong>
+                </p>
+            </td>
+            <td id="survey_condition" width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="14">
+                <p style="text-align:center;line-height:33px">
+                    <strong><span style="font-size:19px;font-family:仿宋_GB2312">标准分值</span></strong>
+                </p>
+            </td>
+            <td id="" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="14">
+                <p style="text-align:center;line-height:33px">
+                    <strong><span style="font-size:19px;font-family:仿宋_GB2312">评 估分 值</span></strong>
+                </p>
+            </td>
+            <td width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="14">
+                <p style="text-align:center;line-height:33px">
+                    <strong><span style="font-size:19px;font-family:仿宋_GB2312">备&nbsp;&nbsp;&nbsp; 注</span></strong>
+                </p>
+            </td>
+        </tr>
+        <tr style=";height:18px">
+            <td width="50" rowspan="15" style="border-right-color: windowtext; border-bottom-color: windowtext; border-left-color: windowtext; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-style: none; padding: 0px 7px;" height="18">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size:19px;font-family:黑体">表</span>
+                </p>
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size:19px;font-family:黑体">&nbsp;</span>
+                </p>
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size:19px;font-family:黑体">现</span>
+                </p>
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size:19px;font-family:黑体">&nbsp;</span>
+                </p>
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size:19px;font-family:黑体">情</span>
+                </p>
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size:19px;font-family:黑体">&nbsp;</span>
+                </p>
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size:19px;font-family:黑体">况</span>
+                </p>
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size:19px;font-family:黑体">&nbsp;</span>
+                </p>
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family:楷体_GB2312">(50分)</span>
+                </p>
+            </td>
+            <td width="5" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="18">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">1</span>
+                </p>
+            </td>
+            <td width="233" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="18">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">有无犯罪前科和其他犯罪嫌疑</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="18">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">6分</span>
+                </p>
+            </td>
+            <td id="score1" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="18"></td>
+            <td id="memo1" width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="18"></td>
+        </tr>
+        <tr style=";height:6px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="6">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">2</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="6">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">有无违法记录和其他违法嫌疑</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="6">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">5分</span>
+                </p>
+            </td>
+            <td id="score2" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="6"></td>
+            <td id="memo2" width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="6"></td>
+        </tr>
+        <tr style=";height:13px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">3</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">有无网恋、吸毒、赌博、嗜酒等恶习</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">2分</span>
+                </p>
+            </td>
+            <td id="score3" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13"></td>
+            <td id="memo3"  width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13"></td>
+        </tr>
+        <tr style=";height:5px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">4</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">个人成长经历中有无重大挫折</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">1分</span>
+                </p>
+            </td>
+            <td id="score4" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5"></td>
+            <td id="memo4"  width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5"></td>
+        </tr>
+        <tr style=";height:5px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">5</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">重大挫折与其犯罪有无关联性</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">1分</span>
+                </p>
+            </td>
+            <td id="score5" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5"></td>
+            <td id="memo5"  width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5"></td>
+        </tr>
+        <tr style=";height:15px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="15">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">6</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="15">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">有无孤僻、偏执、易冲动等异常的性格特征</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="15">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">2分</span>
+                </p>
+            </td>
+            <td id="score6" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="15"></td>
+            <td id="memo6"  width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="15"></td>
+        </tr>
+        <tr style=";height:5px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">7</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">个人习性、行为和情绪控制能力与其犯罪有无关联性</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">5分</span>
+                </p>
+            </td>
+            <td id="score7" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5"></td>
+            <td id="memo7"  width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5"></td>
+        </tr>
+        <tr style=";height:5px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">8</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">有无暴力倾向习性</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">4分</span>
+                </p>
+            </td>
+            <td id="score8" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5"></td>
+            <td id="memo8"  width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5"></td>
+        </tr>
+        <tr style=";height:5px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">9</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">有无较重的报复心理和行为</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">4分</span>
+                </p>
+            </td>
+            <td id="score9" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5"></td>
+            <td  id="memo9" width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5"></td>
+        </tr>
+        <tr style=";height:5px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">10</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">同一类型违法犯罪有无一贯性</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">5分</span>
+                </p>
+            </td>
+            <td id="score10" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5"></td>
+            <td id="memo10" width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="5"></td>
+        </tr>
+        <tr style=";height:30px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="30">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">11</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="30">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">本次犯罪与过去违法记录、犯罪嫌疑及犯罪前科有无同一性</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="30">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">3分</span>
+                </p>
+            </td>
+            <td id="score11" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="30"></td>
+            <td id="memo11" width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="30"></td>
+        </tr>
+        <tr style=";height:31px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="31">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">12</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="31">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">有无经常参加团伙性违法犯罪行为</span>
+                </p>
+            </td>
+            <td  width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="31">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">4分</span>
+                </p>
+            </td>
+            <td id="score12" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="31"></td>
+            <td id="memo12" width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="31"></td>
+        </tr>
+        <tr style=";height:31px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="31">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">13</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="31">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">与其他团伙成员有无密切联系交往</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="31">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">2分</span>
+                </p>
+            </td>
+            <td id="score13" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="31"></td>
+            <td id="memo13" width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="31"></td>
+        </tr>
+		</table>
+	</div>
+	<div style="width:620px;margin-left:auto;margin-right:auto;padding-left:90px;padding-right:90px;height:5px">
+	</div>
+	<div style="width:620px;margin-left:auto;margin-right:auto;background-color:white;padding:90px">
+	<table>
+        <tr style=";height:30px">
+		<td width="20px" rowspan="2"></td>
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="30">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">14</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="30">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">家庭成员中有无现实违法行为、犯罪嫌疑情况和违法犯罪史</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="30">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">3分</span>
+                </p>
+            </td>
+            <td id="score14" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="30"></td>
+            <td id="memo14" width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="30"></td>
+        </tr>
+        <tr style=";height:30px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="30">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">15</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="30">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">上述情况对该人本次犯罪有无影响和关联</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="30">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">3分</span>
+                </p>
+            </td>
+            <td id="score15" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="30"></td>
+            <td id="memo15" width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="30"></td>
+        </tr>
+        <tr style=";height:21px">
+            <td width="50" rowspan="9" style="border-right-color: windowtext; border-bottom-color: windowtext; border-left-color: windowtext; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-style: none; padding: 0px 7px;" height="21">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size:19px;font-family:黑体">家</span>
+                </p>
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size:19px;font-family:黑体">庭</span>
+                </p>
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size:19px;font-family:黑体">、</span>
+                </p>
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size:19px;font-family:黑体">社</span>
+                </p>
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size:19px;font-family:黑体">会</span>
+                </p>
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size:19px;font-family:黑体">状</span>
+                </p>
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size:19px;font-family:黑体">况</span>
+                </p>
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family:楷体_GB2312">(20分)</span>
+                </p>
+            </td>
+            <td width="5" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="21">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">16</span>
+                </p>
+            </td>
+            <td width="233" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="21">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">有无固定职业</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="21">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">3分</span>
+                </p>
+            </td>
+            <td id="score16" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="21"></td>
+            <td id="memo16" width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="21"></td>
+        </tr>
+        <tr style=";height:20px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="20">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">17</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="20">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">有无稳定的收入和经济来源</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="20">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">3分</span>
+                </p>
+            </td>
+            <td id="score17" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="20"></td>
+            <td id="memo17" width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="20"></td>
+        </tr>
+        <tr style=";height:13px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">18</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">有无正当的谋生技能</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">2分</span>
+                </p>
+            </td>
+            <td id="score18" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13"></td>
+            <td id="memo18" width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13"></td>
+        </tr>
+        <tr style=";height:13px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">19</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">家庭成员经济状况和现实表现对该人有无影响</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">2分</span>
+                </p>
+            </td>
+            <td id="score19" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13"></td>
+            <td id="memo19" width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13"></td>
+        </tr>
+        <tr style=";height:13px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">20</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">家庭是否和睦，对家庭有无责任感</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">2分</span>
+                </p>
+            </td>
+            <td id="score20" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13"></td>
+            <td id="memo20" width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13"></td>
+        </tr>
+        <tr style=";height:13px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">21</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">家庭对其有无约束力</span>
+                </p>
+            </td>
+            <td  width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">2分</span>
+                </p>
+            </td>
+            <td id="score21" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13"></td>
+            <td id="memo21"  width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13"></td>
+        </tr>
+        <tr style=";height:36px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="36">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">22</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="36">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">日常生活中有无交往密切的亲属、朋友、同事，且对其行为有正面影响力</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="36">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">2分</span>
+                </p>
+            </td>
+            <td id="score22" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="36"></td>
+            <td id="memo22"  width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="36"></td>
+        </tr>
+        <tr style=";height:14px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="14">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">23</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="14">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">有无固定居所</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="14">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">2分</span>
+                </p>
+            </td>
+            <td id="score23" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="14"></td>
+            <td id="memo23"  width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="14"></td>
+        </tr>
+        <tr style=";height:12px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="12">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">24</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="12">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">家庭居住地有无良好的治安环境</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="12">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">2分</span>
+                </p>
+            </td>
+            <td id="score24" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="12"></td>
+            <td id="memo24"  width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="12"></td>
+        </tr>
+        <tr style=";height:13px">
+            <td width="50" rowspan="7" style="border-right-color: windowtext; border-bottom-color: windowtext; border-left-color: windowtext; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-style: none; padding: 0px 7px;" height="13">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size:19px;font-family:黑体">有</span>
+                </p>
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size:19px;font-family:黑体">关</span>
+                </p>
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size:19px;font-family:黑体">个</span>
+                </p>
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size:19px;font-family:黑体">人</span>
+                </p>
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size:19px;font-family:黑体">、</span>
+                </p>
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size:19px;font-family:黑体">组</span>
+                </p>
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size:19px;font-family:黑体">织</span>
+                </p>
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size:19px;font-family:黑体">意</span>
+                </p>
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size:19px;font-family:黑体">见</span>
+                </p>
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family:楷体_GB2312">(80分)</span>
+                </p>
+            </td>
+            <td width="5" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">25</span>
+                </p>
+            </td>
+            <td width="233" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">家庭成员意见</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">10分</span>
+                </p>
+            </td>
+            <td id="score25" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13"></td>
+            <td id="memo25"  width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="13">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px;"><span style="font-size: 10px; font-family: 仿宋_GB2312;">(</span><strong><span style="font-size: 10px; font-family: 仿宋_GB2312;">注：</span></strong><span style="font-size: 10px; font-family: 仿宋_GB2312;">要有签字盖章，</span></span>
+                </p>
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">以下同)</span>
+                </p>
+            </td>
+        </tr>
+        <tr style=";height:38px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="38">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">26</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="38">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">被害人或其家属意见</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="38">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">10分</span>
+                </p>
+            </td>
+            <td id="score26" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="38"></td>
+            <td id="memo26"  width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="38"></td>
+        </tr>
+        <tr style=";height:35px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="35">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">27</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="35">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">所在单位、学校意见</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="35">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">10分</span>
+                </p>
+            </td>
+            <td id="score27" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="35"></td>
+            <td id="memo27"  width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="35"></td>
+        </tr>
+        <tr style=";height:15px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="15">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">28</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="15">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">社区、居（村）民小组或周边知情群众意见</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="15">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">10分</span>
+                </p>
+            </td>
+            <td id="score28" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="15"></td>
+            <td id="memo28"  width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="15"></td>
+        </tr>
+        <tr style=";height:11px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="11">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">29</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="11">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">社区（村屯）、街道(乡镇)意见</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="11">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">10分</span>
+                </p>
+            </td>
+            <td  id="score29" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="11"></td>
+            <td id="memo29" width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="11"></td>
+        </tr>
+        <tr style=";height:14px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="14">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">30</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="14">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">辖区公安派出所意见</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="14">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">10分</span>
+                </p>
+            </td>
+            <td id="score30" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="14"></td>
+            <td id="memo30" width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="14"></td>
+        </tr>
+        <tr style=";height:28px">
+            <td width="15" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="28">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">31</span>
+                </p>
+            </td>
+            <td width="512" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="28">
+                <p style="line-height:33px">
+                    <span style="font-family: 仿宋_GB2312; font-size: 10px;">辖区司法所意见</span>
+                </p>
+            </td>
+            <td width="64" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="28">
+                <p style="text-align:center;line-height:33px">
+                    <span style="font-size: 10px; font-family: 仿宋_GB2312;">20分</span>
+                </p>
+            </td>
+            <td id="score31" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="28"></td>
+            <td id="memo31" width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="28"></td>
+        </tr>
+        <tr style=";height:61px">
+            <td width="245" colspan="8" style="border-right-color: windowtext; border-bottom-color: windowtext; border-left-color: windowtext; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-style: none; padding: 0px 7px;" height="61">
+                <p style="text-align:center;line-height:33px">
+                    <strong><span style="font-size:19px;font-family:仿宋_GB2312">合&nbsp; 计</span></strong>
+                </p>
+            </td>
+            <td width="143" colspan="6" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="61">
+                <p style="text-align:center;line-height:33px">
+                    <strong><span style="font-size:19px;font-family:仿宋_GB2312">150</span></strong><strong><span style="font-size:19px;font-family:   仿宋_GB2312">分</span></strong>
+                </p>
+            </td>
+            <td id="total_score" width="63" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="61"></td>
+            <td id="total_memo" width="151" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="61"></td>
+        </tr>
+		</table>
+		</div>
+
+		<div style="width:620px;margin-left:auto;margin-right:auto;padding-left:90px;padding-right:90px;height:5px">
+		</div>
+		<div style="width:620px;margin-left:auto;margin-right:auto;background-color:white;padding:90px">
+			<table>
+			<tr style=";height:40px">
+				<td width="602" colspan="19" valign="top" style="border-right-color: windowtext; border-bottom-color: windowtext; border-left-color: windowtext; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-style: none; padding: 0px 7px;" height="40">
+					<p style="text-align:center;line-height:33px">
+						<strong><span style="font-size:19px;font-family:仿宋_GB2312">县（市、区、风景区）司法局调查评估工作小组初步意见</span></strong>
+					</p>
+				</td>
+			</tr>
+			<tr style=";height:664px">
+				<td width="602" colspan="19" valign="top" style="border-right-color: windowtext; border-bottom-color: windowtext; border-left-color: windowtext; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-style: none; padding: 0px 7px; word-break: break-all;" height="664">
+					<p style="text-indent:37px;line-height:33px">
+						<span style="font-size:19px;font-family:仿宋_GB2312">按照局领导的安排，我们于&nbsp;&nbsp;&nbsp; 年&nbsp; 月&nbsp; 日至&nbsp;&nbsp;&nbsp; 年&nbsp; 月&nbsp; 日对被告人（罪犯、犯罪嫌疑人）&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 进行了社区矫正适用前调查评估。有关情况如下：</span>
+					</p>
+					<p style="text-indent:37px;line-height:33px">
+						<span style="font-size:19px;font-family:仿宋_GB2312">1</span><span style="font-size:19px;font-family:仿宋_GB2312">、居所情况：</span>
+					</p>
+					<p style="line-height:33px">
+						<span id="opinion1" style="font-size:19px;font-family:仿宋_GB2312">&nbsp;</span>
+					</p>
+					<p style="line-height:33px">
+						<span style="font-size:19px;font-family:仿宋_GB2312">&nbsp;&nbsp;&nbsp; 2</span><span style="font-size:19px;font-family:仿宋_GB2312">、家庭和社会状况：</span>
+					</p>
+					<p style="line-height:33px">
+						<span id="opinion2" style="font-size:19px;font-family:仿宋_GB2312">&nbsp;</span>
+					</p>
+					
+					<p style="line-height:33px">
+						<span style="font-size:19px;font-family:仿宋_GB2312">&nbsp;&nbsp;&nbsp; 3</span><span style="font-size:19px;font-family:仿宋_GB2312">、一贯表现、犯罪行为的后果和影响：</span>
+					</p>
+					<p style="line-height:33px">
+						<span id="opinion3" style="font-size:19px;font-family:仿宋_GB2312">&nbsp;</span>
+					</p>
+					
+					<p style="line-height:33px">
+						<span style="font-size:19px;font-family:仿宋_GB2312">&nbsp;&nbsp;&nbsp; 4</span><span style="font-size:19px;font-family:仿宋_GB2312">、被害人、居住地社区（村屯）和有关单位、组织意见：</span>
+					</p>
+					<p style="line-height:33px">
+						<span id="opinion4" style="font-size:19px;font-family:仿宋_GB2312">&nbsp;</span>
+					</p>
+					
+					<p style="line-height:33px">
+						<span style="font-size:19px;font-family:仿宋_GB2312">&nbsp;&nbsp;&nbsp; 5</span><span style="font-size:19px;font-family:仿宋_GB2312">、监护人、具保人情况：</span>
+					</p>
+					<p style="line-height:33px">
+						<span id="opinion5"style="font-size:19px;font-family:仿宋_GB2312">&nbsp;</span>
+					</p>
+					<p style="text-indent:38px;line-height:33px">
+						<span style="font-size:19px;font-family:仿宋_GB2312">6</span><span style="font-size:19px;font-family:仿宋_GB2312">、禁止令情况：</span>
+					</p>
+					<p style="line-height:33px">
+						<span id="opinion6" style="font-size:19px;font-family:仿宋_GB2312">&nbsp;</span>
+					</p>
+					<p style="line-height:33px">
+						<span style="font-size:19px;font-family:仿宋_GB2312">&nbsp;&nbsp;&nbsp; </span><span style="font-size:19px;font-family:仿宋_GB2312">综合以上情况，调查评估小组的评估意见为：同意（不同意）该人适用管制（缓刑、假释、暂予监外执行、禁止令）。</span>
+					</p>
+					<p style="text-indent:308px;line-height:33px">
+						<span style="font-size:19px;font-family:仿宋_GB2312">调查人签字：</span>
+					</p>
+					<p style="line-height:33px">
+						<span style="font-size:19px;font-family:仿宋_GB2312">&nbsp;</span>
+					</p>
+					<p style="line-height:33px">
+						<span style="font-size:19px;font-family:仿宋_GB2312">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp </span><span style="font-size:19px;font-family:仿宋_GB2312">年&nbsp;&nbsp;&nbsp; 月&nbsp;&nbsp;&nbsp; 日</span>
+					</p>
+				</td>
+			</tr>
+	</table>
+	
+	<div width="100%" id="printBtn" style="margin_top:10px;font-size:20px;position:absolute;left:30pxx;top:50px"><center><a style="text-decoration: none"href="javascript:doPrint()"><span>[ 打印 ]</span></a></center></div>
+
+  </div>
+</body>
+</html>

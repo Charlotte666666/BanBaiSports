@@ -1,0 +1,252 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery.ui.all.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" src="../../js/checkForm.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var v04001=0;
+			var v04002=0;
+			var v04003=0;
+			var v04004=-1;
+			$(document).ready(function() {
+			   $( "#tdType" ).html( top.getCodeSelectHtml("CMA_ELE_CODE","q_code",true,null,null,"全部") );
+			   
+			   var today=new Date();
+               v04001 = today.getFullYear();
+               v04002 = today.getMonth() + 1;
+               v04003 = today.getDate();
+			   v04004 = today.getHours();
+			   var timer=v04001 + "-" + top.getTwoNumberStr(Number(v04002)) + "-" + top.getTwoNumberStr(Number(v04003));
+			   $( "#q_time1" ).val( timer );
+			   
+			   var iaoColumns= [
+			                   { "sTitle": "省份", "mDataProp": "national", "sWidth": "6%","sClass": "center","bSortable":false},
+			                   { "sTitle": "台站名", "mDataProp": "V01000", "sWidth": "12%","sClass": "left",
+                                      "fnRender": function ( oObj ) {
+                                           return oObj.aData.stationName+"("+top.getCode2ASII(oObj.aData.V01000)+")";
+                                      },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "观测时间", "mDataProp": "time", "sWidth": "12%","sClass": "center"},
+                               { "sTitle": "要素", "mDataProp": "c_CODE", "sWidth": "10%","sClass": "center",
+                                      "fnRender": function ( oObj ) {
+                                           return top.getCodeName( "CMA_ELE_CODE", oObj.aData.c_CODE );
+                                      },
+                                      "bUseRendered": false
+                               },
+							   { "sTitle": "数值", "mDataProp": "V_VALUE", "sWidth": "5%","sClass": "center"},
+                               { "sTitle": "质控结果", "mDataProp": "F_1", "sWidth": "10%","sClass": "center",
+                            	   "fnRender": function ( oObj ) {
+                                      return top.getCodeName( "CMA_QC_STATUS", oObj.aData.F_1 );
+                                   },
+                                   "bUseRendered": false
+                               },
+                               { "sTitle": "反馈结果", "mDataProp": "F_2", "sWidth": "10%", "sClass": "center",
+                                   "fnRender": function ( oObj ) {
+                                        return top.getCodeName( "CMA_CONFIRM_RESULT", oObj.aData.F_2 );
+                                   },
+                                   "bUseRendered": false  
+                               },
+							   { "sTitle": "反馈收到时间", "mDataProp": "RTIME", "sWidth": "12%","sClass": "center","bSortable":true,
+                                  "fnRender": function ( oObj ) {
+                                       return toBeijingTimeSelf(oObj.aData.RTIME);
+                                  },
+                                  "bUseRendered": false
+                               },
+							   { "sTitle": "反馈时效", "mDataProp": "ITIME", "sWidth": "10%", "sClass": "center","bSortable":false,
+                                   "fnRender": function ( oObj ) {
+                                        return timeDis(oObj.aData.time,oObj.aData.RTIME);
+                                   },
+                                   "bUseRendered": false  
+                               },
+                               { "sTitle": "问题原因", "mDataProp": "c_RESN", "sWidth": "13%", "sClass": "center",
+                                   "fnRender": function ( oObj ) {
+                                        return top.getCodeName( "CMA_REASON", oObj.aData.c_RESN );
+                                   },
+                                   "bUseRendered": false  
+                               }
+               ];
+ 
+			   var surl=top.getUrlBase()+"/actions/ProCma.action?getRAWSRPageList";
+			   var temp="";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"aaSorting": [[ 4, "asc" ]],
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+							    top.showLoadingInfo(false);
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+							    top.showLoadingInfo(false);
+								top.showInfoWinError("发生异常:"+error+"  "+thrown);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+			            aoData.push( { "name": "rawsr.c_CODE", "value":$("#q_code").val() } );
+						temp=$("#q_v01000").val();
+						if ( temp == '' ) {
+						 temp = 0;
+						} else temp = top.getASII2Code(temp);
+						aoData.push( { "name": "rawsr.v01000", "value": temp } );
+						aoData.push( { "name": "rawsr.f_2", "value":$("#q_f_2").val() } );
+						temp=top.getRadioValue(document.getElementsByName("q_sign"));
+						if ( temp == '' ) temp = 1;
+						aoData.push( { "name": "rawsr.c_SIGN", "value": temp} );
+						temp=$("#q_time1").val();
+						aoData.push( { "name": "rawsr.v04001", "value": Number(temp.substring(0,4)) } );
+						aoData.push( { "name": "rawsr.v04002", "value": Number(temp.substring(5,7)) } );
+						aoData.push( { "name": "rawsr.v04003", "value": Number(temp.substring(8,10)) } );
+						aoData.push( { "name": "rawsr.v04004", "value": -1 } );
+						top.showLoadingInfo(true);
+			       },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumns
+				} );
+
+			} );
+
+			function toBeijingTimeSelf(str){
+				if ( str == null ) return "";
+				if ( str == '' || str == '-' ) return "";
+				if ( str.length < 13 ) return "";
+				try{
+				  var d=new Date();
+				  d.setFullYear( Number(str.substring(0,4)) );
+				  d.setMonth( Number(str.substring(4,6)) - 1 );
+				  d.setDate( Number(str.substring(6,8)) );
+				  d.setHours( Number(str.substring(8,10)) );
+				  d.setTime( d.getTime() + 8*60*60000 );
+				  var restr = d.getFullYear()+"-"+top.getTwoNumberStr(d.getMonth()+1)+"-"+top.getTwoNumberStr(d.getDate()) +" "+top.getTwoNumberStr(d.getHours());
+				  restr+=":"+str.substring(10,12)+":"+str.substring(12,14);
+				  if ( restr.indexOf("N") != -1 ) return "";
+				  return restr;
+				}catch(e){
+				  return "";
+				}
+		    }
+			
+			function timeDis(t1,t2){
+			   if ( t1 == '' || t2 == '' ) return "";
+			   try{
+			      var d=new Date();
+				  d.setFullYear( Number(t1.substring(0,4)) );
+				  d.setMonth( Number(t1.substring(5,7)) - 1 );
+				  d.setDate( Number(t1.substring(8,10)) );
+				  d.setHours( Number(t1.substring(11,13)) );
+				  d.setMinutes( Number(t1.substring(14,16)) );
+				  d.setSeconds( 0 );
+				  var s1=d.getTime();
+				  d.setFullYear( Number(t2.substring(0,4)) );
+				  d.setMonth( Number(t2.substring(4,6)) - 1 );
+				  d.setDate( Number(t2.substring(6,8)) );
+				  d.setHours( Number(t2.substring(8,10)) );
+				  d.setMinutes( Number(t2.substring(10,12)) );
+				  var s2=d.getTime()+8*60*60000;
+				  var h=Math.floor((s2-s1)/(60000*60));
+				  var m=Math.floor((s2-s1-60000*60*h)/60000);
+				  return h+"小时"+m+"分";
+			   }catch(e){
+			     return 0;
+			   }
+			}
+ 
+			function doQuery(){
+			    if ( $("#q_time1").val() == '' ) {
+				  top.showInfoWinWarn("请输入观测日期");
+				  return ;
+				}
+				oTable.fnDraw();
+			}
+
+			function changeSign(n){
+			   if ( n == 1 ) {
+			      $("#q_f_2").attr("disabled",false);
+			   } else {
+			      $("#q_f_2").val("");
+				  $("#q_f_2").attr("disabled",true);
+			   }
+			}
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+	     	  <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0" >
+			     <tr>
+				  <td align="left" colspan="13">
+				    &nbsp;&nbsp;&nbsp;<input type="radio" name="q_sign" value="1" checked="true" onclick="changeSign(1)"/>已反馈&nbsp;&nbsp;
+					<input type="radio" name="q_sign" value="0" onclick="changeSign(0)"/>未反馈
+				  </td>
+				 </tr>
+			     <tr>
+				  <td align="right" width="5%">要素:</td><td align="left" width="10%" id="tdType"></td>
+				  <td align="right" width="5%">分省:</td><td align="left" width="5%">
+				      <select id="q_province" style="width:80px;" >
+					            <option value='' >全部</option>
+                                <!--option value='1100' >北京</option><option value='1200' >天津</option>
+								<option value='1300' >河北</option><option value='1400' >山西</option>
+								<option value='1500' >内蒙古</option><option value='1600' >辽宁</option>
+								<option value='2200' >吉林</option><option value='2300' >黑龙江</option>
+								<option value='3100' >上海</option><option value='3200' >江苏</option>
+								<option value='3300' >浙江</option><option value='3400' >安徽</option>
+								<option value='3500' >福建</option><option value='3600' >江西</option>
+								<option value='3700' >山东</option><option value='4100' >河南</option>
+								<option value='4200' >湖北</option><option value='4300' >湖南</option>
+								<option value='4400' >广东</option><option value='4500' >广西</option>
+								<option value='4600' >海南</option><option value='5000' >重庆</option>
+								<option value='5100' >四川</option><option value='5200' >贵州</option>
+								<option value='5300' >云南</option><option value='5400' >西藏</option>
+								<option value='6100' >陕西</option><option value='6200' >甘肃</option>
+								<option value='6300' >青海</option><option value='6400' >宁夏</option>
+								<option value='6500' >新疆</option><option value='7100' >台湾</option>
+								<option value='8100' >香港</option><option value='8200' >澳门</option-->
+					   </select>
+			      </td>
+				  <td align="right" width="10%">站号:</td><td align="left" width="10%"><input type="text" id="q_v01000" value="" size="10" onkeydown="if(event.keyCode==13) doQuery();"/></td>
+			      <td align="right" width="10%">观测日期:</td><td align="left" width="15%">
+				    <input type="text" id="q_time1" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" />
+				  </td>
+				  <td align="right" width="10%">反馈情况:</td>
+				   <td align="left" width="10%">
+				    <select id="q_f_2">
+					  <option value="">全部</option>
+					  <option value="0">确认正确</option>
+					  <option value="1">无法确认</option>
+					  <option value="2">确认错误</option>
+					</select>
+				   </td>
+				  <td align="center" width="10%"><span class="buttonTwo"><a href="javascript:doQuery()">查询</a></span></td>
+			     </tr>
+			   </table>
+	           <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

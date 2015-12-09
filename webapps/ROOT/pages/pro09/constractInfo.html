@@ -1,0 +1,355 @@
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css"/>
+		<link rel="stylesheet" type="text/css"
+			href="../../css/redmond/jquery-ui-1.8.16.custom.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css" />
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css" />
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+
+	<script type="text/javascript" charset="utf-8">
+		$(document).ready(function() {
+			var optType=top.getUrlParam(document.URL,"optType");
+			var contract_code=top.getUrlParam(document.URL,"id");
+			$("#contract_code").val(contract_code);
+			$("#contract_code").attr("disabled",true);
+			var aoData=[];
+			aoData.push( { "name": "contractinfo.contract_code", "value": contract_code } );
+			top.sendAjaxRequest("/actions/CustInfo.action?getContractInfoByContrId",aoData,infoCallback);
+	});
+	function infoCallback(obj){
+	   try{
+			if ( obj.status == true ){
+				var contractinfo=obj.body;
+				$("#tdis_supervisor").html( top.getCodeSelectHtml("ISYESORNO","is_supervisor",true,contractinfo.is_supervisor) );
+				$("#tdis_outsourcing").html( top.getCodeSelectHtml("ISYESORNO","is_outsourcing",true,contractinfo.is_outsourcing) );
+				$("#contract_code").val(contractinfo.contract_code);
+				$("#duration_require").val(contractinfo.duration_require);
+				$("#annotation").val(contractinfo.annotation);
+				$("#not_sure_factor").val(contractinfo.not_sure_factor);
+				$("#un_stand_recd").val(contractinfo.un_stand_recd);
+				$("#con_memo").val(contractinfo.memo);
+				$("#design_fee").val( contractinfo.design_fee);
+				$("#project_amount").val( contractinfo.project_amount);
+				$("#product_amount").val( contractinfo.product_amount);
+				$("#first_pay").val( contractinfo.first_pay);
+				$("#second_pay").val( contractinfo.second_pay);
+				$("#final_pay").val( contractinfo.final_pay);
+				$("#require_id").val(contractinfo.require_id );
+				$("#sign_date").val( top.getTimeStr( contractinfo.sign_date, true ) );
+				$("#start_date").val( top.getTimeStr( contractinfo.start_date, true ) );
+				$("#end_date").val( top.getTimeStr( contractinfo.end_date, true ) );
+				
+				$("#cust_code").val(contractinfo.code); 
+				$("#cust_name").html(contractinfo.cust_name);
+				$("#cust_manager").val(top.getUserNameByCode(contractinfo.cust_manager,true));
+				$("#cust_mobile").html(contractinfo.cust_mobile);
+				$("#base_project_addr").html(contractinfo.project_addr);
+				$("#base_district").html(top.getCodeName("DISTRICT",contractinfo.district));  
+				
+				$("#view_is_supervisor").html( top.getCodeName("ISYESORNO",contractinfo.is_supervisor) );
+				$("#view_is_outsourcing").html( top.getCodeName("ISYESORNO",contractinfo.is_outsourcing) );
+				$("#view_contract_code").html(contractinfo.contract_code);
+				$("#view_duration_require").html(contractinfo.duration_require);
+				$("#view_annotation").html(contractinfo.annotation);
+				$("#view_not_sure_factor").html(contractinfo.not_sure_factor);
+				$("#view_un_stand_recd").html(contractinfo.un_stand_recd);
+				$("#view_con_memo").html(contractinfo.memo);
+				$("#view_design_fee").html( contractinfo.design_fee);
+				$("#view_project_amount").html( contractinfo.project_amount);
+				$("#view_product_amount").html( contractinfo.product_amount);
+				$("#view_first_pay").html( contractinfo.first_pay);
+				$("#view_second_pay").html( contractinfo.second_pay);
+				$("#view_final_pay").html( contractinfo.final_pay);
+				//$("#view_require_id").html( top.getTimeStr( contractinfo.require_id, true ) );
+				$("#view_sign_date").html( top.getTimeStr( contractinfo.sign_date, true ) );
+				$("#view_start_date").html( top.getTimeStr( contractinfo.start_date, true ) );
+				$("#view_end_date").html( top.getTimeStr( contractinfo.end_date, true ) );
+				
+				$("#view_cust_code").html(contractinfo.code); 
+				$("#view_cust_name").html(contractinfo.cust_name);
+				$("#view_cust_manager").html(top.getUserNameByCode(contractinfo.cust_manager,true));
+				$("#view_cust_mobile").html(contractinfo.cust_mobile);
+				$("#view_base_project_addr").html(contractinfo.project_addr);
+				$("#view_base_district").html(top.getCodeName("DISTRICT",contractinfo.district));
+		    }
+		}catch(e){
+		}
+	}
+			
+	function saveContractInfo(){
+		if($("#saveContractBtn").html()=='保存'){
+			var aoData=[];
+				aoData.push( { "name": "contractinfo.require_id", "value": $("#require_id").val() } );
+				aoData.push( { "name": "contractinfo.sign_date", "value": top.toTimestamp($("#sign_date").val() )} );
+				aoData.push( { "name": "contractinfo.start_date", "value": top.toTimestamp($("#start_date").val() )} );
+				aoData.push( { "name": "contractinfo.end_date", "value": top.toTimestamp($("#end_date").val() )} );
+				aoData.push( { "name": "contractinfo.contract_code", "value": $("#contract_code").val() } );
+				aoData.push( { "name": "contractinfo.duration_require", "value": $("#duration_require").val() } );
+				aoData.push( { "name": "contractinfo.is_supervisor", "value": $("#is_supervisor").val() } );
+				aoData.push( { "name": "contractinfo.annotation", "value": $("#annotation").val() } );
+				aoData.push( { "name": "contractinfo.is_outsourcing", "value": $("#is_outsourcing").val() } );
+				aoData.push( { "name": "contractinfo.not_sure_factor", "value": $("#not_sure_factor").val() } );
+				aoData.push( { "name": "contractinfo.un_stand_recd", "value": $("#un_stand_recd").val() } );
+				aoData.push( { "name": "contractinfo.memo", "value": $("#con_memo").val() } );
+				aoData.push( { "name": "contractinfo.design_fee", "value": top.g_GetNumValue($("#design_fee").val()) } );
+				aoData.push( { "name": "contractinfo.project_amount", "value": top.g_GetNumValue($("#project_amount").val()) } );
+				aoData.push( { "name": "contractinfo.product_amount", "value": top.g_GetNumValue($("#product_amount").val()) } );
+				aoData.push( { "name": "contractinfo.first_pay", "value": top.g_GetNumValue($("#first_pay").val()) } );
+				aoData.push( { "name": "contractinfo.second_pay", "value": top.g_GetNumValue($("#second_pay").val()) } );
+				aoData.push( { "name": "contractinfo.final_pay", "value": top.g_GetNumValue($("#final_pay").val()) } );
+				top.sendAjaxRequest("/actions/CustInfo.action?saveContractInfoById",aoData,optContractInfoCallback);
+			}else{
+				$("#edit_contract_info").show();
+				$("#view_contract_info").hide();
+				$("#saveContractBtn").html('保存');
+			}
+	}
+	// 操作回调函数--添加合同信息
+	function optContractInfoCallback(obj){
+       try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+			$("#edit_contract_info").hide();
+			$("#view_contract_info").show();
+			$("#saveContractBtn").html('编辑');
+			$("#view_sign_date").html($("#sign_date").val() );
+				$("#view_start_date").html($("#start_date").val() );
+				$("#view_end_date").html($("#end_date").val() );
+				$("#view_contract_code").html($("#contract_code").html() );
+				$("#view_duration_require").html( $("#duration_require").val() );
+				$("#view_is_supervisor").html( top.getCodeName("ISYESORNO",$("#is_supervisor").val()) );
+				$("#view_annotation").html( $("#annotation").val() );
+				$("#view_is_outsourcing").html( top.getCodeName("ISYESORNO",$("#is_outsourcing").val())  );
+				$("#view_not_sure_factor").html( $("#not_sure_factor").val()  );
+				$("#view_un_stand_recd").html( $("#un_stand_recd").val()  );
+				$("#view_con_memo").html( $("#con_memo").val() );
+				$("#view_design_fee").html( $("#design_fee").val() );
+				$("#view_project_amount").html($("#project_amount").val() );
+				$("#view_product_amount").html($("#product_amount").val() );
+				$("#view_first_pay").html($("#first_pay").val() );
+				$("#view_second_pay").html($("#second_pay").val() );
+				$("#view_final_pay").html($("#final_pay").val());
+				
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	</script>
+	</head>
+	<body><br/><center>
+	<B style="">合同信息</B>
+	<hr style="width:80%;display:inline-block">
+	<a id="saveContractBtn" onclick="saveContractInfo()" class="W_btn_round" href="javascript:void(0)"><span>编辑</span></a>
+				<table id="edit_contract_info" style="display:none" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+		           <tr class="tr_data" height="35px">
+						<td align="center" colspan="4">客户基本信息</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center" disabled >客户编号</td>
+						<td align="left" width="35%">
+							<table>
+								<tr class="tr_data" height="25px">
+									<td colspan="3"><input type="text" id="cust_code" disabled /><input type="hidden" id="require_id"></input></td>
+								</tr>
+							</table>
+						</td>
+						<td width="15%" align="center" >客户经理</td>
+						<td align="left" colspan="3" width="35%"><input type="text" id="cust_manager" disabled /></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center">客户姓名</td>
+						<td align="left"><label id="cust_name"></label></td>
+						<td width="15%" align="center">联系方式</td>
+						<td align="left"><label id="cust_mobile"></label></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center">工程地址</td>
+						<td align="left" colspan="3"><label id="base_district"></label>&nbsp;&nbsp;<label id="base_project_addr"></label></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center" colspan="4">合同签订</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">合同编号</td>
+						<td align="left"><input type="text" id="contract_code"/></td>
+						<td align="center">合同签订时间：</td>
+						<td align="left"><input type="text" id="sign_date" onclick="new Calendar().show(this);" readonly="true"/></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">合同开工日期</td>
+						<td align="left"><input type="text" id="start_date" onclick="new Calendar().show(this);" readonly="true"/></td>
+						<td align="center">合同竣工日期</td>
+						<td align="left"><input type="text" id="end_date" onclick="new Calendar().show(this);" readonly="true"/></td>
+					</tr>
+					
+					<tr class="tr_data" height="35px">
+						<td align="center">工期要求：</td>
+						<td align="left" colspan="3"><textarea id="duration_require" rows="2" cols="83"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">是否委派监理：</td>
+						<td align="left" id="tdis_supervisor"></td>
+						<td align="center">是否外采产品：</td>
+						<td align="left" id="tdis_outsourcing"></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">特殊项目标注：</td>
+						<td align="left" colspan="3"><textarea id="annotation" rows="2" cols="83"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">设计费：</td>
+						<td align="left" colspan="3"><input type="text"  id="design_fee"/></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">工程报价：</td>
+						<td align="left"><input type="text"  id="project_amount"/></td>
+						<td align="center">产品报价：</td>
+						<td align="left"><input type="text"  id="product_amount"/></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">报价中不确定因素：</td>
+						<td align="left" colspan="3"><textarea id="not_sure_factor" rows="2" cols="83"></textarea></td>		
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">非标手续记录：</td>
+						<td align="left" colspan="3"><textarea id="un_stand_recd" rows="2" cols="83"></textarea></td>
+					</tr>
+					
+					<tr class="tr_data" height="35px">
+						<td align="center" colspan="4">工程打款跟进：</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">首期：</td>
+						<td align="left"><input type="text" id="first_pay" /></td>
+						<td align="center">中期：</td>
+						<td align="left"><input type="text"  id="second_pay"/></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">尾期：</td>
+						<td align="left" colspan="3"><input type="text"  id="final_pay"/></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">备注：</td>
+						<td align="left" colspan="3"><textarea id="con_memo" rows="2" cols="83"></textarea></td>
+					</tr>
+			   </table><br/>
+			    <table id="view_contract_info" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+		           <tr class="tr_data" height="35px">
+						<td align="center" colspan="4">客户基本信息</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center" disabled >客户编号</td>
+						<td align="left" width="35%">
+							<table>
+								<tr class="tr_data" height="25px">
+									<td colspan="3" id="view_cust_code"></td>
+								</tr>
+							</table>
+						</td>
+						<td width="15%" align="center" >客户经理</td>
+						<td align="left" colspan="3" width="35%" id="view_cust_manager"></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center">客户姓名</td>
+						<td align="left" id="view_cust_name"l></td>
+						<td width="15%" align="center">联系方式</td>
+						<td align="left" id="view_cust_mobile"></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center">工程地址</td>
+						<td align="left" colspan="3"><label id="view_base_district"></label>&nbsp;&nbsp;<label id="view_base_project_addr"></label></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center" colspan="4">合同签订</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">合同编号</td>
+						<td align="left" id="view_contract_code"></td>
+						<td align="center">合同签订时间：</td>
+						<td align="left" id="view_sign_date" ></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">合同开工日期</td>
+						<td align="left" id="view_start_date"></td>
+						<td align="center">合同竣工日期</td>
+						<td align="left" id="view_end_date" ></td>
+					</tr>
+					
+					<tr class="tr_data" height="35px">
+						<td align="center">工期要求：</td>
+						<td align="left" colspan="3" id="view_duration_require"></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">是否委派监理：</td>
+						<td align="left" id="view_is_supervisor"></td>
+						<td align="center">是否外采产品：</td>
+						<td align="left" id="view_is_outsourcing"></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">特殊项目标注：</td>
+						<td align="left" colspan="3" id="view_annotation"></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">设计费：</td>
+						<td align="left" colspan="3" id="view_design_fee"></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">工程报价：</td>
+						<td align="left" id="view_project_amount"></td>
+						<td align="center">产品报价：</td>
+						<td align="left" id="view_product_amount"></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">报价中不确定因素：</td>
+						<td align="left" colspan="3"id="view_not_sure_factor" ></td>		
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">非标手续记录：</td>
+						<td align="left" colspan="3" id="view_un_stand_recd"></td>
+					</tr>
+					
+					<tr class="tr_data" height="35px">
+						<td align="center" colspan="4">工程打款跟进：</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">首期：</td>
+						<td align="left" id="view_first_pay" ></td>
+						<td align="center">中期：</td>
+						<td align="left" id="view_second_pay"></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">尾期：</td>
+						<td align="left" colspan="3" id="view_final_pay"/></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="center">备注：</td>
+						<td align="left" colspan="3" id="view_con_memo"></td>
+					</tr>
+			   </table>
+			   <!--	<table  width="90%" style="margin: 10px;">
+					<tr>
+						<td width="98%" align="center">
+							<div id="saveContractBtn" class="buttonDivTwo">
+								<a href="javascript:void(0)" onclick="saveContractInfo()">保存</a>
+							</div>
+						</td>
+					</tr>
+				</table>
+				<h3 id="title"></h3>
+				<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="detailInfo"></table>
+	 !-->
+	 </center>
+	</body>
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>addIntegrationRule.html</title>
+	
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/checkForm.js"></script>
+	<script type="text/javascript">
+	    var optType="";
+		var info_id=0;
+		var qDeptId="";
+		var qDeptName="";
+	    $(document).ready(function(){
+		  optType=top.getUrlParam(document.URL,"optType");
+		
+		  if(optType=="update"){
+		    info_id=top.getUrlParam(document.URL,"id");
+		    var aoData=[];
+			aoData.push( { "name":"info.id","value":info_id } );
+			top.sendAjaxRequest("/actions/IntegrationRight.action?getIntegrationRightById",aoData,getIntegrationRightInfoCallback);
+		  }
+		
+		});
+		
+		function getIntegrationRightInfoCallback(obj){
+		  if(obj.status==true){
+	        var o=obj.body;
+			$("#integration_manager_name").val(o.integration_manager_name);
+			$("#integration_manager").val(o.integration_manager);
+			$("#reward_upper_limit").val(o.reward_upper_limit);
+			$("#points_floor_level").val(o.points_floor_level);
+			var deptName="";
+			if(o.reward_detail_id!=null && o.reward_detail_id!=""){
+				var deptId=o.reward_detail_id.split(",");
+				var dept_award_score=o.dept_award_score.split(",");
+				var dept_point_score=o.dept_point_score.split(",");
+				for(var i=0;i<deptId.length;i++){
+				   if(i>0){
+					deptName+="<br>";
+				   }
+				   deptName+="<img src='../../img/delete_imag.jpg' width='15' height='15' onclick='deleteDetailId(\""+deptId[i]+"\")'/>"+top.getDeptPath(deptId[i])+"(奖分<input name='award_score' type='text' size='6' value='"+dept_award_score[i]+"'/>分,扣分<input name='point_score' type='text' size='6' value='"+dept_point_score[i]+"'/>分)";
+				}
+			}
+			$("#spanreward_detail").html(deptName);
+			$("#reward_detail_id").val(o.reward_detail_id);
+		  }
+		}
+	
+	    function cancle(){
+		  top.closeDialog();
+		}
+		
+		function doBeforeClose(){
+		}
+		
+		function checkDoSubmit(){
+		  var message="";
+		  message+=checkString($("#integration_manager").val(),true,1024,"积分管理人员姓名");
+		  message+=checkString($("#reward_detail_id").val(),true,1024,"积分奖励明细");
+		  var re = /^\d+(?=\.{0,1}\d+$|$)/ ;
+		  if($("#reward_upper_limit").val()!="" && !re.test($("#reward_upper_limit").val())){
+		    message+="奖励上限应为数字类型<br/>";
+		  }
+		  if($("#points_floor_level").val()!="" && !re.test($("#points_floor_level").val())){
+		    message+="扣分下限应为数字类型<br/>";
+		  }
+		  var award_score=document.getElementsByName("award_score");
+		  var all_award_score=0;
+		  var point_score=document.getElementsByName("point_score");
+		  var all_point_score=0;
+		  var dept=$("#reward_detail_id").val().split(",");
+		  for(var i=0;i<award_score.length;i++){
+		    if(award_score[i].value==""){
+			   message += top.getDeptPath(dept[i])+"奖分值不能为空<br/>";
+			}else if(award_score[i].value!="" && !IsNumber(award_score[i].value)){
+			   message += top.getDeptPath(dept[i])+"奖分值为数字类型<br/>";
+			}else{
+			   all_award_score+=parseInt(award_score[i].value);
+			}
+		  }
+		  for(var j=0;j<point_score.length;j++){
+		    if(point_score[j].value==""){
+			   message += top.getDeptPath(dept[j])+"扣分值不能为空<br/>";
+			}else if(point_score[j].value!="" && !IsNumber(point_score[j].value)){
+			   message += top.getDeptPath(dept[j])+"扣分值为数字类型<br/>";
+			}else{
+			   all_point_score+=parseInt(point_score[j].value);
+			}
+		  }
+		  if(all_award_score>parseInt($("#reward_upper_limit").val())){
+		    message+="各部门分配的奖分总和大于奖励上限值<br/>";
+		  }
+		  if(all_point_score>parseInt($("#points_floor_level").val())){
+		    message+="各部门分配的扣分总和大于扣分下限值<br/>";
+		  }
+		  return message;
+		}
+		
+		function doSubmit(){
+		   var checkMsg=checkDoSubmit();
+		   if(checkMsg!=""){
+		     top.showInfoWinWarn(checkMsg);return;
+		   }
+		   var aoData=[];
+		   aoData.push( { "name":"info.integration_manager","value":$("#integration_manager").val() } );
+		   aoData.push( { "name":"info.integration_manager_name","value":$("#integration_manager_name").val() } );
+		   var user=top.getUserByUserCode($("#integration_manager").val());
+		   aoData.push( { "name":"info.dept","value": user.deptId } );
+		   aoData.push( { "name":"info.job_title","value": user.job_title } );
+		   aoData.push( { "name":"info.reward_upper_limit","value":$("#reward_upper_limit").val() } );
+		   aoData.push( { "name":"info.points_floor_level","value":$("#points_floor_level").val() } );
+		   var deptId=$("#reward_detail_id").val().split(",");
+		   var award_score=document.getElementsByName("award_score");
+		   var point_score=document.getElementsByName("point_score");
+		   var dept_award_score="";
+		   var dept_point_score="";
+		   var detail_name="";
+		   for(var i=0;i<deptId.length;i++){
+		      if(i>0){
+			    detail_name+=",";
+				dept_award_score+=",";
+				dept_point_score+=",";
+			  }
+			  detail_name+=top.getDeptPath(deptId[i]);
+			  dept_award_score+=award_score[i].value;
+			  dept_point_score+=point_score[i].value;
+		   }
+		   
+		   aoData.push( { "name":"info.reward_detail","value":detail_name } );
+		   aoData.push( { "name":"info.reward_detail_id","value":$("#reward_detail_id").val() } );
+		   aoData.push( { "name":"info.dept_award_score","value":dept_award_score } );
+		   aoData.push( { "name":"info.dept_point_score","value":dept_point_score } );
+		   
+		   var xurl="/actions/IntegrationRight.action?insertIntegrationRight";
+		   if(info_id!=0){
+		     aoData.push( { "name":"info.id","value": info_id} );
+			 xurl="/actions/IntegrationRight.action?updateIntegrationRight";
+		   }
+		   top.sendAjaxRequest(xurl,aoData,doSubmitCallback);
+		}
+		
+		function doSubmitCallback(obj){
+		  if(obj.status==true){
+		    top.showInfoWinOK("操作成功！");
+			top.getIntegrationRights();
+			cancle();
+		  }else{
+		    top.showInfoWinError("操作失败--》"+obj.msg);
+		  }
+		}
+		function selectUser(){
+			var xurl="pages/organization/selectOneUser.html";
+			top.openSelectDialog("选择用户",xurl,830,600,doSelectedUser);
+		}
+		
+		function doSelectedUser(){
+		 var userObj = top.getTempValue();
+			if ( !userObj ) return ;
+			try{
+			 $("#integration_manager").val(userObj.userCode);
+			 $("#integration_manager_name").val(userObj.userName);
+			}catch(e){
+			}
+		}
+		
+		function selectDept(){
+		   
+		   top.openSelectDialog("选择要管理积分的部门","pages/organization/selectTreeNode.html?type=dept",300,450,selectDeptCallback);
+		}
+		
+		function selectDeptCallback(){
+		  try{
+			 var obj = top.getTempValue();
+			 if ( obj.nodeId == -1 ) return ;
+			 if ( obj.nodeId == -2 ) {
+				 qDeptId = "";
+				 qDeptName = "";
+			 } else {
+				 qDeptId = obj.nodeId;
+			 }
+			 var dept=$("#spanreward_detail").html();
+			 var deptId=$("#reward_detail_id").val();
+			 if(dept.indexOf(top.getDeptPath(qDeptId))==-1){
+			    if(dept==""){
+				   $("#spanreward_detail").html("<img src='../../img/delete_imag.jpg' id='img_"+qDeptId+"' width='15' height='15' onclick='deleteDetailId(\""+qDeptId+"\")'/>"+top.getDeptPath(qDeptId)+"(奖分<input name='award_score' type='text' size='6'/>分,扣分<input name='point_score' type='text' size='6'/>分)");
+				   $("#reward_detail_id").val(qDeptId);
+				}else{
+				   $("#spanreward_detail").html(dept+"<br>"+"<img src='../../img/delete_imag.jpg' width='15' height='15' onclick='deleteDetailId(\""+qDeptId+"\")'/>"+top.getDeptPath(qDeptId)+"(奖分<input name='award_score' type='text' size='6'/>分,扣分<input name='point_score' type='text' size='6'/>分)");
+				   $("#reward_detail_id").val(deptId+","+qDeptId);
+				}
+			 }
+		   }catch(e){
+		   }
+		   }
+		   
+		   function deleteDetailId(id){
+		     var deptName=$("#spanreward_detail").html().split("<br>");
+			 var deptId=$("#reward_detail_id").val().split(",");
+			 for(var i=0;i<deptId.length;i++){
+			    if(deptId[i]==id){
+                  deptId.splice(i,1);
+                  deptName.splice(i,1);
+				}
+			 }
+			 $("#spanreward_detail").html("");
+			 $("#reward_detail_id").val("");
+			 var d_id="";
+			 var d_name="";
+			 for(var j=0;j<deptId.length;j++){
+			    if(j!=0){
+				   d_id+=",";
+				   d_name+="<br>";
+				}
+				d_id+=deptId[j];
+				d_name+=deptName[j];
+			 }
+			 $("#spanreward_detail").html(d_name);
+			 $("#reward_detail_id").val(d_id);
+		   }
+		
+		
+	</script>
+  </head>
+  
+  <body>
+    <div class="main">
+		<div>
+		    <table  width="100%" border="1" cellpadding="3" cellspacing="1" style="background-color: #b9d8f3;">
+			   <tr class="tr_data" height="35px">
+			      <td align="right" width="25%" style="font-weight:bold;">积分管理人员:</td>
+				  <td align="left" width="75%">
+				      <input type="hidden" id="integration_manager" /><input id="integration_manager_name" type="text" size="20" onclick="selectUser()"/>
+				  </td>
+			   </tr>
+			   <tr class="tr_data">
+			      <td align="right" style="font-weight:bold;" width="25%">奖励上限:</td>
+				  <td align="left" width="75%"><input id="reward_upper_limit"  type="text" size="20"/>分</td>
+			   </tr>
+			   <tr class="tr_data" height="35px"> 
+			      <td align="right" style="font-weight:bold;">扣分底限:</td>
+			      <td align="left"  width="75%"><input id="points_floor_level" type="text" size="20"/>分</td>
+			   </tr>
+			   <tr class="tr_data" height="35px">
+			      <td align="right" width="25%"  style="font-weight:bold;">积分奖励明细:<br/><a href='javascript:void(0)' onclick="selectDept()">选择部门</a></td>
+				  <td align="left" width="75%" ><input id="reward_detail_id" type="hidden" /><input id="reward_detail" type="hidden"/><span id="spanreward_detail" style="width:100%;"></span></td>
+			   </tr>
+			   <tr class="tr_data">
+			      <td align="center" colspan="2">
+				    <table width="100%">
+					   <tr class="tr_data">
+					     <td align="right"><div class="buttonDivTwo"><a href="javascript:void(0)" onclick="doSubmit()">提交</a></div></td>
+						 <td align="left"><div class="buttonDivTwo"><a href="javascript:void(0)" onclick="cancle()">取消</a></div></td></td>
+					   </tr>
+					</table>
+			   </tr>
+			</table>
+		</div>
+	</div>
+  </body>
+</html>

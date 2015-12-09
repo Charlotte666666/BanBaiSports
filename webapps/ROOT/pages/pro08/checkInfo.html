@@ -1,0 +1,116 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var infoId=0;
+   var status=0;
+   var applyId="";
+   var ext_info="";
+   
+   $(document).ready(function() {
+     initData();
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   
+   function doSubmit(s){
+     status=s;
+	 var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+	 top.showLoadingInfo(true);
+	 top.doApproveCheck(optType, applyId, status, ext_info, doApproveSubmit);
+   }
+   
+   function doApproveSubmit(obj){
+       try{
+	    if ( obj.status == true ){
+	      var aoData=[];
+		  aoData.push( { "name": "approve.memo", "value": $("#memo").val() } );
+		  aoData.push( { "name": "approve.id", "value": infoId } );
+		  aoData.push( { "name": "approve.status", "value": status} );
+		  top.sendAjaxRequest("/actions/Approve.action?updateApprove",aoData,optCallback);
+	    }else{
+		 top.showLoadingInfo(false);
+	     isSaveOK = false;
+	     top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		 top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+   function checkForm(){
+     var msg = "";
+	 msg += checkString($("#memo").val(),true,1024,"审批意见");
+     return msg;
+   }
+   
+   function optCallback(obj){
+       top.showLoadingInfo(false);
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功！");
+		 top.closeDialog();
+	    }else{
+	     isSaveOK = false;
+	     top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		 top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   function initData(){
+	   try{
+		   optType=top.getUrlParam(document.URL,"opt");
+  	       infoId=top.getUrlParam(document.URL,"infoId");
+		   applyId=top.getUrlParam(document.URL,"applyId");
+		   ext_info=top.getUrlParam(document.URL,"ext_info");
+		   var o=top.getTempValue();
+		   if ( o.apply_desc ) {
+		     $("#desc").html( o.apply_desc );
+		   }
+	   }catch(e){
+		   top.showInfoWinError(e.message);
+	   }
+   }
+  </script> 
+</head>
+<body>
+<br>
+<table width="100%" border="0" padding="0" spacing="0">
+ <tr>
+    <td align="right">申请描述:</td>
+    <td align="left"><textarea id="desc" cols="60" rows="6" disabled="true" ></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">审批意见:</td>
+    <td align="left"><textarea id="memo" cols="60" rows="6" ></textarea></td>
+ </tr>
+</table>
+<p align="center">
+   <table><tr>
+		    <td><div class="buttonDivSix"><a href="javascript:doSubmit(1)">审核通过</a></div></td>
+		    <td><div class="buttonDivSix"><a href="javascript:doSubmit(2)">审核不通过</a></div></td>
+   </tr></table>
+</p>
+</body>
+</html>

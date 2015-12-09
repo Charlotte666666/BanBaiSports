@@ -1,0 +1,179 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery.ui.all.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			$(document).ready(function() {
+			    $( "#tdType" ).html( top.getCodeSelectHtml("CMA_FILE_TYPE","q_fileType",true) );
+				$( "#tdStatus" ).html( top.getCodeSelectHtml("CMA_FILE_STATUS","q_status",true) );
+				var filePath = "";
+			   
+			   var iaoColumns= [
+			                   { "sTitle": "标题", "mDataProp": "fileName", "sWidth": "50%","sClass": "left",
+                                      "fnRender": function ( oObj ) {
+                                           return '<input type=\'checkbox\' name=\'checkId\' value=\''+oObj.aData.fileId+'\' />&nbsp;<a href=\'javascript:void(0)\' onclick="updateFile(\''+oObj.aData.fileId+'\',\''+oObj.aData.fileName+'\',\''+oObj.aData.filePath+'\',\''+oObj.aData.status+'\',\''+oObj.aData.fileType+'\',\''+oObj.aData.fileTime+'\')" >'+oObj.aData.fileName+"</a>" ;
+                                      },
+                                      "bUseRendered": false 
+                               },
+                               { "sTitle": "类型", "mDataProp": "fileType", "sWidth": "15%","sClass": "center",
+                                      "fnRender": function ( oObj ) {
+                                           return top.getCodeName( "CMA_FILE_TYPE", oObj.aData.fileType );
+                                      },
+                                      "bUseRendered": false
+                               },
+                               { "sTitle": "时间", "mDataProp": "fileTime", "sWidth": "15%","sClass": "center",
+                            	   "fnRender": function ( oObj ) {
+                                      return top.getTimeStr( oObj.aData.fileTime );
+                                   },
+                                   "bUseRendered": false
+                               },
+                               { "sTitle": "状态", "mDataProp": "status", "sWidth": "10%", "sClass": "center",
+                                   "fnRender": function ( oObj ) {
+                                        return top.getCodeName( "CMA_FILE_STATUS", oObj.aData.status );
+                                   },
+                                   "bUseRendered": false  
+                               },
+							   { "sTitle": "操作", "mDataProp": "fileId", "sWidth": "10%", "sClass": "center","bSortable":false,
+                                   "fnRender": function ( oObj ) {
+								        filePath = top.decodeParamURL( oObj.aData.filePath );
+								        if ( filePath.indexOf("http://") != -1 ) {
+										  return "<a href='"+filePath+"' >下载</a>";
+										} else {
+                                          return "<a href='"+top.getUrlBase()+"/download?filePath="+filePath+"&fileName="+top.getDownloadFileName( filePath )+"' >下载</a>";
+										}
+                                   },
+                                   "bUseRendered": false  
+                               }
+               ];
+ 
+			   var surl=top.getUrlBase()+"/actions/ProCma.action?getCmaFileList";
+
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"aaSorting": [[ 2, "desc" ]],
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+			            aoData.push( { "name": "file.fileType", "value":$("#q_fileType").val() } );
+						aoData.push( { "name": "file.fileName", "value":$("#q_fileName").val() } );
+						aoData.push( { "name": "file.status", "value":$("#q_status").val() } );
+						aoData.push( { "name": "time1", "value":$("#q_time1").val() } );
+						aoData.push( { "name": "time2", "value":$("#q_time2").val() } );
+			      },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumns
+				} );
+
+			} );
+
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+			function addFile(){
+				var xurl="pages/pro01/fileInfo.html?opt=create";
+				top.openDialog("创建文件信息",xurl,true,520,490,saveCallBack);
+			}
+			
+			function updateFile(fileId,fileName,filePath,status,fileType,fileTime){
+				var xurl="pages/pro01/fileInfo.html?opt=update&fileId="+fileId+"&fileName="+fileName+"&filePath="+filePath+"&status="+status+"&fileType="+fileType+"&fileTime="+fileTime;
+				top.openDialog("修改文件信息",xurl,true,500,380,saveCallBack);
+			}
+			
+			function deleteFile(){
+				var ids=top.getAllCheckedValue( document.getElementsByName('checkId') );
+				if (ids.length > 0){
+					top.showConfirm("您确定要删除选中的记录吗？", doDeleteFile);
+				}else{
+					top.showInfoWinWarn("请选择要删除的记录");
+				}
+			}
+			
+			function doDeleteFile(){
+				var ids=top.getAllCheckedValue( document.getElementsByName('checkId') );
+				var aoData=[];
+                aoData.push( { "name": "ids", "value":ids } );
+				top.sendAjaxRequest("/actions/ProCma.action?deleteCmaFile",aoData,optCallback);
+			}
+			
+			function saveCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				  
+				}
+			}
+			
+			function optCallback(obj){
+			       try{
+			        if ( obj.status == true ){
+			          top.showInfoWinOK("操作成功");
+			          doQuery();
+			        }else{
+			          top.showInfoWinError("操作失败 "+obj.msg);
+			        }
+			       }catch(e){
+			          top.showInfoWinError("处理异常:"+e.message);
+			       }
+		  }
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+	     	  <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0" >
+			     <tr id="queryArea">
+				  <td align="right" width="5%">类型:</td><td align="left" width="10%" id="tdType"></td>
+				  <td align="right" width="5%">标题:</td><td align="left" width="20%"><input type="text" id="q_fileName" value="" size="20" onkeydown="if(event.keyCode==13) doQuery();"/></td>
+			      <td align="right" width="10%">发布时间从:</td><td align="left" width="10%"><input type="text" id="q_time1" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" /></td>
+			      <td align="right" width="10%">发布时间到:</td><td align="left" width="10%"><input type="text" id="q_time2" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" /></td>
+			      <td align="right" width="10%">状态:</td><td align="left" width="10%" id="tdStatus"></td>
+				  <td align="center" width="20%"><span id="createBtn" class="buttonTwo"><a href="javascript:doQuery()">查询</a></span></td>
+			     </tr>
+		         <tr bgcolor="#C6DEFF">
+			      <td colspan="11">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				   <td>&nbsp;<input type="checkbox" id="selAll" onclick="top.checkAll(this.checked,document.getElementsByName('checkId'))"/>全选</td>
+				   <td><div id="createBtn" class="buttonDivTwo"><a href="javascript:addFile()">创建</a></div><td>
+				   <td><div id="delBtn" class="buttonDivTwo"><a href="javascript:deleteFile()">删除</a></div></td>
+				   </tr></table></td>
+			     </tr>
+			   </table>
+	           <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

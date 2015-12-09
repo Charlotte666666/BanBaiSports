@@ -1,0 +1,348 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>气象资料存储管理系统</title>
+<link href="css/login_css.css" rel="stylesheet" type="text/css">
+<link href="css/comm.css" rel="stylesheet" type="text/css" />
+<link href="css/map_css.css" rel="stylesheet" type="text/css" />
+<link href="css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<script type="text/javascript" src="js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="js/SimpleMap.js"></script>
+<script type="text/javascript" src="js/helpyouworkeasy-core.js"></script>
+<script type="text/javascript" src="js/md5.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript" language="javascript" src="js/checkForm.js"></script>
+
+<script type="text/javascript">
+var adjustInter = -1;
+var userConfig = null;
+var interId = 0;
+
+jQuery(document).ready(function() {
+    g_systemVersion="v1.0.0";
+    initGlobalData(true);
+	adjustPosition();
+	$("#userCode").focus();
+	window.onresize = function(){ adjustPosition(); };
+ });
+ 
+ function showSubMenu(n,index){
+    hideSubMenu();
+	if ( !index ) index = n;
+    $('#menu'+n).show();
+	$('#menu'+n).css({"left":(75*index+20)+"px","top":"67px"});
+	interId = setInterval("checkMouse()",4000);
+ }
+
+ function hideSubMenu(){
+   for ( var i=0;i<5;i++ ) {
+     if ( $('#menu'+i) ) $('#menu'+i).hide();
+   }
+   clearInterval( interId );
+ }
+
+ function checkMouse(){
+   hideSubMenu();
+ }
+
+ function adjustPosition(){
+	if ( adjustInter != -1 ) {
+	   clearInterval( adjustInter );
+	   adjustInter = -1;
+	}
+    var wh=$(window).height();
+	var ww=$(window).width();
+	
+	$('#versionInfo').css("top",wh - 18);
+	$('#versionInfoTxt').html( "<font color='white'>版本:&nbsp;"+g_systemVersion+"</font>&nbsp;&nbsp;<span style='cursor:pointer' onclick='javascript:showHelpWin(400,220,\"pages/pro01/help.html\")'>系统帮助</span>" );
+
+    $('#loginMain').height(wh - 51);
+	$('#main_footer').css("top",wh - 18);
+	$('#mainContent').height(wh - 105);
+	$('#loginResult').css({"left":(ww - 100)/2+"px"});
+ }
+
+ function loginSuccess(){
+    ininMenu();
+    $("body").css({"background-image":"url(img/bg2_body1.png)"});
+	$('#loginTop').hide();
+	$('#loginClear').hide();
+	$('#loginMain').hide();
+	$('#ind_footer').hide();
+	$('#loginResult').hide();
+	$('#main').show();
+	$("#userPass").val("");
+	$('#loginResult').html("");
+	adjustInter = setInterval("adjustPosition()",500);
+	toSysTab('pages/pro03/dataInfoManage.html?opt=query');
+ }
+ 
+ function ininMenu(){
+	var last = "sysParameter";
+
+	// 系统管理
+	if ( !g_isPermit('userManage') ) {
+	   $('#menu_userManage').hide();
+	} else {
+	   $('#menu_userManage').show();
+	   last = "userManage";
+	}
+	
+	if ( !g_isPermit('rightManage') ) {
+	   $('#menu_rightManage').hide();
+	} else {
+	   $('#menu_rightManage').show();
+	   last = "rightManage";
+	}
+	
+	if ( !g_isPermit('deptManage') ) {
+	   $('#menu_deptManage').hide();
+	   first = "userManage";
+	} else {
+	   last = "deptManage";
+	   $('#menu_deptManage').show();
+	}
+
+	$("#menu_td_"+last).removeClass( "bottomLine" );
+ }
+ 
+ function loginFail(){
+    $("body").css({"background-image":"url(img/bg1_home2.jpg)"});
+	$('#loginTop').show();
+	$('#loginClear').show();
+	$('#loginMain').show();
+	$('#ind_footer').show();
+	$('#loginResult').show();
+	$("#mainContent").hide();
+	$('#main').hide();
+ }
+ 
+ function toSysTab(xurl){
+   hideSubMenu();
+   $("#mainContent").show();
+   $("#mainContent").html( '<iframe id="mainFrame" src="'+xurl+'" width="100%" height="100%" style="background-color:#ffffff" frameborder="0"></iframe>' );
+ }
+ 
+ function doLogin(){
+   	   var userCode = $("#userCode").val();
+   	   var pass = $("#userPass").val();
+   	   if ( userCode == '' || pass == '' ) {
+   	 	 showInfoWin("请输入登录账号和密码");
+   	 	 return ;
+   	   }
+	   $('#loginResult').html("");
+	   var aoData=[];
+       aoData.push( { "name": "user.userCode", "value": userCode } );
+       aoData.push( { "name": "user.password", "value": hex_md5(pass) } );
+	   sendAjaxRequest("/actions/User.action?signon",aoData,loginCallback);
+ }
+ function loginCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	    	setCurrentUser(obj.body,obj.msg);
+			loginSuccess();
+	    }else{
+		  $('#loginResult').html("登录失败:"+obj.msg);
+	    }
+	   }catch(e){
+		  $('#loginResult').html("登录异常:"+e.message);
+	   }
+ }
+ 
+ function register(){
+    var xurl="pages/organization/userInfo.html?opt=register";
+	top.openDialog("用户注册",xurl,true,400,400,null);
+ }
+ //////////////////////////////////////////////////////////
+/**
+ * 初始化项目个性化全局缓存数据
+ */
+function proInitGlobalData(){
+	g_dictionary.put("EDIT_DIC_TYPE03_TASK_STATUS", new Code("03_TASK_STATUS","EDIT_DIC_TYPE","任务状态","1"));
+	g_dictionary.put("EDIT_DIC_TYPE03_TASK_TYPE", new Code("03_TASK_TYPE","EDIT_DIC_TYPE","归档任务名称","1"));
+	g_dictionary.put("EDIT_DIC_TYPESAVE_MEDIUM", new Code("SAVE_MEDIUM","EDIT_DIC_TYPE","存储介质","1"));
+}
+
+function openUserConfig(){
+  var xurl="pages/system/userConfig.html";
+  openDialog("个人设置",xurl,true,350,320,null);
+}
+</script>
+
+<style type="text/css">
+* {
+    font-family: Arial, "Free Sans";
+}
+#box {
+    margin-top: 45px;
+	margin-left: 12px;
+}
+.bt, .clicked {
+    height: 20px;
+    color: #666;
+    font-size: 13px;
+    padding: 4px 10px;
+    text-decoration: none;
+    background: #f9f9f9;
+}
+
+.btleft {
+    border: 1px solid #e3e3e3;
+    -webkit-border-radius: .5em 0 0 .5em;
+    -moz-border-radius: .5em 0 0 .5em;
+    border-radius: .5em 0 0 .5em;
+}
+.btleft span {
+    font-size: 15px;
+}
+.btmiddle {
+    border: 1px solid #e3e3e3;
+    border-width: 1px 0;
+    margin: 0 -4px;
+}            
+.btright {
+    border: 1px solid #e3e3e3;
+    -webkit-border-radius: 0 .5em .5em 0;
+    -moz-border-radius: 0 .5em .5em 0;
+    border-radius: 0 .5em .5em 0;
+}
+.btmiddle span, .btright span {
+    font-size: 9px;
+    position: relative;
+    top: -2px;
+}
+.subMenu {
+    display: none;
+	z-index: 99;
+	position: absolute; 
+	left:7px;
+	top:77px;
+}
+.menu_top {
+    -webkit-border-radius: .5em .5em 0 0;
+    -moz-border-radius: .5em .5em 0 0;
+    border-radius: .5em .5em 0 0;
+}
+.menu_bottom {
+    -webkit-border-radius: 0 0 .5em .5em;
+    -moz-border-radius: 0 0 .5em .5em;
+    border-radius: 0 0 .5em .5em;
+}
+.tooltip_menu {
+    background: #fff;
+    -webkit-border-radius: .5em;
+    -moz-border-radius: .5em;
+    border-radius: .5em;
+    width: 100px;
+    -webkit-box-shadow: 0px 0px 3px rgba(0,0,0,.5);
+    -moz-box-shadow: 0px 0px 3px rgba(0,0,0,.5);
+    box-shadow: 0px 0px 3px rgba(0,0,0,.5);
+    padding: 2px;
+	z-index: 99;
+}
+.tooltip_menu a {
+    z-index: 2;
+    padding: 5px 5px 5px 18px;
+    display: block;
+    text-decoration: none;
+    color: #0066cc;
+    font-size: 13px;
+}
+.tooltip_menu a:hover {
+    background: #0066cc;
+    color: #fff;
+}
+.tooltip_menu a img {
+    position: relative;
+    top: 5px;
+    border: 0;
+}
+.bottomLine {
+  border:1px solid blue;
+  border-style:none none dotted none;
+}
+</style>
+
+</head>
+
+<body>
+	<div id="loginTop"></div>
+	<div id="loginClear" class="clear"></div>
+	<div id="loginMain">
+	  <div class="ind_logo"><img src="img/pro01/pic1_logo.png" width="467" height="107" ></div>
+	  <div class="ind_info" style="margin-top: 20px;background-image: url(img/bg1_info_none.png);">
+	    <ul style="padding-top: 20px;padding-left: 60px;"><li>
+	      <font size="5" color="#006096"><b>气象资料存储管理系统</b></font>
+		</li>
+		</ul>
+		<ul class="user_1" style="padding-top: 20px;">
+		  <li class="u1_1"><img src="img/pic1_user.png" width="29" height="35"></li>
+		  <li class="u1_2">账&nbsp;&nbsp;号：</li>
+		  <li class="u1_3">
+			<input type="text" name="textfield" id="userCode" style="width:160px;" onkeydown="if(event.keyCode==13) doLogin();" >
+		  </li>
+		</ul><div class="clear"></div>
+		<ul class="user_2">
+		  <li class="u2_1"><img src="img/pic_1user2.png" width="24" height="30"></li>
+		  <li class="u2_2">密&nbsp;&nbsp;码：</li>
+		  <li class="u2_3">
+			<input type="password" name="textfield" id="userPass" style="width:160px;" onkeydown="if(event.keyCode==13) doLogin();" >
+		  </li>
+		</ul>
+		<ul class="user_3"><li class="u3_1" onclick="doLogin()"><a href="javascript:void(0)">登&nbsp;录</a></li><li class="u3_2" onclick="register()"><a href="javascript:void(0)" >注&nbsp;册</a></li></ul>
+	  </div>
+	</div>
+	<div id="loginResult"></div>
+	<div id="ind_footer" style="float:center">
+	 <table width="100%"><tr><td width="100%" align="center"><font color="white">Copyright &copy; 中国气象局 国家气象信息中心</font>
+	 </td></tr></table>
+	</div>
+
+<div id="main" style="display:none">
+  <div id="top" style="background-image: url(img/empty.gif);">
+     <div class="t_left">
+	    <div style="position: absolute; left:10px;top:5px;"><font size="5" color="#ffffff"><b>气象资料存储管理系统</b></font></div>
+	    <div id="box">
+		    <span class="bt btleft"></span>
+		    <a id="menu_0" href="javascript:toSysTab('pages/pro03/dataInfoManage.html?opt=query')" onmouseover="hideSubMenu()" class="bt btmiddle">资料查询</a>
+			<a href="javascript:toSysTab('pages/pro03/dataTaskManage.html')" class="bt btmiddle">任务管理</a>
+			<a href="javascript:void(0)" onmouseover="showSubMenu(1,2)" onmouseover="hideSubMenu()" class="bt btmiddle">系统管理</a>
+			<span class="bt btright"></span>
+		</div>
+	</div>
+
+    <div class="t_right">
+      <p id="currentUserInfo"></p>
+      <ul>
+	    <li class="u_0" style="background-image:url(img/empty.gif);">&nbsp;</li>
+        <li class="u_1" onclick="g_changepass()"><a href="javascript:void(0)">修改密码</a></li>
+        <li class="u_2" onclick="isLogout()"><a href="javascript:void(0)">注销</a></li>
+      </ul><div class="clear"></div>
+    </div>
+    <div class="clear"></div>
+  </div>
+
+  <div id="menu1" class="subMenu">
+			<div class="tooltip_menu">
+			  <table width="100%">
+			   <tr id="menu_userManage"><td id="menu_td_userManage" class="bottomLine"><a id="menu_a_userManage" href="javascript:toSysTab('pages/organization/userManage.html')" class="menu_top">用户管理</a></td></tr>
+			   <tr id="menu_rightManage"><td id="menu_td_rightManage" class="bottomLine"><a id="menu_a_rightManage" href="javascript:toSysTab('pages/organization/roleManage.html')">角色权限</a></td></tr>
+			   <tr id="menu_deptManage"><td id="menu_td_deptManage" class="bottomLine"><a id="menu_a_deptManage" href="javascript:toSysTab('pages/organization/deptManage.html')">部门管理</a></td></tr>
+			   <tr id="menu_dicManage"><td id="menu_td_dicManage"><a href="javascript:toSysTab('pages/system/dicManage.html')" class="menu_bottom">字典管理</a></td></tr>
+			  </table>
+			</div>
+  </div>
+  <div id="mainContent"></div>
+  <div id="main_footer" style="padding-top: 0px;">
+    <table width="100%"><tr><td width="100%" align="center"><font color="white">Copyright &copy; 中国气象局 国家气象信息中心</font>
+	 </td></tr></table>
+  </div>
+</div> <!-- end of main -->
+
+<div id="versionInfo" style="position: absolute;top:1000px;left:10px"><font color="white"><span id="versionInfoTxt" >v1.0.0</span></font></div>
+
+<script type="text/javascript" >writeCommonDiv();</script>
+
+</body>
+</html>

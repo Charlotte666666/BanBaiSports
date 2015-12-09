@@ -1,0 +1,110 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css" media="print, projection, screen">
+<script src="../../js/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+<script type="text/javascript">
+ 
+   var isCreated=false;
+   var isSaveOK=false;
+   var optType="";
+   var infoId="";
+   $(document).ready(function() {
+		infoId = optType=top.getUrlParam(document.URL,"infoId");
+		var aoData=[];
+		aoData.push( { "name": "notBuyInfo.id", "value": infoId } );
+		top.sendAjaxRequest("/actions/ProductOrder.action?getNotBuyInfoById",aoData,getInfoCallBack);
+   } );
+   function getInfoCallBack(obj){
+       try{
+        if ( obj.status == true ){
+			var o=obj.body;
+			$("#order_id").html(o.order_id);
+			$("#cust_name").html(o.cust_name);
+			$("#product_model").html(o.product_model);
+			$("#follow_time").html(top.getTimeStr(o.follow_time));
+			$("#follower").html( o.follower);
+			$("#span_follow_status").html(top.getCodeSelectHtml("FOLLOW_STATUS","follow_status",false,o.follow_status));
+			$("#memo").val( o.memo);
+        }else{
+          top.showInfoWinError("操作失败");
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+   
+   function saveBaseInfo(){
+	 var aoData=[];
+	     aoData.push( { "name": "notBuyInfo.id", "value": infoId } );
+		 aoData.push( { "name": "notBuyInfo.follower", "value": $("#follower").val() } );
+		 aoData.push( { "name": "notBuyInfo.follow_status", "value": $("#follow_status").val() } );
+		 aoData.push( { "name": "notBuyInfo.memo", "value": $("#memo").val() } );
+	    var xurl="/actions/ProductOrder.action?updateProductNotBuy";
+	   top.sendAjaxRequest(xurl,aoData,optCallback);
+   }
+   function doCancel(){
+     top.closeDialog();
+   }
+    function doBeforeClose(){
+    
+   }
+   
+    function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	        isSaveOK = true;
+	        top.showInfoWinOK("操作成功");
+			 var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+           top.setTempValue(obj);
+		    top.closeDialog();
+	    }else{
+	    	isSaveOK = false;
+			 var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+           top.setTempValue(obj);
+	        top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		    top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+
+  </script> 
+</head>
+<body>
+<br/>
+  <table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				<tr class="tr_data">
+				 <td width="40%" height="30">订单编号</td><td width="60%" align="left">&nbsp;&nbsp;<label id="order_id"/></td></tr>
+				<tr class="tr_data"> 
+			    <td height="30">客户姓名</td><td align="left">&nbsp;&nbsp;<label id="cust_name"/></td><tr>
+			    <tr class="tr_data">
+				<td height="30">产品类型</td><td align="left">&nbsp;&nbsp;<label id="product_model"/></td></tr>
+				<tr class="tr_data">
+				<td height="30">跟进时间</td><td align="left">&nbsp;&nbsp;<label id="follow_time"/></td></tr>
+				<tr class="tr_data">
+				<td height="30">跟进人</td><td align="left">&nbsp;&nbsp;<label id="follower"/></td></tr>	
+                <tr class="tr_data">
+				<td height="30">跟进状态</td><td align="left">&nbsp;&nbsp;<span id="span_follow_status"/></td></tr>	
+                 <tr class="tr_data">
+				 <td>跟进情况</td><td align="left">&nbsp;&nbsp;<textarea id="memo" cols="40" rows="5"></textarea></td></tr>	
+		</table>
+		<p align="center" id="optBtnArea">
+		   <table><tr>
+					<td><span id="okBtn" class="buttonTwo"><a href="javascript:saveBaseInfo()">保存</a></span></td>
+					<td><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+		   </tr></table>
+		</p>
+</body>
+</html>

@@ -1,0 +1,6 @@
+<Context path="/flight" 
+   docBase="D:/workspace/Flight/WebRoot">
+    <Manager className="org.apache.catalina.session.PersistentManager" saveOnRestart="false">
+        <Store className="org.apache.catalina.session.FileStore"/>
+    </Manager>
+</Context>

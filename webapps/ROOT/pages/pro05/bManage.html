@@ -1,0 +1,291 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var objs=[];
+			var tableName='tbl_pro05_b';
+			var pageStart=0;
+			var pageSize=20;
+
+			$(document).ready(function() {
+			   if ( top.g_isPermit("bussSysAddB") ) {
+				 $( "#createBtn" ).show();
+			   } else {
+			     $( "#createBtn" ).hide();
+			   }
+			   
+			   if ( top.g_isPermit("bussSysImpB") ) {
+				 $( "#importBtn" ).show();
+			   } else {
+			     $( "#importBtn" ).hide();
+			   }
+			   
+			   if ( top.g_isPermit("bussExportData") ) {
+				 $( "#exportBtn" ).show();
+				 $( "#exportCurrentBtn" ).show();
+			   } else {
+			     $( "#exportBtn" ).hide();
+				 $( "#exportCurrentBtn" ).hide();
+			   }
+
+			   initCols();
+			   var iaoColumns= top.getTableListHead(tableName);
+
+			   var surl=top.getUrlBase()+"/actions/Pro05.action?getPro05bList";
+
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+								objs=top.getTempObjs();
+								pageStart=json.pageStart;
+								pageSize=json.pageSize;
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+						 aoData.push( { "name": "condStr", "value": getCondStr() } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+			    top.emptyObjs();
+				oTable.fnDraw();
+			}
+			
+ function getCondStr(){
+	var str="";
+	var currentUser=top.top.getCurrentUser();
+	var deptId="-1";
+	if ( currentUser != null ) {
+	  deptId=currentUser.deptId;
+	}
+	if ( !top.g_isPermit("bussQueryAll") ) {
+	    str+=" and dept_id='"+deptId+"' ";
+	}
+	
+	var allFields = top.getAllFields();
+	var userConfig = top.getUserConfig();
+	var configCols="";
+	if ( userConfig ) {
+	    configCols=userConfig.c4;
+	}
+	configCols=configCols+",";
+	var v="";
+	for (var i=0;i<allFields.length;i++) {
+	  if ( allFields[i].table_name == tableName && configCols.indexOf(allFields[i].col_name+",") != -1 ) {
+	    switch( allFields[i].type ){
+		  case 'text': 
+		     v=$("#"+allFields[i].col_name).val();
+		     if ( v != '' ) {
+			   str+=" and "+allFields[i].col_name+" like '%"+v+"%' ";
+			 }
+		     break;
+		  case 'string': 
+		     v=$("#"+allFields[i].col_name).val();
+		     if ( v != '' ) {
+			   str+=" and "+allFields[i].col_name+" like '%"+v+"%' ";
+			 }
+		     break;
+		  case 'date': 
+		     v=$("#"+allFields[i].col_name+"_s").val();
+		     if ( v != '' ) {
+			   str+=" and "+allFields[i].col_name+" >= "+ top.toTimestamp(v)+" ";
+			 }
+			 v=$("#"+allFields[i].col_name+"_e").val();
+		     if ( v != '' ) {
+			   str+=" and "+ top.toTimestamp(v)+" >= "+allFields[i].col_name;
+			 }
+		     break;
+		  case 'number': 
+		     v=$("#"+allFields[i].col_name+"_s").val();
+		     if ( v != '' ) {
+			   str+=" and "+allFields[i].col_name+" >= "+ v+" ";
+			 }
+			 v=$("#"+allFields[i].col_name+"_e").val();
+		     if ( v != '' ) {
+			   str+=" and "+v+" >= "+allFields[i].col_name;
+			 }
+		     break; 
+		  case 'dic': 
+		     v=$("#"+allFields[i].col_name).val();
+		     if ( v != '' ) {
+			   str+=" and "+allFields[i].col_name+" = '"+v+"' ";
+			 }
+		     break;
+		  default: break;
+		}
+	 }
+	}
+   return str;
+ }
+			
+			function addInfo(){
+				var xurl="pages/pro05/bInfo.html?opt=create";
+				top.openDialog("添加血液科数据信息&nbsp;"+top.getDialogButtonHtml("保存",1,'img/save.bmp'),xurl,true,1100,650,saveCallBack);
+			}
+			
+			function updateInfo(infoId){
+			    var o=getObj(infoId);
+			    top.setTempValue( o );
+				var xurl="pages/pro05/bInfo.html?opt=update&infoId="+infoId;
+				var titleHt="血液科数据明细信息&nbsp;";
+				if ( top.g_isPermit("bussSysEditB") ) {
+				  titleHt+=top.getDialogButtonHtml("保存",1,'img/save.bmp');
+			    }
+				top.openDialog(titleHt,xurl,true,1100,650,saveCallBack);
+			}
+
+			function configQueryCols(){
+				var xurl="pages/pro05/configBcols.html?colIndex=4";
+				top.openDialog("配置高级查询字段&nbsp;"+top.getDialogButtonHtml("保存",1,'img/save.bmp'),xurl,true,1100,400,saveColConfigCallBack);
+			}
+			
+			function configListHeadCols(){
+				var xurl="pages/pro05/configBcols.html?colIndex=5";
+				top.openDialog("配置查询列表显示字段&nbsp;"+top.getDialogButtonHtml("保存",1,'img/save.bmp'),xurl,true,1100,400,saveColConfigCallBack);
+			}
+			
+			function configExportCols(){
+			   var xurl="pages/pro05/configBcols.html?colIndex=6";
+			   top.openDialog("配置导出字段&nbsp;"+top.getDialogButtonHtml("保存",1,'img/save.bmp'),xurl,true,1100,400,null);
+			}
+			
+			function initCols(){
+			  $("#queryArea").html( top.getQueryFieldHtml( tableName ) );
+			}
+			
+			function saveColConfigCallBack(){
+			   try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) initCols();
+				}catch(e){
+				}
+			}
+
+			function saveCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				  
+				}
+			}
+		  
+		  function getObj(infoId){
+			   for ( var i=0;i<objs.length;i++ ) {
+			     if ( objs[i].id == infoId ) return objs[i];
+			   }
+			   return null;
+		  }
+		  
+		  function importData(){
+				var xurl="pages/pro05/importData.html?opt=b";
+				top.openDialog("导入血液科数据",xurl,true,500,220,saveCallBack);
+		  }
+		  
+ function exportData(isEmpty){
+     var aoData=[];
+     aoData.push( { "name": "condStr", "value": getCondStr() } );
+	 if ( isEmpty ) {
+	   aoData.push( { "name": "temp", "value": "empty" } );
+	 }
+	 top.showLoadingInfo(true);
+     top.sendAjaxRequest("/actions/Pro05.action?exportDataB",aoData,callBackExportData);
+ }
+ 
+ function exportCurrentData(){
+     var aoData=[];
+	 var str=getCondStr();
+	 str+=" limit "+pageStart+","+pageSize;
+     aoData.push( { "name": "condStr", "value": str } );
+	 top.showLoadingInfo(true);
+     top.sendAjaxRequest("/actions/Pro05.action?exportDataB",aoData,callBackExportData);
+ }
+	
+ function callBackExportData(obj){
+     top.showLoadingInfo(false);
+	 try{
+	    if ( obj.status == true ){
+		   var downUrl=top.getUrlBase()+"/download?filePath="+obj.msg+"&fileName=导出血液科数据.xls";
+		   document.location.href=downUrl;
+	    }else{
+		   top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	 }catch(e){
+	    top.showInfoWinError("处理异常:"+e.message);
+	 }
+ }
+			
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+		    <div style='border: 2px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="120px">&nbsp;查询血液科数据&nbsp;</td>
+				  <td align="left"><div class="buttonDivSix"><a href="javascript:configQueryCols()">配置查询字段</a></div></td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table id="queryArea" width="100%" align="center" cellpadding="0" cellspacing="0" border="0" >
+			 </table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				    <td>&nbsp;查询结果列表&nbsp;</td>
+					<td><div id="createBtn" class="buttonDivTwo"><a href="javascript:addInfo()">添加</a></div></td>
+					<td><div id="importBtn" class="buttonDivTwo"><a href="javascript:importData()">导入</a></div></td>
+					<td><div id="exportBtn" class="buttonDivTwo"><a href="javascript:exportData(false)">导出</a></div></td>
+					<td><div id="exportCurrentBtn" class="buttonDivSix"><a href="javascript:exportCurrentData()">导出当前页</a></div></td>
+					<td><div class="buttonDivSix"><a href="javascript:exportData(true)">导出空表</a></div></td>
+					<td><div class="buttonDivSix"><a href="javascript:configListHeadCols()">配置列表字段</a></div></td>
+					<td><div class="buttonDivSix"><a href="javascript:configExportCols()">配置导出字段</a></div></td>
+			       </tr></table></td>
+			  </tr>
+			</table>
+	        <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

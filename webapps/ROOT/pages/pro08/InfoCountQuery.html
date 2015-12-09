@@ -1,0 +1,313 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var d=new Date();
+			var month=d.getMonth()+1;
+			var year=d.getYear();
+		    var optType="";
+			var dept_id="";
+			var rs="";
+			var submitId="";
+			var sub_status=0;
+			$(document).ready(function() {
+			   optType=top.getUrlParam(document.URL,"optType");
+			   $( "#yearSpan" ).html( top.get5YearSelectHtml("q_year",true) );
+			   $( "#monthSpan" ).html( top.get12MonthSelectHtml("q_month",true) );
+			    $( "#infoTypeSpan" ).html( top.getCodeSelectHtml("INFO_TYPE","q_info_type",false,1));
+				$("#s_not_submit").hide();
+			   $("#CountInfotable2").hide();
+			   dept_id = top.getCurrentUser().deptId;
+			   if(dept_id!=""){
+			   top.sendAjaxRequest("/actions/Pro08Report.action?getSubDept",null,deptCallback);
+			   }
+			});
+			
+	
+   function doQuery(){
+	         var iaoColumns= [
+ 							   { "sTitle": "年份", "mDataProp": "year", "sWidth": "10%", "sClass": "center","bUseRendered": false}, 
+							   { "sTitle": "时间", "mDataProp": "month", "sWidth": "10%", "sClass": "center","bUseRendered": false},
+							   { "sTitle": "地区名称", "mDataProp": "dept_id", "sWidth": "15%",  "sClass": "center",
+							   "fnRender": function ( oObj ) {
+								        return top.getDeptName(oObj.aData.dept_id);
+                                     },"bUseRendered": false },
+								{ "sTitle": "上报时间", "mDataProp": "report_time", "sWidth": "30%", "sClass": "center", 
+								 "fnRender": function ( oObj ) {
+								        return top.getTimeStr(oObj.aData.report_time,false);
+                                     },"bUseRendered": false },
+							  { "sTitle": "审核状态", "mDataProp": "info_status", "sWidth": "15%", "sClass": "center",  
+							   "fnRender": function ( oObj ) {
+								        return top.getCodeName( "INFO_STATUS", oObj.aData.info_status);
+                              },"bUseRendered": false },
+							   { "sTitle": "操作", "mDataProp": "info_status", "sWidth": "20%", "sClass": "center",  
+							   "fnRender": function ( oObj ) {
+							   if( $("#q_info_type").val()==1){
+							    return '<a href=\'javascript:void(0)\' onclick="checkInfo(\''+oObj.aData.id+'\',1)">查看</a>';
+							   }
+							   else{
+							    if(oObj.aData.info_status==0){
+								      return '<a href=\'javascript:void(0)\' onclick="checkInfo(\''+oObj.aData.id+'\',0)">审核</a>';
+										}
+						     	else {
+								      return '<a href=\'javascript:void(0)\' onclick="checkInfo(\''+oObj.aData.id+'\',1)">查看</a>';
+										}
+								}
+                              },"bUseRendered": false } 
+               ];
+			   var surl=top.getUrlBase()+"/actions/Pro08Report.action?infoCountQuery";
+			   oTable = $('#CountInfotable1').dataTable( {
+			       "bPaginate": false,
+				    "bInfo": false,
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"aaSorting": [[ 2, "asc" ]],
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+								notSubmitdoQuery();
+								sub_status=0;
+								submitId="";
+							    canSubmit(json);
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+						 aoData.push( { "name": "count.year", "value": $("#q_year").val() } );
+	                     aoData.push( { "name": "count.month", "value": $("#q_month").val()} );
+						 aoData.push( { "name": "count.info_type", "value": $("#q_info_type").val()} );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+	      //  oTable.fnDraw();
+		// alert($("#q_year").val());
+		   
+ }  
+ function canSubmit(json){
+  if($("#q_year").val()!=0&&$("#q_month").val()!=0&&$("#q_info_type").val()==0){
+    var obj = json.aaData;
+	if(rs.length==obj.length){
+	for(var i=0;i<obj.length;i++){
+	    if(obj[i].info_status!=1) {
+		sub_status=0;
+		  break;
+		}
+		sub_status=1;
+	 }
+	}
+	else{
+	   sub_status=0;
+	  }
+	checkIsNotSubmit();
+   }
+   else{
+      $("#is_submit").hide();
+   }
+ }
+ 
+ function checkIsNotSubmit(){
+	  var aoData=[];
+	   aoData.push( { "name": "count.year", "value": $("#q_year").val() } );
+	   aoData.push( { "name": "count.month", "value": $("#q_month").val()} );
+	   aoData.push( { "name": "count.info_type", "value": "1"} );
+	  top.sendAjaxRequest("/actions/Pro08Report.action?infoCountQuery",aoData,checkCallback);
+	}
+	function checkCallback(obj){
+	  if(obj.aaData.length>0){
+	       submitId = obj.aaData[0].id;
+	       sub_status=2;
+	  }
+	  var ht='';
+	if(sub_status==0){
+	   $("#is_submit").hide();
+	}
+	else if(sub_status==1){
+	   $("#is_submit").show();
+	   ht='<a href=\'javascript:void(0)\' onclick="doSubmit()">数据整合提交</a>';
+	    $("#is_submit").html(ht);
+	}
+	else if(sub_status==2){
+	  $("#is_submit").show();
+	  ht='本月已提交<a href=\'javascript:void(0)\' onclick="checkInfo(\''+submitId+'\',1)">查看</a>';
+	  $("#is_submit").html(ht);
+	   }
+	}
+   function deptCallback(obj){
+     rs=obj.aaData;
+	  if(rs.length==0){
+	  $("#td_infoType").hide();
+	}
+ }
+ function doSubmit(){
+      var aoData=[];
+      aoData.push( { "name": "count.year", "value": $("#q_year").val() } );
+      aoData.push( { "name": "count.month", "value": $("#q_month").val()} );
+	  aoData.push( { "name": "count.info_type", "value": $("#q_info_type").val()} );
+    var xurl="/actions/Pro08Report.action?getSubDept";
+	top.sendAjaxRequest("/actions/Pro08Report.action?doSubmitInfoCount",aoData,submitCallback);
+ }
+ function submitCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	        isCreated = true;
+	        top.showInfoWinOK("操作成功");
+		    top.closeDialog();
+	    }else{
+	    	isCreated = false;
+	        top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		    top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+ function notSubmitdoQuery(){
+   if($("#q_year").val()!=0&&$("#q_month").val()!=0&&$("#q_info_type").val()==0){
+			  $("#s_not_submit").show();
+			  $("#CountInfotable2").show();
+		      doNotSubmitQuery();
+		   } else{
+		     $("#s_not_submit").hide();
+		     $("#CountInfotable2").hide();
+		   }
+ }
+ 
+ function doNotSubmitQuery(){
+ var iaoColumns= [
+ 							   { "sTitle": "年份", "mDataProp": "year", "sWidth": "20%", "sClass": "center","bUseRendered": false}, 
+							   { "sTitle": "时间", "mDataProp": "month", "sWidth": "20%", "sClass": "center","bUseRendered": false},
+							   { "sTitle": "未提交数据地区名称", "mDataProp": "dept_id", "sWidth": "30%",  "sClass": "center",
+							   "fnRender": function ( oObj ) {
+								        return top.getDeptName(oObj.aData.dept_id);
+                                     },"bUseRendered": false },
+								{ "sTitle": "司法所是否有数据", "mDataProp": "dept_id", "sWidth": "30%", "sClass": "center", 
+								 "fnRender": function ( oObj ) {
+								       // return top.getTimeStr(oObj.aData.report_time,false);
+									   return '无';
+                                     },"bUseRendered": false }
+               ];
+			   var surl=top.getUrlBase()+"/actions/Pro08Report.action?infoCountNotSubmitQuery";
+			   oTable = $('#CountInfotable2').dataTable( {
+			       "bPaginate": false,
+				    "bInfo": false,
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"aaSorting": [[ 2, "asc" ]],
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+						 aoData.push( { "name": "count.year", "value": $("#q_year").val() } );
+	                     aoData.push( { "name": "count.month", "value": $("#q_month").val()} );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+    
+ }
+ function checkInfo(infoId,type){
+    if(type==0){
+	  var xurl="pages/pro08/checkInfoCount.html?optType=examine&infoId="+infoId;
+	   top.openDialog("审核报表",xurl,true,1200,600,infoCallBack);
+	}
+	else if(type==1){
+	 var xurl="pages/pro08/checkInfoCount.html?optType=check&infoId="+infoId;
+	  top.openDialog("查看报表",xurl,true,1200,600);
+	}
+ }
+function infoCallBack(){
+      doQuery();
+}
+   </script>
+	</head>
+	<body>
+	 <input type="hidden" id="deptId" value="" />
+		<div width="100%">
+		    <div style='border: 2px solid #89A1B9;'>
+			 <table  width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="200px">&nbsp;社区服刑人员信息情况统计表 &nbsp;</td>			
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+				<td  align="right" width="7%"><b>报表查询</b></td>
+				<td id="td_infoType" align="right" width="20%">报表类别:<span id="infoTypeSpan" ></span></td>
+				 <td align="right" width="5%">年份:</td><td align="left" width="5%" ><span id="yearSpan" ></span></td>
+			      <td align="right" width="5%">月份:</td><td align="left" width="5%"><span id="monthSpan" ></span></td>
+				  <td align="left"><div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div></td>
+			     </tr>
+			 </table>
+			</div>
+		</div>
+		 <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="CountInfotable1"></table>
+   <p>
+    <br/>
+  </p>
+        <div width="100%" align="center">
+        <span id="is_submit"  align="center"></span></div>
+        <span id="s_not_submit" ><b>未提交数据的地区</b></span>
+         <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="CountInfotable2"></table>
+  <p>
+    <br/>
+  </p>
+  <p>
+    <br/>
+</p>
+<p>
+    <br/>
+</p>
+	</body>
+</html>

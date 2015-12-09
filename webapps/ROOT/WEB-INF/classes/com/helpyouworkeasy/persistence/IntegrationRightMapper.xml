@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.helpyouworkeasy.persistence.IntegrationRightMapper">
+  <insert id="insertIntegrationRight" parameterType="IntegrationRight">
+    INSERT INTO tbl_integration_rights (integration_manager,reward_detail,opt_user,id,opt_time,reward_upper_limit,current_reward_score,points_floor_level,current_points_score,reward_detail_id,is_deleted,integration_manager_name,dept_award_score,dept_point_score,dept,job_title)
+    VALUES (#{integration_manager}, #{reward_detail}, #{opt_user}, #{id}, #{opt_time}, #{reward_upper_limit}, #{current_reward_score}, #{points_floor_level}, #{current_points_score},#{reward_detail_id},#{is_deleted},#{integration_manager_name},#{dept_award_score},#{dept_point_score},#{dept},#{job_title})
+  </insert>
+
+  <update id="updateIntegrationRight" parameterType="IntegrationRight">
+    update tbl_integration_rights set 
+    integration_manager=#{integration_manager},reward_detail=#{reward_detail},opt_user=#{opt_user},opt_time=#{opt_time},reward_upper_limit=#{reward_upper_limit},points_floor_level=#{points_floor_level},
+    reward_detail_id=#{reward_detail_id},integration_manager_name=#{integration_manager_name},dept_award_score=#{dept_award_score},dept_point_score=#{dept_point_score},dept=#{dept},job_title=#{job_title}
+    where id=#{id}
+  </update>
+
+  <select id="getIntegrationRightListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_integration_rights where is_deleted=0  
+    <if test="o.integration_manager != '' and o.integration_manager != null" >
+      and integration_manager=#{o.integration_manager}
+    </if>
+    <if test="o.id != -1" >
+      and id=#{o.id}
+    </if>
+    <if test="time1 != -1" >
+      and opt_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=opt_time
+    </if>
+  </select>
+
+  <select id="getIntegrationRightPageList" parameterType="map" resultType="IntegrationRight">
+    select 
+    integration_manager,reward_detail,opt_user,id,opt_time,reward_upper_limit,current_reward_score,points_floor_level,current_points_score,reward_detail_id,integration_manager_name,dept_award_score,dept_point_score,dept,job_title
+    from tbl_integration_rights where is_deleted=0  
+    <if test="o.integration_manager != '' and o.integration_manager != null" >
+      and integration_manager=#{o.integration_manager}
+    </if>
+    <if test="o.id != -1" >
+      and id=#{o.id}
+    </if>
+    <if test="time1 != -1" >
+      and opt_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=opt_time
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+ 
+  <select id="getIntegrationRightById" parameterType="long" resultType="IntegrationRight">
+    select *
+    from tbl_integration_rights
+    where is_deleted=0 and id=#{value}
+  </select>
+  
+  <update id="updateCurrentScore" parameterType="map">
+     update tbl_integration_rights set
+     <if test="reward != null">current_reward_score=current_reward_score-#{reward}</if>
+     <if test="points != null">current_points_score=current_points_score-#{points}</if>
+     where integration_manager=#{user_code}
+  </update>
+  
+  <select id="getIntegrationRightByUserCode" parameterType="string" resultType="IntegrationRight">
+    select *
+    from tbl_integration_rights
+    where is_deleted=0 and integration_manager=#{value}
+  </select>
+  
+  <update id="deleteIntegrationRight" parameterType="long">
+     update tbl_integration_rights
+     set is_deleted=1
+     where id=#{value}
+  </update>
+  
+  <update id="cleanScore" parameterType="IntegrationRight">
+     update tbl_integration_rights set current_reward_score=reward_upper_limit,current_points_score=points_floor_level
+     where is_deleted=0 and id=#{id}
+  </update>
+
+</mapper>

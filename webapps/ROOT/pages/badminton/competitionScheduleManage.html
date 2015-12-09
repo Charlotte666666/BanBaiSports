@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery.dataTables.min.js"></script>
+
+<script type="text/javascript">
+var oTable = null;
+var currentId=0;
+var uploadKey="";
+
+$(document).ready( function() {
+	$( "#tdstatus" ).html( top.getCodeSelectHtml("SCHEDULE_STATUS","status",true,null,null,"全部") );
+    loadList();
+});
+
+ function loadList(){
+    var iaoColumns= [
+               { "sTitle": "赛程标题", "mDataProp": "title", "sWidth": "40%",
+                   "fnRender": function ( oObj ) {
+				      return '<a href="javascript:void(0)" onclick="openInfo(\'update\','+oObj.aData.id+')" >'+oObj.aData.title+'</a>' ;
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "开始日期", "mDataProp": "start_date", "sWidth": "20%",
+                   "fnRender": function ( oObj ) {
+                      return top.getTimeStr( oObj.aData.start_date, true );
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "结束日期", "mDataProp": "end_date", "sWidth": "20%",
+                   "fnRender": function ( oObj ) {
+                      return top.getTimeStr( oObj.aData.end_date, true );
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "进程状态", "mDataProp": "status", "sWidth": "10%","sClass": "center",
+                   "fnRender": function ( oObj ) {
+				     return top.getCodeName( "SCHEDULE_STATUS", oObj.aData.status );
+                   },
+                   "bUseRendered": false , "bSortable":false
+               },
+			   { "sTitle": "操作", "mDataProp": "id", "sWidth": "10%","bSortable":false,
+                    "fnRender": function ( oObj ) {
+                       var ht= '<span align="center" style="cursor:pointer;" onclick="uploadImg(\''+oObj.aData.id+'\')"><img src="../../img/icons/arrow-up.gif" />&nbsp;图片</span>';
+					   ht+='&nbsp;<span align="center" style="cursor:pointer;" onclick="uploadPromotionTable(\''+oObj.aData.id+'\')"><img src="../../img/icons/arrow-up.gif" />&nbsp;晋级表</span>';
+                       return ht;
+					},
+                    "bUseRendered": false
+               }
+        ];
+ 	
+		oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": top.getUrlBase()+"/actions/CompetitionSchedule.action?getCompetitionScheduleList",
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     aoData.push( { "name": "info.status", "value": $("#status").val() } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumns
+	   } );
+ }
+
+ function doQuery(){
+	oTable.fnDraw();
+ }
+ 
+ function optCallback(obj){
+	doQuery();
+ }
+ 
+ function openInfo(optType,sid){
+    var xurl="pages/badminton/competitionScheduleInfo.html?optType=update&id="+sid;
+	if ( optType == 'insert' ) {
+	  xurl="pages/badminton/competitionScheduleInfo.html?optType=insert";
+	} 
+	top.openDialog("赛程信息",xurl,true,800,650,optCallback);
+ }
+ 
+ function uploadImg(tid){
+    currentId=tid;
+    top.openSelectDialog("上传图片","pages/uploadOSSFile.html?key=SCHEDULE_"+tid,300,200,saveUploadImgURL);
+ }
+ 
+ function uploadPromotionTable(tid){
+    currentId=tid;
+	var d=new Date();
+	uploadKey="Promotion_"+d.getTime();
+    top.openSelectDialog("上传图片","pages/uploadOSSFile.html?key="+uploadKey,300,200,saveUploadPromotionURL);
+ }
+ 
+ function saveUploadPromotionURL(){
+   try{
+    var o=top.getTempValue();
+    if ( o != null && o.isSaveOK ) {
+		var aoData=[];
+		aoData.push( { "name": "info.promotion_table", "value": uploadKey } );
+		aoData.push( { "name": "info.id", "value": currentId } );
+		var xurl="/actions/CompetitionSchedule.action?updateSchedulePromotionTable";
+		top.sendAjaxRequest(xurl,aoData,optCallback);
+	}
+   }catch(e){}
+ }
+ 
+ function saveUploadImgURL(){
+   try{
+    var o=top.getTempValue();
+    if ( o != null && o.isSaveOK ) {
+		var aoData=[];
+		aoData.push( { "name": "info.img_url", "value": "SCHEDULE_"+currentId } );
+		aoData.push( { "name": "info.id", "value": currentId } );
+		var xurl="/actions/CompetitionSchedule.action?updateCompetitionScheduleImg";
+		top.sendAjaxRequest(xurl,aoData,optCallback);
+	}
+   }catch(e){}
+ }
+
+</script>
+</head>
+<body>
+            <div style='border: 1px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="150px">&nbsp;大型赛程信息查询&nbsp;</td>
+				  <td align="left">
+					<div id="createBtn" class="buttonDivTwo"><a href="javascript:openInfo('insert',0)">添加</a></div>
+			      </td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+			      <td align="right" width="40%">赛程状态:</td><td align="left" width="60%" id="tdstatus"></td>			  		  
+			     </tr>
+			 </table>
+			</div>
+<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+</body>
+</html> 

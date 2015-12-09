@@ -1,0 +1,3264 @@
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<title>工程订单管理</title>
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css"/>
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css" media="print, projection, screen"/>
+		<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+		<script type="text/javascript" language="javascript"  src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"  src="../../js/Calendar3.js"></script>
+<style type="text/css">
+   .checkCon{}
+</style>
+<script type="text/javascript">
+	var oTable=null;
+	var isSaveOK=false;
+	var optType="";
+	var info_id=0;
+	var modelhouse="";
+	var modelhouseid=0;
+	var cust_code="";
+	var productId=0;
+	var product="";
+	var objs="";
+	var orderDetailId=0;
+	var orderdetailList=[];
+	var selectedProduct=[];
+	var Customizetrid=1;
+	var Customizetrnum=0;
+	var controltrid=1;
+	var controltrnum=0;
+	var changetrid=1;
+	var changetrnum=0;
+	var customize="";
+	var old_product="";
+	var customizeid="";
+	var cyclecontrol="";
+	var controlid="";
+	var changeinfo="";
+	var ch_product={};
+	var detailid=0;
+	var minTime=10000000000;
+	var maxTime=0;
+	var constructId=0;
+	var interId=0;
+	var project_order_status="";//工程订单状态
+	//添加
+	var creIndex=0;
+	var require_id="";
+	var contruction_fileListTable=null;
+	var fileListTable=null;
+	var view_fileListTable=null;
+	var construction_status='';
+	var manager="";
+	var ids='';
+	var currentDeleteId=0;
+	var completed_id=0;//竣工记录ID
+	var projectWorkerId="";//当前工程用工id
+	var workerCode="";//当前要删除的工人编号
+	var is_completed="";//当前要删除的工程用工信息是否已经完工
+	var initTab="";//初始显示页面
+	var startOperationId="";
+	
+   $(document).ready(function() {
+     initData();
+	 if(top.g_isPermit('09_edit_engineer_manager')){
+		 $("#span_engineer_manager").hide();
+		 $("#tdengineer_manager").show();
+	 }else{
+		$("#span_engineer_manager").show();
+		$("#tdengineer_manager").hide();
+	 }
+	 if(top.g_isPermit('09_query_project_manager')){
+		 $("#span_project_manager").hide();
+		 $("#tdproject_manager").show();
+	 }else{
+		$("#span_project_manager").show();
+		$("#tdproject_manager").hide();
+	 }
+	 //新增施工进度按钮显示
+	if(top.g_isPermit('09_insert_construction')){
+		$("#saveConstructionStatusBtn").show();
+	 }
+	 //废弃施工进度按钮显示
+	if(top.g_isPermit('09_abandon_construction')){
+		$("#abandonConstructionStatusBtn").show();
+	 }
+	  //添加工程变更按钮显示
+	if(top.g_isPermit('09_insert_project_change')){
+		$("#createBtn").show();
+	 }
+	if(top.g_isPermit("09_project_guarantee_opt")){
+	    $("#editGuaranteeBtn").show();
+	}else{
+	    $("#editGuaranteeBtn").hide();
+	}
+	   
+	  //点击不同标签页，按钮绑定不同触发事件
+	  $("#tabs ul li a").click(function(){
+		if($(this).parent().attr("class")=="ui-tabs-disabled"){
+		  return;
+		}
+		editModelBt();
+		var tabTitle=$(this).attr("class");
+		//基本信息
+		if(tabTitle=='baseInfo'){
+			$("#editBt").attr("onclick","editBaseInfo()");
+			$("#saveBt").attr("onclick","doSubmit()");
+			$("#returnBt").attr("onclick","doCancelBaseInfo()");
+			if(optType=='insert'){
+				editBaseInfo();
+			}else{
+				doCancelBaseInfo();
+			}
+		//开工记录
+		}else if(tabTitle=='startOperation'){
+			$("#editBt").attr("onclick","editStartOperation()");
+			$("#saveBt").attr("onclick","saveStartOperation()");
+			$("#returnBt").attr("onclick","doCancelStartOperation()");
+			if(optType=='insert'){
+				editStartOperation();
+			}else{
+				doCancelStartOperation();
+			}
+		//工作进度
+		}else if(tabTitle=='workSchedule'){
+			$("#saveBt").hide();
+			$("#returnBt").hide();
+			$("#editBt").hide();
+			if(optType=='insert'){
+				addConstructionInfo();
+			}
+		//项目变更
+		}else if(tabTitle=='workScheduleCheck'){
+		   $("#saveBt").hide();
+		   $("#returnBt").hide();
+		   $("#editBt").hide();
+		
+		}else if(tabTitle=='projectChange'){
+			$("#saveBt").hide();
+			$("#returnBt").hide();
+			$("#editBt").hide();
+		//竣工验收
+		}else if(tabTitle=='finishCheck'){
+			$("#editBt").attr("onclick","editProjectCompleted()");
+			$("#saveBt").attr("onclick","saveProjectCompleted()");
+			$("#returnBt").attr("onclick","doCancelProjectCompleted()");
+			if(optType=='insert'){
+				editProjectCompleted();
+			}else{
+				doCancelProjectCompleted();
+			}
+		//样板间
+		}else if(tabTitle=='modelHouse'){
+			$("#saveBt").hide();
+			$("#editBt").hide();
+			$("#returnBt").hide();
+			$("#hide").show();
+		}else if(tabTitle=="projectPic"){
+			$("#saveBt").hide();
+			$("#editBt").hide();
+			$("#returnBt").hide();
+		}else if(tabTitle=="projectWorkers"){
+		    $("#saveBt").hide();
+			$("#editBt").hide();
+			$("#returnBt").hide();
+		}
+		//解决鼠标浮动div关不掉问题
+		//divHide();
+		
+	});
+   });
+   
+   function changeWorker(){
+     var obj=$("#worker_code option:selected");
+		   if(obj.val()=="无"){
+		     return;
+		   }else{
+		     $("#worker_name").html(obj.attr("oname"));
+		     $("#worker_level").html(obj.attr("olevel"));
+		     $("#worker_tel").html(obj.attr("otel"));
+		   }
+   }
+    //回调函数---返回查询的数据赋值给文本框
+	function custDetailCallback(obj){
+	   try{
+			if ( obj.status == true ){
+			  var o=obj.body;
+			  if(o)
+				{
+					if(o.code){
+						$("#cust_code").val(o.code);
+						
+                       if($("#cust_name").val()==""){	
+						   $("#cust_name").val(o.cust_name);
+					   }
+						cust_code=o.code;
+					}
+					$("#tdcust_manager").html(top.getUserNameByCode(o.cust_manager,true));
+					$("#cust_manager").val(o.cust_manager);
+
+					$("#spancust_manage").html(top.getUserNameByCode(o.cust_manager,true));
+					var cust_tel="";
+					if(o.cust_phone){
+					   cust_tel=o.cust_phone;
+					}
+					if(o.cust_mobile){
+					    if(cust_tel==""){
+						   cust_tel=o.cust_mobile;
+						}else{
+						   cust_tel+=","+o.cust_mobile;
+						}
+					}
+					$("#cust_tel").val(cust_tel);
+				}
+			  if ( o.requireInfo ) {
+					require_id=o.requireInfo.id;
+					$("#tddesigner").html(top.getUserNameByCode(o.requireInfo.require_manager));
+					$("#designer").val(o.requireInfo.require_manager);
+					
+					$("#tdproduct_designer").html(top.getUserNameByCode(top.getProductDesignerByDesigner(o.requireInfo.require_manager)));
+					$("#product_designer").val(top.getProductDesignerByDesigner(o.requireInfo.require_manager));
+					
+					$("#spandesigner").html(top.getUserNameByCode(o.requireInfo.require_manager));
+					$("#spanproduct_designer").html(top.getUserNameByCode(top.getProductDesignerByDesigner(o.requireInfo.require_manager)));
+					if($("#pro_addr").val()==""){
+					    $("#pro_addr").val(o.requireInfo.addr_all);
+					}
+					$("#building_name").val(o.requireInfo.district);
+					if(o.requireInfo.room_count!=0){
+						queryModelHouse(o.requireInfo.room_count);
+					}
+				}
+				if($("#view_y_persons").html()==""){
+				    var persons="";
+					if($("#tdcust_manager").html()){
+					   persons+=$("#tdcust_manager").html();
+					}
+					if($("#tddesigner").html()){
+					   if(persons!=""){
+					      persons+=",";
+					   }
+					   persons+=$("#tddesigner").html();
+					}
+					if($("#tdproduct_designer").html()){
+					   if(persons!=""){
+					      persons+=",";
+					   }
+					   persons+=$("#tdproduct_designer").html();
+					}
+				    $("#y_persons").val(persons);
+				    $("#view_y_persons").html(persons);
+					$("#x_persons").val(persons);
+				    $("#view_x_persons").html(persons);
+				}
+		    }
+		}catch(e){}
+	}
+  
+	//关闭第二层框
+	function closeDialog(){
+		$( "#dialog" ).dialog( "close" );
+	}
+    //根据id删除样板间信息
+	function deletemodelhouse(id){
+		var aoData=[];
+			 aoData.push( { "name": "modelhouse.id", "value": id } );
+			 top.sendAjaxRequest("/actions/ProjectOrder.action?deleteModelHouse",aoData,ModelHouseoptCallback);
+	}
+    //根据id查询样板间信息
+	function getmodelhouse(id){
+		var aoData=[];
+		 aoData.push( { "name": "modelhouse.id", "value": id } );
+		 top.sendAjaxRequest("/actions/ProjectOrder.action?getModelHouse",aoData,getmodelhouseoptCallback);
+	}
+	//调用回调函数---返回单个样板间信息
+	function getmodelhouseoptCallback(obj){
+		
+		try{
+			if(obj.status==true){
+				var o=obj.body
+				
+				$("#model_cust_name").val(o.cust_name);
+				$("#addr").val(o.addr);
+				initCheckedValue( document.getElementsByName("house_style"), o.house_style);
+				$("#watching_focus").val(o.watching_focus);
+				$("#room_count").val( o.room_count);
+				$("#hall_count").val( o.hall_count);
+				$("#bath_count").val( o.bath_count);
+				$("#modelhouse_project_manager").val(o.project_manager);
+				$("#supervision").val(o.supervision);
+				
+				$( "#tdconstruct_status" ).html( top.getCodeSelectHtml("CONSTRUCT_STATUS","construct_status",false,o.construct_status) );
+				$( "#tddistrict" ).html( top.getCodeSelectHtml("DISTRICT","district",false,o.district) );
+				$("#tddesigner").html( top.getAllDesignerSelect("designer",o.designer) );
+				modelhouseid=o.id;
+			}
+		}catch(e)
+		{
+		}
+	}
+	//初始化复选框
+	function initCheckedValue(boxes,values) {
+	    if ( !values ) return ;
+	    if ( values == null || values == '' ) return ;
+		for (var i = 0; i < boxes.length; i++) {
+			if ( values.indexOf(boxes[i].value+",") != -1 || values.indexOf(","+boxes[i].value) != -1 ) {
+				boxes[i].checked = true;
+			}
+        }
+	}
+    //查询样板间信息
+    function queryModelHouse(room_count){
+	var aoData=[];
+	 aoData.push( { "name": "modelhouse.room_count", "value": room_count } );
+	 top.sendAjaxRequest("/actions/ProjectOrder.action?getModelHouseList",aoData,ModelHouseinfooptCallback);
+    }
+	
+	//生成样板间信息表---操作样板间信息
+    function ModelHouseinfooptCallback(obj){
+		try{
+		 modelhouse=obj.aaData;
+		 var ht="";
+		    if(modelhouse.length>0){
+				for (var i=0;i<modelhouse.length;i++) {
+				  ht+='<B style="font-size:12px;padding:10px">样板间'+(i+1)+'</B><br/><table ';
+				  ht+='border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;"';
+				  ht+='>';
+				  ht+='<tr ';
+				  ht+='class="tr_data"';
+				  ht+='height="35px"';
+				  ht+='>';
+				  ht+='<td  class="table_property_title">';
+				  ht+='地址'
+				  ht+='</td>';
+				  ht+='<td colspan="3" align="left">';
+				  ht+=''+modelhouse[i].addr +''
+				  ht+='</td>';
+				  ht+='</tr>';
+				  
+				  ht+='<tr ';
+				  ht+='class="tr_data"';
+				  ht+='height="35px"';
+				  ht+='>';
+				  ht+='<td class="table_property_title">';
+				  ht+='户型'
+				  ht+='</td>';
+				  ht+='<td align="left">';
+				  if(modelhouse[i].room_count!=0){
+					ht+=''+modelhouse[i].room_count +'室 '
+				  }
+				  if(modelhouse[i].hall_count!=0){
+					ht+=''+modelhouse[i].hall_count +'厅 '
+				  }
+				  if(modelhouse[i].bath_count!=0){
+					ht+=''+modelhouse[i].bath_count +'卫 '
+				  }
+				  ht+='</td>';
+				  ht+='<td  class="table_property_title">';
+				  ht+='居室类型'
+				  ht+='</td>';
+				  ht+='<td align="left">';
+				  ht+=''+top.getCodeName( "ROOM_TYPE",modelhouse[i].room_type ) +''
+				  ht+='</td>';
+				  ht+='</tr>';
+				 
+				  ht+='<tr ';
+				  ht+='class="tr_data"';
+				  ht+='height="35px"';
+				  ht+='>';
+				  ht+='<td  class="table_property_title">';
+				  ht+='建筑面积'
+				  ht+='</td>';
+				  ht+='<td align="left">';
+				  ht+=modelhouse[i].struct_area+'平方米'
+				  ht+='</td>';
+				  ht+='<td  class="table_property_title">';
+				  ht+='套内面积'
+				  ht+='</td>';
+				  ht+='<td align="left">';
+				  ht+=modelhouse[i].usable_area+'平方米';
+				  ht+='</td>';
+				  ht+='</tr>';
+				  
+				  ht+='<tr ';
+				  ht+='class="tr_data"';
+				  ht+='height="35px"';
+				  ht+='>';
+				  ht+='<td  class="table_property_title">';
+				  ht+='风格'
+				  ht+='</td>'; 
+				  ht+='<td align="left">';
+				  ht+=''+modelhouse[i].house_style +''
+				  ht+='</td>';
+				  ht+='<td  class="table_property_title">';
+				  ht+='设计师'
+				  ht+='</td>';
+				  ht+='<td align="left">';
+				  ht+=''+top.getUserNameByCode( modelhouse[i].designer,designer)+''
+				  ht+='</td>';
+				  ht+='</tr>';
+				  
+				  ht+='<tr ';
+				  ht+='class="tr_data"';
+				  ht+='height="35px"';
+				  ht+='>';
+				  ht+='<td  class="table_property_title">';
+				  ht+='项目经理'
+				  ht+='</td>';
+				  ht+='<td align="left">';
+				  ht+=''+top.getUserNameByCode(modelhouse[i].project_manager) +''
+				  ht+='</td>';
+				  ht+='<td class="table_property_title">';
+				  ht+='监理'
+				  ht+='</td>';
+				  ht+='<td align="left">';
+				  ht+=''+top.getUserNameByCode(modelhouse[i].supervision)+''
+				  ht+='</td>';
+				  ht+='</tr>';
+				  
+				  ht+='<tr ';
+				  ht+='class="tr_data"';
+				  ht+='height="35px"';
+				  ht+='>';
+				  ht+='<td  class="table_property_title">';
+				  ht+='工程状态'
+				  ht+='</td>';
+				  ht+='<td colspan="3" align="left">';
+				  ht+=''+top.getCodeName( "PROJECT_STATUS",modelhouse[i].construct_status ) +''
+				  ht+='</td>';
+				  ht+='</tr>'; 
+				  
+				  ht+='<tr ';
+				  ht+='class="tr_data"';
+				  ht+='height="35px"';
+				  ht+='>';
+				  ht+='<td class="table_property_title">';
+				  ht+='样板间看点'
+				  ht+='</td>';
+				  ht+='<td align="left" colspan="3" align="left">';
+				  ht+=''+modelhouse[i].watching_focus +''
+				  ht+='</td>';
+				  ht+='</tr>';
+				  
+				  ht+='</table>';
+			  }
+		  }else{
+		      ht+="<tr class='tr_data'><td>还未有样板间信息</td></tr>";
+		  }
+		  $("#modelhouseList").html( ht );
+		}catch(e){
+		}
+   }
+    
+	//保存信息---竣工信息
+	function saveProjectCompleted(){
+		    var aoData=[];
+			  // 检查
+			var checkMsg = checkProjectCompleted();
+			if ( checkMsg != '' ) {
+			   top.showInfoWinWarn(checkMsg);
+			   return ;
+			}
+			if(completed_id!=0){
+				aoData.push( { "name": "completed.id", "value": completed_id } );
+			}
+			aoData.push( { "name": "projectOrder.require_id", "value": require_id } );
+			aoData.push( { "name": "projectOrder.project_order_id", "value":info_id } );
+			aoData.push( { "name": "completed.order_id", "value": info_id } );
+			aoData.push( { "name": "completed.delay_situation", "value": $("#delay_situation").val() } );
+			aoData.push( { "name": "completed.finish_check_person", "value": $("#finish_check_person").val() } );
+			aoData.push( { "name": "completed.change_project", "value": $("#completed_change_project").val() } );
+			aoData.push( { "name": "completed.scene_persons", "value": $("#scene_persons").val() } );
+			aoData.push( { "name": "completed.final_payment_detail", "value": $("#final_payment_detail").val() } );
+			aoData.push( { "name": "completed.final_payment", "value": top.g_GetNumValue($("#final_payment").val()) } );
+			aoData.push( { "name": "completed.project_delay_time", "value": top.toTimestamp($("#project_delay_time").val() )} );
+			aoData.push( { "name": "completed.product_delay_time", "value":top.toTimestamp( $("#product_delay_time").val()) } );
+			aoData.push( { "name": "completed.finish_check_time", "value": top.toTimestamp($("#finish_check_time").val()) } );
+			aoData.push( { "name": "completed.cust_check_time", "value": top.toTimestamp($("#cust_check_time").val()) } );
+			aoData.push( { "name": "completed.final_payment_time", "value": top.toTimestamp($("#final_payment_time").val() )} );
+			aoData.push( { "name": "completed.warranty_time", "value": top.toTimestamp($("#warranty_time").val()) } );
+			aoData.push( { "name": "completed.opt_user", "value": $("#projectcompleted_opt_user").val() } );
+
+			var xurl="/actions/ProjectOrder.action?saveProjectCompleted";
+			 top.sendAjaxRequest(xurl,aoData,ProjectCompletedoptCallback);	
+		
+   }
+    function doCancelProjectCompleted(){
+		$("#edit_tabs-5").hide();
+		$("#view_tabs-5").show();
+		editModelBt();	
+			
+	}
+	function editProjectCompleted(){
+		$("#edit_tabs-5").show();
+		$("#view_tabs-5").hide();
+		saveModelBt();	
+	}
+	//校验竣工信息
+	function checkProjectCompleted(){	
+		var msg="";
+		if ( $("#final_payment").val() != '' && (!IsFloat( $("#final_payment").val() )||$("#final_payment").val()<0 || $("#final_payment").val()>99999999)) msg += "[尾款金额]应为0~99999999之间的数字类型<br>";
+		msg += checkString($("#delay_situation").val(),false,512,"整体延期情况明细");
+		msg += checkString($("#finish_check_person").val(),false,256,"竣工预验收人员");
+		msg += checkString($("#completed_change_project").val(),false,512,"需要进行整改项目");
+		msg += checkString($("#scene_persons").val(),false,256,"相关到场人员");
+		msg += checkString($("#final_payment_detail").val(),false,512,"尾期增减项明细");
+		return msg;
+   }
+    //调用回调函数---竣工信息
+	function ProjectCompletedoptCallback(obj){
+       try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+			doCancelProjectCompleted();
+			var content=obj.msg.split(",");
+			if(completed_id==0&&obj.msg!=''){
+			   completed_id=content[0];
+			}
+			$("#view_projectcompleted_update_time").html(top.getTimeStr(content[1],true));
+			$("#tdprojectcompleted_update_time").html(top.getTimeStr(content[1],true));
+			$("#projectcompleted_update_time").val(top.getTimeStr(content[1],true));
+			updateProjectStatus(3);
+			$("#edit_tabs-5").hide();
+			$("#view_tabs-5").show();
+			$("#saveProjectCompletedBtn").html('编辑');
+			
+			$("#view_delay_situation").html($("#delay_situation").val());
+			$("#view_finish_check_person").html($("#finish_check_person").val());
+			$("#view_completed_change_project").html($("#completed_change_project").val());
+			$("#view_scene_persons").html($("#scene_persons").val());
+			$("#view_final_payment_detail").html($("#final_payment_detail").val());
+			$("#view_projectcompleted_opt_user").html($("#opt_user").val());
+			$("#view_final_payment").html( $("#final_payment").val());
+			//$("#id").val( top.getTimeStr( o.completed.id, true ) );
+			$("#view_project_delay_time").html( $("#project_delay_time").val() );
+			$("#view_product_delay_time").html( $("#product_delay_time").val() );
+			$("#view_finish_check_time").html( $("#finish_check_time").val() );
+			$("#view_cust_check_time").html( $("#cust_check_time").val() );
+			$("#view_final_payment_time").html( $("#final_payment_time").val() );
+			$("#view_warranty_time").html( $("#warranty_time").val());
+			
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+  
+    //保存信息---项目变更
+	function saveProjectChange(){
+		var aoData=[];
+		aoData.push( { "name": "order.order_id", "value":info_id } );
+		aoData.push( { "name": "projectchange.order_id", "value":info_id} );
+		aoData.push( { "name": "projectchange.change_project", "value": $("#change_project").val() } );
+		aoData.push( { "name": "projectchange.rectification_project", "value": $("#rectification_project").val() } );
+		aoData.push( { "name": "projectchange.reason_and_cycle", "value": $("#reason_and_cycle").val() } );
+		aoData.push( { "name": "projectchange.change_result", "value": $("#change_result").val() } );
+		aoData.push( { "name": "projectchange.install_and_check", "value": $("#install_and_check").val() } );
+		aoData.push( { "name": "projectchange.change_project_main", "value": $("#change_project_main").val() } );
+		aoData.push( { "name": "projectchange.change_project_soft", "value": $("#change_project_soft").val() } );
+		aoData.push( { "name": "projectchange.rectification_project_main", "value": $("#rectification_project_main").val() } );
+		aoData.push( { "name": "projectchange.rectification_project_soft", "value": $("#rectification_project_soft").val() } );
+		aoData.push( { "name": "projectchange.opt_user", "value": $("#change_opt_user").val() } );
+		
+		var xurl="/actions/ProjectOrder.action?saveProjectChange";
+		 top.sendAjaxRequest(xurl,aoData,ProjectChangeoptCallback);
+	  }
+	 //调用回调函数---项目变更
+    function ProjectChangeoptCallback(obj){
+       try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+   //开工记录检验
+   function checkStartOperation(){
+      var msg="";
+	  msg+=checkString($("#project_add").val(),false,256,"工程增项");
+	  msg+=checkString($("#product_add").val(),false,256,"产品增项");
+	  msg+=checkString($("#y_persons").val(),false,256,"预交底到场人员");
+	  msg+=checkString($("#y_situation").val(),false,512,"预交底情况");
+	  msg+=checkString($("#cust_engineering").val(),false,512,"客户自己施工项目");
+	  msg+=checkString($("#x_persons").val(),false,256,"现场交底人员");
+	  msg+=checkString($("#x_situation").val(),false,512,"现场交底情况");
+	  return msg;
+   }
+   
+  //保存信息---开工记录
+	function saveStartOperation(){
+	        var checkMsg=checkStartOperation();
+			if(checkMsg!=""){
+			   top.showInfoWinWarn(checkMsg);
+			   return;
+			}
+	
+	        if(info_id==""){top.showInfoWinWarn("还未有工程订单号！");return;}
+			
+			var aoData=[];
+		
+			aoData.push( { "name": "projectOrder.project_order_id", "value": info_id } );
+			aoData.push( { "name": "startoperation.order_id", "value":info_id } );
+			aoData.push( { "name": "startoperation.project_add", "value": $("#project_add").val() } );
+			aoData.push( { "name": "startoperation.product_add", "value": $("#product_add").val() } );
+			aoData.push( { "name": "startoperation.p_is_change", "value": $("#p_is_change").val() } );
+			aoData.push( { "name": "startoperation.is_effect_design", "value": $("#is_effect_design").val() } );
+			aoData.push( { "name": "startoperation.cust_is_know", "value": $("#cust_is_know").val() } );
+			aoData.push( { "name": "startoperation.is_difference", "value": $("#is_difference").val() } );
+			aoData.push( { "name": "startoperation.project_is_manager", "value": $("#project_is_manager").val() } );
+			aoData.push( { "name": "startoperation.product_is_manager", "value": $("#product_is_manager").val() } );
+			aoData.push( { "name": "startoperation.y_persons", "value": $("#y_persons").val() } );
+			aoData.push( { "name": "startoperation.y_situation", "value": $("#y_situation").val() } );
+			aoData.push( { "name": "startoperation.cust_engineering", "value": $("#cust_engineering").val() } );
+			aoData.push( { "name": "startoperation.is_hand_cust", "value": $("#is_hand_cust").val() } );
+			aoData.push( { "name": "startoperation.x_persons", "value": $("#x_persons").val() } );
+			aoData.push( { "name": "startoperation.x_situation", "value": $("#x_situation").val() } );
+			aoData.push( { "name": "startoperation.is_check_accept", "value": $("#is_check_accept").val() } );
+			aoData.push( { "name": "startoperation.opt_user", "value": $("#startoperation_opt_user").val() } );
+			aoData.push( { "name": "startoperation.y_time", "value": top.toTimestamp($("#y_time").val() )} );
+			aoData.push( { "name": "startoperation.x_time", "value":top.toTimestamp( $("#x_time").val()) } );
+			aoData.push( { "name": "startoperation.come_time", "value": top.toTimestamp($("#come_time").val()) } );
+			aoData.push( { "name": "startoperation.update_time", "value": top.toTimestamp($("#startoperation_update_time").val()) } );
+			
+			var xurl="/actions/ProjectOrder.action?saveStartOperation";
+			top.sendAjaxRequest(xurl,aoData,StartOperationoptCallback);
+	}
+	function doCancelStartOperation(){
+		$("#edit_tabs-4").hide();
+		$("#view_tabs-4").show();
+		editModelBt();
+	}
+	function editStartOperation(){
+		$("#edit_tabs-4").show();
+		$("#view_tabs-4").hide();
+		saveModelBt();
+	}
+	//调用回调函数---开工记录
+    function StartOperationoptCallback(obj){
+	   top.showLoadingInfo(false);
+       try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+			updateProjectStatus(2);
+			$("#edit_tabs-4").hide();
+			$("#view_tabs-4").show();
+			editModelBt();
+			//初始化view页面
+				$("#view_project_add").html(top.getCodeName("ISYESORNO",$("#project_add").val()));
+				$("#view_product_add").html(top.getCodeName("ISYESORNO",$("#product_add").val()));
+				$("#view_y_persons").html($("#y_persons").val());
+				$("#view_y_situation").html($("#y_situation").val());
+				$("#view_cust_engineering").html($("#cust_engineering").val());
+				$("#view_x_persons").html($("#x_persons").val());
+				$("#view_x_situation").html($("#x_situation").val());
+				$("#view_startoperation_opt_user").html(top.getUserNameByCode($("#startoperation_opt_user").val()));
+				//$("#id").val( top.getTimeStr( $("#id, true ) );
+				$("#view_y_time").html( $("#y_time").val() );
+				$("#view_x_time").html(  $("#x_time").val() );
+				$("#view_come_time").html( $("#come_time").val());
+				$("#view_startoperation_update_time").html( $("#startoperation_update_time").val());
+				
+				$( "#view_p_is_change" ).html( top.getCodeName("ISYESORNO",$("#p_is_change").val() ));
+				$( "#view_is_effect_design" ).html( top.getCodeName("ISYESORNO",$("#is_effect_design").val() ));
+				$( "#view_cust_is_know" ).html( top.getCodeName("ISYESORNO",$("#cust_is_know").val() ));
+				$( "#view_is_difference" ).html( top.getCodeName("ISYESORNO",$("#is_difference").val() ));
+				$( "#view_project_is_manager" ).html( top.getCodeName("ISYESORNO",$("#project_is_manager").val() ));
+				$( "#view_product_is_manager" ).html( top.getCodeName("ISYESORNO",$("#product_is_manager").val() ));
+				$( "#view_is_hand_cust" ).html( top.getCodeName("ISYESORNO",$("#is_hand_cust").val() ));
+				$( "#view_is_check_accept" ).html( top.getCodeName("ISYESORNO",$("#is_check_accept").val() ));
+			
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+	
+	// 保存基本信息
+    function doSubmit(){
+		var aoData=[];
+		 // 检查
+		var checkMsg = checkFormDoSubmit();
+			if ( checkMsg != '' ) {
+			   top.showInfoWinWarn(checkMsg);
+			   return ;
+			}
+			
+            if($("#project_order_id").html().length<1){top.showInfoWinWarn("还未有工程订单号！");return;}
+			//订单基本信息信息
+			aoData.push( { "name": "projectOrder.cust_code", "value": $("#cust_code").val() } );
+			aoData.push( { "name": "projectOrder.cust_name", "value": $("#cust_name").val() } );
+			aoData.push( { "name": "projectOrder.pro_addr", "value": $("#pro_addr").val() } );
+			aoData.push( { "name": "projectOrder.require_id", "value": require_id } );
+			aoData.push( { "name": "projectOrder.cust_manager", "value": $("#cust_manager").val() } );
+			aoData.push( { "name": "projectOrder.cust_manager_pro", "value": $("#cust_manage_pro").val() } );
+			aoData.push( { "name": "projectOrder.cust_manager_num", "value": $("#cust_manage_diploma").val() } );
+			aoData.push( { "name": "projectOrder.cust_manager_pho", "value": $("#cust_manage_phone").val() } );
+			aoData.push( { "name": "projectOrder.designer", "value": $("#designer").val() } );
+			aoData.push( { "name": "projectOrder.designer_pro", "value": $("#designer_pro").val() } );
+			aoData.push( { "name": "projectOrder.designer_num", "value": $("#designer_diploma").val() } );
+			aoData.push( { "name": "projectOrder.designer_pho", "value": $("#designer_phone").val() } );
+			aoData.push( { "name": "projectOrder.product_designer", "value": $("#product_designer").val() } );
+			aoData.push( { "name": "projectOrder.product_designer_pro", "value": $("#product_designer_pro").val() } );
+			aoData.push( { "name": "projectOrder.product_designer_num", "value": $("#product_designer_diploma").val() } );
+			aoData.push( { "name": "projectOrder.product_designer_pho", "value": $("#product_designer_phone").val() } );
+			aoData.push( { "name": "projectOrder.engineer_manager", "value": $("#engineer_manager").val() } );
+			aoData.push( { "name": "projectOrder.engineer_manager_pro", "value": $("#engineer_supervisor_pro").val() } );
+			aoData.push( { "name": "projectOrder.engineer_manager_num", "value": $("#engineer_supervisor_diploma").val() } );
+			aoData.push( { "name": "projectOrder.engineer_manager_pho", "value": $("#engineer_supervisor_phone").val() } );
+			aoData.push( { "name": "projectOrder.project_manager", "value": $("#project_manager option:selected").val() } );
+			aoData.push( { "name": "projectOrder.project_manager_pro", "value": $("#project_manage_pro").val() } );
+			aoData.push( { "name": "projectOrder.project_manager_num", "value": $("#project_manage_diploma").val() } );
+			aoData.push( { "name": "projectOrder.project_manager_pho", "value": $("#project_manage_phone").val() } );
+			aoData.push( { "name": "projectOrder.work_person", "value": $("#work_person").val() } );
+			
+			aoData.push( { "name": "projectOrder.work_person_professional", "value": $("#work_pro").val() } );
+			aoData.push( { "name": "projectOrder.work_person_number", "value": $("#work_diploma").val() } );
+			aoData.push( { "name": "projectOrder.work_person_phone", "value": $("#work_phone").val() } );
+			aoData.push( { "name": "projectOrder.current_construction_stage", "value": $("#current_construction_stage").val() } );
+			aoData.push( { "name": "projectOrder.is_delay", "value": $("#is_delay").val() } );
+			aoData.push( { "name": "projectOrder.building_name", "value": $("#building_name").val() } );
+			aoData.push( { "name": "projectOrder.cust_tel", "value": $("#cust_tel").val() } );
+			
+			
+			aoData.push( { "name": "projectOrder.contract_sign_date", "value": top.toTimestamp($("#contract_sign_date").val()) } );
+			aoData.push( { "name": "projectOrder.project_plan_begin_date", "value": top.toTimestamp($("#project_plan_begin_date").val() )} );
+			aoData.push( { "name": "projectOrder.project_plan_finish_date", "value": top.toTimestamp($("#project_plan_finish_date").val()) } );
+			aoData.push( { "name": "projectOrder.project_fact_begin_date", "value": top.toTimestamp($("#project_fact_begin_date").val() )} );
+			aoData.push( { "name": "projectOrder.project_fact_finish_date", "value": top.toTimestamp($("#project_fact_finish_date").val()) } );
+			//维保休息保存
+			//var is_guarantee=document.getElementById("is_guarantee");
+			//if(is_guarantee.checked==true){
+			//	aoData.push( { "name": "projectOrder.is_guarantee", "value": '1' } );
+			//}else{
+			//	aoData.push( { "name": "projectOrder.is_guarantee", "value": '0' } );
+			//}
+			aoData.push( { "name":"projectOrder.project_order_id","value":info_id} );
+			//aoData.push( { "name": "projectOrder.guarantee_code", "value": $("#guarantee_code").val() } );
+			//aoData.push( { "name": "projectOrder.guarantee_begin_date", "value": top.toTimestamp($("#guarantee_begin_date").val()) } );
+			//aoData.push( { "name": "projectOrder.guarantee_end_date", "value": top.toTimestamp($("#guarantee_end_date").val()) } );
+			//aoData.push( { "name": "projectOrder.guarantee_text", "value": $("#guarantee_text").val() } );
+		
+			
+			var is_recommend=document.getElementById("is_recommend");
+			if(is_recommend.checked==true){
+				aoData.push( { "name": "projectOrder.is_recommend", "value": '1' } );
+			}else{
+				aoData.push( { "name": "projectOrder.is_recommend", "value": '0' } );
+			}
+			aoData.push( { "name": "projectOrder.recommend_text", "value": $("#recommend_text").val() } );
+
+		var xurl="/actions/ProjectOrder.action?saveProjectOrderInfo";
+		 if ( info_id != 0 ) {
+		    aoData.push({ "name":"projectOrder.project_order_id","value":info_id});
+			aoData.push({ "name":"projectOrder.status","value":project_order_status});
+			aoData.push({ "name":"manager","value":manager});
+			xurl="/actions/ProjectOrder.action?updateProjectOrderInfo";
+		 }
+		 top.showLoadingInfo(true);
+		 top.sendAjaxRequest(xurl,aoData,optCallback);
+   }
+   //实际竣工日期改变时 更新保修时间
+   function projectFinishDateChange(){
+	   if(document.getElementById("is_guarantee").checked&&$("#project_fact_finish_date").val()!=''){
+			$("#guarantee_begin_date").val($("#project_fact_finish_date").val());
+			var dateObj=[];
+			dateObj=$("#project_fact_finish_date").val().split("-");
+			if(dateObj!=null&&dateObj.length==3){
+				var guarantee_end_date=new Date(dateObj[0],dateObj[1],dateObj[2]);
+				guarantee_end_date.setYear(guarantee_end_date.getFullYear()+2);
+				$("#guarantee_end_date").val(top.getTimeStr(guarantee_end_date.getTime(),true));
+			}
+	   }
+  
+   }
+   function editBaseInfo(){
+        if(top.g_isPermit("09_project_order")){//若有新增修改工程订单权限
+			$("#edit_tabs-0").show();
+			if(!top.g_isPermit("09_order_pro_en")){//判断有无指定工程监理和项目经理权限
+			   $(".pmo  td input").hide();
+			   $(".pmo  td select").hide();
+			}
+			$("#view_tabs-0").hide();
+			saveModelBt();
+		}else if(top.g_isPermit("09_order_pro_en")){//判断有无指定工程监理和项目经理权限
+		     $("#view_tabs-0").hide();
+		     $("#edit_tabs-0").show();
+		     $("#edit_tabs-0 input").attr("disabled","disabled");
+			 $(".pmo  input").attr("disabled",false);
+			 $(".pmo  select").show();
+			 saveModelBt();
+		}else{//二者权限都没有
+		    $("#edit_tabs-0").hide();
+			$("#view_tabs-0").show();
+			$("#editBt").hide();
+		}
+		
+   }
+   function doCancelBaseInfo(){
+	$("#edit_tabs-0").hide();
+	$("#view_tabs-0").show();
+	editModelBt();
+   }
+	//校验订单基本信息
+	function checkFormDoSubmit(){	
+		var msg="";
+		if($("#cust_code").val()==""){top.showInfoWinWarn("请选择客户！");return;}
+		msg += checkString($("#cust_code").val(),true,20,"客户编号");
+		msg += checkString($("#cust_manage_pro").val(),false,25,"客户经理职称");
+		msg += checkString($("#designer_pro").val(),false,25,"设计师职称");
+		msg += checkString($("#product_designer_pro").val(),false,25,"产品设计师职称");
+		msg += checkString($("#engineer_supervisor_pro").val(),false,25,"工程监理职称");
+		msg += checkString($("#project_manage_pro").val(),false,25,"项目经理职称");
+		msg += checkString($("#work_pro").val(),false,25,"施工负责人职称");
+		msg += checkString($("#cust_manage_diploma").val(),false,20,"客户经理证书编号");
+		msg += checkString($("#designer_diploma").val(),false,20,"设计师证书编号");
+		msg += checkString($("#product_designer_diploma").val(),false,20,"产品设计师证书编号");
+		msg += checkString($("#engineer_supervisor_diploma").val(),false,20,"工程监理证书编号");
+		msg += checkString($("#project_manage_diploma").val(),false,20,"项目经理证书编号");
+		msg += checkString($("#work_diploma").val(),false,20,"施工负责人证书编号");
+		msg += checkString($("#work_person").val(),false,10,"施工负责人");
+		if($("#cust_manage_phone").val()!="" && !checkPhone($("#cust_manage_phone").val())){msg+="客户经理联系方式存在非法字符";}
+		msg += checkString($("#cust_manage_phone").val(),false,15,"客户经理联系方式");
+		if($("#designer_phone").val()!="" && !checkPhone($("#designer_phone").val())){msg+="设计师联系方式存在非法字符";}
+		msg += checkString($("#designer_phone").val(),false,15,"设计师联系方式");
+		if($("#product_designer_phone").val()!="" && !checkPhone($("#product_designer_phone").val())){msg+="产品设计师联系方式存在非法字符";}
+		msg += checkString($("#product_designer_phone").val(),false,15,"产品设计师联系方式");
+		if($("#engineer_supervisor_phone").val()!="" && !checkPhone($("#engineer_supervisor_phone").val())){msg+="工程监理联系方式存在非法字符";}
+		msg += checkString($("#engineer_supervisor_phone").val(),false,15,"工程监理联系方式");
+		if($("#project_manage_phone").val()!="" && !checkPhone($("#project_manage_phone").val())){msg+="项目经理联系方式存在非法字符";}
+		msg += checkString($("#project_manage_phone").val(),false,15,"项目经理联系方式");
+		if($("#work_phone").val()!="" && !checkPhone($("#work_phone").val())){msg+="施工负责人联系方式存在非法字符";}
+		msg += checkString($("#work_phone").val(),false,15,"施工负责人联系方式");
+		//维保
+		msg+=checkString($("#guarantee_code").val(),false,20);
+		msg+=checkString($("#guarantee_text").val(),false,512);
+		return msg;
+   }
+	//调用回调函数---订单基本信息
+    function optCallback(obj){
+	   top.showLoadingInfo(false);
+       try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+			
+			if ( info_id == 0 ) {
+				info_id=obj.msg;
+				$("#tabs ul li").each(function(){
+				  if($(this).attr("class")=="ui-tabs-disabled"){
+				    $(this).removeClass("ui-tabs-disabled");
+				  }
+				});
+			}
+				editModelBt();
+				$("#edit_tabs-0").hide();
+				$("#view_tabs-0").show();
+				$("#tdproject_order_id").html( info_id );
+				$("#project_order_id").html(info_id);
+				$("#spancust_manage").html(top.getUserNameByCode($("#cust_manager").val() ) );
+				$("#tdcust_manage_pro").html($("#cust_manage_pro").val());
+				$("#tdcust_manage_diploma").html($("#cust_manage_diploma").val());
+				$("#tdcust_manage_phone").html($("#cust_manage_phone").val());
+				$("#spandesigner").html($("#tddesigner").html());
+				$("#tddesigner_pro").html($("#designer_pro").val());
+				$("#tddesigner_diploma").html($("#designer_diploma").val());
+				$("#tddesigner_phone").html($("#designer_phone").val());
+				$("#spanproduct_designer").html($("#tdproduct_designer").html());
+				$("#tdproduct_designer_pro").html($("#product_designer_pro").val());
+				$("#tdproduct_designer_diploma").html($("#product_designer_diploma").val());
+				$("#tdproduct_designer_phone").html($("#product_designer_phone").val());
+				$("#spanengineer_supervisor").html(top.getUserNameByCode($("#engineer_manager").val()));
+				$("#tdengineer_supervisor_pro").html($("#engineer_supervisor_pro").val());
+				$("#tdengineer_supervisor_diploma").html($("#engineer_supervisor_diploma").val());
+				$("#tdengineer_supervisor_phone").html($("#engineer_supervisor_phone").val());
+				$("#spanproject_manager").html(top.getUserNameByCode($("#project_manager").val()));
+				$("#tdproject_manage_pro").html($("#project_manage_pro").val());
+				$("#tdproject_manage_diploma").html($("#project_manage_diploma").val());
+				$("#tdproject_manage_phone").html($("#project_manage_phone").val());
+				$("#tdwork_person").html($("#work_person").val());
+				$("#tdwork_pro").html($("#work_pro").val());
+				$("#tdwork_diploma").html($("#work_diploma").val());
+				$("#tdwork_phone").html($("#work_phone").val());
+				//维保信息更新
+				 $("#view_guarantee_begin_date").html($("#guarantee_begin_date").val());
+				 $("#view_guarantee_end_date").html($("#guarantee_end_date").val());
+						
+				 $("#view_guarantee_text").html($("#guarantee_text").val());
+				 $("#view_guarantee_code").html($("#guarantee_code").val());
+				 var is_guarantee="0";
+				 if(document.getElementById("is_guarantee").checked==true){
+					is_guarantee="1";
+				 }
+				 $("#view_is_guarantee").html(top.getCodeName("ISYESORNO",is_guarantee));
+				 //工程状态更新：现在内容为 未分派，但是监理内容不为空
+				if($("#spanstatus").html()=='未派单'&&$("#spanengineer_supervisor").html()!=''&&$("#spanengineer_supervisor").html()!=null){
+					$("#spanstatus").html("签单未开工");
+					$("#tdstatus").html("签单未开工");
+				}
+				if($("#current_construction_stage").val()!=null&&$("#current_construction_stage").val()!=''){
+					$("#spancurrent_construction_stage").html(top.getProcessNameByCode($("#current_construction_stage").val()));
+				}
+			    if(optType!="insert"){
+				  parent.checkInfoSave();
+				}
+				 
+				
+				$("#label_is_delay").html(top.getCodeName("ISYESORNO",$("#is_delay").val()));
+				parent.checkInfoSave();
+				var persons="";
+				//开工记录中的预交底人员及现交底人员
+				if($("#cust_manager").val()!=""){
+				  persons+=top.getUserNameByCode($("#cust_manager").val());
+				}
+				if($("#tddesigner").html()!=""){
+				  if(persons!=""){
+				    persons+=",";
+				  }
+				  persons+=$("#tddesigner").html();
+				}
+				if($("#tdproduct_designer").html()!=""){
+				  if(persons!=""){
+				    persons+=",";
+				  }
+				  persons+=$("#tdproduct_designer").html();
+				}
+				if($("#engineer_manager").val()!=""){
+				  if(persons!=""){
+				    persons+=",";
+				  }
+				  persons+=top.getUserNameByCode($("#engineer_manager").val());
+				}
+				if($("#project_manager").val()!=""){
+				  if(persons!=""){
+				    persons+=",";
+				  }
+				  persons+=top.getUserNameByCode($("#project_manager").val());
+				}
+				$("#y_persons").val(persons);
+				$("#view_y_persons").html(persons);
+				$("#x_persons").val(persons);
+				$("#view_x_persons").html(persons);
+				//工程开竣工日期 是否推荐 维修信息
+				if(obj.body!=null&&obj.body!=''){
+					$("#view_contract_sign_date").html(top.getTimeStr(obj.body,true));
+					$("#contract_sign_date").html(top.getTimeStr(obj.body,true));
+				}
+				$("#view_project_plan_begin_date").html($("#project_plan_begin_date").val());
+				$("#view_project_plan_finish_date").html($("#project_plan_finish_date").val());
+				$("#view_project_fact_begin_date").html($("#project_fact_begin_date").val());
+				$("#view_project_fact_finish_date").html($("#project_fact_finish_date").val());
+				$("#view_guarantee_begin_date").html($("#guarantee_begin_date").val());
+				$("#view_guarantee_end_date").html($("#guarantee_end_date").val());
+				
+				$("#view_guarantee_text").html($("#guarantee_text").val());
+				$("#view_guarantee_code").html($("#guarantee_code").val());
+				var is_guarantee=document.getElementById("is_guarantee");
+				if(is_guarantee.checked){
+					$("#view_is_guarantee").html(top.getCodeName("ISYESORNO",'1'));
+				}else{
+					$("#view_is_guarantee").html(top.getCodeName("ISYESORNO",'0'));
+				}
+				var is_recommend=document.getElementById("is_recommend");
+				if(is_recommend.checked){
+					$("#view_is_recommend").html(top.getCodeName("ISYESORNO",'1'));
+				}else{
+					$("#view_is_recommend").html(top.getCodeName("ISYESORNO",'0'));
+				}
+				$("#view_recommend_text").html($("#recommend_text").val());
+				if(startOperationId==""){
+					$( "#span_p_is_change" ).html( top.getCodeSelectHtml("ISYESORNO","p_is_change",false) );
+					$( "#span_is_effect_design" ).html( top.getCodeSelectHtml("ISYESORNO","is_effect_design",false) );
+					$( "#span_cust_is_know" ).html( top.getCodeSelectHtml("ISYESORNO","cust_is_know",false) );
+					$( "#span_is_difference" ).html( top.getCodeSelectHtml("ISYESORNO","is_difference",false) );
+					$( "#span_project_is_manager" ).html( top.getCodeSelectHtml("ISYESORNO","project_is_manager",false) );
+					$( "#span_product_is_manager" ).html( top.getCodeSelectHtml("ISYESORNO","product_is_manager",false) );
+					$( "#span_is_hand_cust" ).html( top.getCodeSelectHtml("ISYESORNO","is_hand_cust",false) );
+					$( "#span_is_check_accept" ).html( top.getCodeSelectHtml("ISYESORNO","is_check_accept",false) );
+					$( "#tdconstruct_status" ).html( top.getCodeSelectHtml("CONSTRUCT_STATUS","construct_status",false) );
+					$( "#tdstatus" ).html( top.getCodeSelectHtml("ORDER_STATUS","status",false) );
+					$("#tdifdelay").html( top.getCodeSelectHtml("ISYESORNO","ifdelay",false) );
+					$("#tdpro_status").html( top.getCodeSelectHtml("PRO_STATUS","pro_status",false) );
+					$("#spanproject_add").html( top.getCodeSelectHtml("ISYESORNO","project_add",false) );
+					$("#spanproduct_add").html( top.getCodeSelectHtml("ISYESORNO","product_add",false) );
+				}
+         queryConstructionTableList();
+	   }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+   
+   function getCustInfo(code){
+       var aoData=[];
+	   aoData.push( { "name": "custInfo.code", "value": code } );
+	   top.sendAjaxRequest("/actions/CustInfo.action?getFitmentCustInfo",aoData,custDetailCallback);
+   }
+   
+	function infoCallback(obj){
+	   try{
+        if ( obj.status == true ){
+		  var o=obj.body;
+		  var nowUser=top.getCurrentUser();
+			//订单信息
+			if(o){	
+				if(o.project_order_id!=''){
+					info_id=o.project_order_id;
+				}
+				project_order_status=o.status;
+				getChangeList();
+				if(cust_code){
+					cust_code=o.cust_code;
+					$("#cust_code").val(cust_code);
+				}
+				if(o.cust_manager){
+				  $("#cust").remove();
+				  $("#chooseCust").remove();
+				  $("#project_order_id").attr("colspan","4");
+				}
+				$("#tdtdcust_code").html(o.cust_code);
+				$("#tdtdcust_code").attr("style","color:blue;font-weight:bold;cursor: pointer;");
+				$("#tdtdcust_code").attr("onclick","getCustInfo(\""+o.cust_code+"\")");
+				$("#cust_code").val(o.cust_code);
+				$("#project_order_id").html(o.project_order_id);
+				$("#edit_tabs-0").hide();
+				$("#view_tabs-0").show();
+				manager=o.engineer_manager;
+				//view页面
+				$("#tdproject_order_id").html( info_id );
+				$("#spancust_manage").html(top.getUserNameByCode(o.cust_manager) );
+				$("#tdcust_manage_pro").html(o.cust_manager_pro);
+				$("#tdcust_manage_diploma").html(o.cust_manager_num);
+				$("#tdcust_manage_phone").html(o.cust_manager_pho);
+				$("#spandesigner").html(top.getUserNameByCode(o.designer));
+				$("#tddesigner_pro").html(o.designer_pro);
+				$("#tddesigner_diploma").html(o.designer_num);
+				$("#tddesigner_phone").html(o.designer_pho);
+				$("#spanproduct_designer").html(top.getUserNameByCode(o.product_designer));
+				$("#tdproduct_designer_pro").html(o.product_designer_pro);
+				$("#tdproduct_designer_diploma").html(o.product_designer_num);
+				$("#tdproduct_designer_phone").html(o.product_designer_pho);
+				$("#spanengineer_supervisor").html(top.getUserNameByCode(o.engineer_manager));
+				$("#tdengineer_supervisor_pro").html(o.engineer_manager_pro);
+				$("#tdengineer_supervisor_diploma").html(o.engineer_manager_num);
+				$("#tdengineer_supervisor_phone").html(o.engineer_manager_pho);
+				$("#spanproject_manager").html(top.getUserNameByCode(o.project_manager));
+				$("#tdproject_manage_pro").html(o.project_manager_pro);
+				$("#tdproject_manage_diploma").html(o.project_manager_num);
+				$("#tdproject_manage_phone").html(o.project_manager_pho);
+				$("#tdwork_person").html(top.getUserNameByCode(o.work_person));
+				$("#tdwork_pro").html(o.work_person_professional);
+				$("#tdwork_diploma").html(o.work_person_number);
+				$("#tdwork_phone").html(o.work_person_phone);
+				if(o.current_construction_stage!=null&&o.current_construction_stage!=''){
+					$("#spancurrent_construction_stage").html(top.getProcessNameByCode(o.current_construction_stage));
+				}
+				$("#label_is_delay").html(top.getCodeName("ISYESORNO",o.is_delay));
+				$("#spanstatus").html(top.getCodeName("PROJECT_STATUS",o.status));
+				
+				$("#view_contract_sign_date").html(top.getTimeStr(o.contract_sign_date,true));
+				$("#view_project_plan_begin_date").html(top.getTimeStr(o.project_plan_begin_date,true));
+				$("#view_project_plan_finish_date").html(top.getTimeStr(o.project_plan_finish_date,true));
+				$("#view_project_fact_begin_date").html(top.getTimeStr(o.project_fact_begin_date,true));
+				$("#view_project_fact_finish_date").html(top.getTimeStr(o.project_fact_finish_date,true));
+				$("#view_guarantee_begin_date").html(top.getTimeStr(o.guarantee_begin_date,true));
+				$("#view_guarantee_end_date").html(top.getTimeStr(o.guarantee_end_date,true));
+				
+				$("#view_guarantee_text").html(o.guarantee_text);
+				$("#view_guarantee_code").html(o.guarantee_code);
+				$("#view_is_guarantee").html(top.getCodeName("ISYESORNO",o.is_guarantee));
+				$("#view_is_recommend").html(top.getCodeName("ISYESORNO",o.is_recommend));
+				$("#view_recommend_text").html(o.recommend_text);
+				//编辑页面
+				
+				$("#project_order_id").html(info_id);
+				$("#cust_manager").val(o.cust_manager);
+				$("#tdcust_manager").html(top.getUserNameByCode(o.cust_manager) );
+				$("#cust_manage_pro").val(o.cust_manager_pro);
+				$("#cust_manage_diploma").val(o.cust_manager_num);
+				$("#cust_manage_phone").val(o.cust_manager_pho);
+				$("#tddesigner").html(top.getUserNameByCode(o.designer));
+				$("#designer_pro").val(o.designer_pro);
+				$("#designer_diploma").val(o.designer_num);
+				$("#designer_phone").val(o.designer_pho);
+				$("#product_designer").val(o.product_designer);
+				$("#tdproduct_designer").html(top.getUserNameByCode(o.product_designer));
+				$("#product_designer_pro").val(o.product_designer_pro);
+				$("#product_designer_diploma").val(o.product_designer_num);
+				$("#product_designer_phone").val(o.product_designer_pho);
+				$("#engineer_manager").val(o.engineer_manager);
+				$("#engineer_supervisor_pro").val(o.engineer_manager_pro);
+				$("#engineer_supervisor_diploma").val(o.engineer_manager_num);
+				$("#engineer_supervisor_phone").val(o.engineer_manager_pho);
+				$("#project_manager").val(o.project_manager);
+				$("#project_manage_pro").val(o.project_manager_pro);
+				$("#project_manage_diploma").val(o.project_manager_num);
+				$("#project_manage_phone").val(o.project_manager_pho);
+				$("#work_person").val(top.getUserNameByCode(o.work_person));
+				$("#work_pro").val(o.work_person_professional);
+				$("#work_diploma").val(o.work_person_number);
+				$("#work_phone").val(o.work_person_phone);
+				$("#current_construction_stage").val(o.current_construction_stage);
+				$("#is_delay").val(o.is_delay);
+				$("#tdstatus").html(top.getCodeName("PROJECT_STATUS",o.status));
+				
+				$("#contract_sign_date").html(top.getTimeStr(o.contract_sign_date,true));
+				$("#project_plan_begin_date").val(top.getTimeStr(o.project_plan_begin_date,true));
+				$("#project_plan_finish_date").val(top.getTimeStr(o.project_plan_finish_date,true));
+				$("#project_fact_begin_date").val(top.getTimeStr(o.project_fact_begin_date,true));
+				$("#project_fact_finish_date").val(top.getTimeStr(o.project_fact_finish_date,true));
+				$("#guarantee_begin_date").val(top.getTimeStr(o.guarantee_begin_date,true));
+				$("#guarantee_end_date").val(top.getTimeStr(o.guarantee_end_date,true));
+				
+				$("#guarantee_text").val(o.guarantee_text);
+				$("#guarantee_code").val(o.guarantee_code);
+				//$("#is_guarantee").val(top.getCodeName("ISYESORNO",o.is_guarantee));
+				//$("#is_recommend").val(top.getCodeName("ISYESORNO",o.is_recommend));
+				$("#recommend_text").val(o.recommend_text);
+				var is_guarantee=document.getElementById("is_guarantee");
+				if(o.is_guarantee==1){
+					is_guarantee.checked=true;
+				}else{
+					is_guarantee.checked=false;
+				}
+				var is_recommend=document.getElementById("is_recommend");
+				if(o.is_recommend==1){
+					is_recommend.checked=true;
+				}else{
+					is_recommend.checked=false;
+				}
+			if(o.construction){
+				$("#building_site_sales").val(o.construction.building_site_sales);
+				$("#delay_reason").val(o.construction.delay_reason);
+				$("#construction_opt_user").html(o.construction.opt_user);
+				$("#id").val( top.getTimeStr( o.construction.id, true ) );
+				$("#snapline_time").val( top.getTimeStr( o.construction.snapline_time, true ) );
+				$("#hydroelectricity_check_time").val( top.getTimeStr( o.construction.hydroelectricity_check_time, true ) );
+				$("#collect_paper_time").val( top.getTimeStr( o.construction.collect_paper_time, true ) );
+				$("#midterm_check_time").val( top.getTimeStr( o.construction.midterm_check_time, true ) );
+				$("#woodworker_check_time").val( top.getTimeStr( o.construction.woodworker_check_time, true ) );
+				$("#bricklayer_check_time").val( top.getTimeStr( o.construction.bricklayer_check_time, true ) );
+				$("#oiler_check_time").val( top.getTimeStr( o.construction.oiler_check_time, true ) );
+				$("#construction_update_time").html( top.getTimeStr( o.construction.update_time, true ) );
+				
+				$( "#span_is_provide_paper" ).html( top.getCodeSelectHtml("ISYESORNO","is_provide_paper",false,o.construction.is_provide_paper) );
+				$( "#span_is_drawing_paper" ).html( top.getCodeSelectHtml("ISYESORNO","is_drawing_paper",false,o.construction.is_drawing_paper) );
+				$( "#span_midterm_is_delay" ).html( top.getCodeSelectHtml("ISYESORNO","midterm_is_delay",false,o.construction.midterm_is_delay) );
+				$( "#span_is_delay_bill" ).html( top.getCodeSelectHtml("ISYESORNO","is_delay_bill",false,o.construction.is_delay_bill) );
+			//view
+				$("#view_building_site_sales").html(o.construction.building_site_sales);
+				$("#view_delay_reason").html(o.construction.delay_reason);
+				$("#view_construction_opt_user").html(o.construction.opt_user);
+				$("#view_snapline_time").html( top.getTimeStr( o.construction.snapline_time, true ) );
+				$("#view_hydroelectricity_check_time").html( top.getTimeStr( o.construction.hydroelectricity_check_time, true ) );
+				$("#view_collect_paper_time").html( top.getTimeStr( o.construction.collect_paper_time, true ) );
+				$("#view_midterm_check_time").html( top.getTimeStr( o.construction.midterm_check_time, true ) );
+				$("#view_woodworker_check_time").html( top.getTimeStr( o.construction.woodworker_check_time, true ) );
+				$("#view_bricklayer_check_time").html( top.getTimeStr( o.construction.bricklayer_check_time, true ) );
+				$("#view_oiler_check_time").html( top.getTimeStr( o.construction.oiler_check_time, true ) );
+				$("#view_construction_update_time").html( top.getTimeStr( o.construction.update_time, true ) );
+				
+				$( "#view_is_provide_paper" ).html( top.getCodeName("ISYESORNO",o.construction.is_provide_paper) );
+				$( "#view_is_drawing_paper" ).html( top.getCodeName("ISYESORNO",o.construction.is_drawing_paper) );
+				$( "#view_midterm_is_delay" ).html( top.getCodeName("ISYESORNO",o.construction.midterm_is_delay) );
+				$( "#view_is_delay_bill" ).html( top.getCodeName("ISYESORNO",o.construction.is_delay_bill) );
+			
+			}
+			var persons="";
+			if(o.cust_manager!=""){
+			   persons+=top.getUserNameByCode(o.cust_manager);
+			}
+			if(o.desinger!=""){
+			   if(persons!=""){
+			      persons+=",";
+			   }
+			   persons+=top.getUserNameByCode(o.designer);
+			}
+			if(o.product_designer!=""){
+			   if(persons!=""){
+			     persons+=",";
+			   }
+			   persons+=top.getUserNameByCode(o.product_designer);
+			}
+			if(o.engineer_manager!=""){
+			   if(persons!=""){
+			     persons+=",";
+			   }
+			   persons+=top.getUserNameByCode(o.engineer_manager);
+			}
+			if(o.project_manager!=""){
+			   if(persons!=""){ 
+			     persons+=",";
+			   }
+			   persons+=top.getUserNameByCode(o.project_manager);
+			}
+			if(o.startoperation){
+				if(o.startoperation.y_persons!=""){
+				   $("#y_persons").val(o.startoperation.y_persons);
+				   $("#view_y_persons").html(o.startoperation.y_persons);
+				}else{
+				   $("#y_persons").val(persons);
+				   $("#view_y_persons").html(persons);
+				}
+				$("#y_situation").val(o.startoperation.y_situation);
+				$("#cust_engineering").val(o.startoperation.cust_engineering);
+				if(o.startoperation.x_persons!=""){
+				   $("#x_persons").val(o.startoperation.x_persons);
+				   $("#view_x_persons").html(o.startoperation.x_persons);
+				}else{
+				   $("#x_persons").val(persons);
+				   $("#view_x_persons").html(persons);
+				}
+				
+				$("#x_situation").val(o.startoperation.x_situation);
+				if(o.startoperation.opt_user){
+				   $("#operator_user").html(top.getUserNameByCode(o.startoperation.opt_user));
+				   $("#startoperation_opt_user").val(o.startoperation.opt_user);
+				   $("#view_startoperation_opt_user").html(top.getUserNameByCode(o.startoperation.opt_user));
+				}else{
+				  $("#operator_user").html(top.getUserNameByCode(nowUser.userCode));
+				  $("#startoperation_opt_user").val(nowUser.userCode);
+				  $("#view_startoperation_opt_user").html(top.getUserNameByCode(nowUser.userCode));
+				}
+				if(o.startoperation.update_time){
+				  $("#startoperation_update_time").val( top.getTimeStr( o.startoperation.update_time, true ) );
+				  $("#view_startoperation_update_time").html( top.getTimeStr( o.startoperation.update_time, true ) );
+				  $("#update_time").html( top.getTimeStr( o.startoperation.update_time, true ) );
+				}else{
+				  $("#startoperation_update_time").val(top.getCurrentDate());
+				  $("#view_startoperation_update_time").html(top.getCurrentDate());
+				  $("#update_time").html(top.getCurrentDate());
+				}
+				startOperationId=o.startoperation.id;
+				$("#id").val( top.getTimeStr( o.startoperation.id, true ) );
+				$("#y_time").val( top.getTimeStr( o.startoperation.y_time, true ) );
+				$("#x_time").val( top.getTimeStr( o.startoperation.x_time, true ) );
+				$("#come_time").val( top.getTimeStr( o.startoperation.come_time, true ) );
+				$( "#span_p_is_change" ).html( top.getCodeSelectHtml("ISYESORNO","p_is_change",true,o.startoperation.p_is_change) );
+				$( "#span_is_effect_design" ).html( top.getCodeSelectHtml("ISYESORNO","is_effect_design",true,o.startoperation.is_effect_design) );
+				$( "#span_cust_is_know" ).html( top.getCodeSelectHtml("ISYESORNO","cust_is_know",true,o.startoperation.cust_is_know) );
+				$( "#span_is_difference" ).html( top.getCodeSelectHtml("ISYESORNO","is_difference",true,o.startoperation.is_difference) );
+				$( "#span_project_is_manager" ).html( top.getCodeSelectHtml("ISYESORNO","project_is_manager",true,o.startoperation.project_is_manager) );
+				$( "#span_product_is_manager" ).html( top.getCodeSelectHtml("ISYESORNO","product_is_manager",true,o.startoperation.product_is_manager) );
+				$( "#span_is_hand_cust" ).html( top.getCodeSelectHtml("ISYESORNO","is_hand_cust",true,o.startoperation.is_hand_cust) );
+				$( "#span_is_check_accept" ).html( top.getCodeSelectHtml("ISYESORNO","is_check_accept",true,o.startoperation.is_check_accept) );
+				$("#spanproject_add").html( top.getCodeSelectHtml("ISYESORNO","project_add",true,o.startoperation.project_add) );
+			    $("#spanproduct_add").html( top.getCodeSelectHtml("ISYESORNO","product_add",true,o.startoperation.product_add) );
+			//初始化view页面
+				$("#view_project_add").html(top.getCodeName("ISYESORNO",o.startoperation.project_add));
+				$("#view_product_add").html(top.getCodeName("ISYESORNO",o.startoperation.product_add));
+				$("#view_y_situation").html(o.startoperation.y_situation);
+				$("#view_cust_engineering").html(o.startoperation.cust_engineering);
+				$("#view_x_situation").html(o.startoperation.x_situation);
+				
+				$("#view_y_time").html( top.getTimeStr( o.startoperation.y_time, true ) );
+				$("#view_x_time").html( top.getTimeStr( o.startoperation.x_time, true ) );
+				$("#view_come_time").html( top.getTimeStr( o.startoperation.come_time, true ) );
+				
+				$( "#view_p_is_change" ).html( top.getCodeName("ISYESORNO",o.startoperation.p_is_change) );
+				$( "#view_is_effect_design" ).html( top.getCodeName("ISYESORNO",o.startoperation.is_effect_design) );
+				$( "#view_cust_is_know" ).html( top.getCodeName("ISYESORNO",o.startoperation.cust_is_know) );
+				$( "#view_is_difference" ).html( top.getCodeName("ISYESORNO",o.startoperation.is_difference) );
+				$( "#view_project_is_manager" ).html( top.getCodeName("ISYESORNO",o.startoperation.project_is_manager) );
+				$( "#view_product_is_manager" ).html( top.getCodeName("ISYESORNO",o.startoperation.product_is_manager) );
+				$( "#view_is_hand_cust" ).html( top.getCodeName("ISYESORNO",o.startoperation.is_hand_cust) );
+				$( "#view_is_check_accept" ).html( top.getCodeName("ISYESORNO",o.startoperation.is_check_accept) );
+			
+			}
+			if(o.projectchange){
+				$("#change_project_main").val(o.projectchange.change_project_main);
+				$("#change_project_soft").val(o.projectchange.change_project_soft);
+				$("#rectification_project_main").val(o.projectchange.rectification_project_main);
+				$("#rectification_project_soft").val(o.projectchange.rectification_project_soft);
+				$("#change_project").val(o.projectchange.change_project);
+				$("#rectification_project").val(o.projectchange.rectification_project);
+				$("#reason_and_cycle").val(o.projectchange.reason_and_cycle);
+				$("#change_result").val(o.projectchange.change_result);
+				$("#install_and_check").val(o.projectchange.install_and_check);
+				$("#change_opt_user").val(o.projectchange.opt_user);
+				$("#change_update_time").val( top.getTimeStr( o.projectchange.update_time, true ) );
+			}
+			if(o.completed){
+				completed_id=o.completed.id;
+				$("#delay_situation").val(o.completed.delay_situation);
+				$("#finish_check_person").val(o.completed.finish_check_person);
+				$("#completed_change_project").val(o.completed.change_project);
+				$("#scene_persons").val(o.completed.scene_persons);
+				$("#final_payment_detail").val(o.completed.final_payment_detail);
+				if(o.completed.opt_user){
+				   $("#projectcompleted_opt_user").val(o.completed.opt_user);
+				   $("#tdprojectcompleted_opt_user").html(o.completed.opt_user);
+				   $("#view_projectcompleted_opt_user").html(o.completed.opt_user);
+				}else{
+				   $("#projectcompleted_opt_user").val(nowUser.userCode);
+				   $("#tdprojectcompleted_opt_user").html(top.getUserNameByCode(nowUser.userCode));
+				   $("#view_projectcompleted_opt_user").html(top.getUserNameByCode(nowUser.userCode));
+				}
+				if(o.completed.update_time){
+				   $("#tdprojectcompleted_update_time").html( top.getTimeStr( o.completed.update_time, true ) );
+				   $("#view_projectcompleted_update_time").html( top.getTimeStr( o.completed.update_time, true ) );
+				   $("#projectcompleted_update_time").val( top.getTimeStr( o.completed.update_time, true ) );
+				}else{
+				   $("#tdprojectcompleted_update_time").html( top.getCurrentDate() );
+				   $("#view_projectcompleted_update_time").html( top.getCurrentDate() );
+				   $("#projectcompleted_update_time").val( top.getCurrentDate() );
+				}
+				$("#final_payment").val( o.completed.final_payment);
+				$("#id").val( top.getTimeStr( o.completed.id, true ) );
+				
+				$("#project_delay_time").val( top.getTimeStr( o.completed.project_delay_time, true ) );
+				$("#product_delay_time").val( top.getTimeStr( o.completed.product_delay_time, true ) );
+				$("#finish_check_time").val( top.getTimeStr( o.completed.finish_check_time, true ) );
+				$("#cust_check_time").val( top.getTimeStr( o.completed.cust_check_time, true ) );
+				$("#final_payment_time").val( top.getTimeStr( o.completed.final_payment_time, true ) );
+				$("#warranty_time").val( top.getTimeStr( o.completed.warranty_time, true ) );
+				//初始化view页面值
+				$("#view_delay_situation").html(o.completed.delay_situation);
+				$("#view_finish_check_person").html(o.completed.finish_check_person);
+				$("#view_completed_change_project").html(o.completed.change_project);
+				$("#view_scene_persons").html(o.completed.scene_persons);
+				$("#view_final_payment_detail").html(o.completed.final_payment_detail);
+			
+				$("#view_final_payment").html( o.completed.final_payment);
+				
+				$("#view_project_delay_time").html( top.getTimeStr( o.completed.project_delay_time, true ) );
+				$("#view_product_delay_time").html( top.getTimeStr( o.completed.product_delay_time, true ) );
+				$("#view_finish_check_time").html( top.getTimeStr( o.completed.finish_check_time, true ) );
+				$("#view_cust_check_time").html( top.getTimeStr( o.completed.cust_check_time, true ) );
+				$("#view_final_payment_time").html( top.getTimeStr( o.completed.final_payment_time, true ) );
+				$("#view_warranty_time").html( top.getTimeStr( o.completed.warranty_time, true ) );
+			}
+			if(o.conDrawing){
+				constructId=o.conDrawing.check_id;
+				$("#drawing_assessor").val(o.conDrawing.drawing_assessor);
+				$("#goover_explain").val(o.conDrawing.goover_explain);
+				$("#goover_date").val(top.getTimeStr(o.conDrawing.goover_date,true));
+				$("#check_date").val(top.getTimeStr(o.conDrawing.check_date,true));
+				$("#total_deduct_marks").html(o.conDrawing.total_deduct_marks);
+				$("#total_score").val(o.conDrawing.total_score);
+				$("#time_limit").val(o.conDrawing.time_limit);
+				$("#construct_pro1_score").val(o.conDrawing.check_pro1_score);
+				$("#construct_pro2_score").val(o.conDrawing.check_pro2_score);
+				$("#construct_pro3_score").val(o.conDrawing.check_pro3_score);
+				$("#construct_pro4_score").val(o.conDrawing.check_pro4_score);
+				$("#construct_pro5_score").val(o.conDrawing.check_pro5_score);
+				$("#construct_pro6_score").val(o.conDrawing.check_pro6_score);
+				$("#construct_pro7_score").val(o.conDrawing.check_pro7_score);
+				$("#construct_pro8_score").val(o.conDrawing.check_pro8_score);
+				$("#construct_pro9_score").val(o.conDrawing.check_pro9_score);
+				$("#construct_pro10_score").val(o.conDrawing.check_pro10_score);
+				$("#construct_pro11_score").val(o.conDrawing.check_pro11_score);
+				$("#construct_pro12_score").val(o.conDrawing.check_pro12_score);
+				$("#construct_pro13_score").val(o.conDrawing.check_pro13_score);
+				$("#construct_pro14_score").val(o.conDrawing.check_pro14_score);
+				$("#construct_pro15_score").val(o.conDrawing.check_pro15_score);
+				$("#construct_pro16_score").val(o.conDrawing.check_pro16_score);
+				$("#construct_pro17_score").val(o.conDrawing.check_pro17_score);
+				$("#construct_pro18_score").val(o.conDrawing.check_pro18_score);
+				$("#construct_pro19_score").val(o.conDrawing.check_pro19_score);
+				$("#construct_pro20_score").val(o.conDrawing.check_pro20_score);
+				$("#construct_pro1_num").val(o.conDrawing.check_pro1_num);
+				$("#construct_pro2_num").val(o.conDrawing.check_pro2_num);
+				$("#construct_pro3_num").val(o.conDrawing.check_pro3_num);
+				$("#construct_pro4_num").val(o.conDrawing.check_pro4_num);
+				$("#construct_pro5_num").val(o.conDrawing.check_pro5_num);
+				$("#construct_pro6_num").val(o.conDrawing.check_pro6_num);
+				$("#construct_pro7_num").val(o.conDrawing.check_pro7_num);
+				$("#construct_pro8_num").val(o.conDrawing.check_pro8_num);
+				$("#construct_pro9_num").val(o.conDrawing.check_pro9_num);
+				$("#construct_pro10_num").val(o.conDrawing.check_pro10_num);
+				$("#construct_pro11_num").val(o.conDrawing.check_pro11_num);
+				$("#construct_pro12_num").val(o.conDrawing.check_pro12_num);
+				$("#construct_pro13_num").val(o.conDrawing.check_pro13_num);
+				$("#construct_pro14_num").val(o.conDrawing.check_pro14_num);
+				$("#construct_pro15_num").val(o.conDrawing.check_pro15_num);
+				$("#construct_pro16_num").val(o.conDrawing.check_pro16_num);
+				$("#construct_pro17_num").val(o.conDrawing.check_pro17_num);
+				$("#construct_pro18_num").val(o.conDrawing.check_pro18_num);
+				$("#construct_pro19_num").val(o.conDrawing.check_pro19_num);
+				$("#construct_pro20_num").val(o.conDrawing.check_pro20_num);
+				
+				//view页面初始化
+				$("#view_drawing_assessor").html(o.conDrawing.drawing_assessor);
+				$("#view_goover_explain").html(o.conDrawing.goover_explain);
+				$("#view_goover_date").html(top.getTimeStr(o.conDrawing.goover_date,true));
+				$("#view_check_date").html(top.getTimeStr(o.conDrawing.check_date,true));
+				$("#view_total_deduct_marks").html(o.conDrawing.total_deduct_marks);
+				$("#view_total_score").html(o.conDrawing.total_score);
+				$("#view_time_limit").html(o.conDrawing.time_limit);
+				$("#view_construct_pro1_score").html(o.conDrawing.check_pro1_score);
+				$("#view_construct_pro2_score").html(o.conDrawing.check_pro2_score);
+				$("#view_construct_pro3_score").html(o.conDrawing.check_pro3_score);
+				$("#view_construct_pro4_score").html(o.conDrawing.check_pro4_score);
+				$("#view_construct_pro5_score").html(o.conDrawing.check_pro5_score);
+				$("#view_construct_pro6_score").html(o.conDrawing.check_pro6_score);
+				$("#view_construct_pro7_score").html(o.conDrawing.check_pro7_score);
+				$("#view_construct_pro8_score").html(o.conDrawing.check_pro8_score);
+				$("#view_construct_pro9_score").html(o.conDrawing.check_pro9_score);
+				$("#view_construct_pro10_score").html(o.conDrawing.check_pro10_score);
+				$("#view_construct_pro11_score").html(o.conDrawing.check_pro11_score);
+				$("#view_construct_pro12_score").html(o.conDrawing.check_pro12_score);
+				$("#view_construct_pro13_score").html(o.conDrawing.check_pro13_score);
+				$("#view_construct_pro14_score").html(o.conDrawing.check_pro14_score);
+				$("#view_construct_pro15_score").html(o.conDrawing.check_pro15_score);
+				$("#view_construct_pro16_score").html(o.conDrawing.check_pro16_score);
+				$("#view_construct_pro17_score").html(o.conDrawing.check_pro17_score);
+				$("#view_construct_pro18_score").html(o.conDrawing.check_pro18_score);
+				$("#view_construct_pro19_score").html(o.conDrawing.check_pro19_score);
+				$("#view_construct_pro20_score").html(o.conDrawing.check_pro20_score);
+				$("#view_construct_pro1_num").html(o.conDrawing.check_pro1_num);
+				$("#view_construct_pro2_num").html(o.conDrawing.check_pro2_num);
+				$("#view_construct_pro3_num").html(o.conDrawing.check_pro3_num);
+				$("#view_construct_pro4_num").html(o.conDrawing.check_pro4_num);
+				$("#view_construct_pro5_num").html(o.conDrawing.check_pro5_num);
+				$("#view_construct_pro6_num").html(o.conDrawing.check_pro6_num);
+				$("#view_construct_pro7_num").html(o.conDrawing.check_pro7_num);
+				$("#view_construct_pro8_num").html(o.conDrawing.check_pro8_num);
+				$("#view_construct_pro9_num").html(o.conDrawing.check_pro9_num);
+				$("#view_construct_pro10_num").html(o.conDrawing.check_pro10_num);
+				$("#view_construct_pro11_num").html(o.conDrawing.check_pro11_num);
+				$("#view_construct_pro12_num").html(o.conDrawing.check_pro12_num);
+				$("#view_construct_pro13_num").html(o.conDrawing.check_pro13_num);
+				$("#view_construct_pro14_num").html(o.conDrawing.check_pro14_num);
+				$("#view_construct_pro15_num").html(o.conDrawing.check_pro15_num);
+				$("#view_construct_pro16_num").html(o.conDrawing.check_pro16_num);
+				$("#view_construct_pro17_num").html(o.conDrawing.check_pro17_num);
+				$("#view_construct_pro18_num").html(o.conDrawing.check_pro18_num);
+				$("#view_construct_pro19_num").html(o.conDrawing.check_pro19_num);
+				$("#view_construct_pro20_num").html(o.conDrawing.check_pro20_num);
+			}
+			}
+			// 查询需求信息
+			if(cust_code){
+				var aoData=[];
+			    aoData.push( { "name": "custInfo.code", "value": cust_code } );
+			    top.sendAjaxRequest("/actions/CustInfo.action?getFitmentCustInfo",aoData,custDetailCallback);
+			}
+			if(info_id!=0){
+				queryConstructionTableList();
+				getProjectWorkImgList();
+				getProjectWorkerList();
+	        }
+			$("#ConstructionTitle").hide();
+			
+			if(info_id==0){
+			   $("#tabs ul").tabs({disabled:[2,3,4,5,6,7,8,9]});
+			}else{
+			   $( "#tabs ul" ).tabs();
+			   initTab=top.getUrlParam(document.URL,"initTab");//初始显示tab
+				if(initTab){
+					$("#tabs ul li:eq("+initTab+") a").trigger("click");
+				}
+			}
+		}else{
+          top.showInfoWinError("操作失败");
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	
+	// 关闭当前页面前，页面框架自动调用的函数
+	function doBeforeClose(){
+     var obj={
+              "isSaveOK":isSaveOK
+            };
+     top.setTempValue(obj);
+   }
+	function updateProjectStatus(status_id){
+		if(project_order_status<status_id){
+			project_order_status=status_id;
+			$("#tdstatus").html(top.getCodeName("PROJECT_STATUS",project_order_status));
+			$("#spanstatus").html(top.getCodeName("PROJECT_STATUS",project_order_status));
+		}
+	}
+	//初始化
+	function initData(){
+		$("#tdChangeType").html(top.getCodeSelectHtml("PROJECT_CHANGE_TYPE","change_type",true));
+		 $("#tdcurrent_construction_stage").html(top.getProcesInfoSelectHtml("current_construction_stage","","120px"));
+		 $("#span_is_delay").html(top.getCodeSelectHtml("ISYESORNO","is_delay",true));
+		optType=top.getUrlParam(document.URL,"optType");
+		$("#tdproject_manage").html(top.getUserListByRole('programme_manager','project_manager',true));
+		//$("#tdmodelhouse_project_manager").html(top.getUserListByRole('programme_manager','modelhouse_project_manager',true));
+		// 样板间新增页面里的工程监理
+		//$("#tdsupervision").html(top.getUserListByRole('engineer_manager','supervision',true));
+		
+		// 基本信息里的工程监理
+		$("#tdengineer_supervisor").html(top.getUserListByRole('engineer_manager','engineer_manager',true));
+		$("#modeldesigner").html( top.getAllDesignerSelect("designer") );
+	    if ( optType=='update' ){
+            info_id=top.getUrlParam(document.URL,"id");
+			require_id=top.getUrlParam(document.URL,"require_id");
+			if(info_id!=null&&info_id!=''){
+			     $("#cust").html("客户编号");
+			     $("#chooseCust").html("<span id='tdtdcust_code'></span>");
+			     $("#cust").show();
+			     $("#chooseCust").show();
+			     $("#project_order_id").attr("colspan","2");
+				var aoData=[];
+				aoData.push( { "name": "projectOrder.project_order_id", "value": info_id } );
+				top.sendAjaxRequest("/actions/ProjectOrder.action?orderCustInfoByOrderId",aoData,infoCallback);
+			}else if(require_id!=null&&require_id!=""){
+				cust_code=top.getUrlParam(document.URL,"cust_code");
+				//客户详细信息页面不显示选择用户按钮
+				$("#cust").remove();
+				$("#chooseCust").remove();
+				$("#project_order_id").attr("colspan","4");
+				 
+				var aoData=[];
+				aoData.push({"name":"projectOrder.require_id","value":require_id});
+				aoData.push({"name":"projectOrder.cust_code","value":cust_code});
+				top.sendAjaxRequest("/actions/ProjectOrder.action?orderCustInfoByRequireId",aoData,infoCallback);
+			}
+		} else{
+			 //$( "#tdorder_type" ).html( top.getCodeSelectHtml("ORDER_TYPE","order_type",false) );
+			 //$( "#span_is_provide_paper" ).html( top.getCodeSelectHtml("ISYESORNO","is_provide_paper",false) );
+			 //$( "#span_is_drawing_paper" ).html( top.getCodeSelectHtml("ISYESORNO","is_drawing_paper",false) );
+			 //$( "#span_midterm_is_delay" ).html( top.getCodeSelectHtml("ISYESORNO","midterm_is_delay",false) );
+			 //$( "#span_is_delay_bill" ).html( top.getCodeSelectHtml("ISYESORNO","is_delay_bill",false) );
+			 
+			 $( "#span_p_is_change" ).html( top.getCodeSelectHtml("ISYESORNO","p_is_change",false) );
+			 $( "#span_is_effect_design" ).html( top.getCodeSelectHtml("ISYESORNO","is_effect_design",false) );
+			 $( "#span_cust_is_know" ).html( top.getCodeSelectHtml("ISYESORNO","cust_is_know",false) );
+			 $( "#span_is_difference" ).html( top.getCodeSelectHtml("ISYESORNO","is_difference",false) );
+			 $( "#span_project_is_manager" ).html( top.getCodeSelectHtml("ISYESORNO","project_is_manager",false) );
+			 $( "#span_product_is_manager" ).html( top.getCodeSelectHtml("ISYESORNO","product_is_manager",false) );
+			 $( "#span_is_hand_cust" ).html( top.getCodeSelectHtml("ISYESORNO","is_hand_cust",false) );
+			 $( "#span_is_check_accept" ).html( top.getCodeSelectHtml("ISYESORNO","is_check_accept",false) );
+			 $( "#tdconstruct_status" ).html( top.getCodeSelectHtml("CONSTRUCT_STATUS","construct_status",false) );
+			 $( "#tdstatus" ).html( top.getCodeSelectHtml("ORDER_STATUS","status",false) );
+			 $("#tdifdelay").html( top.getCodeSelectHtml("ISYESORNO","ifdelay",false) );
+			 $("#tdpro_status").html( top.getCodeSelectHtml("PRO_STATUS","pro_status",false) );
+			 $("#spanproject_add").html( top.getCodeSelectHtml("ISYESORNO","project_add",false) );
+			 $("#spanproduct_add").html( top.getCodeSelectHtml("ISYESORNO","product_add",false) );
+			 $("#project_order_id").html( "系统自动生成" );
+			 if(info_id==0){
+			   $("#tabs ul").tabs({disabled:[2,3,4,5,6,7,8,9]});
+			 }
+			// $("#edit_tabs-0").show();
+			// $("#view_tabs-0").hide();
+			 editBaseInfo();
+		}
+		 $( "#tddistrict" ).html( top.getCodeSelectHtml("DISTRICT","district",false) );
+		 $( "#tdconstruct_status" ).html( top.getCodeSelectHtml("CONSTRUCT_STATUS","construct_status",false) );
+		//查询所有的上传附件
+		selectAllUploadFile();
+    }
+	
+	//查询所有的项目进度信息
+	function queryConstructionStatus(){
+		// 查询需求信息
+		var aoData=[];
+		aoData.push( { "name": "constructionstatus.order_id", "value": info_id } );
+		top.sendAjaxRequest("/actions/ProjectOrder.action?getConstructionStatusList",aoData,createConstructionStatusTable);
+	}
+	
+	//生成项目进度信息列表
+	function createConstructionStatusTable(obj){
+		try{
+		 constructionstatus=obj.aaData;
+		 var ht="";
+		 var dis_days=0;
+		 var fact_days=0;
+		 var trColor="";
+		 var leftPx=0;
+		 var everyday=0;
+		 var planwidth=0;
+		 var factwidth=0;
+		 var planfirstday=0;
+		 var tempTime=0;
+		 minTime=10000000000000;//
+	     maxTime=0;
+		 var temp=0;
+		 var listTbWidth=$("#ConstructionDraw").width()-87;
+		 for (var i=0;i<constructionstatus.length;i++) {
+			countMaxMinTime(constructionstatus[i].plan_end_date);
+		    countMaxMinTime(constructionstatus[i].plan_start_date);
+			countMaxMinTime(constructionstatus[i].fact_start_date);
+			countMaxMinTime(constructionstatus[i].fact_end_date);
+			countMaxMinTime(constructionstatus[i].apply_delay_date);
+		 }
+		 temp=(maxTime-minTime)/(24*60*60000);
+		 everyday=listTbWidth/temp;
+		 planfirstday=minTime;
+		 
+		 var midtime=minTime+((temp/2)*(24*60*60000));
+		 ht+='<tr class="tr_data" height="25px">';
+		 ht+='<td align="center" width="87px">施工项目</td>';
+		 ht+='<td align="left" id="txt_start_date">&nbsp;'+top.getTimeStr(minTime,true)+'</td>';
+		 ht+='<td align="center" id="txt_mid_date">'+top.getTimeStr(midtime,true)+'</td>';
+		 ht+='<td align="right" id="txt_end_date">'+top.getTimeStr(maxTime,true)+'&nbsp;</td>';
+		 ht+='</tr>';
+		 for (var i=0;i<constructionstatus.length;i++) {
+			dis_days=(constructionstatus[i].plan_end_date-constructionstatus[i].plan_start_date)/(24*60*60000)+1;
+			fact_days=(constructionstatus[i].fact_end_date-constructionstatus[i].fact_start_date)/(24*60*60000)+1;
+			//planfirstday=minTime;
+			ht+='<tr class="tr_data"  height="25px">';
+			ht+=' <td align="center" style="width:87px">';
+			ht+=top.getProcessNameByCode(constructionstatus[i].project_name);
+			ht+='</td>';
+			ht+=' <td align="center"  width="'+listTbWidth+'px" colspan="3">';
+			ht+='<table width="99%">';
+			ht+='<tr>';
+			ht+='<td>';
+			
+			leftPx=(constructionstatus[i].plan_start_date-planfirstday)/(24*60*60000)*everyday; 
+			
+			planwidth=everyday*dis_days;
+			ht+='<div id="chartA'+i+'" onmouseover="showDetail(\'A\','+i+','+constructionstatus[i].plan_start_date+','+constructionstatus[i].plan_end_date
+			+','+constructionstatus[i].fact_start_date+','+constructionstatus[i].apply_delay_date+','+constructionstatus[i].fact_end_date+','
+			+constructionstatus[i].status+')" onmouseout="divHide()" style="margin:0px 0px 10px '+leftPx+'px;width:'+planwidth+'px;height:20px;background-color:blue;">';
+			ht+='</div>';
+			ht+='</td>';
+			ht+='</tr>';
+			ht+='<tr>';
+			ht+='<td>';
+			
+			trColor="green";
+			if ( constructionstatus[i].status=='1' ) {
+			  trColor="yellow";
+			} else if ( constructionstatus[i].status=='2' ) {
+			  trColor="green";
+			}
+			
+			leftPx=(constructionstatus[i].fact_start_date-planfirstday)/(24*60*60000)*everyday; 
+			factwidth=everyday*fact_days;
+			ht+='<div id="chartB'+i+'" onmouseover="showDetail(\'B\','+i+','+constructionstatus[i].plan_start_date+','+constructionstatus[i].plan_end_date
+			+','+constructionstatus[i].fact_start_date+','+constructionstatus[i].apply_delay_date+','+constructionstatus[i].fact_end_date+','
+			+constructionstatus[i].status+')" onmouseout="divHide()" style="margin:0px 0px 10px '+leftPx+'px;width:'+factwidth+'px;height:20px;background-color:'+trColor+';">';
+			ht+='</div>';
+			ht+='</td>';
+			ht+='</tr>';
+			ht+='</table>';
+			ht+='</td>';
+			ht+='</tr>';
+		}
+		$("#ConstructionDraw").html( ht );
+	  }catch(e){
+			
+	  }
+	}
+	
+	function showDetail(a,i,plan_start_date,plan_end_date,fact_start_date,apply_delay_date,fact_end_date,tdconstruction_status){
+		$("#plan_start_date").html(top.getTimeStr(plan_start_date,true));
+		$("#plan_end_date").html(top.getTimeStr(plan_end_date,true));
+		$("#fact_start_date").html(top.getTimeStr(fact_start_date,true));
+		$("#apply_delay_date").html(top.getTimeStr(apply_delay_date,true));
+		$("#fact_end_date").html(top.getTimeStr(fact_end_date,true));
+		$("#tdconstruction_status").html(top.getCodeName("CONSTRUCTIONSTATUS_STATUS",tdconstruction_status));
+		var y = $("#chart"+a+i).offset().top+30;
+		var x = $("#chart"+a+i).offset().left+10; 
+		if(x>550){
+			x=x-350-30;
+		}
+		if(y>400){
+			y=y-150-30;
+		}
+		$("#projectDetail").css("position", "absolute"); 
+		$("#projectDetail").css("left",x); 
+		$("#projectDetail").css("top", y);
+		$("#projectDetail").css("display", "block");  	
+		$("#projectDetail").show();
+	}
+	function divHide(){
+	$("#projectDetail").hide();
+	}
+	function countMaxMinTime(tempTime){
+		if(tempTime!=0)
+		{
+			if ( minTime > tempTime ) {
+			  minTime=tempTime;
+			}
+			if ( maxTime < tempTime ) {
+			  maxTime = tempTime;
+			}
+		}
+	}
+
+	//弹出二层框
+	function openDialog(t,xurl,isModal,w,h,callback){
+		if ( isModal == undefined ) isModal=true;
+		if ( !h ) h=200;
+		if ( !w ) w=400;
+		$( "#dialog" ).dialog({
+			title: t,
+			height: h,
+			width: w,
+			modal: isModal,
+			resizable: false,
+		    beforeClose: function(event, ui) {
+		        try{
+		            document.getElementById("self_iframe").contentWindow.doBeforeClose();
+		            if ( callback ) callback.apply();
+		        }catch(e){
+		        }
+		        return true;
+		    }
+		});
+		document.getElementById("self_iframe").src = xurl;
+    }
+	function doCancelConstructCheck(){
+		$("#edit_tabs-9").hide();
+		$("#view_tabs-9").show();
+		editModelBt();	
+	}
+	function editConstructCheck(){
+		$("#edit_tabs-9").show();
+		$("#view_tabs-9").hide();
+		saveModelBt();		
+	}
+	function queryWorkRecordFile(){
+		var aoData=[];
+		aoData.push( { "name": "fileinfo.belong_id", "value": info_id} );
+		aoData.push( { "name": "fileinfo.belong_type", "value": 5} );
+		var surl=top.getUrlBase()+"/actions/File.action?getFileInfoList";
+		top.sendAjaxRequest(surl,aoData,queryWorkRecordFileCallBack);
+	}
+	function queryWorkRecordFileCallBack(obj){
+		if(obj.aaData){
+			fileList=obj.aaData;
+			for(var i=0;i<fileList.length;i++){
+				$("#fileInfo_"+fileList[i].belong_id2).html('<a href="'+top.getUrlBase()+'/download?filePath='+fileList[i].file_path+'+"&fileName="'+fileList[i].file_name+'">'+fileList[i].file_name+'</a>');
+			}
+		}
+	}
+	//上传施工现场照片上传
+	function uploadFile(){
+		var xurl="../uploadFile.html?belong_id0="+require_id+"&belong_id="+info_id+"&belong_type=5";
+		openDialog("上传文件",xurl,true,600,230,saveFileCallBack);
+	}
+	//调用回调函数---上传文件
+   	function saveFileCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQueryFileList();
+				}catch(e){
+				}
+	}
+	//doQuery---上传文件
+	function doQueryFileList(){
+		fileListTable.fnDraw();
+		view_fileListTable.fnDraw();
+	}
+	//查询所有上传的附件
+	function selectAllUploadFile(){
+		var surl=top.getUrlBase()+"/actions/File.action?getFileInfoList";
+		fileListTable = $('#filePathList').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":5,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+							aoData.push( { "name": "fileinfo.belong_id", "value": info_id} );
+			        },
+			      "sDom": "frtip",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": [
+							{"sTitle": "文件名称", "mDataProp": "file_name", "sWidth": "500px","sClass": "left", "bUseRendered": false },
+			                {"sTitle": "类型","mDataProp": "file_type", "sWidth": "100px","sClass": "center",
+								 "fnRender": function ( oObj ) {
+                                          return top.getCodeName( "FILE_TYPE", oObj.aData.file_type );
+                            },
+							  "bUseRendered": false },
+							{"sTitle": "上传时间","mDataProp": "upload_time", "sWidth": "150px", "sClass": "center",
+								    "fnRender": function ( oObj ) {
+                                           return top.getTimeStr(oObj.aData.upload_time ,false);
+                            },
+							
+							 "bUseRendered": false},
+							{ "sTitle": "操作", "mDataProp": "file_name", "sWidth": "100px","sClass": "center",
+								"fnRender": function ( oObj ) {
+										return '<a href="'+top.getUrlBase()+'/download?filePath='+oObj.aData.file_path+'+"&fileName="'+oObj.aData.file_name+'">下载</a>||<a href=\'javascript:void(0)\' onclick="previewFile(\''+oObj.aData.file_path+'\',\''+oObj.aData.file_name+'\')">预览</a>';
+									 },
+									"bUseRendered": false 
+							}
+							 
+                      ]
+				} );
+	
+		viewFileListTable = $('#view_filePathList').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":5,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+							aoData.push( { "name": "fileinfo.belong_id", "value": info_id} );
+							aoData.push( { "name": "fileinfo.belong_type", "value": 0} );
+			         },
+			      "sDom": "frtip",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": [
+							{"sTitle": "文件名称", "mDataProp": "file_name", "sWidth": "500px","sClass": "left", "bUseRendered": false },
+			                {"sTitle": "类型","mDataProp": "file_type", "sWidth": "100px","sClass": "center",
+								 "fnRender": function ( oObj ) {
+                                          return top.getCodeName( "FILE_TYPE", oObj.aData.file_type );
+                            },
+							  "bUseRendered": false },
+							{"sTitle": "上传时间","mDataProp": "upload_time", "sWidth": "150px", "sClass": "center",
+								    "fnRender": function ( oObj ) {
+                                           return top.getTimeStr(oObj.aData.upload_time ,false);
+                            },
+							
+							 "bUseRendered": false},
+							{ "sTitle": "操作", "mDataProp": "file_name", "sWidth": "100px","sClass": "center",
+								"fnRender": function ( oObj ) {
+										return '<a href="'+top.getUrlBase()+'/download?filePath='+oObj.aData.file_path+'+"&fileName="'+oObj.aData.file_name+'">下载</a>||<a href=\'javascript:void(0)\' onclick="previewFile(\''+oObj.aData.file_path+'\',\''+oObj.aData.file_name+'\')">预览</a>';
+									 },
+									"bUseRendered": false 
+							}
+							 
+                      ]
+				} );	
+   }
+   	//预览
+	function previewFile(filePath,fileName){
+		var xurl="../openFile.html?filePath="+filePath+"&fileName="+fileName;
+		openDialog("文件预览",xurl,true,700,600,null);
+	}
+	function queryConstructionTableList(){
+		var aoData=[];
+		aoData.push( { "name": "constructionstatus.order_id", "value": info_id } );
+		var surl=top.getUrlBase()+"/actions/ProjectOrder.action?getConstructionStatusList";
+		top.sendAjaxRequest(surl,aoData,queryConstructionTableListCallBack);
+	}
+	function queryConstructionTableListCallBack(obj){
+	    var is_checked="";
+		var constructionList=null;
+		var ht='';
+		var content="";
+		ht='<tr align="center"><td>工程阶段</td><td>计划开始时间</td><td>计划结束时间</td><td>实际开始时间</td><td>实际结束时间</td><td>计划周期</td><td>实际周期</td><td>工程状态</td><td>附件</td><td>操作</td></tr>'
+		content='<tr align="center"><td>工程阶段</td><td>计划开始时间</td><td>计划结束时间</td><td>实际开始时间</td><td>实际结束时间</td><td>计划周期</td><td>实际周期</td><td>工程状态</td><td>是否验收</td><td>验收说明</td><td>操作</td></tr>';
+		if(obj.aaData){
+			constructionList=obj.aaData;
+			var name='';
+			for(var i=0;i<constructionList.length;i++){
+				if(constructionList[i].file_path!=''){
+					name=fixFilename(constructionList[i].file_path);
+				}else{
+					name='';
+				}
+				ht+='<tr height="35px" class="tr_data" id="tr_construction_'+constructionList[i].id+'">';
+				content+='<tr height="35px" class="tr_data">';
+				content+='<td>'+top.getProcessNameByCode(constructionList[i].project_name)+'</td>';
+				if(top.g_isPermit("09_update_construction")){
+					ht+='<td><a href="javascript:void(0)" onclick="updateConstructionInfo(\''+constructionList[i].id+'\',\'update\')"><lable id="lb_project_name_'+constructionList[i].id+'">'+top.getProcessNameByCode(constructionList[i].project_name)+'</lable></a></td>';
+				}else{
+					ht+='<td id="lb_project_name_'+constructionList[i].id+'">'+top.getProcessNameByCode(constructionList[i].project_name)+'</td>';
+				}
+				ht+='<td><lable id="lb_plan_start_date_'+constructionList[i].id+'">'+top.getTimeStr(constructionList[i].plan_start_date ,true)+'</lable></td>';
+				content+='<td><lable>'+top.getTimeStr(constructionList[i].plan_start_date ,true)+'</lable></td>';
+				ht+='<td><lable id="lb_plan_end_date_'+constructionList[i].id+'">'+top.getTimeStr(constructionList[i].plan_end_date ,true)+'</lable></td>';
+				content+='<td><lable>'+top.getTimeStr(constructionList[i].plan_end_date ,true)+'</lable></td>';
+				ht+='<td><lable id="lb_fact_start_date_'+constructionList[i].id+'">'+top.getTimeStr(constructionList[i].fact_start_date ,true)+'</lable></td>';
+				content+='<td><lable>'+top.getTimeStr(constructionList[i].fact_start_date ,true)+'</lable></td>';
+				ht+='<td><lable id="lb_fact_end_date_'+constructionList[i].id+'">'+top.getTimeStr(constructionList[i].fact_end_date ,true)+'</lable></td>';
+				content+='<td><lable>'+top.getTimeStr(constructionList[i].fact_end_date ,true)+'</lable></td>';
+				ht+='<td><lable id="lb_plan_cycle_'+constructionList[i].id+'">'+constructionList[i].plan_cycle+'</lable></td>';
+				content+='<td><lable>'+constructionList[i].plan_cycle+'</lable></td>';
+				ht+='<td><lable id="lb_fact_cycle_'+constructionList[i].id+'">'+constructionList[i].fact_cycle+'</lable></td>';
+				content+='<td><lable>'+constructionList[i].fact_cycle+'</lable></td>';
+				ht+='<td><lable id="lb_status_'+constructionList[i].id+'">'+top.getCodeName( "CONSTRUCTIONSTATUS_STATUS", constructionList[i].status )+'</lable><input id="text_status_'+constructionList[i].id+'"  type="hidden" value="'+constructionList[i].status+'"/></td>';
+				content+='<td><lable>'+top.getCodeName( "CONSTRUCTIONSTATUS_STATUS", constructionList[i].status )+'</lable></td>';
+				if(name){
+					ht+='<td><span id="fileInfo_'+constructionList[i].id+'"><a href="'+top.getUrlBase()+'/download?filePath='+constructionList[i].file_path+'+"&fileName="'+name+'">'+name+'</a></span></td>';
+				}else{
+					ht+='<td></td>';
+				}
+				content+="<td  style='width:100px;' class='"+constructionList[i].id+"' opt='is_check' purl='"+constructionList[i].is_checked+"'>"+top.getCodeName("IS_CHECK",constructionList[i].is_checked)+"</td>";
+				content+="<td  style='width:150px;' class='"+constructionList[i].id+"' opt='check_memo' purl='"+constructionList[i].check_memo+"'>"+constructionList[i].check_memo+"</td>";
+				content+="<td  style='width:90px;' class='"+constructionList[i].id+"' opt='operator'><a href='javascript:void(0)' onclick='editCheck(\""+constructionList[i].id+"\")'>修改</a></td>";
+				ht+='<td>';
+				if ( constructionList[i].fact_start_date == 0 ) {
+				  ht+='<a style="color:blue;cursor:pointer" onclick="deleteConstructionStatus(\''+constructionList[i].id+'\')">删除</a>';
+				}
+				ht+='</td></tr>';
+			}
+		}else{
+		    ht+="<tr class='tr_data'><td colspan='11'>暂无施工数据</td></tr>";
+		    content+="<tr class='tr_data'><td colspan='11'>暂无施工数据</td></tr>";
+		}
+		$('#ConstructionTable').html(ht);
+		$("#ConstructionCheckTable").html(content); 
+		$(".tdis_check").html(top.getCodeSelectHtml("IS_CHECK","is_check",true,is_checked,null,"","80px"));
+		queryWorkRecordFile();
+	}
+	
+	//施工进度验收保存
+	function saveCheck(id){
+	  var aoData=[];
+	  if($("#is_check").val()==""){top.showInfoWinWarn("请选择验收标准！");return;}
+	  aoData.push( {"name":"constructionstatus.id","value":id} );
+	  aoData.push( {"name":"constructionstatus.is_checked","value":$("#is_check").val()} );
+	  aoData.push( {"name":"constructionstatus.check_memo","value":$("#check_memo").val()} );
+	  top.sendAjaxRequest("/actions/ProjectOrder.action?saveConstructionCheck",aoData,saveCheckCallBack);
+	}
+	
+	//施工进度验收保存回调函数
+	function saveCheckCallBack(obj){
+	   if(obj.status==true){
+	      top.showInfoWinOK("操作成功！");
+	      queryConstructionTableList();
+	   }else{
+	     top.showInfoWinError("");
+	   }
+	}
+	
+	//施工进度验收编辑
+	function editCheck(id){
+		$(".selected").each(function(){
+		    $(this).removeClass("selected");
+			if($(this).attr("opt")=="is_check"){
+			  $(this).removeClass("tdis_check");
+			  $(this).html(top.getCodeName("IS_CHECK",$(this).attr("purl")));
+			}
+			if($(this).attr("opt")=="operator"){
+			   $(this).children().text("修改");
+			   $(this).children().attr("onclick","editCheck('"+$(this).attr('class')+"')");
+			   $(this).children().eq(1).remove();
+			}
+			if($(this).attr("opt")=="check_memo"){
+			   $(this).html($(this).attr("purl"));
+			}
+		})
+		$("."+id).each(function(){
+		   $(this).addClass("selected");
+		   if($(this).attr("opt")=="is_check"){
+			  $(this).addClass("tdis_check");
+			  $(".tdis_check").html(top.getCodeSelectHtml("IS_CHECK","is_check",true));
+			  $("#is_check").val($(this).attr("purl"));
+		   }
+		   if($(this).attr("opt")=="check_memo"){
+		      $(this).html("<textarea type='text' id='check_memo' value='"+$(this).attr('purl')+"' style='wdith:100%'>"+$(this).attr('purl')+"</textarea>");
+		   }
+		   if($(this).attr("opt")=="operator"){
+		      $(this).children().text("保存")
+		      $(this).children().attr("onclick","saveCheck('"+id+"')");
+			  $(this).append("<a href='javascript:void(0)' style='cursor:pointer;' onclick='cancleCheck()'>&nbsp;取消</a>");
+		   }
+		});
+	}
+	
+	//施工进度验收取消
+	function cancleCheck(){
+	   $(".selected").each(function(){
+		    $(this).removeClass("selected");
+			if($(this).attr("opt")=="is_check"){
+			  $(this).removeClass("tdis_check");
+			  $(this).html(top.getCodeName("IS_CHECK",$(this).attr("purl")));
+			}
+			if($(this).attr("opt")=="operator"){
+			   $(this).children().text("修改");
+			   $(this).children().attr("onclick","editCheck('"+$(this).attr('class')+"')");
+			   $(this).children().eq(1).remove();
+			}
+			if($(this).attr("opt")=="check_memo"){
+			   $(this).html($(this).attr("purl"));
+			}
+		});
+	}
+	
+	function deleteConstructionStatus(did){
+	    currentDeleteId=did;
+	    top.showConfirm("您确定要删除选中的工程进度吗？", doDeleteConstructionStatus);
+	}
+	
+	function doDeleteConstructionStatus(){
+		var aoData=[];
+		aoData.push( { "name": "constructionstatus.id", "value":currentDeleteId} );
+		var xurl="/actions/ProjectOrder.action?deleteConstructionStatus";
+		top.sendAjaxRequest(xurl,aoData,updateConstructionStatusCallback);
+	}
+	
+	function checkIdsStatus(status){
+		var idlist=ids.split(",");
+		var msg='';
+		if(status==''){msg='操作错误！';return;}
+		if(status=='-1'){//删除操作
+			for(var i=0;i<idlist.length;i++){
+				if($("#construction_status_"+idlist[i]).val()!='0'){
+					msg="操作失败，只有未执行的进度可以执行删除操作";
+					return msg;
+				}
+			}
+		}else if(status=='6'){//删除操作
+			for(var i=0;i<idlist.length;i++){
+				if($("#construction_status_"+idlist[i]).val()=='0'){
+					msg="操作失败，您选择的进度中包含未执行进度不能执行废弃操作";
+					return msg;
+				}
+			}
+		}else if(status=='2'){//删除操作
+			for(var i=0;i<idlist.length;i++){
+				if($("#construction_status_"+idlist[i]).val()!='1'){
+					msg="操作失败，只有正常执行的进度可以执行延迟操作";
+					return msg;
+				}
+			}
+		}
+		return '';
+	}
+	function updateConstructionStatusCallback(obj){
+       try{
+		 var ht='';
+         if ( obj.status==true){
+             top.showInfoWinOK("操作成功");
+			 queryConstructionTableList();
+			 }else{
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+	function fixFilename(fp){
+		 if ( !fp ) return "";
+		 var n=fp.indexOf("_");
+		 if ( n != -1 ) {
+		   return fp.substring(n+2);
+		 }
+		 return fp;
+	}
+	function addConstructionInfo(){
+		var xurl="/pages/pro09/projectProgressInfo.html?optType=insert&order_id="+info_id;
+		top.openSelectDialog("新增项目进度",xurl,700,450,addConstructionInfoCallback);
+	}
+	function updateConstructionInfo(id,updateType){
+		var xurl="/pages/pro09/projectProgressInfo.html?optType="+updateType+"&id="+id;
+		if(updateType=='update'){
+			top.openSelectDialog("项目进度详情",xurl,700,450,addConstructionInfoCallback);
+		}else{
+			top.openSelectDialog("延期说明",xurl,400,300,null);
+		}
+	}
+	function addConstructionInfoCallback(){
+		var obj=top.getTempValue();
+		if(obj.isSaveOK==true){
+			queryConstructionTableList();
+		}
+	}
+	
+    function addInfo(){
+		var xurl="pages/pro09/projectChangeInfo.html?order_id="+info_id+"&cust_code="+cust_code+"&optType=insert"+"&require_id="+require_id;
+		top.openSelectDialog("添加工程变更",xurl,600,550,saveCallBack);
+	}
+	
+	function updateProjectChange(pro_change_id){
+		var xurl="pages/pro09/projectChangeInfo.html?order_id="+info_id+"&cust_code="+cust_code+"&pro_change_id="+pro_change_id+"&optType=update&require_id="+require_id;
+		top.openSelectDialog("工程变更信息",xurl,600,550,saveCallBack);
+	}
+	function saveCallBack(){
+		try{
+			var obj = top.getTempValue();
+			if(obj.isSaveOK) {
+			   getChangeList();
+			   parent.getBankInfo();
+			}
+		}catch(e){}
+	}
+	function saveProjectChangeInfoCallBack(obj){
+	 try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+			getChangeList();
+		}else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+	function getChangeList(){
+		 var iaoColumns= [
+								{ "sTitle": "变更名称", "mDataProp": "change_name", "sWidth": "15%","sClass": "center", "bUseRendered": false},
+								{ "sTitle": "变更类型", "mDataProp": "change_type", "sWidth": "15%","sClass": "center",
+								     "fnRender":function(oObj){
+								        return top.getCodeName("PROJECT_CHANGE_TYPE",oObj.aData.change_type);
+								     },
+									 "bUseRendered": false},
+								{ "sTitle": "变更性质", "mDataProp": "money_change_type", "sWidth": "10%", "sClass": "center",
+								    "fnRender": function ( oObj ) {
+                                        return top.getCodeName("MONEY_CHANGE_TYPE",oObj.aData.money_change_type);
+                                },
+								"bUseRendered": false},
+								{ "sTitle": "变更金额", "mDataProp": "change_money", "sWidth": "10%","sClass": "center","bUseRendered": false  },
+								{ "sTitle": "变更人", "mDataProp": "opt_user", "sWidth": "10%", "sClass": "center",
+								 "fnRender": function ( oObj ) {
+                                           return top.getUserNameByCode(oObj.aData.opt_user)
+										},
+								"bUseRendered": false},
+								{ "sTitle": "变更日期", "mDataProp": "opt_time", "sWidth": "15%", "sClass": "center",
+								 "fnRender": function ( oObj ) {
+                                           return top.getTimeStr(oObj.aData.opt_time,true);
+										}, 
+								"bUseRendered": false},
+								{ "sTitle": "审核状态", "mDataProp": "examine_status", "sWidth": "10%", "sClass": "center",
+								    "fnRender": function ( oObj ) {
+                                        return top.getCodeName('PRODUCT_STATUS',oObj.aData.examine_status)
+                                },
+								"bUseRendered": false},
+								{ "sTitle": "操作", "mDataProp": "pro_change_id", "sWidth": "15%", "sClass": "center","bSortable": false,
+								 "fnRender": function ( oObj ) {
+								            var operator="";
+											if(oObj.aData.file_path){
+											  operator+='<a href="'+top.getUrlBase()+'/download?filePath=\''+oObj.aData.file_path+'\'&fileName=\''+oObj.aData.file_name+'\'">下载附件</a>||';
+											}
+											if(oObj.aData.examine_status=='3'||oObj.aData.examine_status=='2'){//新建、审核未通过
+												if(top.g_isPermit('09_alter_project_change')){//拥有编辑权限，显示申请审批和修改两个按钮
+													operator+='<a href="javascript:void(0)" onclick="updateProjectChange(\''+oObj.aData.pro_change_id+'\')">查看详情</a>'+
+												'||<a href="javascript:void(0)" onclick="applyProjectChangeExamine(\''+oObj.aData.pro_change_id+'\')">申请审批</a>';
+												}else{//显示查看按钮
+													operator+='<a href="javascript:void(0)" onclick="updateProjectChange(\''+oObj.aData.pro_change_id+'\')">查看详情</a>';
+												}
+											}else if(oObj.aData.examine_status=='1'){//审核通过，显示查看按钮
+												operator+='<a href="javascript:void(0)" onclick="updateProjectChange(\''+oObj.aData.pro_change_id+'\')">查看详情</a>'
+											}else if(oObj.aData.examine_status=='0'){//待审核
+												if(top.g_isPermit('09_examine_project_change')){//拥有审批权限，显示审批按钮
+													operator+='<a href="javascript:void(0)" onclick="updateProjectChange(\''+oObj.aData.pro_change_id+'\')">审批</a>'
+												}else{//显示查看按钮
+													operator+='<a href="javascript:void(0)" onclick="updateProjectChange(\''+oObj.aData.pro_change_id+'\')">查看详情</a>'
+												}
+											}
+											return operator;
+										   }, 
+								"bUseRendered": false}
+			  ];
+			   
+			   var surl=top.getUrlBase()+"/actions/ProjectOrder.action?getProChangeList";
+			   oTable = $('#proChangeTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":100,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+					aoData.push( { "name": "proChange.order_id", "value": info_id } );
+			    },
+			     "sDom": "frt",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );	
+	}
+	function applyProjectChangeExamine(pro_change_id){
+		if(pro_change_id==null||pro_change_id==''){
+				return;
+		}
+			var aoData=[];
+			aoData.push( { "name": "proChange.pro_change_id", "value":pro_change_id} );
+		    aoData.push( { "name": "proChange.examine_status", "value": '0'} );
+		    aoData.push( { "name": "cust_code","value":$("#cust_code").val() } );
+			var xurl="/actions/ProjectOrder.action?examineProChange";
+			top.sendAjaxRequest(xurl,aoData,applyProjectChangeExamineCallBack);
+	}
+	function applyProjectChangeExamineCallBack(obj){
+		try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+			getChangeList();
+		}else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	 //选择客户
+	function chooseCust(){
+		var xurl="/pages/pro09/chooseCust.html";
+		openDialog("选择客户",xurl,true,700,500,chooseCustCallBack);
+	}
+	//调用回调函数---调用查询选择方法
+   	function chooseCustCallBack(){
+		try{
+			var o = top.getTempValue();
+			if(o){
+			   var cust_base_info_id=o.code; 
+				// 查询需求信息
+				var aoData=[];
+			    aoData.push( { "name": "custInfo.code", "value": cust_base_info_id } );
+			    top.sendAjaxRequest("/actions/CustInfo.action?getFitmentCustInfo",aoData,custDetailCallback);
+			}
+		}catch(e){
+		
+		}
+   }
+
+	  
+	//保存、编辑、取消按钮隐藏显示
+    function saveModelBt(){
+		$("#saveBt").show();
+		$("#returnBt").show();
+		$("#editBt").hide();
+    }
+    function editModelBt(){
+		$("#saveBt").hide();
+		$("#returnBt").hide();
+		$("#editBt").show();
+    }
+	//施工管理中图形显示
+	function checkConstructionDraw(){
+	$("#ConstructionTable").hide();
+	$("#ConstructionTitle").show();
+	$("#ConstructionDraw").show();
+	$("#saveConstructionStatusBtn").hide();
+	$("#draw_mode").hide();
+	$("#tbl_mode").show();
+	queryConstructionStatus();
+	}
+	//施工管理中表格显示
+	function checkConstructionTable(){
+	$("#ConstructionTable").show();
+	$("#ConstructionTitle").hide();
+	$("#ConstructionDraw").hide();
+	$("#draw_mode").show();
+	$("#tbl_mode").hide();
+	$("#saveConstructionStatusBtn").show();
+	queryConstructionTableList();
+	}
+	
+	function uploadProjectWorkImg(){
+	   	top.openSelectDialog("上传工程图片","pages/pro09/addProjectWorkImg.html?order_id="+info_id+"&cust_code="+cust_code+"&require_id="+require_id,430,420,getProjectWorkImgList);
+	}
+	
+	function getProjectWorkImgList(){
+	   var aoData=[];
+	   aoData.push( {"name":"projectWorkImg.project_order_id","value":info_id} );
+	   aoData.push( {"name":"projectWorkImg.require_id","value":require_id} );
+	   aoData.push( {"name":"projectWorkImg.cust_code","value":cust_code} );
+	   top.sendAjaxRequest("/actions/ProjectOrder.action?getProjectWorkImgList",aoData,getProjectWorkImgListCallBack);
+	}
+	
+	function getProjectWorkImgListCallBack(obj){
+	   if(obj.status==true){
+	      var imgList=obj.body;
+		  var content="";
+		  if(imgList && imgList.length>0){
+		     var i=0;
+		     for(i=0;i<imgList.length;i++){
+			    if(i%3==0){
+				  if(i>0){
+				    content+="</tr>";
+				  }
+				  content+="<tr>";
+				}
+				content+="<td align='center'><img title='"+imgList[i].memo+"' src='"+top.getUrlBase()+"/download?filePath="+imgList[i].pic_path+"' height='180px' width='220px'/></br><a href='javascript:void(0)' style='cursor:pointer;' onclick='updateProjectWorkImg(\""+imgList[i].id+"\")'>"+top.getUserNameByCode(imgList[i].opt_user)+"&nbsp;"+top.getTimeStr(imgList[i].opt_time,true)+"&nbsp;"+imgList[i].pic_title+"</a></td>";
+             }
+			 if(i%3!=0){
+               for(var j=0;j<(3-i%3);j++){
+			      content+="<td></td>";
+			   }
+			  content+="</tr>";
+			 }
+		  }else{
+		     content+="<tr><td align='center'><img title='暂无工程图片信息' src='/img/no_picture1.jpg' height='180px'/></td><td align='center'><input type='image' title='暂无工程图片信息' src='/img/no_picture1.jpg' height='180px'/></td><td align='center'><input type='image' title='暂无工程图片信息' src='/img/no_picture1.jpg' height='180px'/></td></tr>";
+		  }
+	   }else{
+	     content+="<tr><td align='center'><img title='暂无工程图片信息' src='/img/no_picture1.jpg' height='180px'/></td><td align='center'><input type='image' title='暂无工程图片信息' src='/img/no_picture1.jpg' height='180px'/></td><td align='center'><input type='image' title='暂无工程图片信息' src='/img/no_picture1.jpg' height='180px'/></td></tr>";
+	   }
+	   $("#projectWorkImgList").html(content);
+	}
+	
+	function updateProjectWorkImg(id){
+	   top.openSelectDialog("工程图片修改","pages/pro09/addProjectWorkImg.html?id="+id+"&order_id="+info_id+"&cust_code="+cust_code+"&require_id="+require_id,430,420,getProjectWorkImgList);
+	}
+	
+	//获取工程用工列表信息
+	function getProjectWorkerList(){
+	   var aoData=[];
+	   aoData.push( {"name":"projectWorker.project_order_id","value":info_id} );
+	   top.sendAjaxRequest("/actions/ProjectOrder.action?getProjectWorkerList",aoData,getProjectWorkerListCallback);
+	}
+	
+	//获取工程用工信息回调函数
+	function getProjectWorkerListCallback(obj){
+	    var ht="<tr class='tr_data' style='background-color: #b9d8f3;' height='30px'>";
+		ht+="<td width='15%'>工人编号</td><td width='10%'>姓名</td><td width='5%'>星级</td><td width='10%'>联系方式</td><td width='10%'>施工阶段</td><td width='5%'>进场时间</td><td width='5%'>完工时间</td><td width='10%'>是否完工</td><td width='15%'>备注</td><td width='10%'>操作</td>";
+		 if(obj.aaData){
+		     var workerList=obj.aaData;
+			 for(var i=0;i<workerList.length;i++){
+			    ht+="<tr class='tr_data' height='30px'>";
+				ht+="<td id='worker_code_"+workerList[i].id+"' class='"+workerList[i].worker_code+"'>"+workerList[i].worker_code+"</td>";
+				ht+="<td>"+workerList[i].worker_name+"</td>";
+				ht+="<td>"+workerList[i].worker_level+"</td>";
+				ht+="<td>"+workerList[i].worker_tel+"</td>";
+				ht+="<td id='stage_"+workerList[i].id+"' class='"+workerList[i].construction_stage+"'>"+top.getProcessNameByCode(workerList[i].construction_stage)+"</td>";
+				ht+="<td id='a_t_"+workerList[i].id+"'>"+top.getTimeStr(workerList[i].approach_time,true)+"</td>";
+				ht+="<td id='c_t_"+workerList[i].id+"'>"+top.getTimeStr(workerList[i].completed_time,true)+"</td>";
+				ht+="<td id='i_c_"+workerList[i].id+"' class='"+workerList[i].is_completed+"'>"+top.getCodeName("ISYESORNO",workerList[i].is_completed)+"</td>";
+				ht+="<td id='m_"+workerList[i].id+"'>"+workerList[i].memo+"</td>";
+				ht+="<td id='opt_"+workerList[i].id+"'><a href='javascript:void(0)' onclick='updateProjectWorker(\""+workerList[i].id+"\")'>修改</a>&nbsp;&nbsp;<a href='javascript:void(0)' onclick='deleteProjectWorker(\""+workerList[i].id+"\",\""+workerList[i].worker_code+"\",\""+workerList[i].is_completed+"\")'>删除</a></td>";
+				ht+="</tr>";
+			 }
+		 }
+		 ht+="<tr class='tr_data' height='30px'>";
+		 ht+="<td><span id='available_worker' ></span></td>";
+		 ht+="<td><span id='worker_name'></span></td>";
+		 ht+="<td><span id='worker_level'></span></td>";
+		 ht+="<td><span id='worker_tel'></span></td>";
+		 ht+="<td><span id='span_construction_stage'></span></td>";
+		 ht+="<td><input id='approach_time_' type='text' onclick='top.selectDate(this)'  size='10'/></td>";
+		 ht+="<td><input id='completed_time_' type='text' onclick='top.selectDate(this)' size='10'/></td>";
+		 ht+="<td><span id='span_is_completed'></span></td>";
+		 ht+="<td><textarea id='memo_' style='width:120px'></textarea></td>";
+		 ht+="<td id='opt_'><a href='javascript:void(0)' onclick='saveProjectWorker(\"\")'>保存</a></td>";
+		 ht+="</tr>";
+		 
+	   
+		$("#projectWokerList").html(ht);
+		$("#span_construction_stage").html(top.getProcesInfoSelectHtml("construction_stage_","","80px"));
+		$("#span_is_completed").html(top.getCodeSelectHtml("ISYESORNO","is_completed_",true,"","",null,"40px"));
+		if(!top.g_isPermit("09_worker_manager_opt")){//工人管理添加修改权限
+		  $('#projectWokerList tr').find('td:eq(9)').hide();
+		}else{
+		  $('#projectWokerList tr').find('td:eq(9)').show();
+		}
+		getAvailableWorks();
+	}
+	
+	//获取可用工人信息
+	function getAvailableWorks(){
+	   var aoData=[];
+	   aoData.push( {"name":"worker.is_delete","value":0} );
+	   //aoData.push( {"name":"worker.is_on_job","value":0} );
+	   top.sendAjaxRequest("/actions/ProjectOrder.action?getWorkerInfoList",aoData,getAvailableWorksCallback);
+	}
+	
+	//获取可用工人信息回调函数
+	function getAvailableWorksCallback(obj){
+	   obj.aaData.splice(obj.aaData.length-1,1);
+	   var workersList=obj.aaData;
+	   var result="<select id='worker_code' width='100px' onchange='changeWorker()'><option value='无'>---请选择工人---</option>";
+	   if(workersList.length>0){
+	     for(var i=0;i<workersList.length;i++){
+		   result+="<option value='"+workersList[i].worker_code+"' oname='"+workersList[i].worker_name+"' olevel='"+workersList[i].worker_level+"' otel='"+workersList[i].worker_tel+"' >【"+workersList[i].worker_code+"】"+workersList[i].worker_name+"</option>";
+		 }
+	   }
+	   result+="</select>";
+	   $("#available_worker").html(result);
+	}
+	
+	//保存工程用工信息
+	function saveProjectWorker(id){
+	   if(info_id==0){top.showInfoWinWarn("还未有工程订单！");return;}
+	   var worker_code="";
+	   if(id==""){
+		   if($("#worker_code").val()=="无"){
+			  top.showInfoWinWarn("请选择可用的工人！");
+			  return;
+		   }
+		   worker_code=$("#worker_code").val();
+	   }else{
+		   worker_code=$("#worker_code_"+id).attr("class");
+	   }
+	   if($("#memo_"+id).val()!=''){
+	    var msg='';
+	    msg += checkString($("#memo_"+id).val(),true,512,"备注");
+		if(msg!=''){
+			top.showInfoWinWarn(msg);
+			return;
+		}
+	   }
+	   if($("#constrution_stage_"+id).val()==""){
+	      top.showInfoWinWarn("请选择施工阶段！");
+		  return;
+	   }
+	   var aoData=[];
+	   aoData.push( {"name":"projectWorker.project_order_id","value":info_id} );
+	   aoData.push( {"name":"projectWorker.cust_code","value":cust_code} );
+	   aoData.push( {"name":"projectWorker.require_id","value":require_id} );
+	   aoData.push( {"name":"projectWorker.worker_code","value":worker_code} );
+	   aoData.push( {"name":"projectWorker.approach_time","value":top.toTimestamp($("#approach_time_"+id).val())} );
+	   aoData.push( {"name":"projectWorker.completed_time","value":top.toTimestamp($("#completed_time_"+id).val())} );
+	   aoData.push( {"name":"projectWorker.is_completed","value":$("#is_completed_"+id).val()} );
+	   aoData.push( {"name":"projectWorker.memo","value":$("#memo_"+id).val()} );
+	   aoData.push( {"name":"projectWorker.construction_stage","value":$("#construction_stage_"+id).val()} );
+	   var xurl="/actions/ProjectOrder.action?saveProjectWorker";
+	   if(id!=""){
+	     aoData.push( {"name":"projectWorker.id","value":id} );
+	     xurl="/actions/ProjectOrder.action?updateProjectWorker";
+	   }
+	   top.sendAjaxRequest(xurl,aoData,saveProjectWorkerCallback);
+	}
+	//保存工程用工信息回调函数
+	function saveProjectWorkerCallback(obj){
+	   if(obj.status==true){
+	      top.showInfoWinOK("操作成功！");
+		  getProjectWorkerList();
+	   }else{
+	      top.showInfoWinError("操作失败--》"+obj.msg);
+	   }
+	}
+	
+	//修改工程用工信息
+	function updateProjectWorker(id){
+	   $("#stage_"+id).html(top.getProcesInfoSelectHtml("construction_stage_"+id,$("#stage_"+id).attr("class"),"80px"));
+	   $("#a_t_"+id).html("<input id='approach_time_"+id+"' value='"+$("#a_t_"+id).html()+"' size='10' onclick='top.selectDate(this)'/>");
+	   $("#c_t_"+id).html("<input id='completed_time_"+id+"' value='"+$("#c_t_"+id).html()+"' size='10' onclick='top.selectDate(this)'/>");
+	   $("#i_c_"+id).html(top.getCodeSelectHtml("ISYESORNO","is_completed_"+id,true,$("#i_c_"+id).attr("class"),"",null,"40px"));
+	   $("#m_"+id).html("<textarea id='memo_"+id+"' style='width:120px;' value='"+$("#m_"+id).html()+"'>"+$("#m_"+id).html()+"</textarea>");
+	   $("#opt_"+id).html("<a href='javascript:void(0)' onclick='saveProjectWorker(\""+id+"\")'>保存</a><a href='javascript:void(0)' onclick='cancleEditProjectWorker(\""+id+"\")'>取消</a>");
+	}
+	//取消工程用工信息
+	function cancleEditProjectWorker(id){
+	   var completed=$("#is_completed_"+id).val();
+	   $("#stage_"+id).html(top.getProcessNameByCode($("#construction_stage_"+id).val()));
+	   $("#a_t_"+id).html($("#approach_time_"+id).val());
+	   $("#c_t_"+id).html($("#completed_time_"+id).val());
+	   $("#i_c_"+id).html(top.getCodeName("ISYESORNO",$("#is_completed_"+id).val()));
+	   $("#m_"+id).html($("#memo_"+id).val());
+	   $("#opt_"+id).html("<a href='javascript:void(0)' onclick='updateProjectWorker(\""+id+"\")'>编辑</a><a href='javascript:void(0)' onclick='deleteProjectWorker(\""+id+"\",\""+$("#worker_code_"+id).attr("class")+"\",\""+completed+"\")'>删除</a>");
+	}
+	//删除工程用工信息
+	function deleteProjectWorker(id,code,completed){
+	   projectWorkerId=id;
+	   workerCode=code;
+	   is_completed=completed
+	   top.showConfirm("确定要删除该工人的用工信息吗？",doDeleteProjectWorker);
+	}
+	//执行删除工程用工信息
+	function doDeleteProjectWorker(){
+	  var aoData=[];
+	  aoData.push( {"name":"projectWorker.id","value":projectWorkerId} );
+	  aoData.push( {"name":"projectWorker.worker_code","value":workerCode} );
+	  aoData.push( {"name":"projectWorker.is_completed","value":is_completed} );
+	  top.sendAjaxRequest("/actions/ProjectOrder.action?deleteProjectWorker",aoData,doDeleteProjectWorkerCallback);
+	}
+	//执行删除工程用工信息回调函数
+	function doDeleteProjectWorkerCallback(obj){
+	  if(obj.status==true){
+	     top.showInfoWinOK("操作成功！");
+		 getProjectWorkerList();
+	  }else{
+	     top.showInfoWinError("操作失败--》"+obj.msg);
+	  }
+	}
+	
+	//编辑工程保修单
+	function editProjectGuarantee(){
+	   $("#view_project_guarantee").hide();
+	   $("#edit_project_guarantee").show();
+	}
+	
+	//保存工程保修单
+	function saveProjectGuarantee(){
+	    if(info_id==0){ top.showInfoWinWarn("先保存工程订单信息");return;}
+	    var message="";
+		message+=checkString($("#guarantee_code").val(),false,20);
+		message+=checkString($("#guarantee_text").val(),false,512);
+		if(message!=""){
+		  top.showInfoWinWarn(message);return;
+		}
+		var aoData=[];
+	    var is_guarantee=document.getElementById("is_guarantee");
+	    if(is_guarantee.checked==true){
+		    aoData.push( { "name": "projectOrder.is_guarantee", "value": '1' } );
+		}else{
+			aoData.push( { "name": "projectOrder.is_guarantee", "value": '0' } );
+		}
+		aoData.push( { "name":"projectOrder.project_order_id","value":info_id} );
+		aoData.push( { "name": "projectOrder.guarantee_code", "value": $("#guarantee_code").val() } );
+		aoData.push( { "name": "projectOrder.guarantee_begin_date", "value": top.toTimestamp($("#guarantee_begin_date").val()) } );
+		aoData.push( { "name": "projectOrder.guarantee_end_date", "value": top.toTimestamp($("#guarantee_end_date").val()) } );
+		aoData.push( { "name": "projectOrder.guarantee_text", "value": $("#guarantee_text").val() } );
+		top.sendAjaxRequest("/actions/ProjectOrder.action?updateProjectGuarantee",aoData,saveProjectGuaranteeCallback);
+	}
+	
+	function saveProjectGuaranteeCallback(obj){
+	   if(obj.status==true){
+	     top.showInfoWinOK("操作成功！");
+         $("#view_guarantee_begin_date").html($("#guarantee_begin_date").val());
+		 $("#view_guarantee_end_date").html($("#guarantee_end_date").val());
+				
+		 $("#view_guarantee_text").html($("#guarantee_text").val());
+		 $("#view_guarantee_code").html($("#guarantee_code").val());
+		 var is_guarantee="0";
+		 if(document.getElementById("is_guarantee").checked==true){
+		    is_guarantee="1";
+		 }
+		 $("#view_is_guarantee").html(top.getCodeName("ISYESORNO",is_guarantee));
+		 cancleProjectGuarantee();
+		  parent.checkInfoSave();
+	   }
+	}
+	//取消工程保修单
+	function cancleProjectGuarantee(){
+	   $("#view_project_guarantee").show();
+	   $("#edit_project_guarantee").hide();
+	}
+	</script>
+<style>
+body,td {
+	font-size: 13px;
+}
+
+.roomTd {
+	border: 1px;
+	border-style: dotted none none none;
+	border-color: blue;
+	color: #000000;
+	padding-left: 5px;
+}
+
+#KinSlideshow {
+	overflow: hidden;
+	width: 500px;
+	height: 450px;
+}
+
+.inputBottomLine {
+	border-top: hide;
+	border-left: hide;
+	border-center: hide;
+}
+#hall_count,#room_count,#bath_count,#amount{
+	width: 50px;
+}
+#product_brand,#product_model,#product_standard,#price,#unit{
+	width: 80px;
+}
+#product_name
+{
+	width: 100px;
+}
+	a{text-decoration:none}
+</style>
+	</head>
+	<body>
+		<div id="tabs" style="margin: 10px 0px 0px 0px;">
+			<ul>
+				<li>
+					<a href="#tabs-0" class="baseInfo" ><span>基本信息</span>
+					</a>
+				</li>
+				<li>
+					<a href="#tabs-4" class="startOperation" ><span>开工记录</span>
+					</a>
+				</li>
+				<li>
+					<a href="#tabs-8" class="workSchedule" ><span>施工管理</span>
+					</a>
+				</li>
+				<li>
+					<a href="#tabs-9" class="workScheduleCheck" ><span>施工验收</span>
+					</a>
+				</li>
+				<li>
+					<a href="#tabs-3" class="projectChange" ><span>项目变更</span>
+					</a>
+				</li>		
+				<li>
+					<a href="#tabs-5" class="finishCheck" ><span>竣工验收</span>
+					</a>
+				</li>
+				<li>
+					<a href="#tabs-7" class="modelHouse"><span>样板间</span>
+					</a>
+				</li>
+				<li>
+					<a href="#tabs-10" class="projectPic"><span>工程图片</span>
+					</a>
+				</li>
+				<li>
+					<a href="#tabs-11" class="projectWorkers"><span>工人管理</span>
+					</a>
+				</li>
+			</ul>
+				<img src="image/edit.gif" onclick="editBaseInfo()" style="cursor:pointer;display:inline-block;position:absolute;top:12px;right:20px" id="editBt" />
+				<img src="image/save.png" onclick="doSubmit()" style="cursor:pointer;display:inline-block;position:absolute;top:12px;right:65px;display:none;" id="saveBt" />
+				<img src="image/return.png" onclick="doCancelBaseInfo()" style="cursor:pointer;display:inline-block;position:absolute;top:5px;right:20px;display:none;" id="returnBt" />
+			</div>
+		<div id="tabs-0">
+				<div id="edit_tabs-0" style="display:none">	
+				<br /><input type="hidden" id="cust_code"/><input type="hidden" id="cust_name"/><input type="hidden" id="pro_addr"/><input type="hidden" id="building_name"/><input type="hidden" id="cust_tel"/>
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				 <tr class="tr_data"><td class="table_property_title" >工程订单号</td><td colspan="2" id="project_order_id" align="left">系统自动生成</td><td  class="table_property_title" style="font-weight:bold;" id="cust">请选择客户</td><td id="chooseCust"><div class="buttonDivTwo"><a href="javascript:void(0);" onclick="chooseCust()">客户</a></div></td></tr>
+				 <tr class="tr_data">
+				    <td class="table_property_title" >订单状态</td>
+					<td id="tdstatus" align="left"></td>
+					<td class="table_property_title">当前施工阶段</td>
+					<td id="tdcurrent_construction_stage" align="left"></td>
+					<td>是否延期:<span id="span_is_delay"></span></td>
+				 </tr>
+				  <tr class="tr_data">
+				     <td style="width:100px;"></td><td style="width:100px;font-weight:bold;">姓名</td><td style="font-weight:bold;">职称</td><td style="font-weight:bold;">证书号</td><td style="font-weight:bold;">联系电话</td>
+				  </tr>
+				  <tr class="tr_data">
+				     <td class="table_property_title">客户经理<input type="hidden" id="cust_manager"/></td><td id="tdcust_manager"></td><td><input id="cust_manage_pro"/></td><td><input id="cust_manage_diploma"/></td><td><input id="cust_manage_phone"/></td>
+				  </tr> 
+				  <tr class="tr_data">
+				     <td class="table_property_title">设计师<input type="hidden" id="designer"/></td><td id="tddesigner"></td><td><input id="designer_pro"/></td><td><input id="designer_diploma"/></td><td><input id="designer_phone"/></td>
+				  </tr>
+				  <tr class="tr_data">
+				     <td class="table_property_title">产品设计师<input type="hidden" id="product_designer"/></td><td id="tdproduct_designer"></td><td><input id="product_designer_pro"/></td><td><input id="product_designer_diploma"/></td><td><input id="product_designer_phone"/></td>
+				  </tr>
+				  <tr class="tr_data pmo">
+				     <td class="table_property_title">监理</td><td id="tdengineer_supervisor"></td><td><input id="engineer_supervisor_pro"/></td><td><input id="engineer_supervisor_diploma"/></td><td><input id="engineer_supervisor_phone"/></td>
+				  </tr>
+				  <tr class="tr_data pmo">
+				     <td class="table_property_title">项目经理</td><td id="tdproject_manage"></td><td><input id="project_manage_pro"/></td><td><input id="project_manage_diploma"/></td><td><input id="project_manage_phone"/></td>
+				  </tr>
+				  <tr class="tr_data">
+				     <td class="table_property_title">施工负责人</td><td><input style="width:120px" id="work_person"/></td><td><input id="work_pro"/></td><td><input id="work_diploma"/></td><td><input id="work_phone"/></td>
+				  </tr>
+				</table>
+				
+				<br/>
+				<span>工程记录</span>
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+					<tr class="tr_data">
+						<td class="table_property_title">合同签订日期</td>
+						<td align="left" colspan="3" id="contract_sign_date"></td>
+					</tr>
+					<tr  class="tr_data">
+						<td class="table_property_title">计划开工日期</td>
+						<td align="left"><input type="text" id="project_plan_begin_date" onclick="new Calendar().show(this);"  style="width:170px;" readonly="true"/></td>
+						<td class="table_property_title">计划竣工日期</td>
+						<td align="left"><input type="text" id="project_plan_finish_date" onclick="new Calendar().show(this);"  style="width:170px;" readonly="true"/></td>
+					</tr>
+					<tr  class="tr_data">
+						<td class="table_property_title">实际开工日期</td>
+						<td align="left"><input type="text" id="project_fact_begin_date" onclick="new Calendar().show(this);"  style="width:170px;" readonly="true"/></td>
+						<td class="table_property_title">实际竣工日期</td>
+						<td align="left"><input type="text" id="project_fact_finish_date" onblur="projectFinishDateChange()" onclick="new Calendar().show(this);"  style="width:170px;" readonly="true"/></td>
+					</tr>
+				</table>
+				
+				<br/>
+				<span>推荐工地 并作为样板房</span>
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+					<tr class="tr_data">
+						<td width="25%" class="table_property_title"><input type="checkbox" id="is_recommend" value="1"/>推荐工程</td>
+						<td width="25%"  class="table_property_title">推荐说明</td><td align="left" colspan="2"><textarea id="recommend_text" style="width:99%"></textarea></td>
+					</tr>
+				</table>
+				<br/>
+				</div>
+				
+				
+				<div id="view_tabs-0">
+				<br/>
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				  <tr class="tr_data"><td class="table_property_title">工程订单号</td><td colspan="4" id="tdproject_order_id" align="left">系统自动生成</td></tr>
+				  <tr class="tr_data">
+				    <td class="table_property_title" >订单状态</td>
+					<td id="spanstatus" align="left"></td>
+					<td class="table_property_title">当前施工阶段</td>
+					<td id="spancurrent_construction_stage" align="left"></td>
+					<td align="left">是否延期:&nbsp;<label id="label_is_delay"></label></td>
+				 </tr>
+				  <tr class="tr_data">
+				     <td style="width:100px;"></td><td style="width:100px;font-weight:bold">姓名</td><td style="font-weight:bold;">职称</td><td style="font-weight:bold;">证书号</td><td style="font-weight:bold;">联系电话</td>
+				  </tr>
+				  <tr class="tr_data">
+				     <td class="table_property_title">客户经理</td><td id="spancust_manage"></td><td id="tdcust_manage_pro"></td><td id="tdcust_manage_diploma"></td><td id="tdcust_manage_phone"></td>
+				  </tr> 
+				  <tr class="tr_data">
+				     <td class="table_property_title">设计师</td><td id="spandesigner"></td><td id="tddesigner_pro"></td><td id="tddesigner_diploma"></td><td id="tddesigner_phone"></td>
+				  </tr>
+				  <tr class="tr_data">
+				     <td class="table_property_title">产品设计师</td><td id="spanproduct_designer"></td><td id="tdproduct_designer_pro"></td><td id="tdproduct_designer_diploma"></td><td id="tdproduct_designer_phone"></td>
+				  </tr>
+				  <tr class="tr_data">
+				     <td class="table_property_title">监理</td><td id="spanengineer_supervisor"></td><td id="tdengineer_supervisor_pro"></td><td id="tdengineer_supervisor_diploma"></td><td id="tdengineer_supervisor_phone"></td>
+				  </tr>
+				  <tr class="tr_data">
+				     <td class="table_property_title">项目经理</td><td id="spanproject_manager"></td><td id="tdproject_manage_pro"></td><td id="tdproject_manage_diploma"></td><td id="tdproject_manage_phone"></td>
+				  </tr>
+				  <tr class="tr_data">
+				     <td class="table_property_title">施工负责人</td><td id="tdwork_person"></td><td id="tdwork_pro"></td><td id="tdwork_diploma"></td><td id="tdwork_phone"></td>
+				  </tr>
+				</table>
+				
+				<br/>
+				<span>工程记录</span>
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+					<tr class="tr_data">
+						<td  width="25%" class="table_property_title">合同签订日期</td>
+						<td   align="left" colspan="3" id="view_contract_sign_date"></td>
+					</tr>
+					<tr  class="tr_data">
+						<td width="25%" class="table_property_title">计划开工日期</td>
+						<td width="25%" align="left" id="view_project_plan_begin_date"></td>
+						<td width="25%" class="table_property_title">计划竣工日期</td>
+						<td width="25%" align="left" id="view_project_plan_finish_date"></td>
+					</tr>
+					<tr  class="tr_data">
+						<td class="table_property_title">实际开工日期</td>
+						<td align="left" id="view_project_fact_begin_date"></td>
+						<td class="table_property_title">实际竣工日期</td>
+						<td align="left" id="view_project_fact_finish_date"></td>
+					</tr>
+				</table>
+				<br/>
+				<span>推荐工地 并作为样板房</span>
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+					<tr class="tr_data">
+						<td width="25%"  class="table_property_title">是否推荐工程</td>
+						<td align="left" id="view_is_recommend"></td>
+					</tr>
+					<tr class="tr_data">
+						<td width="25%"  class="table_property_title">推荐说明</td>
+						<td align="left" id="view_recommend_text"></td>
+					</tr>
+				</table>
+				 <br/>
+				</div>
+				<div id="view_project_guarantee">
+				<span>工程保修</span>
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+					<tr class="tr_data">
+						<td width="25%" class="table_property_title">是否开保修单</td><td align="left" id="view_is_guarantee"></td>
+						<td width="25%"  class="table_property_title">保修单号</td><td align="left" colspan="2" id="view_guarantee_code"></td>
+					</tr>
+					<tr  class="tr_data">
+						<td width="25%"  class="table_property_title">保修开始时间</td>
+						<td width="25%"  align="left" id="view_guarantee_begin_date"></td>
+						<td width="25%"  class="table_property_title">保修结束时间</td>
+						<td width="25%"  align="left" id="view_guarantee_end_date"></td>
+					</tr>
+					<tr class="tr_data">
+						<td width="25%"  class="table_property_title">保修说明</td><td align="left" colspan="3" id="view_guarantee_text"></td>
+					</tr>
+					<tr class="tr_data" id="editGuaranteeBtn">
+					    <td colspan="4" align="center"><div class="buttonDivTwo"><a href="javascript:void(0)" onclick="editProjectGuarantee()">编辑</a></div></td>
+					</tr>
+				</table>
+				</div>
+				<div id="edit_project_guarantee" style="display:none;">
+				<span>工程保修</span>
+					<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+						<tr class="tr_data">
+							<td width="50%"  colspan="2"><input onclick="projectFinishDateChange()" type="checkbox" id="is_guarantee" value="1"/>是否开保修单</td>
+							<td width="25%"  class="table_property_title">保修单号</td><td align="left" colspan="2"><input type="text" id="guarantee_code"></input></td>
+						</tr>
+						<tr  class="tr_data">
+							<td width="25%"  class="table_property_title">保修开始时间</td>
+							<td width="25%"  align="left"><input type="text" id="guarantee_begin_date" onclick="new Calendar().show(this);" style="width:170px;" readonly="true"/></td>
+							<td width="25%"  class="table_property_title">保修结束时间</td>
+							<td width="25%"  align="left"><input type="text" id="guarantee_end_date" onclick="new Calendar().show(this);" style="width:170px;" readonly="true"/></td>
+						</tr>
+						<tr class="tr_data">
+							<td  width="25%" class="table_property_title">保修说明</td>
+							<td align="left" colspan="3"><textarea id="guarantee_text" style="width:99%"></textarea></td>
+						</tr>
+						<tr class="tr_data" id="editGuaranteeBtn">
+					        <td colspan="2" align="right"><div class="buttonDivTwo"><a href="javascript:void(0)" onclick="saveProjectGuarantee()">保存</a></div></td><td colspan="2" align="left"><div class="buttonDivTwo"><a href="javascript:void(0)" onclick="cancleProjectGuarantee()">取消</a></div></td>
+				        </tr>
+					</table>
+				</div>
+		</div>	
+		<div id="tabs-3">
+			<table width="100%" align="center" cellpadding="0" cellspacing="0"
+				border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									<div id="createBtn" style="display:none" class="buttonDivTwo">
+										<a href="javascript:addInfo()">添加</a>
+									</div>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<table cellpadding="0" width="100%" cellspacing="0" border="0"
+				class="display" id="proChangeTable"></table>
+			</div>	
+		<div id="tabs-4">
+			  <table id="edit_tabs-4" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="display:none;background-color: #b9d8f3;">
+				    <tr class="tr_data" height="35px">
+						<td align="left" colspan="4">增项跟进：</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title">工程增项：</td>
+						<td align="left"><span  id="spanproject_add"></span></td>
+						<td class="table_property_title">产品增项：</td>
+						<td align="left"><span  id="spanproduct_add"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title">图纸、设计是否变更：</td>
+						<td align="left"><span id="span_p_is_change"></span></td>
+						<td class="table_property_title">变更后是否影响设计方案：</td>
+						<td align="left"><span id="span_is_effect_design"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title">图纸、设计变更客户是否知情：</td>
+						<td align="left"><span id="span_cust_is_know"></span></td>
+						<td class="table_property_title">有无异型：</td>
+						<td align="left"><span id="span_is_difference"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title">工程排期表开工3日内交管家：</td>
+						<td align="left"><span id="span_project_is_manager"></span></td>
+						<td class="table_property_title">产品排期表是否在开工3日内交管家：</td>
+						<td align="left"><span id="span_product_is_manager"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title">预交底时间：</td>
+						<td align="left" ><input type="text" id="y_time" onclick="new Calendar().show(this);" style="width:120px;" readonly="true"/></td>
+						<td class="table_property_title">预交底到场人员：</td>
+						<td align="left"><textarea type="text" id="y_persons" cols="25" rows="3" style="width:100%"></textarea></td>
+						
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title">预交底情况：</td>
+						<td align="left" colspan="3"><textarea id="y_situation" rows="2" cols="80" style="width:100%"></textarea></td>
+						
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title">客户自己施工项目：</td>
+						<td align="left" colspan="3"><textarea id="cust_engineering" rows="2" cols="80" style="width:100%"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title">客户协作单是否交由客户：</td>
+						<td align="left" colspan="3"><span id="span_is_hand_cust"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title">现场交底时间：</td>
+						<td align="left"><input type="text" id="x_time" onclick="new Calendar().show(this);" style="width:120px;" readonly="true"/></td>
+						<td class="table_property_title">现场交底到场人员：</td>
+						<td align="left"><textarea type="text" id="x_persons" cols="25" rows="3" style="width:100%;"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title">交底现场情况：</td>
+						<td align="left" colspan="3"><textarea id="x_situation" rows="2" cols="80" style="width:100%"></textarea></td>
+					</tr>	
+					<tr class="tr_data" height="35px">
+						<td align="left" colspan="4">材料进场验收</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title">进场时间：</td>
+						<td align="left"><input type="text" id="come_time" onclick="new Calendar().show(this);" style="width:120px;" readonly="true"/></td>
+						<td class="table_property_title">客户是否验收：</td>
+						<td align="left"><span id="span_is_check_accept"></span></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title">操作人:</td>
+						<td align="left"><label id="operator_user"></label><input type="hidden" id="startoperation_opt_user" style="width:120px;"/></td>
+						<td class="table_property_title">更新时间:</td>
+						<td align="left"><label id="update_time"></label><input type="hidden" id="startoperation_update_time" style="width:120px;"/></td>
+					</tr>
+				</table>
+				
+				 <table id="view_tabs-4" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				    <tr class="tr_data" height="35px">
+						<td align="left" colspan="4">增项跟进：</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title" style="width:250px;">工程增项：</td>
+						<td align="left" id="view_project_add" style="width:150px;"></td>
+						<td class="table_property_title" style="width:250px;">产品增项：</td>
+						<td align="left" id="view_product_add" style="width:150px;"></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title">图纸、设计是否变更：</td>
+						<td align="left" id="view_p_is_change"></td>
+						<td class="table_property_title">变更后是否影响设计方案：</td>
+						<td align="left" id="view_is_effect_design"></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title">图纸、设计变更客户是否知情：</td>
+						<td align="left" id="view_cust_is_know"></td>
+						<td class="table_property_title">有无异型：</td>
+						<td align="left" id="view_is_difference"></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title">工程排期表开工3日内交管家：</td>
+						<td align="left" id="view_project_is_manager"></td>
+						<td class="table_property_title">产品排期表是否在开工3日内交管家：</td>
+						<td align="left" id="view_product_is_manager"></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title">预交底时间：</td>
+						<td align="left" id="view_y_time"></td>
+						<td class="table_property_title">预交底到场人员：</td>
+						<td align="left" id="view_y_persons"/></td>
+						
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title">预交底情况：</td>
+						<td align="left" colspan="3" id="view_y_situation" ></td>
+						
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title">客户自己施工项目：</td>
+						<td align="left" colspan="3" id="view_cust_engineering"></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title">客户协作单是否交由客户：</td>
+						<td align="left" colspan="3" id="view_is_hand_cust"></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title">现场交底时间：</td>
+						<td align="left" id="view_x_time"></td>
+						<td class="table_property_title">现场交底到场人员：</td>
+						<td align="left" id="view_x_persons"></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title">交底现场情况：</td>
+						<td align="left" colspan="3" id="view_x_situation"></td>
+					</tr>	
+					<tr class="tr_data" height="35px">
+						<td align="left" colspan="4">材料进场验收</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title">进场时间：</td>
+						<td align="left" id="view_come_time"></td>
+						<td class="table_property_title">客户是否验收：</td>
+						<td align="left" id="view_is_check_accept"></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title">操作人:</td>
+						<td align="left" id="view_startoperation_opt_user"></td>
+						<td class="table_property_title">更新时间:</td>
+						<td align="left" id="view_startoperation_update_time"></td>
+					</tr>
+				</table>
+		</div>	
+		<div id="tabs-5">
+				 <table id="edit_tabs-5" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="display:none;background-color: #b9d8f3;">
+			       <tr class="tr_data" height="35px">
+						<td class="table_property_title" width="15%">整体延期情况明细：</td>
+						<td align="left" colspan="3"><textarea id="delay_situation" rows="2" style="width: 804px;"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px" style="display:none;">
+						<td class="table_property_title" width="15%">工程延期：</td>
+						<td align="left"><input type="text"  id="project_delay_time" onclick="new Calendar().show(this);" readonly="true"/></td>
+						<td class="table_property_title" width="15%">产品延期：</td>
+						<td align="left"><input type="text"  id="product_delay_time" onclick="new Calendar().show(this);" readonly="true"/></td>
+					</tr>
+					<tr class="tr_data" height="35px" style="display:none;">
+						<td colspan="4" align="center" style="font-weight:bold;">竣工验收</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title" width="15%">竣工预验收时间：</td>
+						<td align="left"><input type="text"  id="finish_check_time" onclick="new Calendar().show(this);" readonly="true"/></td>
+						<td class="table_property_title" width="15%">竣工预验收人员：</td>
+						<td align="left"><input type="text"  id="finish_check_person"/></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title" width="15%">需要进行整改项目：</td>
+						<td align="left" colspan="3"><textarea id="completed_change_project" rows="2" style="width: 804px;"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title" width="15%">客户验收时间：</td>
+						<td align="left"><input type="text" id="cust_check_time" onclick="new Calendar().show(this);" readonly="true"/></td>
+						<td class="table_property_title" width="15%">相关到场人员：</td>
+						<td align="left"><input type="text" id="scene_persons"/></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title" width="15%">尾期增减项明细：</td>
+						<td align="left" colspan="3"><textarea id="final_payment_detail" rows="2" style="width: 804px;"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title" width="15%">尾款金额：</td>
+						<td align="left"><input type="text"  id="final_payment"/></td>
+						<td class="table_property_title" width="15%">交纳尾款时间：</td>
+						<td align="left"><input type="text" id="final_payment_time" onclick="new Calendar().show(this);" readonly="true"/></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title" width="15%">开具保修单时间：</td>
+						<td align="left" colspan="3"><input type="text" id="warranty_time" onclick="new Calendar().show(this);" readonly="true"/></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title">操作人:</td>
+						<td align="left"><label id="tdprojectcompleted_opt_user"></label><input type="hidden" id="projectcompleted_opt_user"  /></td>
+						<td class="table_property_title">更新时间:</td>
+						<td align="left"><label id="tdprojectcompleted_update_time"></label><input type="hidden" id="projectcompleted_update_time"  /></td>
+					</tr>
+				</table>
+				  <table id="view_tabs-5" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+			       <tr class="tr_data" height="35px">
+						<td class="table_property_title" width="15%">整体延期情况明细：</td>
+						<td align="left" colspan="3" id="view_delay_situation" rows="2" cols="80"></td>
+					</tr>
+					<tr class="tr_data" height="35px" style="display:none;">
+						<td class="table_property_title" width="15%">工程延期：</td>
+						<td align="left" id="view_project_delay_time"></td>
+						<td class="table_property_title" width="15%">产品延期：</td>
+						<td align="left" id="view_product_delay_time"></td>
+					</tr>
+					<tr class="tr_data" height="35px" style="display:none;">
+						<td colspan="4" align="center" style="font-weight:bold;">竣工验收</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title" width="15%">竣工预验收时间：</td>
+						<td align="left" id="view_finish_check_time"></td>
+						<td class="table_property_title" width="15%">竣工预验收人员：</td>
+						<td align="left" id="view_finish_check_person"></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title" width="15%">需要进行整改项目：</td>
+						<td align="left" colspan="3" id="view_completed_change_project"></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title" width="15%">客户验收时间：</td>
+						<td align="left" id="view_cust_check_time"></td>
+						<td class="table_property_title" width="15%">相关到场人员：</td>
+						<td align="left" id="view_scene_persons"></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title" width="15%">尾期增减项明细：</td>
+						<td align="left" colspan="3" id="view_final_payment_detail"></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title" width="15%">尾款金额：</td>
+						<td align="left" id="view_final_payment"></td>
+						<td class="table_property_title" width="15%">交纳尾款时间：</td>
+						<td align="left" id="view_final_payment_time"></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title" width="15%">开具保修单时间：</td>
+						<td align="left" colspan="3" id="view_warranty_time"></td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td class="table_property_title">操作人:</td>
+						<td align="left" id="view_projectcompleted_opt_user"></td>
+						<td class="table_property_title">更新时间:</td>
+						<td align="left" id="view_projectcompleted_update_time"></td>
+					</tr>
+				</table>
+			</div>	
+		<div id="tabs-7">
+				<!--<table border="1" cellpadding="3" cellspacing="1" width="100%"
+					align="center" style="background-color: #b9d8f3;">
+					<tr class="tr_data" height="25px">
+						<td width="15%" class="table_property_title">小区</td>
+						<td align="left" id="tddistrict"></td>
+						<td width="15%" class="table_property_title">地址</td>
+						<td align="left" ><textarea id="addr" style="width:205px;"></textarea> </td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" class="table_property_title">客户姓名</td>
+						<td align="left" ><input type="text" id="model_cust_name" style="width:120px;"/></td>
+						<td width="15%" class="table_property_title">户型</td>
+						<td align="left" width="30%">
+							<input type="text" id="room_count">
+							室
+							<input type="text" id="hall_count">
+							厅
+							<input type="text" id="bath_count">
+							卫
+						</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" class="table_property_title">
+							风格
+						</td>
+						<td colspan="3" align="left">
+							<table width="90%">
+								<tr class="tr_data">
+									<td align="left">
+										<input type="checkbox" name="house_style" value="现代前卫•另类" />
+										现代前卫•另类
+									</td>
+									<td align="left">
+										<input type="checkbox" name="house_style" value="现代简约•时尚" />
+										现代简约•时尚
+									</td>
+									<td align="left">
+										<input type="checkbox" name="house_style" value="雅致风格•优雅" />
+										雅致风格•优雅
+									</td>
+									<td align="left">
+										<input type="checkbox" name="house_style" value="新中式•怀旧" />
+										新中式•怀旧
+										<br />
+									</td>
+								</tr>
+								<tr class="tr_data">
+									<td align="left">
+										<input type="checkbox" name="house_style" value="新古典•高雅" />
+										新古典•高雅
+									</td>
+									<td align="left">
+										<input type="checkbox" name="house_style" value="欧式古典•华贵" />
+										欧式古典•华贵
+									</td>
+									<td align="left">
+										<input type="checkbox" name="house_style" value="美式乡村•休闲" />
+										美式乡村•休闲
+									</td>
+									<td align="left">
+										<input type="checkbox" name="house_style" value="地中海•浪漫" />
+										地中海•浪漫
+									</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" class="table_property_title">项目经理</td>
+						<td align="left" id="tdmodelhouse_project_manager"></td>
+						<td width="15%" class="table_property_title">工程监理</td>
+						<td align="left" id="tdsupervision"></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" class="table_property_title">设计师</td>
+						<td align="left" id="modeldesigner"></td>
+						<td width="15%" class="table_property_title">施工进度</td>
+						<td align="left" id="tdconstruct_status"></td>
+					
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" class="table_property_title">样板间看点</td>
+						<td align="left" colspan="3"><textarea id="watching_focus" cols="90"></textarea></td>
+					</tr>
+				</table>
+				<table width="90%" style="margin: 10px;">
+					<tr>
+						<td width="98%" align="center">
+							<div id="saveModelHouseBtn" class="buttonDivTwo">
+								<a href="javascript:void(0)" onclick="saveModelHouse()">保存</a>
+							</div>
+						</td>
+					</tr>
+				</table>!-->
+				<br/>
+				<table border="1" cellpadding="3" id="modelhouseList" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;"></table>
+			</div>
+			
+		<div id="tabs-8">
+		   <table width="30%" style="margin: 10px;">
+				<tr>
+					<td  align="left">
+						<div id="saveConstructionStatusBtn" style="display:none" class="buttonDivTwo">
+							<a href="javascript:void(0)" onclick="addConstructionInfo()">新增</a>
+						</div>
+					</td>
+					<td  align="left">
+						<div  class="buttonDivTwo" id="draw_mode">
+							<a href="javascript:void(0)" onclick="checkConstructionDraw()">图形</a>
+						</div>
+					</td>
+					<td  align="left">
+						<div class="buttonDivTwo" id="tbl_mode"  style="display:none">
+							<a href="javascript:void(0)" onclick="checkConstructionTable()">表格</a>
+						</div>
+					</td>
+					<td></td>
+				</tr>
+			</table>
+			<table border="1" cellpadding="1" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="ConstructionDraw">
+			</table>
+			<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="ConstructionTable">
+			</table>
+			</div>
+		<div id="tabs-9">
+		   <table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="ConstructionCheckTable">
+		   </table>
+		</div>
+		<div id="tabs-10">
+		   <div class="buttonDivTwo">
+		      <a href="javascript:void(0)" onclick="uploadProjectWorkImg()">添加</a>
+		   </div>
+		   <table id="projectWorkImgList" border="1" cellpadding="1" cellspacing="1" width="100%"></table>
+		</div>
+		<div id="tabs-11">
+		    <table id="projectWokerList" border="1" cellpadding="1" cellspacing="1" width="100%"></table>
+		</div>
+		<div id="dialog" title="" style="display: none; padding: 0 0 0 0; margin: 0 0 0 0; z-index: 10000">
+			<iframe id="self_iframe" src="about:blank" width="100%" height="96%"
+				frameborder="0"></iframe>
+		</div>
+		
+	</body>
+</html>

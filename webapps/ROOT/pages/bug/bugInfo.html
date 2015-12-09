@@ -1,0 +1,210 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var defaultProjectId = "JJZS";
+   var from="";
+
+   $(document).ready(function() {
+     initData();
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    	 };
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   function doSubmit(){
+	 var aoData=[];
+     var url = "/actions/Bug.action?insertBug";
+     if ( optType == 'update' ) {
+         aoData.push( { "name": "bug.bugId", "value": $("#bugId").val() } );
+		 url = "/actions/Bug.action?updateBug";
+     }
+	 var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+
+     aoData.push( { "name": "bug.bugId", "value": $("#bugId").val() } );
+	 aoData.push( { "name": "bug.projectId", "value": $("#projectId").val() } );
+	 aoData.push( { "name": "bug.moduleId", "value": $("#moduleId").val() } );
+	 aoData.push( { "name": "bug.bugTitle", "value": $("#bugTitle").val() } );
+	 aoData.push( { "name": "bug.bugDesc", "value": $("#bugDesc").val() } );
+	 aoData.push( { "name": "bug.bugType", "value": $("#bugType").val() } );
+	 aoData.push( { "name": "bug.priority", "value": $("#priority").val() } );
+	 aoData.push( { "name": "bug.status", "value": $("#status").val() } );
+	 aoData.push( { "name": "bug.fixDesc", "value": $("#fixDesc").val() } );
+	 aoData.push( { "name": "bug.verifyDesc", "value": $("#verifyDesc").val() } );
+	 top.sendAjaxRequest(url,aoData,optCallback);
+   }
+   
+   function checkForm(){
+     var msg = "";
+	 msg += checkString($("#bugTitle").val(),true,64,"标题");
+	 msg += checkString($("#bugDesc").val(),true,1000,"描述");
+     return msg;
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      isSaveOK = true;
+		  if ( optType == 'create' ) {
+		    $("#bugTitle").val("");
+		    $("#bugDesc").val("");
+		  }
+	      top.showInfoWinOK("操作成功");
+	    }else{
+	      isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   function initData(){
+	   try{
+		   optType=top.getUrlParam(document.URL,"opt");
+		   var bugId=top.getUrlParam(document.URL,"bugId");
+		   from=top.getUrlParam(document.URL,"from");
+		   document.getElementById("bugId").value = bugId;
+		   $( "#td_status" ).html( top.getCodeSelectHtml("BUG_STATUS","status",false) );
+		   if ( optType == 'create' ) {
+		     $( "#tr_bugId" ).hide();
+			 $( "#tr_creater" ).hide();
+			 $( "#tr_createTime" ).hide();
+			 $( "#tr_updateTime" ).hide();
+			 $( "#tr_fixDesc" ).hide();
+			 $( "#tr_verifyDesc" ).hide();
+
+			 $( "#td_bugType" ).html( top.getCodeSelectHtml("BUG_TYPE","bugType",false ) );
+			 $( "#td_priority" ).html( top.getCodeSelectHtml("BUG_PRIORITY","priority",false ) );
+			 $( "#td_projectId" ).html( top.getCodeSelectHtml("BUG_PROJECT", "projectId", false, defaultProjectId, "onchangeProjectId()" ));
+			 $( "#td_moduleId" ).html( top.getCodeSelectHtml("BUG_PROJECT_"+ $("#projectId").val(), "moduleId", false ) );
+			 $("#status").val("0");
+			 $("#status").attr("disabled",true);
+			 $("#priority").val("2");
+			 $("#bugType").val("2");
+		   } else {
+			 var aoData=[];
+		     aoData.push( { "name": "bug.bugId", "value":bugId } );
+		     top.sendAjaxRequest("/actions/Bug.action?getBugInfo",aoData,infoCallback);
+		   }
+		   
+		   if ( optType == 'create' || optType == 'update' ) {
+		     $( "#submitBtn" ).show();
+	     	 $( "#closeBtn" ).show();
+		   } else {
+		     $( "#submitBtn" ).hide();
+	     	 $( "#closeBtn" ).hide();
+		   }	 
+	   }catch(e){
+		   top.showInfoWinError(e.message);
+	   }
+   }
+
+   function infoCallback(obj){
+       try{
+        if ( obj.status == true ){
+          var bug=obj.body;
+		  
+		  $( "#td_status" ).html( top.getCodeSelectHtml("BUG_STATUS","status",false,bug.status) );
+		  $( "#td_priority" ).html( top.getCodeSelectHtml("BUG_PRIORITY","priority",false,bug.priority) );
+		  $( "#td_bugType" ).html( top.getCodeSelectHtml("BUG_TYPE","bugType",false,bug.bugType) );
+		  $( "#td_projectId" ).html( top.getCodeSelectHtml("BUG_PROJECT", "projectId", false, bug.projectId, "onchangeProjectId()" ));
+		  $( "#td_moduleId" ).html( top.getCodeSelectHtml("BUG_PROJECT_"+bug.projectId, "moduleId", false, bug.moduleId) );
+		  
+          $("#projectId").val( bug.projectId );
+          $("#bugTitle").val( bug.bugTitle );
+		  $("#bugDesc").val( bug.bugDesc );
+		  $("#fixDesc").val( bug.fixDesc );
+		  $("#verifyDesc").val( bug.verifyDesc );
+		  $( "#td_creater" ).html( bug.creater );
+		  $( "#td_createTime" ).html( top.getTimeStr( bug.createTime ) );
+		  $( "#td_updateTime" ).html( top.getTimeStr( bug.updateTime ) );
+        }else{
+          top.showInfoWinError("操作失败");
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+   
+   function onchangeProjectId(){
+       $( "#td_moduleId" ).html( top.getCodeSelectHtml("BUG_PROJECT_"+ $("#projectId").val() , "moduleId", false) );
+   }
+
+  </script> 
+</head>
+<body><br/>
+<table width="100%" border="0" padding="0" spacing="0">
+ <tr id="tr_bugId">
+    <td width="25%" align="right">编号:</td>
+    <td width="75%" align="left" colspan="3"><input type="text" id="bugId" readonly value="" size="15"/></td>
+ </tr>
+ <tr>
+    <td align="right" width="15%">项目:</td>
+    <td align="left" id="td_projectId" width="30%"></td>
+    <td align="right" width="25%">模块:</td>
+    <td align="left" id="td_moduleId" width="35%"></td>
+ </tr>
+ <tr>
+    <td align="right" width="25%">问题标题:</td>
+    <td align="left" width="75%" colspan="3"><input type="text" id="bugTitle" value="" style="width:445px" /></td>
+ </tr>
+ <tr>
+    <td align="right">问题描述:</td>
+    <td align="left" colspan="3"><textarea id="bugDesc" cols="55" rows="5" ></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">状态:</td>
+    <td align="left" id="td_status"></td>
+    <td align="right">问题类型:</td>
+    <td align="left" id="td_bugType"></td>
+ </tr>
+ <tr>
+    <td align="right">优先级:</td>
+    <td align="left" id="td_priority" colspan="3"></td>
+ </tr>
+ <tr id="tr_creater">
+    <td align="right">创建人:</td>
+    <td align="left" id="td_creater" colspan="3"></td>
+ </tr>
+ <tr id="tr_createTime">
+    <td align="right">创建时间:</td>
+    <td align="left" id="td_createTime" colspan="3"></td>
+ </tr>
+ <tr id="tr_updateTime">
+    <td align="right">更新时间:</td>
+    <td align="left" id="td_updateTime" colspan="3"></td>
+ </tr>
+ <tr id="tr_fixDesc">
+    <td align="right">处理情况:</td>
+    <td align="left" colspan="3"><textarea id="fixDesc" cols="55" rows="5" ></textarea></td>
+ </tr>
+ <tr id="tr_verifyDesc">
+    <td align="right">回归测试:</td>
+    <td align="left" colspan="3"><textarea id="verifyDesc" cols="55" rows="5" ></textarea></td>
+ </tr>
+</table>
+<p align="center">
+   <table><tr>
+		    <td><span id="submitBtn" class="buttonTwo"><a href="javascript:doSubmit()">提交</a></span></td>
+		    <td><span id="closeBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+   </tr></table>
+</p>
+</body>
+</html>

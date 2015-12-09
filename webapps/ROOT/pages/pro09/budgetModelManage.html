@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+    <link rel="stylesheet" type="text/css" href="../../css/drag-drop-folder-tree.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/context-menu.css"></link>
+    <link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+    <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js" ></script>
+	<script type="text/javascript" language="javascript" src="../../js/myDtree.js" ></script>
+	<script type="text/javascript" language="javascript" src="../../js/context-menu.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/drag-drop-folder-tree.js" ></script>
+	<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+	<style type="text/css"> 
+	 .versionStyle{background-color:#6CA6CD;margin-bottom:10px; text-align: center;color:#FFFFFF; width:100px;height:30px;}
+	 .versionStyle2{background-color:#FF7F00;margin-bottom:10px; text-align: center;color:#FFFFFF; width:100px;height:30px;}
+	 </style>
+	<script type="text/javascript" >
+	 var curModelInfoIndex=0;
+       $(document).ready(function(){
+    	  getBudgetModelList();
+       });
+	function getBudgetModelList(){
+	  top.sendAjaxRequest("/actions/Projectquote.action?getBudgetModelList",[],getBudgetModelListCallback);
+	}
+	function getBudgetModelListCallback(obj){
+		try{
+		 var budgetModelList=obj.aaData;
+		 var ht="";
+		 var view_ht="";
+		 ht+="<tr class='tr_data'>";
+		ht+="<td width='20%'>模板名称</td>";
+		ht+="<td width='10%'>税金比率</td>";
+		ht+="<td width='10%'>管理费比率</td>";
+		ht+="<td width='10%'>人工费（元）</td>";
+		ht+="<td colspan='2'>备注</td>";
+		ht+="<td width='15%'>操作</td>";
+		ht+="</tr>";
+		  for(var i=0;i<budgetModelList.length;i++){
+				ht+="<tr id='tr_model_row"+budgetModelList[i].model_id+"' class='tr_data'>";
+				ht+="<td valign='top'><label id='lb_model_name"+budgetModelList[i].model_id+"'>"+budgetModelList[i].model_name+"</label><input type='hidden' value='"+budgetModelList[i].model_id+"' id='model_id"+budgetModelList[i].model_id+"'></input><input style='width:120px' type='text' value='"+budgetModelList[i].model_name+"' id='model_name"+budgetModelList[i].model_id+"'></input></td>";
+				ht+="<td valign='top'><label id='lb_tax_scale"+budgetModelList[i].model_id+"'>"+budgetModelList[i].tax_scale+"</label><input id='tax_scale"+budgetModelList[i].model_id+"' value='"+budgetModelList[i].tax_scale+"' style='width:50px'/>%</td>";
+				ht+="<td valign='top'><label id='lb_manage_scale"+budgetModelList[i].model_id+"'>"+budgetModelList[i].manage_scale+"</label><input id='manage_scale"+budgetModelList[i].model_id+"' value='"+budgetModelList[i].manage_scale+"'  style='width:50px'/>%</td>";
+				ht+="<td valign='top'><label id='lb_rengong_price"+budgetModelList[i].model_id+"'>"+budgetModelList[i].rengong_price+"</label><input id='rengong_price"+budgetModelList[i].model_id+"' value='"+budgetModelList[i].rengong_price+"'  style='width:50px'/></td>";
+				ht+="<td colspan='2'  valign='top'><label id='lb_memo"+budgetModelList[i].model_id+"'>"+budgetModelList[i].memo+"</label><textarea id='memo"+budgetModelList[i].model_id+"' rows='3' style='width:200px'>"+budgetModelList[i].memo+"</textarea></td>";
+				ht+="<td id=\"img"+budgetModelList[i].model_id+"\" >";
+				ht+="<img src='../../img/edit.gif'  style='cursor:pointer;' title='编辑' onclick='editModelInfo(\""+budgetModelList[i].model_id+"\")'>&nbsp;&nbsp;<img src='../../img/delete.gif'  style='cursor:pointer;' title='取消' onclick='deleteBudgetModelInfo(\""+budgetModelList[i].model_id+"\")'>";
+				//ht+="<img src='../../img/save.bmp'  style='cursor:pointer;' title='保存' onclick='savePayVioRecord()'>&nbsp;<img src='../../img/delete.gif'  style='cursor:pointer;' title='取消' onclick='deleteBudgetModelInfo()'>";
+				ht+="&nbsp;&nbsp;<img src='../../img/dhtmlgoodies_sheet.gif'  style='cursor:pointer;' title='查看详情' onclick='openBudgetInfo(\""+budgetModelList[i].model_id+"\")'>";
+				
+				ht+="</td>";
+				ht+="</tr>";
+				
+			}
+			
+			ht+="<tr class='tr_data' id='addBudgetModelRow'>";
+			ht+="<td colspan='6'></td><td><img src='../../img/add.gif'  style='cursor:pointer' title='添加' onclick='addModelInfoRow()'></td>";
+			ht+="</tr>";
+			$("#edit_budget_model_list").html(ht);
+			$("#edit_budget_model_list input").hide();
+			$("#edit_budget_model_list textarea").hide();
+			$("#edit_budget_model_list label").show();
+			//$("#view_budget_model_list").append(view_ht);
+		  }catch(e){
+		}
+	}
+	 function editModelInfo(index){
+		$("#img"+index).html("<img src='../../img/save.bmp'  style='cursor:pointer;' title='保存' onclick='saveBudgetModel(\""+index+"\")'>&nbsp;<img src='../../img/delete.gif'  style='cursor:pointer;' title='取消' onclick='deleteBudgetModelInfo(\""+index+"\")'>");
+		$("#tr_model_row"+index+" input").show();
+		$("#tr_model_row"+index+" textarea").show();
+		$("#tr_model_row"+index+" label").hide();
+	  }
+	  function addModelInfoRow(){
+		var view_ht="";
+		var ht="";
+		var modelInfoIndex="";
+		ht+="<tr id='tr_model_row"+modelInfoIndex+"' class='tr_data'>";
+		ht+="<td valign='top'><input id='model_name' value='' style='width:120px'/></td>";
+		ht+="<td valign='top'><input id='tax_scale' value='0' style='width:50px'/>%</td>";
+		ht+="<td valign='top'><input id='manage_scale' value='0'  style='width:50px'/>%</td>";
+		ht+="<td valign='top'><input id='rengong_price' value='0'  style='width:70px'/></td>";
+		ht+="<td colspan='2' valign='top'><textarea id='memo' rows='3' style='width:95%'></textarea></td>";
+		ht+="<td id=\"img"+modelInfoIndex+"\" >";
+		ht+="<img src='../../img/save.bmp'  style='cursor:pointer;' title='保存' onclick='saveBudgetModel(\"\")'>";
+		ht+="</td>";
+		ht+="</tr>";
+		$("#addBudgetModelRow").before(ht);
+		//$("#tr_model_row"+modelInfoIndex+" input").show();
+		//$("#tr_model_row"+modelInfoIndex+" label").hide();
+		/*view_ht+="<tr style='display:none' id='view_tr_model_row"+modelInfoIndex+"'class='tr_data'>";
+		view_ht+="<td id='view_model_name"+modelInfoIndex+"'></td>";
+		view_ht+="<td id='view_tax_scale"+modelInfoIndex+"'></td>";
+		view_ht+="<td id='view_manage_scale"+modelInfoIndex+"'></td>";
+		view_ht+="<td id='view_rengong_price"+modelInfoIndex+"'></td>";
+				view_ht+="<td id='view_memo"+modelInfoIndex+"'></td>";
+		view_ht+="</tr>";*/
+		//$("#view_budget_model_list").append(view_ht);
+	  }
+	  //校验客户基本信息
+    function checkFormDoSubmit(id){	
+	var msg="";
+		if ( $("#manage_scale"+id).val() != '' && !IsFloat( $("#manage_scale"+id).val() )) msg +="[管理费比率]应为数字类型<br>";
+		if ( $("#rengong_price"+id).val() != '' && !IsFloat( $("#rengong_price"+id).val() )) msg +="[人工费]应为数字类型<br>";
+		if ( $("#tax_scale"+id).val() != '' && !IsFloat( $("#tax_scale"+id).val() )) msg +="[税金比率]应为数字类型<br>";
+		if($("#tax_scale"+id).val()>100||$("#tax_scale").val()<=0){
+			msg +="[税金比率]应为介于0~100之间的小数<br>";
+		}
+		if($("#manage_scale"+id).val()>100||$("#manage_scale").val()<=0){
+			msg +="[管理费比率]应为介于0~100之间的小数<br>";
+		}
+		return msg;
+   }
+	function saveBudgetModel(id){
+	// 检查
+		var checkMsg = checkFormDoSubmit(id);
+	    if ( checkMsg != '' ) {
+	       top.showInfoWinWarn(checkMsg);
+           return ;
+	    }
+
+		var aoData=[];
+		var xurl="";
+		aoData.push( { "name": "budgetModel.model_name", "value": $("#model_name"+id).val() } );
+		aoData.push( { "name": "budgetModel.manage_scale", "value": $("#manage_scale"+id).val() } );
+		aoData.push( { "name": "budgetModel.tax_scale", "value": $("#tax_scale"+id).val() } );
+		aoData.push( { "name": "budgetModel.rengong_price", "value": $("#rengong_price"+id).val() } );
+		aoData.push( { "name": "budgetModel.memo", "value": $("#memo"+id).val() } );
+		if(id!=''&&$("#model_id"+id).val()!=''){
+			aoData.push( { "name": "budgetModel.model_id", "value": $("#model_id"+id).val() } );
+		   xurl="/actions/Projectquote.action?updateBudgetModel";
+		}else{
+		   xurl="/actions/Projectquote.action?insertBudgetModel";
+		}
+	    top.sendAjaxRequest(xurl,aoData,saveBudgetModelCallback);
+	}
+	function saveBudgetModelCallback(obj){
+	    try{
+			   if ( obj.status == true ){
+			        top.showInfoWinOK("操作成功");
+			          getBudgetModelList();
+			        }else{
+			        top.showInfoWinError("操作失败");
+			        }
+			       }catch(e){
+			          top.showInfoWinError("处理异常:"+e.message);
+			       }
+	}
+	function deleteBudgetModelInfo(index){
+		if(!index)  return;
+		curModelInfoIndex=index;
+		top.showConfirm("确定删除该预算模板吗？", doDeleteModelInfo);
+		
+	}
+	function doDeleteModelInfo(){
+		if($("#model_id"+curModelInfoIndex).val()==''){
+			$("#tr_model_row"+curModelInfoIndex).remove();
+			$("#view_tr_model_row"+curModelInfoIndex).remove();
+		}else{
+			var aoData=[];
+			aoData.push( { "name": "budgetModel.model_id", "value": $("#model_id"+curModelInfoIndex).val() } );
+			xurl="/actions/Projectquote.action?deleteBudgetModelById";
+			top.sendAjaxRequest(xurl,aoData,deleteModelInfoCallback);
+		}
+	}
+	function deleteModelInfoCallback(obj){
+	 try{
+        if ( obj.status == true ){
+             top.showInfoWinOK("操作成功");
+			 $("#tr_model_row"+curModelInfoIndex).remove();
+			 $("#view_tr_model_row"+curModelInfoIndex).remove();
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	function openBudgetInfo(id){
+		var xurl="pages/pro09/modelItemInfo.html?model_id="+id;
+		top.toSysTab("预算模板配置",xurl);
+	}
+    </script>
+</head>
+<body >
+</br>
+	<B>预算模板</B><br/>				
+			<!--<img src="image/save.png" onclick="saveMeasureHouse()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:0px;right:0px;float:right;display:none;" id="otherSaveBt" />
+			<img src="image/return.png" onclick="doCancelMeasureHouse()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:-5px;right:0px;float:right;display:none;" id="otherReturnBt" />
+			<img src="image/edit.gif" onclick="editMeasureHouse()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:0px;right:0px;float:right;" id="otherEditBt" />
+			<img src="image/printer.png" onclick="" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:0px;right:0px;float:right;display:none;" id="otherPrinterBt" />
+!-->
+		<div id="edit_budget_model">
+		<br/>
+			
+				<table id="edit_budget_model_list" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;border-top: 0;border-bottom: 0;">
+					<!--<tr class='tr_data'>
+						<td width="15%">模板名称</td>
+						<td width="15%">税金比率</td>
+						<td width="15%">管理费比率</td>
+						<td width="15%">人工费（元）</td>
+						<td colspan="2">备注</td>
+						<td width="15%">操作</td>
+					</tr>
+					<tr class='tr_data' id="addBudgetModelRow">
+						<td colspan='6'></td><td><img src='../../img/add.gif'  style='cursor:pointer' title='添加' onclick='addModelInfoRow()'></td>
+					</tr>!-->
+				</table>
+		</div>
+		<div id="view_budget_model" style="display:none">
+			<br/>
+			<B>房间详细信息记录</B><br/>
+				<table id="view_budget_model_list" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;border-top: 0;border-bottom: 0;">
+					<tr class='tr_data'>
+						<td width="21%">房间类型</td>
+						<td width="20%">房间编号</td>
+						<td width="20%">房间名称</td>
+						<td width="13%">地面积</td>
+						<td width="13%">墙面积</td>
+						<td width="13%">层高</td>
+					</tr>
+				</table>
+		</div>
+	
+</body>
+</html>

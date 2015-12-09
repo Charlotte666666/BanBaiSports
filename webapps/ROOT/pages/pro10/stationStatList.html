@@ -1,0 +1,204 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css"	href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"	src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var rowNum=0;
+				
+			$(document).ready(function() {
+			    //$("#td_province_code").html( top.getNationalSelect("q_province_code", true,"doQuery()" ));
+				var today=new Date();
+				var y = today.getFullYear();
+				var m = today.getMonth();
+				if ( m == 0 ) {
+				 m=12;
+				 y=y-1;
+				}
+				$( "#yearSpan" ).html( top.get5YearSelectHtml("q_year",false,y,"doQuery()") );
+			    $( "#monthSpan" ).html( top.get12MonthSelectHtml("q_month",false,m,"doQuery()") );
+				$("#q_year").val(y);
+
+			    var iaoColumns=[
+			                  { "sTitle": "序号", "mDataProp": "province", "sWidth": "10%","sClass": "center","bUseRendered": false,"bSortable":false,
+							      "fnRender": function ( oObj ) {
+								        rowNum++;
+								        return rowNum;
+                                   }
+							  },
+							  { "sTitle": "省份", "mDataProp": "province", "sWidth": "20%","sClass": "center","bUseRendered": false,"bSortable":false,
+							      "fnRender": function ( oObj ) {
+								        return top.getNationalName( oObj.aData.province );
+                                   }
+							  },
+							  { "sTitle": "站号", "mDataProp": "station", "sWidth": "20%", "sClass": "center","bUseRendered": false,"bSortable":false},
+							  { "sTitle": "是否考核站", "mDataProp": "isCheck", "sWidth": "10%", "sClass": "center","bUseRendered": false,"bSortable":false,
+							      "fnRender": function ( oObj ) {
+								        if ( oObj.aData.isCheck == 0 ) return "否";
+                                        return "是";
+                                   }
+							  },
+							  { "sTitle": "可用率（%）", "mDataProp": "right", "sWidth": "20%", "sClass": "center","bSortable":false,
+                                   "fnRender": function ( oObj ) {
+								        if ( oObj.aData.receive == 0 ) return "";
+										var v=Number( oObj.aData.right )*10000/Number( oObj.aData.receive );
+										if ( v > 9999 ) return "99.99";
+                                        return Math.round( v )/100;
+                                   },
+                                   "bUseRendered": false  
+                              }
+                ];
+			   
+			   var surl=top.getUrlBase()+"/actions/CmaTable.action?dailyCountGroupByStationDayFilterByProvince";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+							    top.showLoadingInfo(false);
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+							    top.showLoadingInfo(false);
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData=getParamDate(aoData);
+			    },
+			    "sDom": "frt",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+			    var slen=$("#q_len").val();
+				slen=top.g_GetNumValue(slen,100);
+				if ( slen > 2000 ) {
+				  alert("为了提高查询效率，每次最多返回前2000条数据，请缩小查询范围。");
+				  return ;
+				}
+				rowNum=0;
+				oTable.fnDraw();
+			}
+
+		    function getParamDate(aoData){
+				aoData.push( { "name": "year", "value": $("#q_year").val() } );
+				aoData.push( { "name": "month", "value": $("#q_month").val() } );
+				var sv=$("#q_val").val();
+				var slen=$("#q_len").val();
+				if ( sv == '' ) sv=-1;
+				if ( slen == '' ) slen=100;
+				slen=top.g_GetNumValue(slen,100);
+				var isShow0=1;
+				if ( document.getElementById("isShow0").checked  ) {
+				  isShow0=0;
+				}
+
+				top.showLoadingInfo(true);
+				aoData.push( { "name": "isShow0", "value": isShow0 } );
+				aoData.push( { "name": "val", "value": sv } );
+	            aoData.push( { "name": "len", "value": slen } );
+				aoData.push( { "name": "area", "value": top.getRadioValue( document.getElementsByName("q_area") ) } );
+				aoData.push( { "name": "notExam", "value": top.getRadioValue( document.getElementsByName("q_notExam") ) } );
+				return aoData;
+			}
+			
+ function exportData(){
+     var aoData=[];
+     aoData=getParamDate(aoData);
+	 top.showLoadingInfo(true);
+     top.sendAjaxRequest("/actions/CmaTable.action?exportStationStatData",aoData,callBackExportData);
+ }
+			
+ function callBackExportData(obj){
+     top.showLoadingInfo(false);
+	 try{
+	    if ( obj.status == true ){
+		   var downUrl=top.getUrlBase()+"/download?filePath="+obj.msg+"&fileName=黑名单列表.xls";
+		   document.location.href=downUrl;
+	    }else{
+		   top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	 }catch(e){
+	    top.showInfoWinError("处理异常:"+e.message);
+	 }
+ }
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+			<div style='border: 2px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="150px">
+							&nbsp;黑名单查询&nbsp;
+						</td>
+						<td align="right">
+							<div class="buttonDivTwo">
+								<a href="javascript:exportData()">导出</a>
+							</div>
+						</td>
+						<td width="2px">
+							&nbsp;
+						</td>
+					</tr>
+				</table>
+				<table width="100%" align="center" cellpadding="1px"
+					cellspacing="1px" border="0">
+					<tr class="tr_data">
+						<td align="right">台站类型</td>
+						<td align="left">
+						  <input type="radio" checked name="q_area" value="NAT" onclick="doQuery()"/>国家站
+                          &nbsp;<input type="radio" name="q_area" value="REG" onclick="doQuery()"/>区域站
+						</td>
+						<td align="right">是否考核</td>
+						<td align="left">
+						  <input type="radio" checked name="q_notExam" value="all" onclick="doQuery()"/>全部
+						  &nbsp;<input type="radio" name="q_notExam" value="" onclick="doQuery()"/>考核站
+                          &nbsp;<input type="radio" name="q_notExam" value="not" onclick="doQuery()"/>非考核站
+						</td>
+						<td align="right">统计月份</td>
+						<td align="left">
+						   <span id="yearSpan"></span>年<span id="monthSpan"></span>月
+						</td>
+						<td align="right">显示可用率为0的台站:<input type="checkbox" id="isShow0" value="0" checked onclick="doQuery()" ></input></td>
+						<td align="center">
+						   查询可用率低于<input type="text" id="q_val" value="" onkeydown="if(event.keyCode==13) doQuery();" size="4"></input>%，只显示排名最后的<input type="text" id="q_len" value="100" onkeydown="if(event.keyCode==13) doQuery();" size="5"></input>名
+						</td>
+					</tr>
+				</table>
+			</div>
+			<table cellpadding="0" width="100%" cellspacing="0" border="0"
+				class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

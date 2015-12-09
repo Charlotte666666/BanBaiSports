@@ -1,0 +1,155 @@
+<html>
+	<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+
+  <script type="text/javascript">
+   var dataStr="";
+   var interId = 0;
+   
+   $(document).ready(function() {
+       var sType=top.getUrlParam(document.URL,"sType");
+       var area=top.getUrlParam(document.URL,"area");
+       var proCode=top.getUrlParam(document.URL,"proCode");
+       var aoData=[];
+		   aoData.push( { "name": "detail.type", "value": sType } );
+		   aoData.push( { "name": "area", "value": area } );
+           aoData.push( { "name": "detail.province_code", "value": proCode } );
+		   top.showLoadingInfo(true);
+		   top.sendAjaxRequest("/actions/CmaTable.action?getStatTranRealListByProvinceAndType",aoData,callBackStationDetail);
+   } );
+   
+   function callBackStationDetail(obj){
+       try{
+	        top.showLoadingInfo(false);
+	        dataStr='<chart title="历史到报率情况统计图" types="line" yTitle="单位(%)" yTitle2="" ';
+			var max=100;
+			var min=100;
+			var step=10;
+			var vals="";
+			var axis="";
+			var ad=0;
+			
+			var date=new Date();
+			
+			for (var i=0;i<obj.aaData.length;i++){
+			  if ( i > 0 ) {
+			    vals+=',';
+				axis+=",";
+			  }
+			  if ( ad == 4 ) {
+			    date.setFullYear( obj.aaData[i].v04001 );
+				date.setMonth( Number(obj.aaData[i].v04002)-1 );
+				date.setDate( obj.aaData[i].v04003 );
+				date.setHours( obj.aaData[i].v04004 );
+				
+				date.setTime( date.getTime() + 8*60*60000 );
+			  
+				axis+=date.getDate()+"日"+date.getHours()+"时";
+				ad=0;
+			  } else {
+			    axis+="";
+				ad++;
+			  }
+			  vals+=obj.aaData[i].val;
+			  if ( min > obj.aaData[i].val ) min=obj.aaData[i].val;
+			}
+			
+			min = getMMin(min);
+			step = getMStep( max - min );
+			
+            dataStr+='xAxis="'+axis+'" colors="green" ';
+			dataStr+='yMax="'+max+'" yMin="'+min+'" yStep="'+step+'">';
+			dataStr+='<data label="到报率" values="'+vals+'" />';
+			dataStr+='</chart>';
+			
+			drawChart();
+       }catch(e){
+          top.showInfoWin("处理异常:"+e.message);
+       }
+   }
+   
+   function getChartStr(){
+    return dataStr;
+   }
+ 
+   function drawChart(){
+   	   if ( dataStr == '' ) return ;
+   	   try{
+         var chartFrame = document.getElementById("chartFrame");
+         if ( chartFrame.contentWindow.isLoaded() ) {
+		   clearInterval( interId );
+           chartFrame.contentWindow.doDrawChart( dataStr );
+         }
+       }catch(e){
+       }
+   }
+   
+   function getMMin(m){
+      if ( m == 0 ) return 0;
+      for ( var i=1;i<15;i++ ) {
+	     if ( m > (100 - i*5) ) {
+		    m = (100 - i*5);
+			break;
+		 }
+	  }
+	  if ( m < 20 ) {
+	     for ( var i=1;i<16;i++ ) {
+			 if ( m > (20 - i) ) {
+				m = 20 - i;
+				break;
+			 }
+		 }
+	  }
+	  if ( m < 5 ) {
+	     for ( var i=1;i<10;i++ ) {
+			 if ( m > (5 - i*0.5) ) {
+				m = 5 - i*0.5;
+				break;
+			 }
+		 }
+	  }
+	  if ( m < 1 ) {
+	     for ( var i=1;i<10;i++ ) {
+			 if ( m > (1 - i*0.1) ) {
+				m = 1 - i*0.1;
+				break;
+			 }
+		 }
+	  }
+	  if ( m < 0.1 ) {
+	     for ( var i=1;i<10;i++ ) {
+			 if ( m > (0.1 - i*0.01) ) {
+				m = 0.1 - i*0.01;
+				break;
+			 }
+		 }
+	  }
+	  if ( m < 0 ) m = 0;
+	  return m;
+   }
+   
+   function getMStep(d){
+      if ( d > 50 ) return 10;
+	  if ( d > 10 ) return 5;
+	  if ( d > 1 ) return 1;
+	  if ( d > 0.1 ) return 0.1;
+	  if ( d > 0.01 ) return 0.01;
+	  if ( d > 0.005 ) return 0.005;
+	  return 0.0005;
+   }
+   
+  </script> 
+</head>   
+<body>
+   <table height="100%" width="100%">
+   <tr>
+    <td height="100%" width="100%">
+      <iframe id="chartFrame" src="../chart.html" width="100%" height="100%" frameborder="0"></iframe>
+    </td>
+   </tr>
+   </table>
+</body>
+</html>

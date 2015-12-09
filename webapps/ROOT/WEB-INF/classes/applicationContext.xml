@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jee="http://www.springframework.org/schema/jee" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:tool="http://www.springframework.org/schema/tool" 
+	xsi:schemaLocation="
+			http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.1.xsd
+			http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+			http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
+			http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-3.1.xsd
+			http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.1.xsd
+			http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd
+			http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd
+			http://www.springframework.org/schema/tool http://www.springframework.org/schema/tool/spring-tool-3.1.xsd"
+	default-lazy-init="true">
+	
+	<bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<description>配置需要的资源文件</description>
+		<property name="locations">
+			<list>
+				<value>classpath:configure.properties</value>
+			</list>
+		</property>
+	</bean>
+
+    <bean id="dataSource" class="com.jolbox.bonecp.BoneCPDataSource" destroy-method="close">
+	  <property name="driverClass" value="${jdbc.driverClassName}" />
+	  <property name="jdbcUrl" value="${jdbc.url}" />
+	  <property name="username" value="${jdbc.username}" />
+	  <property name="password" value="${jdbc.password}" />
+	  <!--检查数据库连接池中空闲连接的间隔时间 -->
+	  <property name="idleConnectionTestPeriodInMinutes" value="2" />
+	  <!--连接池中未使用的链接最大存活时间 -->
+	  <property name="idleMaxAgeInMinutes" value="20" />
+	  <!--设置每个分区含有connection最大个数--> 
+	  <property name="maxConnectionsPerPartition" value="10" />
+	  <!--设置每个分区含有connection最小个数 --> 
+	  <property name="minConnectionsPerPartition" value="3" />
+	  <!--设置每个分区数 --> 
+	  <property name="partitionCount" value="2" />
+	  <!--设置分区中的connection增长数量 --> 
+	  <property name="acquireIncrement" value="5" />
+	  <!--设置连接池阀值 --> 
+	  <property name="poolAvailabilityThreshold" value="10" />
+	  <!--连接超时时间 --> 
+	  <property name="connectionTimeoutInMs" value="20000" />
+	  <property name="logStatementsEnabled" value="true" />
+	</bean>
+
+    <!-- transaction manager, use JtaTransactionManager for global tx -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource" />
+    </bean>
+
+    <context:component-scan base-package="com.helpyouworkeasy.service" />
+
+    <!-- enable autowire -->
+    <context:annotation-config />
+
+    <!-- define the SqlSessionFactory -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource" />
+        <property name="typeAliasesPackage" value="com.helpyouworkeasy.model" />
+    </bean>
+
+    <!-- scan for mappers and let them be autowired -->
+    <bean name="mapperScannerConfigurer" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.helpyouworkeasy.persistence" />
+        <property name="sqlSessionFactory" ref="sqlSessionFactory" />
+    </bean>
+    
+    <import resource="applicationContext-quartz.xml" />
+    
+</beans>

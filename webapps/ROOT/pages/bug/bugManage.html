@@ -1,0 +1,173 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+		    var optType="";
+			$(document).ready(function() {
+			   $( "#tdStatus" ).html( top.getCodeSelectHtml("BUG_STATUS","q_status",true, "0") );
+			   $( "#tdPriority" ).html( top.getCodeSelectHtml("BUG_PRIORITY","q_priority",true) );
+			   $( "#tdProjectId" ).html( top.getCodeSelectHtml("BUG_PROJECT","q_projectId",true) );
+			   
+			   optType=top.getUrlParam(document.URL,"optType");
+			   var iaoColumns= [
+                               { "sTitle": "编号", "mDataProp": "bugId", "sWidth": "10%", "bUseRendered": false },
+                               { "sTitle": "标题", "mDataProp": "bugTitle", "sWidth": "40%","sClass": "left",
+                                      "fnRender": function ( oObj ) {
+                                           return '<a href=\'javascript:void(0)\' onclick="updateBug(\''+oObj.aData.bugId+'\')" >'+oObj.aData.bugTitle+"</a>" ;
+                                      },
+                                      "bUseRendered": false 
+                               },
+                               { "sTitle": "类型", "mDataProp": "bugType", "sWidth": "10%","sClass": "center",
+                            	   "fnRender": function ( oObj ) {
+                                      return top.getCodeName( "BUG_TYPE", oObj.aData.bugType );
+                                   },
+                                   "bUseRendered": false
+                               },
+                               { "sTitle": "优先级", "mDataProp": "priority", "sWidth": "10%", "sClass": "center",
+                                   "fnRender": function ( oObj ) {
+                                        return top.getCodeName( "BUG_PRIORITY", oObj.aData.priority );
+                                   },
+                                   "bUseRendered": false  
+                               },
+                               { "sTitle": "状态","mDataProp": "status","sWidth": "15%", "sClass": "center",
+                            	  "fnRender": function ( oObj ) {
+                                       return top.getCodeName( "BUG_STATUS", oObj.aData.status );
+                                  },
+                                  "bUseRendered": false 
+                               },
+							   { "sTitle": "更新时间","mDataProp": "updateTime","sWidth": "15%", "sClass": "center",
+                            	  "fnRender": function ( oObj ) {
+                                       return top.getTimeStr( oObj.aData.updateTime );
+                                  },
+                                  "bUseRendered": false 
+                               }
+               ];
+
+			   var surl=top.getUrlBase()+"/actions/Bug.action?getBugList";
+
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"aaSorting": [[ 5, "desc" ]],
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     aoData.push( { "name": "bug.bugId", "value": $("#q_bugId").val() } );
+						 aoData.push( { "name": "bug.projectId", "value": $("#q_projectId").val() } );
+						 aoData.push( { "name": "bug.bugTitle", "value": $("#q_bugTitle").val() } );
+						 aoData.push( { "name": "bug.creater", "value": $("#q_creater").val() } );
+						 aoData.push( { "name": "bug.priority", "value": $("#q_priority").val() } );
+						 aoData.push( { "name": "bug.status", "value": $("#q_status").val() } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+			function addBug(){
+				var xurl="pages/bug/bugInfo.html?opt=create";
+				top.openDialog("创建Bug信息",xurl,true,600,350,saveCallBack);
+			}
+			
+			function updateBug(bugId){
+				var xurl="pages/bug/bugInfo.html?opt=update&bugId="+bugId;
+				top.openDialog("处理Bug信息",xurl,true,600,600,saveCallBack);
+			}
+			
+			function saveCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				  
+				}
+			}
+			
+			function optCallback(obj){
+			       try{
+			        if ( obj.status == true ){
+			          top.showInfoWinOK("操作成功");
+			          doQuery();
+			        }else{
+			          top.showInfoWinError("操作失败 "+obj.msg);
+			        }
+			       }catch(e){
+			          top.showInfoWinError("处理异常:"+e.message);
+			       }
+		  }
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+		    <div style='border: 1px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="110px">&nbsp;Bug查询&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0" >
+			   <tr class="tr_data">
+			      <td align="right" width="5%">编号:</td><td align="left" width="10%"><input type="text" id="q_bugId" value="" size="10" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+			      <td align="right" width="5%">标题:</td><td align="left" width="20%"><input type="text" id="q_bugTitle" value="" size="20" onkeydown="if(event.keyCode==13) doQuery();"/></td>
+			      <td align="right" width="5%">项目:</td><td align="left" width="10%" id="tdProjectId"></td>
+				  <td align="right" width="5%">状态:</td><td align="left" width="10%" id="tdStatus"></td>
+			      <td align="right" width="6%">优先级:</td><td align="left" width="10%" id="tdPriority"></td>
+				  <td align="right" width="10%">创建人账号:</td><td align="left" width="10%"><input type="text" id="q_creater" value="" size="10" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+			     </tr>
+			 </table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				    <td>&nbsp;查询结果列表&nbsp;</td>
+					<td><div id="createBtn" class="buttonDivTwo"><a href="javascript:addBug()">添加</a></div></td>
+			       </tr></table></td>
+			  </tr>
+			</table>
+	        <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

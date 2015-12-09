@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.helpyouworkeasy.persistence.TeamMapper">
+   
+  <insert id="insertTeam" parameterType="Team">
+    INSERT INTO tbl_team (team_name,memo,phone,short_name,slogan,school_code,img_url,leader_name,coach_name,leader_sex,id,leader_id,schedule_id,coach_id)
+    VALUES (#{team_name}, #{memo}, #{phone}, #{short_name}, #{slogan}, #{school_code}, #{img_url}, #{leader_name}, #{coach_name}, #{leader_sex}, #{id}, #{leader_id}, #{schedule_id}, #{coach_id})
+  </insert>
+
+  <update id="updateTeam" parameterType="Team">
+    update tbl_team set 
+    team_name=#{team_name},memo=#{memo},phone=#{phone},short_name=#{short_name},slogan=#{slogan},school_code=#{school_code},leader_name=#{leader_name},coach_name=#{coach_name},leader_sex=#{leader_sex},leader_id=#{leader_id},schedule_id=#{schedule_id},coach_id=#{coach_id}
+    where id=#{id}
+  </update>
+  
+  <update id="updateTeamImg" parameterType="Team">
+    update tbl_team set 
+     img_url=#{img_url}
+    where id=#{id}
+  </update>
+  
+  <delete id="deleteTeam" parameterType="map">
+    delete from tbl_team where id=#{id}
+  </delete>
+
+  <select id="getTeamListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_team where 1=1 
+    <if test="o.team_name != '' and o.team_name != null" >
+      and team_name=#{o.team_name}
+    </if>
+    <if test="o.school_code != '' and o.school_code != null" >
+      and school_code=#{o.school_code}
+    </if>
+    <if test="o.leader_id != -1" >
+      and leader_id=#{o.leader_id}
+    </if>
+    <if test="o.schedule_id != -1" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+  </select>
+
+  <select id="getTeamPageList" parameterType="map" resultType="Team">
+    select 
+    team_name,memo,phone,short_name,slogan,school_code,img_url,leader_name,coach_name,leader_sex,id,leader_id,schedule_id,coach_id
+    from tbl_team where 1=1 
+    <if test="o.team_name != '' and o.team_name != null" >
+      and team_name=#{o.team_name}
+    </if>
+    <if test="o.school_code != '' and o.school_code != null" >
+      and school_code=#{o.school_code}
+    </if>
+    <if test="o.leader_id != -1" >
+      and leader_id=#{o.leader_id}
+    </if>
+    <if test="o.schedule_id != -1" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+  
+  <select id="getTeamByLeader" parameterType="map" resultType="Team">
+    select 
+    team_name,memo,phone,short_name,slogan,school_code,img_url,leader_name,coach_name,leader_sex,id,leader_id,schedule_id,coach_id
+    from tbl_team where leader_id=#{leader_id} and schedule_id=#{schedule_id}
+  </select>
+
+  <select id="getAllTeamListBySchedule" parameterType="map" resultType="Team">
+    select 
+    team_name,memo,phone,short_name,slogan,school_code,img_url,leader_name,coach_name,leader_sex,id,leader_id,schedule_id,coach_id
+    from tbl_team where schedule_id=#{schedule_id}
+  </select>
+  
+  <select id="getTeamById" parameterType="map" resultType="Team">
+    select 
+    team_name,memo,phone,short_name,slogan,school_code,img_url,leader_name,coach_name,leader_sex,id,leader_id,schedule_id,coach_id
+    from tbl_team where id=#{id}
+  </select>
+
+</mapper>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+<script type="text/javascript">
+var oTable = null;
+var currentDeleteCode=0;
+
+$(document).ready( function() {
+	loadList();
+});
+
+  function deleteInfo(code){
+    currentDeleteCode=code;
+	top.showConfirm("您确定要删除选中的记录吗？", doDelete);
+ }
+			
+ function doDelete(){
+    var aoData=[];
+	aoData.push( { "name": "shareInfo.id", "value": currentDeleteCode } );
+	var xurl="/actions/Share.action?deleteShareInfo";
+    top.sendAjaxRequest(xurl,aoData,optCallback);
+ }
+ 
+ function loadList(){
+    var iaoColumns= [
+	           { "sTitle": "发布时间", "mDataProp": "publish_time", "sWidth": "20%", 
+			       "fnRender": function ( oObj ) {
+				     return  top.getTimeStr( oObj.aData.publish_time );
+                   },
+			       "bUseRendered": false , "bSortable":false},
+				{ "sTitle": "发布人昵称", "mDataProp": "author_name", "sWidth": "20%", "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "内容", "mDataProp": "content", "sWidth": "50%", "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "操作", "mDataProp": "id", "sWidth": "10%","bSortable":false,
+                    "fnRender": function ( oObj ) {
+					     var ht='&nbsp;<span align="center" style="cursor:pointer;" onclick="deleteInfo(\''+oObj.aData.id+'\')"><img src="../../img/delete.gif" />&nbsp;删除</span>';
+                         return ht;
+					},
+                    "bUseRendered": false
+               }
+        ];
+ 	
+		oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": top.getUrlBase()+"/actions/Share.action?getShareInfoList",
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+				         aoData.push( { "name": "time1", "value": $("#q_time1").val() } );
+						 aoData.push( { "name": "time2", "value": $("#q_time2").val() } );
+						 aoData.push( { "name": "shareInfo.author_id", "value": -1 } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumns
+	   } );
+ }
+
+ function doQuery(){
+	oTable.fnDraw();
+ }
+ 
+ function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      top.showInfoWinOK("操作成功");
+		  doQuery();
+	    }else{
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+ }
+
+</script>
+</head>
+<body>
+            <div style='border: 1px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="180px">&nbsp;羽球圈信息管理&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+                  <td align="right">发布时间:</td><td align="left" colspan="7"><input type="text" id="q_time1" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" />~<input type="text" id="q_time2" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" /></td>				  		  
+				 </tr>
+			 </table>
+			</div>
+<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+</body>
+</html> 

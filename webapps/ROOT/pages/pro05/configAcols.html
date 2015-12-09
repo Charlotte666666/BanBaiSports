@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/base/ui.all.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery.ui.accordion.js"></script>
+
+<style type="text/css">
+#main{
+	height:100%;
+	padding: 10px;
+}
+</style>
+<script type="text/javascript">
+var isSaveOK=false;
+var colIndex=1;
+var userCode = "";
+
+$(document).ready( function() {
+    $( "#accordion" ).accordion({
+		 autoHeight: false,
+		 navigation: true
+    });
+	initData();
+});
+
+function doBeforeClose(){
+    var obj={
+   		  "isSaveOK":isSaveOK
+	};
+    top.setTempValue(obj);
+}
+
+function doCancel(){
+    top.closeDialog();
+}
+
+function headButtonFun1(){
+    doSubmit();
+}
+
+function doSubmit(){
+    var fields=top.getAllCheckedValue( document.getElementsByName('col') );
+	if ( fields == '' ) {
+	  top.showInfoWinWarn("请勾选配置的字段");
+	  return;
+	}
+	var aoData=[];
+    aoData.push( { "name": "userConfig.userCode", "value": userCode } );
+	for ( var i=1;i<10;i++ ) {
+	  if ( colIndex == i ) {
+	    aoData.push( { "name": "userConfig.c"+i, "value": fields } );
+	  } else {
+        aoData.push( { "name": "userConfig.c"+i, "value": "INOCHANGEI" } );
+	  }
+	}
+	top.sendAjaxRequest("/actions/User.action?updateUserConfig",aoData,optCallback);
+}
+
+function initData(){
+    colIndex=top.getUrlParam(document.URL,"colIndex");
+	if ( !colIndex ) colIndex=1;
+	colIndex=Number(colIndex);
+	
+	var user = top.getCurrentUser();
+	userCode = user.userCode;
+	
+	var userConfig = top.getUserConfig();
+	if ( userConfig ) {
+	  var v=userConfig.c1;
+	  if ( colIndex == 2 ) { 
+	    v=userConfig.c2;
+	  } else if ( colIndex == 3 ) { 
+	    v=userConfig.c3;
+	  } else if ( colIndex == 4 ) { 
+	    v=userConfig.c4;
+	  } else if ( colIndex == 5 ) { 
+	    v=userConfig.c5;
+	  } else if ( colIndex == 6 ) { 
+	    v=userConfig.c6;
+	  } else if ( colIndex == 7 ) { 
+	    v=userConfig.c7;
+	  } else if ( colIndex == 8 ) { 
+	    v=userConfig.c8;
+	  } else if ( colIndex == 9 ) { 
+	    v=userConfig.c9;
+	  }
+	  if ( v == 'INOCHANGEI' ) return ;
+	  if ( colIndex == 3 && v == '' ) {
+	    top.checkAll(true,document.getElementsByName('col'));
+		document.getElementById("c1").checked=true;
+		document.getElementById("c2").checked=true;
+		document.getElementById("c3").checked=true;
+		document.getElementById("c4").checked=true;
+		document.getElementById("c5").checked=true;
+		document.getElementById("c6").checked=true;
+		document.getElementById("c7").checked=true;
+	  } else {
+	    top.initCheckedValue( document.getElementsByName('col'), v);
+	  }
+	}
+}
+
+function optCallback(obj){
+	try{
+	 if ( obj.status == true ){
+	  isSaveOK = true;
+	  top.showInfoWinOK("操作成功");
+	  var userConfig = top.getUserConfig();
+	  if ( !userConfig ) userConfig={};
+	  var v=top.getAllCheckedValue( document.getElementsByName('col') );
+	  if ( colIndex == 1 ) {
+	    userConfig.c1=v;
+	  } else if ( colIndex == 2 ) { 
+	    userConfig.c2=v;
+	  } else if ( colIndex == 3 ) { 
+	    userConfig.c3=v;
+	  } else if ( colIndex == 4 ) { 
+	    userConfig.c4=v;
+	  } else if ( colIndex == 5 ) { 
+	    userConfig.c5=v;
+	  } else if ( colIndex == 6 ) { 
+	    userConfig.c6=v;
+	  } else if ( colIndex == 7 ) { 
+	    userConfig.c7=v;
+	  } else if ( colIndex == 8 ) { 
+	    userConfig.c8=v;
+	  } else if ( colIndex == 9 ) { 
+	    userConfig.c9=v;
+	  }
+	  top.updateUserConfig( userConfig );
+	  top.closeDialog();
+	 }else{
+	  isSaveOK = false;
+	  top.showInfoWinError("操作失败 "+obj.msg);
+	 }
+	}catch(e){
+	  top.showInfoWinError("处理异常:"+e.message);
+	}
+}
+
+function selectAll(cpre){
+   var isChecked=document.getElementById(cpre).checked;
+   var cs=document.getElementsByName('col');
+   for ( var i=0;i<cs.length;i++ ) {
+     if ( cs[i].value.indexOf( cpre ) != -1 ) cs[i].checked = isChecked;
+   }
+}
+</script>
+</head>
+<body>
+<div id="main">
+<div id="accordion" class="demolayout" style="background-color:#ffffff;">
+	<h3><a href="#section1">一般情况</a></h3>
+<div>
+<table width="100%">
+<tr>
+<td colspan="4"><input type='checkbox' id="c1" onclick="selectAll('c1')" value=''></input>&nbsp;全选</td>
+</tr>
+<tr>
+<td><input type='checkbox' value='c1101' name='col'></input>&nbsp;姓名</td>
+<td><input type='checkbox' value='c1102' name='col'></input>&nbsp;病历号</td>
+<td><input type='checkbox' value='c1103' name='col'></input>&nbsp;性别</td>
+<td><input type='checkbox' value='c1104' name='col'></input>&nbsp;移植前年龄</td>
+</tr><tr>
+<td><input type='checkbox' value='c1105' name='col'></input>&nbsp;出生年月</td><td><input type='checkbox' value='c1106' name='col'></input>&nbsp;身高</td>
+<td><input type='checkbox' value='c1107' name='col'></input>&nbsp;体重</td>
+<td><input type='checkbox' value='c1108' name='col'></input>&nbsp;体表面积</td>
+</tr><tr>
+<td><input type='checkbox' value='c1109' name='col'></input>&nbsp;BMT日期（移植时间）</td>
+<td><input type='checkbox' value='c1201' name='col'></input>&nbsp;移植前细胞遗传学</td>
+<td><input type='checkbox' value='c1202' name='col'></input>&nbsp;移植前分子遗传学</td><td><input type='checkbox' value='c1203' name='col'></input>&nbsp;移植前白细胞数</td>
+</tr><tr>
+<td><input type='checkbox' value='c1204' name='col'></input>&nbsp;骨髓原始细胞数</td><td><input type='checkbox' value='c1205' name='col'></input>&nbsp;流式残留情况</td><td><input type='checkbox' value='c1206' name='col'></input>&nbsp;分子学MRD</td>
+<td><input type='checkbox' value='c1207' name='col'></input>&nbsp;髓外髓外浸润</td>
+</tr><tr>
+<td><input type='checkbox' value='c1208' name='col'></input>&nbsp;诊断</td><td><input type='checkbox' value='c1209' name='col'></input>&nbsp;移植前状况</td>
+<td><input type='checkbox' value='c1210' name='col'></input>&nbsp;移植物</td><td><input type='checkbox' value='c1301' name='col'></input>&nbsp;HLA</td>
+</tr><tr>
+<td><input type='checkbox' value='c1302' name='col'></input>&nbsp;供者性别</td>
+<td><input type='checkbox' value='c1303' name='col'></input>&nbsp;供者年龄</td><td><input type='checkbox' value='c1304' name='col'></input>&nbsp;供者与患者关系</td><td><input type='checkbox' value='c1305' name='col'></input>&nbsp;患者血型</td>
+</tr><tr>
+<td><input type='checkbox' value='c1306' name='col'></input>&nbsp;供者血型</td><td><input type='checkbox' value='c1307' name='col'></input>&nbsp;不合位点</td><td><input type='checkbox' value='c1308' name='col'></input>&nbsp;HLA-A</td>
+<td><input type='checkbox' value='c1309' name='col'></input>&nbsp;HLA-B</td>
+</tr><tr>
+<td><input type='checkbox' value='c1310' name='col'></input>&nbsp;HLA-C</td><td><input type='checkbox' value='c1311' name='col'></input>&nbsp;HLA-DR</td>
+<td><input type='checkbox' value='c1312' name='col'></input>&nbsp;HLA-DP</td><td><input type='checkbox' value='c1313' name='col'></input>&nbsp;HLA-DQ</td>
+</tr><tr>
+<td><input type='checkbox' value='c1315' name='col'></input>&nbsp;患者位点HLA-A</td>
+<td><input type='checkbox' value='c1316' name='col'></input>&nbsp;患者位点HLA-B</td>
+<td><input type='checkbox' value='c1317' name='col'></input>&nbsp;患者位点HLA-C</td>
+<td><input type='checkbox' value='c1318' name='col'></input>&nbsp;患者位点HLA-DR</td>
+</tr><tr>
+<td><input type='checkbox' value='c1319' name='col'></input>&nbsp;患者位点HLA-DP</td><td><input type='checkbox' value='c1320' name='col'></input>&nbsp;患者位点HLA-DQ</td>
+<td><input type='checkbox' value='c1321' name='col'></input>&nbsp;供者位点HLA-A</td>
+<td><input type='checkbox' value='c1322' name='col'></input>&nbsp;供者位点HLA-B</td>
+</tr><tr>
+<td><input type='checkbox' value='c1323' name='col'></input>&nbsp;供者位点HLA-C</td>
+<td><input type='checkbox' value='c1324' name='col'></input>&nbsp;供者位点HLA-DR</td>
+<td><input type='checkbox' value='c1325' name='col'></input>&nbsp;供者位点HLA-DP</td>
+<td><input type='checkbox' value='c1326' name='col'></input>&nbsp;供者位点HLA-DQ</td>
+</tr><tr>
+<td><input type='checkbox' value='c1306' name='col'></input>&nbsp;供者血型</td><td><input type='checkbox' value='c1307' name='col'></input>&nbsp;不合位点</td><td><input type='checkbox' value='c1308' name='col'></input>&nbsp;HLA-A</td>
+<td><input type='checkbox' value='c1309' name='col'></input>&nbsp;HLA-B</td>
+</tr><tr>
+<td><input type='checkbox' value='c1310' name='col'></input>&nbsp;HLA-C</td><td><input type='checkbox' value='c1311' name='col'></input>&nbsp;HLA-DR</td>
+<td><input type='checkbox' value='c1312' name='col'></input>&nbsp;HLA-DP</td><td><input type='checkbox' value='c1313' name='col'></input>&nbsp;HLA-DQ</td>
+</tr><tr>
+<td><input type='checkbox' value='c1401' name='col'></input>&nbsp;诊断距移植时间(月)</td>
+<td><input type='checkbox' value='c1402' name='col'></input>&nbsp;移植前化疗疗程</td><td><input type='checkbox' value='c1403' name='col'></input>&nbsp;移植前鞘注次数</td><td><input type='checkbox' value='c1404' name='col'></input>&nbsp;前期移植</td>
+</tr><tr>
+<td><input type='checkbox' value='c1405' name='col'></input>&nbsp;再次移植原因</td><td><input type='checkbox' value='c1501' name='col'></input>&nbsp;感染</td><td><input type='checkbox' value='c1502' name='col'></input>&nbsp;既往侵袭性真菌感染</td>
+<td><input type='checkbox' value='c1503' name='col'></input>&nbsp;吸烟史</td>
+</tr><tr>
+<td><input type='checkbox' value='c1504' name='col'></input>&nbsp;高血压</td><td><input type='checkbox' value='c1505' name='col'></input>&nbsp;DLCO%</td>
+<td><input type='checkbox' value='c1314' name='col'></input>&nbsp;FEV1%</td><td><input type='checkbox' value='c1506' name='col'></input>&nbsp;肺病</td>
+</tr><tr>
+<td><input type='checkbox' value='c1507' name='col'></input>&nbsp;心律失常</td>
+<td><input type='checkbox' value='c1508' name='col'></input>&nbsp;心衰/冠心病</td><td><input type='checkbox' value='c1509' name='col'></input>&nbsp;射血分数</td><td><input type='checkbox' value='c1511' name='col'></input>&nbsp;糖尿病</td>
+</tr><tr>
+<td><input type='checkbox' value='c1510' name='col'></input>&nbsp;IBD</td><td><input type='checkbox' value='c1512' name='col'></input>&nbsp;脑血管病</td><td><input type='checkbox' value='c1513' name='col'></input>&nbsp;精神病</td>
+<td><input type='checkbox' value='c1514' name='col'></input>&nbsp;轻度肝病</td>
+</tr><tr>
+<td><input type='checkbox' value='c1515' name='col'></input>&nbsp;免疫病2</td><td><input type='checkbox' value='c1516' name='col'></input>&nbsp;消化性溃疡2</td>
+<td><input type='checkbox' value='c1517' name='col'></input>&nbsp;中重度肾病2</td><td><input type='checkbox' value='c1518' name='col'></input>&nbsp;前期实体肿瘤3</td>
+</tr><tr>
+<td><input type='checkbox' value='c1520' name='col'></input>&nbsp;中重度肝病3</td>
+<td><input type='checkbox' value='c1519' name='col'></input>&nbsp;瓣膜病3</td><td><input type='checkbox' value='c1521' name='col'></input>&nbsp;HCT-CI</td><td><input type='checkbox' value='c1522' name='col'></input>&nbsp;移植前白细胞</td>
+</tr><tr>
+<td><input type='checkbox' value='c1523' name='col'></input>&nbsp;移植前红细胞</td><td><input type='checkbox' value='c1524' name='col'></input>&nbsp;移植前血红蛋白</td><td><input type='checkbox' value='c1525' name='col'></input>&nbsp;移植前血小板</td>
+<td><input type='checkbox' value='c1601' name='col'></input>&nbsp;供者CMV抗体</td>
+</tr><tr>
+<td><input type='checkbox' value='c1602' name='col'></input>&nbsp;受者CMV抗体</td><td><input type='checkbox' value='c1604' name='col'></input>&nbsp;受者EBV抗体</td>
+<td><input type='checkbox' value='c1603' name='col'></input>&nbsp;供者EBV抗体</td><td><input type='checkbox' value='c1605' name='col'></input>&nbsp;供者HCV抗体</td>
+</tr><tr>
+<td><input type='checkbox' value='c1607' name='col'></input>&nbsp;供者乙肝五项</td>
+<td><input type='checkbox' value='c1608' name='col'></input>&nbsp;受者乙肝五项</td><td><input type='checkbox' value='c1609' name='col'></input>&nbsp;受者乙肝DNA滴度</td><td><input type='checkbox' value='c1606' name='col'></input>&nbsp;受者HCV抗体</td>
+</tr><tr>
+<td><input type='checkbox' value='c1610' name='col'></input>&nbsp;供者乙肝DNA滴度</td><td><input type='checkbox' value='c1701' name='col'></input>&nbsp;预处理方案</td><td><input type='checkbox' value='c1702' name='col'></input>&nbsp;ATG剂量</td>
+<td><input type='checkbox' value='c1703' name='col'></input>&nbsp;TBI剂量</td></tr>
+</table>
+</div>
+<h3><a href="#section1">移植物组分及造血重建情况</a></h3>
+<div>
+<table width="100%">
+<tr>
+<td colspan="4"><input type='checkbox' onclick="selectAll('c2')"  id="c2"></input>&nbsp;全选</td>
+</tr>
+<tr>
+<td><input type='checkbox' value='c2001' name='col'></input>&nbsp;BM-MNC</td><td><input type='checkbox' value='c2002' name='col'></input>&nbsp;BM-淋巴细胞%</td><td><input type='checkbox' value='c2003' name='col'></input>&nbsp;BM-CD3%</td>
+</tr><tr>
+<td><input type='checkbox' value='c2004' name='col'></input>&nbsp;BM-CD4%</td><td><input type='checkbox' value='c2005' name='col'></input>&nbsp;BM-CD8%</td><td><input type='checkbox' value='c2006' name='col'></input>&nbsp;BM-CD34%</td>
+</tr><tr>
+<td><input type='checkbox' value='c2007' name='col'></input>&nbsp;第1次PBMNC</td><td><input type='checkbox' value='c2008' name='col'></input>&nbsp;第1次PB淋巴细胞%</td><td><input type='checkbox' value='c2009' name='col'></input>&nbsp;第1次PBCD3%</td>
+</tr><tr>
+<td><input type='checkbox' value='c2010' name='col'></input>&nbsp;第1次PBCD4%</td><td><input type='checkbox' value='c2011' name='col'></input>&nbsp;第1次PBCD8%</td><td><input type='checkbox' value='c2012' name='col'></input>&nbsp;第1次PBCD34%</td>
+</tr><tr>
+<td><input type='checkbox' value='c2013' name='col'></input>&nbsp;第2次PBMNC</td><td><input type='checkbox' value='c2014' name='col'></input>&nbsp;第2次PB淋巴细胞%</td><td><input type='checkbox' value='c2015' name='col'></input>&nbsp;第2次PBCD3%</td>
+</tr><tr>
+<td><input type='checkbox' value='c2016' name='col'></input>&nbsp;第2次PBCD4%</td><td><input type='checkbox' value='c2017' name='col'></input>&nbsp;第2次PBCD8%</td><td><input type='checkbox' value='c2018' name='col'></input>&nbsp;第2次PBCD34%</td>
+</tr><tr>
+<td><input type='checkbox' value='c2019' name='col'></input>&nbsp;第3次PBMNC</td><td><input type='checkbox' value='c2020' name='col'></input>&nbsp;第3次PB淋巴细胞%</td><td><input type='checkbox' value='c2021' name='col'></input>&nbsp;第3次PBCD3%</td>
+</tr><tr>
+<td><input type='checkbox' value='c2022' name='col'></input>&nbsp;第3次PBCD4%</td><td><input type='checkbox' value='c2023' name='col'></input>&nbsp;第3次PBCD8%</td><td><input type='checkbox' value='c2024' name='col'></input>&nbsp;第3次PBCD34%</td>
+</tr><tr>
+<td><input type='checkbox' value='c2025' name='col'></input>&nbsp;移植后使用造血刺激因子</td><td><input type='checkbox' value='c2026' name='col'></input>&nbsp;使用G-CSF</td><td><input type='checkbox' value='c2027' name='col'></input>&nbsp;使用G-CSF时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c2028' name='col'></input>&nbsp;使用TPO</td><td><input type='checkbox' value='c2029' name='col'></input>&nbsp;使用TPO时间</td><td><input type='checkbox' value='c2030' name='col'></input>&nbsp;使用EPO</td>
+</tr><tr>
+<td><input type='checkbox' value='c2031' name='col'></input>&nbsp;使用EPO时间</td><td><input type='checkbox' value='c2032' name='col'></input>&nbsp;ANC≥500时间</td><td><input type='checkbox' value='c2033' name='col'></input>&nbsp;ANC≥1000时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c2034' name='col'></input>&nbsp;ANC重新降到500以下时间</td><td><input type='checkbox' value='c2035' name='col'></input>&nbsp;ANC重新降到500以下原因</td><td><input type='checkbox' value='c2036' name='col'></input>&nbsp;PLT≥2万时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c2037' name='col'></input>&nbsp;PLT≥5万时间</td><td><input type='checkbox' value='c2038' name='col'></input>&nbsp;PLT≥10万时间</td><td><input type='checkbox' value='c2039' name='col'></input>&nbsp;30天内PLT输注量</td>
+</tr><tr>
+<td><input type='checkbox' value='c2040' name='col'></input>&nbsp;PLT重新降到500以下时间</td><td><input type='checkbox' value='c2041' name='col'></input>&nbsp;PLT重新降到500以下原因</td><td><input type='checkbox' value='c2042' name='col'></input>&nbsp;至少20天不用输红细胞的时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c2043' name='col'></input>&nbsp;移植后30天内红细胞输注量</td><td><input type='checkbox' value='c2044' name='col'></input>&nbsp;血型不合者血型转换时间</td><td><input type='checkbox' value='c2045' name='col'></input>&nbsp;移植后30天WBC</td>
+</tr><tr>
+<td><input type='checkbox' value='c2046' name='col'></input>&nbsp;移植后30天HB</td><td><input type='checkbox' value='c2047' name='col'></input>&nbsp;移植后30天PLT</td><td><input type='checkbox' value='c2048' name='col'></input>&nbsp;移植后30天骨穿增生程度</td>
+</tr><tr>
+<td><input type='checkbox' value='c2049' name='col'></input>&nbsp;移植后30天粒红比</td><td><input type='checkbox' value='c2050' name='col'></input>&nbsp;移植后30天原始细胞</td><td><input type='checkbox' value='c2051' name='col'></input>&nbsp;移植后30天巨核细胞</td>
+</tr><tr>
+<td><input type='checkbox' value='c2054' name='col'></input>&nbsp;移植后30天DNA指纹图</td>
+<td><input type='checkbox' value='c2065' name='col'></input>&nbsp;移植后30天基因WT1%</td>
+<td><input type='checkbox' value='c2066' name='col'></input>&nbsp;移植后30天基因ETO%</td>
+</tr><tr>
+<td><input type='checkbox' value='c2067' name='col'></input>&nbsp;移植后30天基因CBFβ%</td>
+<td><input type='checkbox' value='c2068' name='col'></input>&nbsp;移植后30天基因BCR-ABL%</td>
+<td><input type='checkbox' value='c2069' name='col'></input>&nbsp;移植后30天基因MLL%</td>
+</tr><tr>
+<td><input type='checkbox' value='c2070' name='col'></input>&nbsp;移植后30天基因其他%</td>
+<td><input type='checkbox' value='c2071' name='col'></input>&nbsp;移植后30天免疫残留</td>
+<td><input type='checkbox' value='c2072' name='col'></input>&nbsp;移植后30天免疫残留值</td>
+</tr><tr>
+<td><input type='checkbox' value='c2055' name='col'></input>&nbsp;移植后30天染色体</td><td><input type='checkbox' value='c2056' name='col'></input>&nbsp;移植后100天WBC</td><td><input type='checkbox' value='c2057' name='col'></input>&nbsp;移植后100天HB</td>
+</tr><tr>
+<td><input type='checkbox' value='c2058' name='col'></input>&nbsp;移植后100天PLT</td><td><input type='checkbox' value='c2059' name='col'></input>&nbsp;移植后100天骨穿增生程度</td><td><input type='checkbox' value='c2060' name='col'></input>&nbsp;移植后100天粒红比</td>
+</tr><tr>
+<td><input type='checkbox' value='c2061' name='col'></input>&nbsp;移植后100天原始细胞</td><td><input type='checkbox' value='c2062' name='col'></input>&nbsp;移植后100天巨核细胞</td><td>&nbsp;</td>
+</tr><tr>
+<td><input type='checkbox' value='c2081' name='col'></input>&nbsp;移植后100天基因WT1%</td>
+<td><input type='checkbox' value='c2082' name='col'></input>&nbsp;移植后100天基因ETO%</td>
+<td><input type='checkbox' value='c2083' name='col'></input>&nbsp;移植后100天基因CBFβ%</td>
+</tr><tr>
+<td><input type='checkbox' value='c2084' name='col'></input>&nbsp;移植后100天基因BCR-ABL%</td>
+<td><input type='checkbox' value='c2085' name='col'></input>&nbsp;移植后100天基因MLL%</td>
+<td><input type='checkbox' value='c2086' name='col'></input>&nbsp;移植后100天基因其他%</td>
+</tr><tr>
+<td><input type='checkbox' value='c2087' name='col'></input>&nbsp;移植后100天免疫残留</td>
+<td><input type='checkbox' value='c2088' name='col'></input>&nbsp;移植后100天免疫残留值</td>
+<td>&nbsp;</td>
+</tr><tr>
+<td><input type='checkbox' value='c2073' name='col'></input>&nbsp;移植后2月基因WT1%</td>
+<td><input type='checkbox' value='c2074' name='col'></input>&nbsp;移植后2月基因ETO%</td>
+<td><input type='checkbox' value='c2075' name='col'></input>&nbsp;移植后2月基因CBFβ%</td>
+</tr><tr>
+<td><input type='checkbox' value='c2076' name='col'></input>&nbsp;移植后2月基因BCR-ABL%</td>
+<td><input type='checkbox' value='c2077' name='col'></input>&nbsp;移植后2月基因MLL%</td>
+<td><input type='checkbox' value='c2078' name='col'></input>&nbsp;移植后2月基因其他%</td>
+</tr><tr>
+<td><input type='checkbox' value='c2079' name='col'></input>&nbsp;移植后2月免疫残留</td>
+<td><input type='checkbox' value='c2080' name='col'></input>&nbsp;移植后2月免疫残留值</td>
+<td>&nbsp;</td>
+</tr><tr>
+<td><input type='checkbox' value='c2089' name='col'></input>&nbsp;移植后4.5月基因WT1%</td>
+<td><input type='checkbox' value='c2090' name='col'></input>&nbsp;移植后4.5月基因ETO%</td>
+<td><input type='checkbox' value='c2091' name='col'></input>&nbsp;移植后4.5月基因CBFβ%</td>
+</tr><tr>
+<td><input type='checkbox' value='c2092' name='col'></input>&nbsp;移植后4.5月基因BCR-ABL%</td>
+<td><input type='checkbox' value='c2093' name='col'></input>&nbsp;移植后4.5月基因MLL%</td>
+<td><input type='checkbox' value='c2094' name='col'></input>&nbsp;移植后4.5月基因其他%</td>
+</tr><tr>
+<td><input type='checkbox' value='c2095' name='col'></input>&nbsp;移植后4.5月免疫残留</td>
+<td><input type='checkbox' value='c2096' name='col'></input>&nbsp;移植后4.5月免疫残留值</td>
+<td>&nbsp;</td>
+</tr><tr>
+<td><input type='checkbox' value='c2097' name='col'></input>&nbsp;移植后5月基因WT1%</td>
+<td><input type='checkbox' value='c2098' name='col'></input>&nbsp;移植后5月基因ETO%</td>
+<td><input type='checkbox' value='c2099' name='col'></input>&nbsp;移植后5月基因CBFβ%</td>
+</tr><tr>
+<td><input type='checkbox' value='c2100' name='col'></input>&nbsp;移植后5月基因BCR-ABL%</td>
+<td><input type='checkbox' value='c2101' name='col'></input>&nbsp;移植后5月基因MLL%</td>
+<td><input type='checkbox' value='c2102' name='col'></input>&nbsp;移植后5月基因其他%</td>
+</tr><tr>
+<td><input type='checkbox' value='c2103' name='col'></input>&nbsp;移植后5月免疫残留</td>
+<td><input type='checkbox' value='c2104' name='col'></input>&nbsp;移植后5月免疫残留值</td>
+<td>&nbsp;</td>
+</tr><tr>
+<td><input type='checkbox' value='c2105' name='col'></input>&nbsp;移植后6月基因WT1%</td>
+<td><input type='checkbox' value='c2106' name='col'></input>&nbsp;移植后6月基因ETO%</td>
+<td><input type='checkbox' value='c2107' name='col'></input>&nbsp;移植后6月基因CBFβ%</td>
+</tr><tr>
+<td><input type='checkbox' value='c2108' name='col'></input>&nbsp;移植后6月基因BCR-ABL%</td>
+<td><input type='checkbox' value='c2109' name='col'></input>&nbsp;移植后6月基因MLL%</td>
+<td><input type='checkbox' value='c2110' name='col'></input>&nbsp;移植后6月基因其他%</td>
+</tr><tr>
+<td><input type='checkbox' value='c2111' name='col'></input>&nbsp;移植后6月免疫残留</td>
+<td><input type='checkbox' value='c2112' name='col'></input>&nbsp;移植后6月免疫残留值</td>
+<td>&nbsp;</td>
+</tr><tr>
+<td><input type='checkbox' value='c2113' name='col'></input>&nbsp;移植后9月基因WT1%</td>
+<td><input type='checkbox' value='c2114' name='col'></input>&nbsp;移植后9月基因ETO%</td>
+<td><input type='checkbox' value='c2115' name='col'></input>&nbsp;移植后9月基因CBFβ%</td>
+</tr><tr>
+<td><input type='checkbox' value='c2116' name='col'></input>&nbsp;移植后9月基因BCR-ABL%</td>
+<td><input type='checkbox' value='c2117' name='col'></input>&nbsp;移植后9月基因MLL%</td>
+<td><input type='checkbox' value='c2118' name='col'></input>&nbsp;移植后9月基因其他%</td>
+</tr><tr>
+<td><input type='checkbox' value='c2119' name='col'></input>&nbsp;移植后9月免疫残留</td>
+<td><input type='checkbox' value='c2120' name='col'></input>&nbsp;移植后9月免疫残留值</td>
+<td>&nbsp;</td>
+</tr><tr>
+<td><input type='checkbox' value='c2121' name='col'></input>&nbsp;移植后12月基因WT1%</td>
+<td><input type='checkbox' value='c2122' name='col'></input>&nbsp;移植后12月基因ETO%</td>
+<td><input type='checkbox' value='c2123' name='col'></input>&nbsp;移植后12月基因CBFβ%</td>
+</tr><tr>
+<td><input type='checkbox' value='c2124' name='col'></input>&nbsp;移植后12月基因BCR-ABL%</td>
+<td><input type='checkbox' value='c2125' name='col'></input>&nbsp;移植后12月基因MLL%</td>
+<td><input type='checkbox' value='c2126' name='col'></input>&nbsp;移植后12月基因其他%</td>
+</tr><tr>
+<td><input type='checkbox' value='c2127' name='col'></input>&nbsp;移植后12月免疫残留</td>
+<td><input type='checkbox' value='c2128' name='col'></input>&nbsp;移植后12月免疫残留值</td>
+<td>&nbsp;</td>
+</tr><tr>
+</table>
+</div>
+<h3><a href="#section2">急性移植物抗宿主病</a></h3>
+<div>
+<table width="100%">
+<tr>
+<td colspan="4"><input type='checkbox' onclick="selectAll('c3')" id="c3"></input>&nbsp;全选</td>
+</tr>
+<tr>
+<td><input type='checkbox' value='c3001' name='col'></input>&nbsp;急性GVHD</td><td><input type='checkbox' value='c3002' name='col'></input>&nbsp;急性GVHD发生时间</td><td><input type='checkbox' value='c3003' name='col'></input>&nbsp;急性GVHD起始严重程度</td>
+</tr><tr>
+<td><input type='checkbox' value='c3004' name='col'></input>&nbsp;急性GVHD峰值时间</td><td><input type='checkbox' value='c3005' name='col'></input>&nbsp;急性GVHD峰值严重程度</td><td><input type='checkbox' value='c3006' name='col'></input>&nbsp;皮肤急性GVHD</td>
+</tr><tr>
+<td><input type='checkbox' value='c3007' name='col'></input>&nbsp;皮疹出现时间</td><td><input type='checkbox' value='c3008' name='col'></input>&nbsp;皮疹起始程度</td><td><input type='checkbox' value='c3009' name='col'></input>&nbsp;皮疹起始面积</td>
+</tr><tr>
+<td><input type='checkbox' value='c3010' name='col'></input>&nbsp;皮疹峰值时间</td><td><input type='checkbox' value='c3011' name='col'></input>&nbsp;皮疹峰值程度</td><td><input type='checkbox' value='c3012' name='col'></input>&nbsp;皮疹峰值面积</td>
+</tr><tr>
+<td><input type='checkbox' value='c3013' name='col'></input>&nbsp;皮疹完全缓解时间</td><td><input type='checkbox' value='c3014' name='col'></input>&nbsp;肠道急性GVHD</td><td><input type='checkbox' value='c3015' name='col'></input>&nbsp;肠道急性GVHD出现时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c3016' name='col'></input>&nbsp;肠道急性GVHD起始程度</td><td><input type='checkbox' value='c3017' name='col'></input>&nbsp;起始腹泻量</td><td><input type='checkbox' value='c3018' name='col'></input>&nbsp;肠道急性GVHD峰值时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c3019' name='col'></input>&nbsp;肠道急性GVHD峰值程度</td><td><input type='checkbox' value='c3020' name='col'></input>&nbsp;峰值腹泻量</td><td><input type='checkbox' value='c3021' name='col'></input>&nbsp;肠镜病理</td>
+</tr><tr>
+<td><input type='checkbox' value='c3022' name='col'></input>&nbsp;肠道GVHD完全缓解时间</td><td><input type='checkbox' value='c3023' name='col'></input>&nbsp;肝脏GVHD</td><td><input type='checkbox' value='c3024' name='col'></input>&nbsp;肝脏GVHD起始时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c3025' name='col'></input>&nbsp;肝脏GVHD起始程度</td><td><input type='checkbox' value='c3026' name='col'></input>&nbsp;起始总胆红素</td><td><input type='checkbox' value='c3027' name='col'></input>&nbsp;肝脏GVHD峰值时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c3028' name='col'></input>&nbsp;肝脏GVHD峰值程度</td><td><input type='checkbox' value='c3029' name='col'></input>&nbsp;峰值总胆红素</td><td><input type='checkbox' value='c3030' name='col'></input>&nbsp;肝脏GVHD完全缓解时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c3031' name='col'></input>&nbsp;使用糖皮质激素</td><td><input type='checkbox' value='c3032' name='col'></input>&nbsp;激素起始时间</td><td><input type='checkbox' value='c3033' name='col'></input>&nbsp;激素起始剂量</td>
+</tr><tr>
+<td><input type='checkbox' value='c3034' name='col'></input>&nbsp;激素最高剂量</td><td><input type='checkbox' value='c3035' name='col'></input>&nbsp;激素最高剂量时间</td><td><input type='checkbox' value='c3036' name='col'></input>&nbsp;激素减量时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c3037' name='col'></input>&nbsp;停用激素时间</td><td><input type='checkbox' value='c3038' name='col'></input>&nbsp;使用MTX</td><td><input type='checkbox' value='c3039' name='col'></input>&nbsp;使用MTX时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c3040' name='col'></input>&nbsp;MTX次数</td><td><input type='checkbox' value='c3041' name='col'></input>&nbsp;一线治疗疗效</td><td><input type='checkbox' value='c3042' name='col'></input>&nbsp;二线治疗</td>
+</tr><tr>
+<td><input type='checkbox' value='c3043' name='col'></input>&nbsp;二线治疗起始时间</td><td><input type='checkbox' value='c3044' name='col'></input>&nbsp;CD25单抗</td><td><input type='checkbox' value='c3045' name='col'></input>&nbsp;CD25单抗起始时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c3046' name='col'></input>&nbsp;CD25次数</td><td><input type='checkbox' value='c3047' name='col'></input>&nbsp;普乐可复</td><td><input type='checkbox' value='c3048' name='col'></input>&nbsp;普乐可复起始时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c3049' name='col'></input>&nbsp;MMF</td><td><input type='checkbox' value='c3050' name='col'></input>&nbsp;MMF起始时间</td><td><input type='checkbox' value='c3051' name='col'></input>&nbsp;开始起效时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c3052' name='col'></input>&nbsp;完全缓解时间</td><td><input type='checkbox' value='c3053' name='col'></input>&nbsp;最优疗效</td><td><input type='checkbox' value='c3054' name='col'></input>&nbsp;最优疗效时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c3055' name='col'></input>&nbsp;急性GVHD发生次数</td><td></td><td></td></tr>
+</table>
+</div>
+<h3><a href="#section3">慢性移植物抗宿主病</a></h3>
+<div>
+<table width="100%">
+<tr>
+<td colspan="4"><input type='checkbox' onclick="selectAll('c4')" id="c4"></input>&nbsp;全选</td>
+</tr>
+<tr>
+<td><input type='checkbox' value='c4001' name='col'></input>&nbsp;慢性GVHD</td><td><input type='checkbox' value='c4002' name='col'></input>&nbsp;慢性GVHD发生时间</td><td><input type='checkbox' value='c4003' name='col'></input>&nbsp;慢性GVHD起始严重程度积分</td>
+</tr><tr>
+<td><input type='checkbox' value='c4004' name='col'></input>&nbsp;慢性GVHD最高严重程度积分</td><td><input type='checkbox' value='c4005' name='col'></input>&nbsp;慢性GVHD达峰时间</td><td><input type='checkbox' value='c4006' name='col'></input>&nbsp;皮肤慢性GVHD</td>
+</tr><tr>
+<td><input type='checkbox' value='c4007' name='col'></input>&nbsp;皮肤慢性GVHD起始时间</td><td><input type='checkbox' value='c4008' name='col'></input>&nbsp;皮肤慢性GVHD起始程度</td><td><input type='checkbox' value='c4009' name='col'></input>&nbsp;皮肤慢性GVHD峰值时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c4010' name='col'></input>&nbsp;皮肤慢性GVHD峰值程度</td><td><input type='checkbox' value='c4011' name='col'></input>&nbsp;眼睛慢性GVHD</td><td><input type='checkbox' value='c4012' name='col'></input>&nbsp;眼睛慢性GVHD起始时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c4013' name='col'></input>&nbsp;眼睛慢性GVHD起始程度</td><td><input type='checkbox' value='c4014' name='col'></input>&nbsp;眼睛慢性GVHD峰值时间</td><td><input type='checkbox' value='c4015' name='col'></input>&nbsp;眼睛慢性GVHD峰值程度</td>
+</tr><tr>
+<td><input type='checkbox' value='c4016' name='col'></input>&nbsp;口腔慢性GVHD</td><td><input type='checkbox' value='c4017' name='col'></input>&nbsp;口腔慢性GVHD起始时间</td><td><input type='checkbox' value='c4018' name='col'></input>&nbsp;口腔慢性GVHD起始程度</td>
+</tr><tr>
+<td><input type='checkbox' value='c4019' name='col'></input>&nbsp;口腔慢性GVHD峰值时间</td><td><input type='checkbox' value='c4020' name='col'></input>&nbsp;口腔慢性GVHD峰值程度</td><td><input type='checkbox' value='c4021' name='col'></input>&nbsp;肝脏慢性GVHD</td>
+</tr><tr>
+<td><input type='checkbox' value='c4022' name='col'></input>&nbsp;肝脏慢性GVHD起始时间</td><td><input type='checkbox' value='c4023' name='col'></input>&nbsp;肝脏慢性GVHD起始程度</td><td><input type='checkbox' value='c4024' name='col'></input>&nbsp;肝脏慢性GVHD峰值时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c4025' name='col'></input>&nbsp;肝脏慢性GVHD峰值程度</td><td><input type='checkbox' value='c4026' name='col'></input>&nbsp;肺慢性GVHD</td><td><input type='checkbox' value='c4027' name='col'></input>&nbsp;肺慢性GVHD起始时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c4028' name='col'></input>&nbsp;肺慢性GVHD起始程度</td><td><input type='checkbox' value='c4029' name='col'></input>&nbsp;肺慢性GVHD峰值时间</td><td><input type='checkbox' value='c4030' name='col'></input>&nbsp;肺慢性GVHD峰值程度</td>
+</tr><tr>
+<td><input type='checkbox' value='c4031' name='col'></input>&nbsp;消化道慢性GVHD</td><td><input type='checkbox' value='c4032' name='col'></input>&nbsp;消化道慢性GVHD起始时间</td><td><input type='checkbox' value='c4033' name='col'></input>&nbsp;消化道慢性GVHD起始程度</td>
+</tr><tr>
+<td><input type='checkbox' value='c4034' name='col'></input>&nbsp;消化道慢性GVHD峰值时间</td><td><input type='checkbox' value='c4035' name='col'></input>&nbsp;消化道慢性GVHD峰值程度</td><td><input type='checkbox' value='c4036' name='col'></input>&nbsp;肌肉慢性GVHD</td>
+</tr><tr>
+<td><input type='checkbox' value='c4037' name='col'></input>&nbsp;肌肉慢性GVHD起始时间</td><td><input type='checkbox' value='c4038' name='col'></input>&nbsp;肌肉慢性GVHD起始程度</td><td><input type='checkbox' value='c4039' name='col'></input>&nbsp;肌肉慢性GVHD峰值时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c4040' name='col'></input>&nbsp;肌肉慢性GVHD峰值程度</td><td><input type='checkbox' value='c4041' name='col'></input>&nbsp;浆膜腔积液</td><td><input type='checkbox' value='c4042' name='col'></input>&nbsp;肾病综合征</td>
+</tr><tr>
+<td><input type='checkbox' value='c4043' name='col'></input>&nbsp;血小板减少</td><td><input type='checkbox' value='c4044' name='col'></input>&nbsp;激素起始时间</td><td><input type='checkbox' value='c4045' name='col'></input>&nbsp;激素起始剂量</td>
+</tr><tr>
+<td><input type='checkbox' value='c4046' name='col'></input>&nbsp;激素停药时间</td><td><input type='checkbox' value='c4047' name='col'></input>&nbsp;环孢素起始时间</td><td><input type='checkbox' value='c4048' name='col'></input>&nbsp;环孢素停药时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c4049' name='col'></input>&nbsp;普乐可复起始时间</td><td><input type='checkbox' value='c4050' name='col'></input>&nbsp;普乐可复停药时间</td><td><input type='checkbox' value='c4051' name='col'></input>&nbsp;硫唑嘌呤</td>
+</tr><tr>
+<td><input type='checkbox' value='c4052' name='col'></input>&nbsp;硫唑嘌呤起始时间</td><td><input type='checkbox' value='c4053' name='col'></input>&nbsp;硫唑嘌呤停药时间</td><td><input type='checkbox' value='c4054' name='col'></input>&nbsp;MMF</td>
+</tr><tr>
+<td><input type='checkbox' value='c4055' name='col'></input>&nbsp;MMF起始时间</td><td><input type='checkbox' value='c4056' name='col'></input>&nbsp;MMF停药时间</td><td><input type='checkbox' value='c4057' name='col'></input>&nbsp;慢性GVHD完全缓解时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c4058' name='col'></input>&nbsp;停全部免疫抑制剂时间</td><td></td><td></td></tr>
+</table>
+</div>
+<h3><a href="#section4">其他并发症</a></h3>
+<div>
+<table width="100%">
+<tr>
+<td colspan="4"><input type='checkbox' onclick="selectAll('c5')" id="c5"></input>&nbsp;全选</td>
+</tr>
+<tr>
+<td><input type='checkbox' value='c5001' name='col'></input>&nbsp;排斥</td><td><input type='checkbox' value='c5002' name='col'></input>&nbsp;排斥时间</td><td><input type='checkbox' value='c5003' name='col'></input>&nbsp;排斥距移植时间（查询）</td>
+</tr><tr>
+<td><input type='checkbox' value='c5004' name='col'></input>&nbsp;治疗方法</td><td><input type='checkbox' value='c5005' name='col'></input>&nbsp;植入综合征</td><td><input type='checkbox' value='c5006' name='col'></input>&nbsp;植入综合征出现时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c5007' name='col'></input>&nbsp;植入综合征治愈时间</td><td><input type='checkbox' value='c5008' name='col'></input>&nbsp;弥漫性肺泡出血</td><td><input type='checkbox' value='c5009' name='col'></input>&nbsp;弥漫性肺泡出血发生时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c5010' name='col'></input>&nbsp;起始激素治疗时间</td><td><input type='checkbox' value='c5011' name='col'></input>&nbsp;起始激素治疗剂量</td><td><input type='checkbox' value='c5012' name='col'></input>&nbsp;激素最高剂量</td>
+</tr><tr>
+<td><input type='checkbox' value='c5013' name='col'></input>&nbsp;呼吸机治疗</td><td><input type='checkbox' value='c5014' name='col'></input>&nbsp;呼吸机治疗时间</td><td><input type='checkbox' value='c5015' name='col'></input>&nbsp;弥漫性肺泡出血治愈时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c5016' name='col'></input>&nbsp;弥漫性肺泡出血结局</td><td><input type='checkbox' value='c5017' name='col'></input>&nbsp;闭塞性细支气管炎综合征</td><td><input type='checkbox' value='c5018' name='col'></input>&nbsp;闭塞性细支气管炎综合征发生时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c5019' name='col'></input>&nbsp;诊断闭塞性细支气管炎综合征时FEV1%</td><td><input type='checkbox' value='c5020' name='col'></input>&nbsp;诊断闭塞性细支气管炎综合征时FEV1/FVC%</td><td><input type='checkbox' value='c5021' name='col'></input>&nbsp;诊断闭塞性细支气管炎综合征时RV%</td>
+</tr><tr>
+<td><input type='checkbox' value='c5022' name='col'></input>&nbsp;诊断闭塞性细支气管炎综合征时Dlco%</td><td><input type='checkbox' value='c5023' name='col'></input>&nbsp;闭塞性细支气管炎综合征治疗措施</td><td><input type='checkbox' value='c5024' name='col'></input>&nbsp;特发性间质性肺炎</td>
+</tr><tr>
+<td><input type='checkbox' value='c5025' name='col'></input>&nbsp;特发性间质性肺炎发生时间</td><td><input type='checkbox' value='c5026' name='col'></input>&nbsp;特发性肺间质肺炎治疗手段</td><td><input type='checkbox' value='c5027' name='col'></input>&nbsp;特发性间质性肺炎结局</td>
+</tr><tr>
+<td><input type='checkbox' value='c5028' name='col'></input>&nbsp;TMA</td><td><input type='checkbox' value='c5029' name='col'></input>&nbsp;TMA发生时间</td><td><input type='checkbox' value='c5030' name='col'></input>&nbsp;TMA肾脏受累</td>
+</tr><tr>
+<td><input type='checkbox' value='c5031' name='col'></input>&nbsp;TMA神经系统受累</td><td><input type='checkbox' value='c5032' name='col'></input>&nbsp;停环孢素或普乐可复</td><td><input type='checkbox' value='c5033' name='col'></input>&nbsp;血浆置换</td>
+</tr><tr>
+<td><input type='checkbox' value='c5034' name='col'></input>&nbsp;血浆置换时间</td><td><input type='checkbox' value='c5035' name='col'></input>&nbsp;血浆置换次数</td><td><input type='checkbox' value='c5036' name='col'></input>&nbsp;TMA转归</td>
+</tr><tr>
+<td><input type='checkbox' value='c5037' name='col'></input>&nbsp;TMA治愈时间/死时间</td><td><input type='checkbox' value='c5038' name='col'></input>&nbsp;消化道出血</td><td><input type='checkbox' value='c5039' name='col'></input>&nbsp;消化道出血发生时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c5040' name='col'></input>&nbsp;消化道出血原因</td><td><input type='checkbox' value='c5041' name='col'></input>&nbsp;药物性肝损害</td><td><input type='checkbox' value='c5042' name='col'></input>&nbsp;药物性肝损害发生时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c5043' name='col'></input>&nbsp;导致肝损害的药物</td><td></td><td></td></tr>
+</table>
+</div>
+<h3><a href="#section5">感染和膀胱炎</a></h3>
+<div>
+<table width="100%">
+<tr>
+<td colspan="4"><input type='checkbox' onclick="selectAll('c6')" id="c6"></input>&nbsp;全选</td>
+</tr>
+<tr>
+<td><input type='checkbox' value='c6001' name='col'></input>&nbsp;败血症</td><td><input type='checkbox' value='c6002' name='col'></input>&nbsp;败血症发生时间</td><td><input type='checkbox' value='c6003' name='col'></input>&nbsp;败血症病原</td>
+</tr><tr>
+<td><input type='checkbox' value='c6004' name='col'></input>&nbsp;是否导管相关感染</td><td><input type='checkbox' value='c6005' name='col'></input>&nbsp;有效的抗生素</td><td><input type='checkbox' value='c6006' name='col'></input>&nbsp;停抗生素时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c6007' name='col'></input>&nbsp;CMV血症</td><td><input type='checkbox' value='c6008' name='col'></input>&nbsp;CMV血症发生时间</td><td><input type='checkbox' value='c6009' name='col'></input>&nbsp;CMV血症次数</td>
+</tr><tr>
+<td><input type='checkbox' value='c6010' name='col'></input>&nbsp;CMV病</td><td><input type='checkbox' value='c6011' name='col'></input>&nbsp;CMV病种类</td><td><input type='checkbox' value='c6012' name='col'></input>&nbsp;CMV病发生时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c6013' name='col'></input>&nbsp;开始治疗时间</td><td><input type='checkbox' value='c6014' name='col'></input>&nbsp;停药时间</td><td><input type='checkbox' value='c6015' name='col'></input>&nbsp;起效药物</td>
+</tr><tr>
+<td><input type='checkbox' value='c6016' name='col'></input>&nbsp;EBV血症</td><td><input type='checkbox' value='c6017' name='col'></input>&nbsp;EBV血症出现时间</td><td><input type='checkbox' value='c6018' name='col'></input>&nbsp;EBV最高拷贝数</td>
+</tr><tr>
+<td><input type='checkbox' value='c6019' name='col'></input>&nbsp;EBV血症次数</td><td><input type='checkbox' value='c6020' name='col'></input>&nbsp;PTLD</td><td><input type='checkbox' value='c6021' name='col'></input>&nbsp;PTLD发生时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c6022' name='col'></input>&nbsp;发生PTLD后减停免疫抑制剂</td><td><input type='checkbox' value='c6023' name='col'></input>&nbsp;使用美罗华</td><td><input type='checkbox' value='c6024' name='col'></input>&nbsp;初始使用美罗华时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c6025' name='col'></input>&nbsp;使用美罗华次数</td><td><input type='checkbox' value='c6026' name='col'></input>&nbsp;DLI</td><td><input type='checkbox' value='c6027' name='col'></input>&nbsp;初始DLI时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c6028' name='col'></input>&nbsp;DLI次数</td><td><input type='checkbox' value='c6029' name='col'></input>&nbsp;DLI总剂量</td><td><input type='checkbox' value='c6030' name='col'></input>&nbsp;起效时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c6031' name='col'></input>&nbsp;完全缓解时间</td><td><input type='checkbox' value='c6032' name='col'></input>&nbsp;PTLD结局</td><td><input type='checkbox' value='c6033' name='col'></input>&nbsp;深部真菌感染</td>
+</tr><tr>
+<td><input type='checkbox' value='c6034' name='col'></input>&nbsp;深部真菌感染发生时间</td><td><input type='checkbox' value='c6035' name='col'></input>&nbsp;真菌感染部位</td><td><input type='checkbox' value='c6036' name='col'></input>&nbsp;抗真菌药物</td>
+</tr><tr>
+<td><input type='checkbox' value='c6037' name='col'></input>&nbsp;治疗结局</td><td><input type='checkbox' value='c6038' name='col'></input>&nbsp;停抗真菌药时间</td><td><input type='checkbox' value='c6039' name='col'></input>&nbsp;出血性膀胱炎</td>
+</tr><tr>
+<td><input type='checkbox' value='c6040' name='col'></input>&nbsp;出血性膀胱炎发生时间</td><td><input type='checkbox' value='c6041' name='col'></input>&nbsp;出血性膀胱炎最高程度</td><td><input type='checkbox' value='c6042' name='col'></input>&nbsp;出血性膀胱炎治愈时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c6043' name='col'></input>&nbsp;出血性膀胱炎次数</td><td><input type='checkbox' value='c6044' name='col'></input>&nbsp;出血性膀胱炎时血CMV滴度</td><td></td></tr>
+</table>
+</div>
+<h3><a href="#section6">复发和生存</a></h3>
+<div>
+<table width="100%">
+<tr>
+<td colspan="4"><input type='checkbox' onclick="selectAll('c7')" id="c7"></input>&nbsp;全选</td>
+</tr>
+<tr>
+<td><input type='checkbox' value='c7033' name='col'></input>&nbsp;DLI原因</td><td><input type='checkbox' value='c7034' name='col'></input>&nbsp;DLI总次数</td><td><input type='checkbox' value='c7035' name='col'></input>&nbsp;DLI总剂量</td>
+</tr><tr>
+<td><input type='checkbox' value='c7001' name='col'></input>&nbsp;基础免疫抑制剂维持有效浓度时间</td><td><input type='checkbox' value='c7002' name='col'></input>&nbsp;基础免疫抑制剂停用时间</td><td><input type='checkbox' value='c7003' name='col'></input>&nbsp;预防性DLI</td>
+</tr><tr>
+<td><input type='checkbox' value='c7004' name='col'></input>&nbsp;预防性DLI时间</td><td><input type='checkbox' value='c7005' name='col'></input>&nbsp;预防性DLI次数</td><td><input type='checkbox' value='c7006' name='col'></input>&nbsp;预防性DLI累积剂量</td>
+</tr><tr>
+<td><input type='checkbox' value='c7007' name='col'></input>&nbsp;干预性DLI</td><td><input type='checkbox' value='c7008' name='col'></input>&nbsp;干预时流式残留</td><td><input type='checkbox' value='c7009' name='col'></input>&nbsp;干预时基因水平</td>
+</tr><tr>
+<td><input type='checkbox' value='c7010' name='col'></input>&nbsp;干预性DLI时间</td><td><input type='checkbox' value='c7011' name='col'></input>&nbsp;干预性DLI累积剂量</td><td><input type='checkbox' value='c7012' name='col'></input>&nbsp;复发</td>
+</tr><tr>
+<td><input type='checkbox' value='c7013' name='col'></input>&nbsp;复发时间</td><td><input type='checkbox' value='c7014' name='col'></input>&nbsp;复发后治疗</td><td><input type='checkbox' value='c7015' name='col'></input>&nbsp;复发后化疗</td>
+</tr><tr>
+<td><input type='checkbox' value='c7016' name='col'></input>&nbsp;复发后化疗疗程</td><td><input type='checkbox' value='c7017' name='col'></input>&nbsp;治疗性DLI</td><td><input type='checkbox' value='c7018' name='col'></input>&nbsp;治疗性DLI时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c7019' name='col'></input>&nbsp;治疗性DLI疗程</td><td><input type='checkbox' value='c7020' name='col'></input>&nbsp;治疗性DLI累积剂量</td><td><input type='checkbox' value='c7021' name='col'></input>&nbsp;复发后治疗疗效</td>
+</tr><tr>
+<td><input type='checkbox' value='c7022' name='col'></input>&nbsp;DLI后出现全血细胞减少</td><td><input type='checkbox' value='c7023' name='col'></input>&nbsp;DLI后GVHD</td><td><input type='checkbox' value='c7024' name='col'></input>&nbsp;DLI后GVHD发生时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c7025' name='col'></input>&nbsp;DLI后GVHD程度</td><td><input type='checkbox' value='c7026' name='col'></input>&nbsp;DLI后GVHD部位</td><td><input type='checkbox' value='c7027' name='col'></input>&nbsp;DLI后GVHD转归</td>
+</tr><tr>
+<td><input type='checkbox' value='c7028' name='col'></input>&nbsp;其他并发症情况</td><td><input type='checkbox' value='c7029' name='col'></input>&nbsp;生存情况</td><td><input type='checkbox' value='c7030' name='col'></input>&nbsp;死亡时间/末次随访时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c7031' name='col'></input>&nbsp;总生存时间</td><td><input type='checkbox' value='c7032' name='col'></input>&nbsp;死亡原因</td>
+</table>
+</div>
+ 
+</div>
+</body>
+</html> 

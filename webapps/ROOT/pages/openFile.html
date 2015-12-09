@@ -1,0 +1,43 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+  <script type="text/javascript">
+  var loadPath="";
+  var filePath="";
+  var fileName="";
+	 $(document).ready(function() {
+		filePath=top.getUrlParam(document.URL,"filePath");
+		fileName=top.getUrlParam(document.URL,"fileName");
+		loadPath=top.getUrlBase()+"/download?filePath="+filePath+"&fileName="+fileName;
+		
+		$("img").attr("src",loadPath);
+		
+	} );
+	
+  </script> 
+  <style>
+	div{
+		width:700px;
+		height:600px;
+	}
+	img{
+		width:600px;
+		height:500px;
+	}
+  </style>
+</head>
+<body>
+	<div>
+		<center>
+			<br/>
+			<img src=""/>
+			
+		</center>
+	</div>
+</body>
+</html>

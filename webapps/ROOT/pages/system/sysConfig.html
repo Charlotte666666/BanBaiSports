@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/simpleTab.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery.ui.selectable.js"></script>
+	<script type="text/javascript" src="../../js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="../../js/yetii-min.js"></script>
+<style type="text/css">
+#main{
+	height:100%;
+	padding: 10px;
+}
+body {
+    background-image: url(../../img/bg2_body1.png);
+	background-repeat: repeat;
+   }
+</style>
+<script type="text/javascript">
+var tabber1 = null;
+var oTableCode=null;
+var oTableSystem = null;
+var currentCodeType = "USER_STATUS";
+var currentOptIconId = "";
+$(document).ready( function() {
+    tabber1 = new Yetii({
+      id: 'demo'
+    });
+	var wh=$(window).height();
+	var ww=$(window).width();
+	$('#tabs').height(wh - 70);
+	$('#tabs').width(ww - 40);
+	$( "#selectable" ).selectable();
+    loadSystemParameter();
+});
+
+ function loadSystemParameter(){
+    var iaoColumnsSystem= [
+               { "sTitle": "参数编码", "mDataProp": "code", "sWidth": "20%", "bSortable":false},
+               { "sTitle": "参数值", "mDataProp": "value", "sWidth": "35%","sClass": "center",
+                   "fnRender": function ( oObj ) {
+                     return '<input type="text" style="width:100%" id="param_value_'+oObj.aData.code+'" onchange="showOptIcon(\'param_opt_'+oObj.aData.code+'\',true)" value="'+oObj.aData.value+'" />' ;
+                   },
+                   "bUseRendered": false , "bSortable":false
+               },
+               { "sTitle": "参数说明", "mDataProp": "memo", "sWidth": "35%",
+                   "fnRender": function ( oObj ) {
+                      return '<input type="text" style="width:100%" id="param_memo_'+oObj.aData.code+'" onchange="showOptIcon(\'param_opt_'+oObj.aData.code+'\',true)" value="'+oObj.aData.memo+'" />' ;
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "操作", "mDataProp": "code", "sWidth": "10%","bSortable":false,
+                    "fnRender": function ( oObj ) {
+                       return '<span id="param_opt_'+oObj.aData.code+'" align="center" style="cursor:pointer;display:none;" onclick="editParam(\''+oObj.aData.code+'\')"><img src="../../img/save.bmp" />&nbsp;保存修改</span>';
+                    },
+                    "bUseRendered": false
+               }
+        ];
+ 	
+		oTableSystem = $('#systemParameterDataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":1000,
+					"sAjaxSource": top.getUrlBase()+"/actions/System.action?getParameterList",
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+			      "sDom": "frt",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumnsSystem
+	   } );
+ }
+ 
+ function loadCode(){
+      var iaoColumnsCode= [
+               { "sTitle": "字典编码", "mDataProp": "code", "sWidth": "20%", "bSortable":false},
+			   { "sTitle": "编码类型", "mDataProp": "type", "sWidth": "20%", "bSortable":false,
+			      "fnRender": function ( oObj ) {
+	                  return '<input type="hidden" id="code_type_'+oObj.aData.code+'" value="'+oObj.aData.type+'" />' + top.getCodeName( "SYS_CODE_TYPE", oObj.aData.type );
+	              }
+			   },
+               { "sTitle": "字典名称", "mDataProp": "name", "sWidth": "40%","sClass": "center",
+                   "fnRender": function ( oObj ) {
+                     return '<input type="text" style="width:100%" id="code_name_'+oObj.aData.code+'" onchange="showOptIcon(\'code_opt_'+oObj.aData.code+'\',true)" value="'+oObj.aData.name+'" />' ;
+                   },
+                   "bUseRendered": false , "bSortable":false
+               },
+			   { "sTitle": "操作", "mDataProp": "code", "sWidth": "20%","bSortable":false,
+                    "fnRender": function ( oObj ) {
+                       return '<span id="code_opt_'+oObj.aData.code+'" align="center" style="cursor:pointer;display:none" onclick="editCode(\''+oObj.aData.code+'\')"><img src="../../img/save.bmp" />&nbsp;保存修改</span>';
+                    },
+                    "bUseRendered": false
+               }
+        ];
+      oTableCode = $('#codeDataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":1000,
+					"sAjaxSource": top.getUrlBase()+"/actions/System.action?getCodeList",
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+			            if ( currentCodeType != '' ) aoData.push( { "name": "code.type", "value": currentCodeType  } );
+			        },
+			      "sDom": "frt",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumnsCode
+				} );
+ }
+ 
+ 
+ function loadMapLegendConfig(){
+ 
+ }
+ 
+ function showOptIcon(id,b){
+    if ( b ) {
+ 	  $("#"+id).show();
+	} else $("#"+id).hide();
+ }
+
+ function queryCodeList(type){
+    currentCodeType = type;
+	oTableCode.fnDraw();
+ }
+
+ function editCode(code){
+    var aoData=[];
+    var name = document.getElementById("code_name_"+code).value;
+	var type = document.getElementById("code_type_"+code).value;
+	if ( name == '' ) {
+	    top.showInfoWinWarn("请输入字典名称");
+        return ;
+	}
+    aoData.push( { "name": "code.code", "value": code } );
+    aoData.push( { "name": "code.name", "value": name } );
+    aoData.push( { "name": "code.type", "value": type } );
+	currentOptIconId = "code_opt_"+code;
+    top.sendAjaxRequest("/actions/System.action?updateCode",aoData,optCallback);
+ }
+ 
+ function editParam(code){
+    var aoData=[];
+	var v = document.getElementById("param_value_"+code).value;
+	var memo = document.getElementById("param_memo_"+code).value;
+	if ( v == '' ) {
+	    top.showInfoWinWarn("请输入参数值");
+        return ;
+	}
+	if ( memo == '' ) {
+	    top.showInfoWinWarn("请输入参数说明");
+        return ;
+	}
+    aoData.push( { "name": "param.code", "value": code } );
+    aoData.push( { "name": "param.value", "value": v } );
+	aoData.push( { "name": "param.memo", "value": memo} );
+	
+	currentOptIconId = "param_opt_"+code;
+    top.sendAjaxRequest("/actions/System.action?updateParameter",aoData,optCallback);
+ }
+ 
+ function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      top.showInfoWinOK("操作成功");
+		  showOptIcon(currentOptIconId,false);
+	    }else{
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+ }
+</script>
+</head>
+<body>
+<div id="main">
+<div id="demo" class="demolayout">
+
+<ul id="demo-nav" class="demolayout">
+<li class="activeli" onclick="loadSystemParameter()"><a href="#tab1"  class="active" >系统参数</a></li>
+<li class="democlass" onclick="loadCode()"><a href="#tab2">字典管理</a></li>
+<li class="democlass" onclick="loadMapLegendConfig()"><a href="#tab3">地图图例</a></li>
+</ul>
+    
+<div id="tabs" class="tabs-container">
+
+<div class="tab" id="tab1" style="display: none; ">
+  <table cellpadding="0" width="99%" cellspacing="0" border="0" class="display" id="systemParameterDataTable"></table>
+</div>
+
+<div class="tab" id="tab2" style="display: none; ">
+ <table cellpadding="0" width="90%" cellspacing="0" border="0"><tr>
+  <td width="20%" valign="top" align="center">
+   点击选择编码类型:<br>
+   <ol id="selectable">
+	<li class="ui-widget-content ui-selectee ui-selected" onclick="queryCodeList('USER_STATUS')"><font size="4">账号状态</font></li>
+	<li class="ui-widget-content" onclick="queryCodeList('CMA_OPT_SIGN')"><font size="4">操作标识</font></li>
+	<li class="ui-widget-content" onclick="queryCodeList('CMA_CONFIRM_RESULT')"><font size="4">反馈质控</font></li>
+	<li class="ui-widget-content" onclick="queryCodeList('CMA_QC_STATUS')"><font size="4">质量标志</font></li>
+	<li class="ui-widget-content" onclick="queryCodeList('CMA_FILE_STATUS')"><font size="4">评估报告状态</font></li>
+   </ol>
+  </td><td valign="top" width="80%">
+  <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="codeDataTable"></table></td>
+ </tr></table>
+</div>
+
+<div class="tab" id="tab3" style="display: none; ">
+  <iframe id="legendIframe" src="legendConfig.html" width="100%" height="98%" frameborder="0"></iframe>
+</div>
+ 
+</div>
+</div>
+</div>
+</body>
+</html> 

@@ -1,0 +1,252 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+ 
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var gcode = "";
+   var gdb_codes="";
+   var gserver_code="";
+   var gopt_server="";
+ 
+   $(document).ready(function() {
+        $( "#gopt_server_td" ).html( top.getRunServerCodeSelectHtml("qopt_server") );
+        try{
+		  optType=top.getUrlParam(document.URL,"opt");
+		  gcode=top.getUrlParam(document.URL,"code");
+ 		}catch(e){
+		}
+		if ( optType == 'create' ) {
+		  $( "#tdStatus" ).html( top.getCodeSelectHtml("USE_STATUS","qstatus",false) );
+		} else {
+		  var o=top.getTempValue();
+		  $( "#tdStatus" ).html( top.getCodeSelectHtml("USE_STATUS","qstatus",false, o.status) );
+		  $( "#qfrom_path" ).val( o.from_path );
+		  $( "#qto_dir" ).val( o.to_dir );
+		  $( "#qopt_sql" ).val( o.opt_sql );
+		  $( "#qtrash_dir" ).val( o.trash_dir );
+		  $( "#qitimei" ).val( o.itimei );
+		  $( "#qielei" ).val( o.ielei );
+		  $( "#qmonth" ).val( o.month );
+		  $( "#qday" ).val( o.day );
+		  $( "#qhour" ).val( o.hour );
+		  $( "#qminute" ).val( o.minute );
+		  $( "#replace_month" ).val( o.replace_month );
+		  $( "#replace_day" ).val( o.replace_day );
+		  $( "#replace_hour" ).val( o.replace_hour );
+		  $( "#qopt_server" ).val( o.opt_server );
+		  $( "#qtask_title" ).val( o.task_title );
+		  gserver_code=o.server_code;
+		  gdb_codes=o.db_codes;
+		}
+		top.sendAjaxRequest("/actions/Metadata.action?getMetaDBList",[],optGetDBListCallback);
+   } );
+ 
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   function doSubmit(){
+	 var aoData=[];
+	 var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+	 var sta=$("#qstatus").val();
+	 if ( sta == undefined || sta == '' ) sta = '0';
+ 
+	 aoData.push( { "name": "metaConfigFile.code", "value": gcode } );
+	 aoData.push( { "name": "metaConfigFile.server_code", "value": $("#qserver_code").val() } );
+	 var temp= top.getAllCheckedValue( document.getElementsByName('gdb_codes_cb') );
+	 if ( temp == '' ) {
+	   top.showInfoWinWarn("请选择数据库服务器");
+	   return;
+	 }
+	 aoData.push( { "name": "metaConfigFile.db_codes", "value": temp } );
+     aoData.push( { "name": "metaConfigFile.from_path", "value": $("#qfrom_path").val() } );
+	 aoData.push( { "name": "metaConfigFile.itimei", "value": $("#qitimei").val() } );
+	 aoData.push( { "name": "metaConfigFile.ielei", "value": $("#qielei").val() } );
+     aoData.push( { "name": "metaConfigFile.to_dir", "value": $("#qto_dir").val() } );
+	 aoData.push( { "name": "metaConfigFile.opt_sql", "value": $("#qopt_sql").val() } );
+	 aoData.push( { "name": "metaConfigFile.trash_dir", "value": $("#qtrash_dir").val() } );
+     aoData.push( { "name": "metaConfigFile.status", "value": sta } );
+     aoData.push( { "name": "metaConfigFile.month", "value": $("#qmonth").val() } );
+	 aoData.push( { "name": "metaConfigFile.day", "value": $("#qday").val() } );
+	 aoData.push( { "name": "metaConfigFile.hour", "value": $("#qhour").val() } );
+	 aoData.push( { "name": "metaConfigFile.minute", "value": $("#qminute").val() } );
+	 aoData.push( { "name": "metaConfigFile.replace_month", "value": $("#replace_month").val() } );
+	 aoData.push( { "name": "metaConfigFile.replace_day", "value": $("#replace_day").val() } );
+	 aoData.push( { "name": "metaConfigFile.replace_hour", "value": $("#replace_hour").val() } );
+	 aoData.push( { "name": "metaConfigFile.opt_server", "value": $("#qopt_server").val() } );
+	 aoData.push( { "name": "metaConfigFile.task_title", "value": $("#qtask_title").val() } );
+	 var url = "/actions/Metadata.action?updateMetaConfigFile";
+	 if ( optType == 'create' ) url = "/actions/Metadata.action?insertMetaConfigFile";
+
+	 top.sendAjaxRequest(url,aoData,optCallback);
+   }
+
+   function checkForm(){
+     var temp = "";
+	 temp += checkString($("#qtask_title").val(),true,32,"标题");
+	 temp += checkString($("#qfrom_path").val(),true,512,"文件路径");
+	 temp += checkString($("#qto_dir").val(),true,512,"目标路径");
+	 temp += checkString($("#qitimei").val(),false,7,"时间占位");
+	 temp += checkString($("#qielei").val(),false,7,"要素占位");
+	 temp += checkString($("#qopt_sql").val(),true,512,"执行SQL");
+	 temp += checkString($("#qtrash_dir").val(),false,512,"本地迁移路径");
+     return temp;
+   }
+   
+   function optGetFTPListCallback(obj){
+     try{
+	   var str="<select id='qserver_code'>";
+	   var temp = "";
+	   for ( var i=0;i<obj.aaData.length;i++ ) {
+	     temp = obj.aaData[i].code;
+		 str += "<option value='"+temp+"' ";
+		 if ( gserver_code == temp ) {
+		  str += " selected ";
+		 }
+		 str += ">"+temp+"</option>";
+	   }
+	   str+="</select>";
+	   $( "#gftp_code_td" ).html( str );
+	 }catch(e){}
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      isSaveOK = true;
+	      top.showInfoWinOK("操作成功");
+	    }else{
+	      isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   function optGetDBListCallback(obj){
+     try{
+	   var str="";
+	   var temp = "";
+	   for ( var i=0;i<obj.aaData.length;i++ ) {
+	     temp = obj.aaData[i].code;
+	     str += "<input type='checkbox' name='gdb_codes_cb' value='"+temp+"' ";
+		 if ( gdb_codes.indexOf(temp+",") != -1 || gdb_codes.indexOf("," +temp) != -1 || gdb_codes == temp ) str += " checked ";
+		 str += "></input>&nbsp;"+temp+"<br/>";
+	   }
+	   $( "#gdb_codes_td" ).html( str );
+	   
+	   top.sendAjaxRequest("/actions/Metadata.action?getMetaFTPList",[],optGetFTPListCallback);
+	 }catch(e){}
+   }
+  </script> 
+</head>
+<body>
+<br>
+<table width="100%" border="0" padding="0" spacing="0">
+ <tr>
+    <td align="right">标题(<font color="red">*</font>):</td>
+    <td align="left"><input type="text" id="qtask_title" ></input></td>
+ </tr>
+ <tr>
+    <td align="right">文件(<font color="red">*</font>):</td>
+    <td align="left"><textarea id="qfrom_path" cols="55" rows="3"></textarea></td>
+ </tr>
+  <tr>
+    <td align="right">时间占位:</td>
+    <td align="left"><input type="text" id="qitimei" ></input>(ITIMEI)</td>
+ </tr>
+  <tr>
+    <td align="right">要素占位:</td>
+    <td align="left"><input type="text" id="qielei" ></input>(IELEI)</td>
+ </tr>
+  <tr>
+    <td align="right">执行SQL(<font color="red">*</font>):</td>
+    <td align="left"><textarea id="qopt_sql" cols="55" rows="3"></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">数据库服务器(<font color="red">*</font>):</td>
+    <td align="left" id="gdb_codes_td" border="1"></td>
+ </tr>
+ <tr>
+    <td align="right">FTP目标路径(<font color="red">*</font>):</td>
+    <td align="left"><textarea id="qto_dir" cols="55" rows="3"></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">本地迁移路径(<font color="red">*</font>):</td>
+    <td align="left"><textarea id="qtrash_dir" cols="55" rows="3"></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">替换策略:</td>
+    <td align="left"><input id="replace_month" type="txt" value="0" size="3"/>月
+	<input type="txt" id="replace_day" value="0" size="3"/>日<input type="txt" id="replace_hour" value="0" size="3"/>时</td>
+ </tr>
+ <tr>
+    <td align="right">执行时间:</td>
+    <td align="left">
+	  <select id="qmonth">
+	    <option value="-1">每月</option>
+	    <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option><option value="5">5月</option>
+		<option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option>
+		<option value="11">11月</option><option value="12">12月</option>
+	  </select>
+	  <select id="qday">
+	    <option value="-1">每日</option>
+	    <option value="1">1日</option><option value="2">2日</option><option value="3">3日</option><option value="4">4日</option><option value="5">5日</option>
+		<option value="6">6日</option><option value="7">7日</option><option value="8">8日</option><option value="9">9日</option><option value="10">10日</option>
+		<option value="11">11日</option><option value="12">12日</option><option value="13">13日</option><option value="14">14日</option><option value="15">15日</option>
+		<option value="16">16日</option><option value="17">17日</option><option value="18">18日</option><option value="19">19日</option><option value="20">20日</option>
+		<option value="21">21日</option><option value="22">22日</option><option value="23">23日</option><option value="24">24日</option><option value="25">25日</option>
+		<option value="26">26日</option><option value="27">27日</option><option value="28">28日</option><option value="29">29日</option><option value="30">30日</option>
+		<option value="31">31日</option>
+	  </select>
+	  <select id="qhour">
+	    <option value="-1">每时</option><option value="0">0时</option>
+	    <option value="1">1时</option><option value="2">2时</option><option value="3">3时</option><option value="4">4时</option><option value="5">5时</option>
+		<option value="6">6时</option><option value="7">7时</option><option value="8">8时</option><option value="9">9时</option><option value="10">10时</option>
+		<option value="11">11时</option><option value="12">12时</option><option value="13">13时</option><option value="14">14时</option><option value="15">15时</option>
+		<option value="16">16时</option><option value="17">17时</option><option value="18">18时</option><option value="19">19时</option><option value="20">20时</option>
+		<option value="21">21时</option><option value="22">22时</option><option value="23">23时</option>
+	  </select>
+	  <select id="qminute">
+	    <option value="0">0分</option><option value="5">5分</option><option value="10">10分</option><option value="15">15分</option>
+		<option value="20">20分</option><option value="25">25分</option><option value="30">30分</option><option value="35">35分</option>
+		<option value="40">40分</option><option value="45">45分</option><option value="50">50分</option><option value="55">55分</option>
+	  </select>
+	</td>
+ </tr>
+ <tr>
+    <td align="right">状态:</td>
+    <td align="left" id="tdStatus"></td>
+ </tr>
+  <tr>
+    <td align="right">服务器:</td>
+    <td align="left" id="gftp_code_td" border="1"></td>
+ </tr>
+ <tr>
+    <td align="right">启用策略的服务器:</td>
+    <td align="left" id="gopt_server_td" border="1"></td>
+ </tr>
+</table>
+<p align="center">
+   <table><tr>
+		    <td><span id="okBtn" class="buttonTwo"><a href="javascript:doSubmit()">提交</a></span></td>
+		    <td><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+   </tr></table>
+</p>
+</body>
+</html>

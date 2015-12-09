@@ -1,0 +1,205 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css"
+			href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var queryCtlMark=0;//查询条件显示收缩标志变量
+			
+			$(document).ready(function() {
+			$( "#tdsource_award_points" ).html( top.getCodeSelectHtml("SOURCE_AWARD_POINTS","source_award_points",true) );
+			 var iaoColumns= [
+			                { "sTitle": "积分项目内容", "mDataProp": "integration_item", "sWidth": "45%","sClass": "left",
+							        "fnRender": function ( oObj ) {
+                                        return '<input type="checkbox" name="checkId" value=\''+oObj.aData.id+'\'/><a href=\'javascript:void(0)\' onclick="updateInfo(\''+oObj.aData.id+'\')" >'+oObj.aData.integration_item+'</a>';
+										
+                                  },
+								   "bUseRendered": false
+							},
+                            { "sTitle": "奖扣分来源", "mDataProp": "source_award_points", "sWidth": "25%", "sClass": "center",
+							  "fnRender": function (oObj){
+							    return top.getCodeName("SOURCE_AWARD_POINTS",oObj.aData.source_award_points);
+							  },
+							  "bUseRendered": false
+							},
+							{ "sTitle": "奖/扣分", "mDataProp": "reward_points", "sWidth": "15%","sClass": "center",
+							        "fnRender": function ( oObj ) {
+                                        if(oObj.aData.reward_points=="0"){
+										  return "扣分";
+										}
+										return "奖分";
+                                  },
+								   "bUseRendered": false
+							},
+							{ "sTitle": "分数", "mDataProp": "score", "sWidth": "15%","sClass": "center",
+								   "bUseRendered": false
+							}
+               ];			
+			   var surl=top.getUrlBase()+"/actions/IntegrationItem.action?getIntegrationItemList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData=getParamDate(aoData);
+			    },
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+			function updateInfo(id){
+				top.openDialog("修改积分规则","pages/oa/addIntegrationRule.html?optType=update&id="+id,true,600,350,doQuery()); 
+			}
+
+		    function getParamDate(aoData){
+			    aoData.push( { "name": "info.source_award_points", "value":$("#source_award_points").val() } );
+			    aoData.push( { "name": "info.id", "value":-1 } );
+				return aoData;
+			}
+		 //查询条件的展开与收缩
+		 function dwOup(){
+		   if(queryCtlMark==0){//展开
+			 $("#queryCtlIcon").attr("src","../../img/icons/arrow-up.gif"); 
+			 $("#queryTab").slideToggle();
+			 queryCtlMark=1;
+		   }else{//收缩
+			 $("#queryCtlIcon").attr("src","../../img/icons/arrow-down.gif"); 
+			 $("#queryTab").slideToggle();
+			 queryCtlMark=0;
+		   }
+		 }
+		 
+		 function addIntegrationItem(){
+            top.openDialog("添加积分规则","pages/oa/addIntegrationRule.html?optType=insert",true,600,350,doQuery); 		 
+		 }
+		 
+		 function deleteIntegrationItem(){
+		    var ids=top.getAllCheckedValue( document.getElementsByName('checkId') );
+			if (ids.length > 0){
+				top.showConfirm("您确定要删除选中的积分规则吗？", doDeleteIntegrationItem);
+			}else{
+				top.showInfoWinWarn("请选择要删除的积分规则");
+			} 
+		 }
+		 
+		 function doDeleteIntegrationItem(){
+		    var ids=top.getAllCheckedValue( document.getElementsByName('checkId') );
+			var aoData=[];
+			aoData.push( { "name":"ids","value":ids} );
+			top.sendAjaxRequest("/actions/IntegrationItem.action?deleteIntegrationItem",aoData,doDeleteIntegrationItemCallback);
+		 }
+		 
+		 function doDeleteIntegrationItemCallback(obj){
+		    if(obj.status==true){
+			   top.showInfoWinOK("操作成功!");
+			   doQuery();
+			}else{
+			   top.showInfoWinError("操作失败！");
+			}
+		 }
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+			<div style='border: 1px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="150px">
+							&nbsp;
+							积分规则管理&nbsp;
+						</td>
+						<td align="right">
+							<span><image id="queryCtlIcon" src="../../img/icons/arrow-down.gif" alt="展开" onclick="javascript:dwOup();"/></span>
+						</td>
+						<td width="2px">
+							&nbsp;
+						</td>
+					</tr>
+				</table>
+				<table width="100%" align="center" cellpadding="1px" id="queryTab" style="display:none"
+					cellspacing="1px" border="0">
+					<tr class="tr_data">
+					    <td align="right" width="45%">奖扣分来源:</td>
+						<td align="left" width="45%" id="tdsource_award_points">
+						</td>
+						<td align="center" width="10%">
+						   <div class="buttonDivTwo">
+								<a href="javascript:doQuery()">查询</a>
+						   </div>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0"
+				border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									&nbsp;查询结果列表&nbsp;
+								</td>
+								<td>
+								  <div class="buttonDivTwo">
+								    <a href="javascript:void(0)" onclick="addIntegrationItem()">添加</a>
+								  </div>
+								</td>
+								<td>
+								  <div class="buttonDivTwo">
+								    <a href="javascript:void(0)" onclick="deleteIntegrationItem()">删除</a>
+								  </div>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/base/ui.all.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+    <script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+<style type="text/css">
+#main{
+	height:100%;
+	padding: 10px;
+}
+</style>
+<script type="text/javascript">
+var isSaveOK=false;
+var optType="";
+var infoId="";
+var orgObj={};
+
+$(document).ready( function() {
+    optType=top.getUrlParam(document.URL,"opt");
+	initData();
+});
+
+function doBeforeClose(){
+    var obj={
+   		  "isSaveOK":isSaveOK
+	};
+    top.setTempValue(obj);
+}
+
+function doCancel(){
+    top.closeDialog();
+}
+
+function checkForm(){
+    var msg = "";
+if ( $("#c0019").val() != '' && !IsFloat( $("#c0019").val() )) msg += "[MTX累积剂量]应为数字类型<br>";
+if ( $("#c0018").val() != '' && !IsFloat( $("#c0018").val() )) msg += "[阿糖胞苷累积剂量]应为数字类型<br>";
+if ( $("#c0017").val() != '' && !IsFloat( $("#c0017").val() )) msg += "[环磷酰胺累积剂量]应为数字类型<br>";
+if ( $("#c0016").val() != '' && !IsFloat( $("#c0016").val() )) msg += "[蒽环类累积剂量]应为数字类型<br>";
+if ( $("#c0020").val() != '' && !IsFloat( $("#c0020").val() )) msg += "[腰穿鞘注次数]应为数字类型<br>";
+if ( $("#c0023").val() != '' && !IsFloat( $("#c0023").val() )) msg += "[靶向药物剂量]应为数字类型<br>";
+if ( $("#c0010").val() != '' && !IsFloat( $("#c0010").val() )) msg += "[骨髓原始细胞百分比]应为数字类型<br>";
+if ( $("#c0009").val() != '' && !IsFloat( $("#c0009").val() )) msg += "[外周血原始细胞百分比]应为数字类型<br>";
+msg += checkString($("#c0028").val(),false,32,"复发后治疗");
+msg += checkString($("#c0025").val(),false,32,"治疗后最优疗效");
+msg += checkString($("#c0036").val(),false,32,"移植后结局");
+msg += checkString($("#c0035").val(),false,32,"移植后并发症");
+msg += checkString($("#c0034").val(),false,32,"移植类型");
+msg += checkString($("#c0030").val(),false,32,"化疗后死亡原因");
+msg += checkString($("#c0029").val(),false,32,"化疗后存活情况");
+msg += checkString($("#c0024").val(),false,32,"靶向药物疗程");
+msg += checkString($("#c0022").val(),false,32,"靶向药物种类");
+msg += checkString($("#c0002").val(),false,32,"单位");
+msg += checkString($("#c0003").val(),false,32,"年龄（初诊）");
+msg += checkString($("#c0004").val(),false,32,"病历号");
+msg += checkString($("#c0005").val(),false,32,"原发病");
+msg += checkString($("#c0006").val(),false,32,"诊断时白细胞");
+msg += checkString($("#c0007").val(),false,32,"诊断时血红蛋白");
+msg += checkString($("#c0008").val(),false,32,"诊断时血小板");
+msg += checkString($("#c0011").val(),false,32,"染色体");
+msg += checkString($("#c0012").val(),false,32,"免疫分型");
+msg += checkString($("#c0015").val(),false,32,"化疗疗程");
+msg += checkString($("#c0001").val(),false,32,"姓名");
+msg += checkString($("#c0014").val(),false,256,"治疗方案");
+msg += checkString($("#c0038").val(),false,256,"化疗方案");
+
+	return msg;
+}
+
+function headButtonFun1(){
+    doSubmit();
+}
+
+function doSubmit(){
+	 var aoData=[];
+	 var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+aoData.push( { "name": "binfo.id", "value": infoId } );
+aoData.push( { "name": "binfo.c0032", "value": $("#c0032").val() } );
+aoData.push( { "name": "binfo.c0026", "value": $("#c0026").val() } );
+aoData.push( { "name": "binfo.c0021", "value": $("#c0021").val() } );
+aoData.push( { "name": "binfo.c0028", "value": $("#c0028").val() } );
+aoData.push( { "name": "binfo.c0025", "value": $("#c0025").val() } );
+aoData.push( { "name": "binfo.c0036", "value": $("#c0036").val() } );
+aoData.push( { "name": "binfo.c0035", "value": $("#c0035").val() } );
+aoData.push( { "name": "binfo.c0034", "value": $("#c0034").val() } );
+aoData.push( { "name": "binfo.c0030", "value": $("#c0030").val() } );
+aoData.push( { "name": "binfo.c0029", "value": $("#c0029").val() } );
+aoData.push( { "name": "binfo.c0024", "value": $("#c0024").val() } );
+aoData.push( { "name": "binfo.c0022", "value": $("#c0022").val() } );
+aoData.push( { "name": "binfo.c0002", "value": $("#c0002").val() } );
+aoData.push( { "name": "binfo.c0003", "value": $("#c0003").val() } );
+aoData.push( { "name": "binfo.c0004", "value": $("#c0004").val() } );
+aoData.push( { "name": "binfo.c0005", "value": $("#c0005").val() } );
+aoData.push( { "name": "binfo.c0006", "value": $("#c0006").val() } );
+aoData.push( { "name": "binfo.c0007", "value": $("#c0007").val() } );
+aoData.push( { "name": "binfo.c0008", "value": $("#c0008").val() } );
+aoData.push( { "name": "binfo.c0011", "value": $("#c0011").val() } );
+aoData.push( { "name": "binfo.c0012", "value": $("#c0012").val() } );
+aoData.push( { "name": "binfo.c0015", "value": $("#c0015").val() } );
+aoData.push( { "name": "binfo.c0001", "value": $("#c0001").val() } );
+aoData.push( { "name": "binfo.c0014", "value": $("#c0014").val() } );
+aoData.push( { "name": "binfo.c0038", "value": $("#c0038").val() } );
+
+aoData.push( { "name": "binfo.c0019", "value": top.g_GetNumValue($("#c0019").val()) } );
+aoData.push( { "name": "binfo.c0018", "value": top.g_GetNumValue($("#c0018").val()) } );
+aoData.push( { "name": "binfo.c0017", "value": top.g_GetNumValue($("#c0017").val()) } );
+aoData.push( { "name": "binfo.c0016", "value": top.g_GetNumValue($("#c0016").val()) } );
+aoData.push( { "name": "binfo.c0020", "value": top.g_GetNumValue($("#c0020").val()) } );
+aoData.push( { "name": "binfo.c0023", "value": top.g_GetNumValue($("#c0023").val()) } );
+aoData.push( { "name": "binfo.c0010", "value": top.g_GetNumValue($("#c0010").val()) } );
+aoData.push( { "name": "binfo.c0009", "value": top.g_GetNumValue($("#c0009").val()) } );
+
+aoData.push( { "name": "binfo.c0032", "value": top.toTimestamp($("#c0032").val()) } );
+aoData.push( { "name": "binfo.c0026", "value": top.toTimestamp($("#c0026").val()) } );
+aoData.push( { "name": "binfo.c0021", "value": top.toTimestamp($("#c0021").val()) } );
+aoData.push( { "name": "binfo.c0028", "value": top.toTimestamp($("#c0028").val()) } );
+aoData.push( { "name": "binfo.c0025", "value": top.toTimestamp($("#c0025").val()) } );
+aoData.push( { "name": "binfo.c0036", "value": top.toTimestamp($("#c0036").val()) } );
+aoData.push( { "name": "binfo.c0035", "value": top.toTimestamp($("#c0035").val()) } );
+aoData.push( { "name": "binfo.c0034", "value": top.toTimestamp($("#c0034").val()) } );
+aoData.push( { "name": "binfo.c0030", "value": top.toTimestamp($("#c0030").val()) } );
+aoData.push( { "name": "binfo.c0029", "value": top.toTimestamp($("#c0029").val()) } );
+aoData.push( { "name": "binfo.c0024", "value": top.toTimestamp($("#c0024").val()) } );
+aoData.push( { "name": "binfo.c0022", "value": top.toTimestamp($("#c0022").val()) } );
+aoData.push( { "name": "binfo.c0002", "value": top.toTimestamp($("#c0002").val()) } );
+aoData.push( { "name": "binfo.c0003", "value": top.toTimestamp($("#c0003").val()) } );
+aoData.push( { "name": "binfo.c0004", "value": top.toTimestamp($("#c0004").val()) } );
+aoData.push( { "name": "binfo.c0005", "value": top.toTimestamp($("#c0005").val()) } );
+aoData.push( { "name": "binfo.c0006", "value": top.toTimestamp($("#c0006").val()) } );
+aoData.push( { "name": "binfo.c0007", "value": top.toTimestamp($("#c0007").val()) } );
+aoData.push( { "name": "binfo.c0008", "value": top.toTimestamp($("#c0008").val()) } );
+aoData.push( { "name": "binfo.c0011", "value": top.toTimestamp($("#c0011").val()) } );
+aoData.push( { "name": "binfo.c0012", "value": top.toTimestamp($("#c0012").val()) } );
+aoData.push( { "name": "binfo.c0015", "value": top.toTimestamp($("#c0015").val()) } );
+aoData.push( { "name": "binfo.c0001", "value": top.toTimestamp($("#c0001").val()) } );
+aoData.push( { "name": "binfo.c0014", "value": top.toTimestamp($("#c0014").val()) } );
+aoData.push( { "name": "binfo.c0038", "value": top.toTimestamp($("#c0038").val()) } );
+
+     var ixurl="";
+     if ( infoId > 0 || optType == 'updatePro05b' ) {
+	   iurl="/actions/Pro05.action?updatePro05b";
+	 } else {
+	   iurl="/actions/Pro05.action?insertPro05b"
+	 }
+	 top.sendAjaxRequest(iurl,aoData,optCallback);
+}
+
+function initData(){
+	   try{
+		  if ( optType == 'update' ) {
+		    var o=top.getTempValue();
+            orgObj = o;
+			infoId = o.id;
+			
+$("#c0032").val(o.c0032);
+$("#c0026").val(o.c0026);
+$("#c0021").val(o.c0021);
+$("#c0028").val(o.c0028);
+$("#c0025").val(o.c0025);
+$("#c0036").val(o.c0036);
+$("#c0035").val(o.c0035);
+$("#c0034").val(o.c0034);
+$("#c0030").val(o.c0030);
+$("#c0029").val(o.c0029);
+$("#c0024").val(o.c0024);
+$("#c0022").val(o.c0022);
+$("#c0002").val(o.c0002);
+$("#c0003").val(o.c0003);
+$("#c0004").val(o.c0004);
+$("#c0005").val(o.c0005);
+$("#c0006").val(o.c0006);
+$("#c0007").val(o.c0007);
+$("#c0008").val(o.c0008);
+$("#c0011").val(o.c0011);
+$("#c0012").val(o.c0012);
+$("#c0015").val(o.c0015);
+$("#c0001").val(o.c0001);
+$("#c0014").val(o.c0014);
+$("#c0038").val(o.c0038);
+$("#c0013").val( top.getTimeStr( o.c0013, true ) );
+$("#c0037").val( top.getTimeStr( o.c0037, true ) );
+$("#c0027").val( top.getTimeStr( o.c0027, true ) );
+$("#c0031").val( top.getTimeStr( o.c0031, true ) );
+$("#c0033").val( top.getTimeStr( o.c0033, true ) );
+
+		  }
+	   }catch(e){
+		   top.showInfoWinError(e.message);
+	   }
+}
+
+function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功");
+		 infoId = obj.msg;
+	    }else{
+	     isSaveOK = false;
+	     top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+}
+</script>
+</head>
+<body>
+<div id="main">
+<div id="demo" class="demolayout" style="background-color:#ffffff;">
+<table width="100%"><tr>
+<td align='right'>姓名:</td><td align='left'><input type='text'  id='c0001' value=''></input></td>
+<td align='right'>单位:</td><td align='left'><input type='text'  id='c0002' value=''></input></td>
+</tr><tr>
+<td align='right'>年龄（初诊）:</td><td align='left'><input type='text'  id='c0003' value=''></input></td>
+<td align='right'>病历号:</td><td align='left'><input type='text'  id='c0004' value=''></input></td>
+</tr><tr>
+<td align='right'>原发病:</td><td align='left'><input type='text'  id='c0005' value=''></input></td>
+<td align='right'>诊断时白细胞:</td><td align='left'><input type='text'  id='c0006' value=''></input></td>
+</tr><tr>
+<td align='right'>诊断时血红蛋白:</td><td align='left'><input type='text'  id='c0007' value=''></input></td>
+<td align='right'>诊断时血小板:</td><td align='left'><input type='text'  id='c0008' value=''></input></td>
+</tr><tr>
+<td align='right'>外周血原始细胞百分比:</td><td align='left'><input type='text'  id='c0009' value=''></input></td>
+<td align='right'>骨髓原始细胞百分比:</td><td align='left'><input type='text'  id='c0010' value=''></input></td>
+</tr><tr>
+<td align='right'>染色体:</td><td align='left'><input type='text'  id='c0011' value=''></input></td>
+<td align='right'>免疫分型:</td><td align='left'><input type='text'  id='c0012' value=''></input></td>
+</tr><tr>
+<td align='right'>诊断距开始治疗时间:</td><td align='left' ><input type='text'  id='c0013' value='' onclick='new Calendar().show(this);' style='width:93px'></input></td>
+<td align='right'>末次随访时间:</td><td align='left' ><input type='text'  id='c0037' value='' onclick='new Calendar().show(this);' style='width:93px'></input></td>
+</tr><tr>
+<td align='right'>化疗疗程:</td><td align='left'><input type='text'  id='c0015' value=''></input></td>
+<td align='right'>蒽环类累积剂量:</td><td align='left'><input type='text'  id='c0016' value=''></input></td>
+</tr><tr>
+<td align='right'>环磷酰胺累积剂量:</td><td align='left'><input type='text'  id='c0017' value=''></input></td>
+<td align='right'>阿糖胞苷累积剂量:</td><td align='left'><input type='text'  id='c0018' value=''></input></td>
+</tr><tr>
+<td align='right'>MTX累积剂量:</td><td align='left'><input type='text'  id='c0019' value=''></input></td>
+<td align='right'>腰穿鞘注次数:</td><td align='left'><input type='text'  id='c0020' value=''></input></td>
+</tr><tr>
+<td align='right'>使用靶向药物:</td><td align='left'><select  id='c0021'><option value='0'>无</option><option value='1'>有</option></select></td>
+<td align='right'>靶向药物种类:</td><td align='left'><input type='text'  id='c0022' value=''></input></td>
+</tr><tr>
+<td align='right'>靶向药物剂量:</td><td align='left'><input type='text'  id='c0023' value=''></input></td>
+<td align='right'>靶向药物疗程:</td><td align='left'><input type='text'  id='c0024' value=''></input></td>
+</tr><tr>
+<td align='right'>治疗后最优疗效:</td><td align='left'><input type='text'  id='c0025' value=''></input></td>
+<td align='right'>化疗后复发:</td><td align='left'><select  id='c0026'><option value='0'>无</option><option value='1'>有</option></select></td>
+</tr><tr>
+<td align='right'>化疗后复发时间:</td><td align='left'><input type='text'  id='c0027' value='' onclick='new Calendar().show(this);' style='width:93px'></input></td>
+<td align='right'>复发后治疗:</td><td align='left'><input type='text'  id='c0028' value=''></input></td>
+</tr><tr>
+<td align='right'>化疗后存活情况:</td><td align='left'><input type='text'  id='c0029' value=''></input></td>
+<td align='right'>化疗后死亡原因:</td><td align='left'><input type='text'  id='c0030' value=''></input></td>
+</tr><tr>
+<td align='right'>化疗后末次随访时间/死亡时间:</td><td align='left'><input type='text'  id='c0031' value='' onclick='new Calendar().show(this);' style='width:93px'></input></td>
+<td align='right'>是否移植:</td><td align='left'><select  id='c0032'><option value='0'>无</option><option value='1'>有</option></select></td>
+</tr><tr>
+<td align='right'>移植时间:</td><td align='left'><input type='text'  id='c0033' value='' onclick='new Calendar().show(this);' style='width:93px'></input></td>
+<td align='right'>移植类型:</td><td align='left'><input type='text'  id='c0034' value=''></input></td>
+</tr><tr>
+<td align='right'>移植后并发症:</td><td align='left'><input type='text'  id='c0035' value=''></input></td>
+<td align='right'>移植后结局:</td><td align='left'><input type='text'  id='c0036' value=''></input></td>
+</tr><tr>
+</tr><tr>
+<td align='right'>化疗方案:</td><td align='left' ><textarea cols='20' rows='3' id='c0038' ></textarea></td>
+<td align='right'>治疗方案:</td><td align='left' ><textarea cols='20' rows='3' id='c0014' ></textarea></td>
+</tr>
+</table>
+
+</div>
+ 
+</div>
+</body>
+</html> 

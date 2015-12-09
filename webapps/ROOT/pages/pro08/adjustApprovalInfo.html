@@ -1,0 +1,99 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<link rel="stylesheet" type="text/css" href="../../css/fileuploader.css">
+<script src="../../js/jquery-1.7.2.min.js"></script>
+<script src="../../js/ui/jquery.ui.core.js"></script>
+<script src="../../js/ui/jquery.ui.widget.js"></script>
+<script src="../../js/ui/jquery.ui.tabs.js"></script>
+<script src="../../js/ui/jquery.ui.dialog.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+<script type="text/javascript" src="../../js/fileuploader.js"></script>
+
+
+<style>
+	input.a{
+FONT-SIZE: 9pt; MARGIN-BOTTOM: 
+		5px; WIDTH: 125px; COLOR: #333333; BORDER-TOP-STYLE: none; BORDER-BOTTOM: #999999 1px solid; FONT-FAMILY: Arial,Helvetica,sans-serif; 
+		BORDER-RIGHT-STYLE: none; BORDER-LEFT-STYLE: none; HEIGHT: 18px; TEXT-DECORATION: none
+}
+
+</style>
+</head>
+<body>
+	<table border="1" cellpadding="3" cellspacing="1" width="100%" height="5%" align="center" style="background-color: #b9d8f3;">
+		<tr style="text-align: center; COLOR: #0076C8; BACKGROUND-COLOR: #FFFFFF; font-weight: bold">
+			<td>
+				<div>添加管理级别调整审批</div>
+			</td>
+		</tr>
+	</table>	
+<div style="text-align:center;">	
+	<table border="1" cellpadding="3" cellspacing="1" width="100%" height="80%" align="center" style="background-color: #b9d8f3;" >
+		  <tr  style="text-align: center; COLOR: #0076C8; BACKGROUND-COLOR: #FFFFFF; font-weight: bold">
+					<td class="">姓名</td><td align="left"><input type="text" id="q_user_code" value="" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+					<td class="">矫正类别</td> <td class="" align="left"><input type="text" id="q_user_code" value="" onkeydown="if(event.keyCode==13) doQuery();" /></td>	
+				</tr>
+				<tr style="text-align: center; COLOR: #0076C8; BACKGROUND-COLOR: #FFFFFF; font-weight: bold">
+					<td class="">矫正时间</td><td colspan="4" align="left"><input type="text" id="birthday" value="" onclick="new Calendar().show(this);" />-<input type="text" id="birthday" value="" onclick="new Calendar().show(this);" /></td>
+				</tr>
+				<tr style="text-align: center; COLOR: #0076C8; BACKGROUND-COLOR: #FFFFFF; font-weight: bold">
+					<td class="">现在级别</td><td align="left" class=""><input type="text" id="q_user_code" value="" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+					<td class="">拟定级别</td><td align="left"><input type="text" id="q_user_code" value="" onkeydown="if(event.keyCode==13) doQuery();" /></td>	
+				</tr>
+				<tr style="text-align: center; COLOR: #0076C8; BACKGROUND-COLOR: #FFFFFF; font-weight: bold">
+					<td class="" rowspan="4">量化考核</td>
+					<td class="">教育学习</td><td align="left" colspan="4"><input type="text" id="q_user_code" value="" name="a" class="a" />分</td> 					
+				</tr>
+				<tr style="text-align: center; COLOR: #0076C8; BACKGROUND-COLOR: #FFFFFF; font-weight: bold">
+					<td class="">社会活动</td><td align="left" colspan="4"><input type="text" id="q_user_code" value="" name="a" class="a" />分</td> 
+				</tr>
+				<tr style="text-align: center; COLOR: #0076C8; BACKGROUND-COLOR: #FFFFFF; font-weight: bold">
+					<td class="">思想活动汇报</td><td align="left" colspan="4"><input type="text" id="q_user_code" value="" name="a" class="a" />分</td> 	
+				</tr>
+				<tr style="text-align: center; COLOR: #0076C8; BACKGROUND-COLOR: #FFFFFF; font-weight: bold">
+					<td class="">报告记录</td><td align="left" colspan="4"><input type="text" id="q_user_code" value="" name="a" class="a" />分</td> 
+				</tr>
+				<tr style="text-align: center; COLOR: #0076C8; BACKGROUND-COLOR: #FFFFFF; font-weight: bold">
+					<td class="">奖惩情况</td><td align="left" colspan="3"><textarea name="change_level[describe]" class="textarea" cols="80" rows="3"></textarea></td>
+        		</tr>
+        		<tr style="text-align: center; COLOR: #0076C8; BACKGROUND-COLOR: #FFFFFF; font-weight: bold">
+					<td class="">评定级别理由</td><td align="left" colspan="3"><textarea name="change_level[reason]" class="textarea" cols="80" rows="3"></textarea>					</td>
+        		</tr>
+        		<tr style="text-align: center; COLOR: #0076C8; BACKGROUND-COLOR: #FFFFFF; font-weight: bold">
+					<td class="">备注</td><td align="left" colspan="3"><textarea name="change_level[remarks]" class="textarea" cols="80" rows="3"></textarea></td>
+        		</tr>
+	</table>
+</div>
+	<br/>
+	<table border="1" cellpadding="3" cellspacing="1" width="100%" height="30%" align="center" style="background-color: #b9d8f3;">
+		        <tr style="text-align: center; COLOR: #FF0000; BACKGROUND-COLOR: #C6E2FF; font-weight: bold">
+					<td class="td-t" style="background:#E1E1E1;">宽管</td>
+					<td colspan="3">
+						每两周口头或电话汇报一次，每两个月到司法所报到一次，并上交书面汇报一份，参加教育学习8小时以上，参加社区服务8小时以上
+					</td>
+        		</tr>
+        		<tr style="text-align: center; COLOR: #FF0000; BACKGROUND-COLOR: #C6E2FF; font-weight: bold">
+					<td class="td-t" style="background:#E1E1E1;">普管</td>
+					<td colspan="3">
+						每周口头或者电话汇报一次，每一个月到司法所报到一次，并上交书面汇报一份，参加教育学习10小时以上，参加社区服务10小时以上
+					</td>
+        		</tr>
+        		<tr style="text-align: center; COLOR: #FF0000; BACKGROUND-COLOR: #C6E2FF; font-weight: bold">
+					<td class="td-t" style="background:#E1E1E1;">严管</td>
+					<td colspan="3">
+						每周口头或电话汇报两次，每半个月到司法所报到一次，并上交书面汇报一份，参加教育学习12小时以上，参加社区服务12小时以上，不得请假外出
+					</td>
+        		</tr>
+
+	</table>
+	<br/>
+	<br/>
+
+</body>
+</html>

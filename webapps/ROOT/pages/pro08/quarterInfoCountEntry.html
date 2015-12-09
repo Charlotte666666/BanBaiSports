@@ -1,0 +1,1018 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var d=new Date();
+			var month=d.getMonth()+1;
+			var day = d.getDate();
+		    var optType="";
+			var qDeptId="";
+		    var qDeptName="";
+			var ht="";
+			var dept_id = '';
+			
+			$(document).ready(function() {
+			    var quarter=""
+				if(month==1||month==2||month==3){
+				    quarter =1;
+				}
+				else if(month==4||month==5||month==6){
+				   quarter =2;
+				}
+				else if(month==7||month==8||month==9){
+				   quarter =3; 
+				}
+				else if(month==10||month==11||month==12){
+				   quarter =4;
+				}
+			
+			   optType=top.getUrlParam(document.URL,"optType");
+			   $( "#yearSpan" ).html( top.get5YearSelectHtml("q_year",false,null,"checkHasCountInfo()") );
+			   $( "#quarterSpan" ).html(get4QuarterSelectHtml(quarter) );
+			   $("#q_submit").hide();
+			   checkHasCountInfo();
+			   dept_id = top.getCurrentUser().deptId;
+	
+			});
+
+function get4QuarterSelectHtml(initValue){
+   var html="";
+   html+='<select id="q_quarter" onchange="checkHasCountInfo()">';
+	  for(var i=1;i<=4;i++ ){
+		   html+="<option value='"+ i +"' ";
+		   if ( i == initValue ) html+=" selected ";
+		   html+=">第"+i+"季度</option>";
+		}
+		html+="</select>";
+		return html;
+}
+function checkHasCountInfo(){
+     var aoData=[];
+     aoData.push( { "name": "quarter_count.year", "value": $("#q_year").val() } );
+     aoData.push( { "name": "quarter_count.quarter", "value": $("#q_quarter").val()} );
+     aoData.push( { "name": "quarter_count.info_type", "value": 1} );
+     top.sendAjaxRequest("/actions/Pro08Report.action?quarterInfoCountQuery",aoData,checkInfoCallback);
+}
+
+function checkInfoCallback(obj){
+    var rs = obj.aaData;
+	if(rs.length==1){
+	 $("#td_entry").hide();
+	  $("#checkSpan").show();
+	 $("#q_submit").hide();
+	  $("#CountInfotable").hide();
+	 $("#checkSpan").html("本报表已经存在！");
+	}
+	else{
+	$("#td_entry").show();
+    $("#checkSpan").hide();
+	}
+	//else if( $("#q_quarter").val()==1&&month==3&&day>20||$("#q_quarter").val()==2&&month==6&&day>20
+	//||$("#q_quarter").val()==3&&month==9&&day>20||$("#q_quarter").val()==4&&month==12&&day>20){
+	// $("#td_entry").show();
+	// $("#checkSpan").hide();
+	//}
+	//else{
+     // $("#td_entry").hide();
+	//  $("#checkSpan").show();
+	 // $("#q_submit").hide();
+	//  $("#CountInfotable").hide();
+	//  var i = $("#q_quarter").val();
+	//  $("#checkSpan").html(i+"季度报表在"+i*3+"月20日后上报");
+	//}
+}
+function doQuery(){
+	var aoData=[];
+	aoData.push( { "name": "quarter_count.year", "value": $("#q_year").val() } );
+	aoData.push( { "name": "quarter_count.quarter", "value": $("#q_quarter").val()} );
+	aoData.push( { "name": "quarter_count.dept_id", "value": dept_id } );
+	top.sendAjaxRequest("/actions/Pro08Report.action?quarterinfoCountEntry",aoData,quarterInfoCallback);
+ }  
+function quarterInfoCallback(obj){
+ try{
+   $("#CountInfotable").show();
+   $("#q_submit").show();
+	rs=obj.aaData;
+      ht='';
+      ht+='<tbody><tr style="height:30px" class="firstRow">';
+        ht+='<td width="1485" colspan="37" style="border: 1px solid black; padding: 0px 7px; background: white;" height="30"><p style="text-align:center">';
+        ht+='<strong><span style="font-size: 15px;font-family: 宋体">('+$("#q_year").val()+' </span></strong><strong><span style="font-size: 15px;font-family: 宋体">年&nbsp;' + $("#q_quarter").val()+'&nbsp;季度) 矫正工作情况信息统计表</span></strong>';
+		ht+='</p></td></tr>';
+        ht+='<tr style="height:30px">';
+        ht+=' <td width="45" style="border-right-color: black; border-bottom-color: black; border-left-color: black; border-width: 1px; border-style: solid; padding: 0px 7px; background: white;" rowspan="5">';
+        ht+='<p style="text-align:center">';
+        ht+=' <strong><span style="font-size: 15px;font-family: 宋体">地</span></strong>';
+        ht+=' </p>';
+        ht+=' <p style="text-align:center">';
+        ht+='<strong><span style="font-size: 15px;font-family: 宋体">区</span></strong>';
+        ht+='</p>';
+        ht+='</td>';
+            ht+='<td width="118" colspan="3" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="30">';
+                ht+='<p style="text-align:center">';
+                    ht+='<strong><span style="font-size: 15px;font-family: 宋体">开展地区</span></strong>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="158" colspan="4" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="30">';
+                ht+='<p style="text-align:center">';
+                    ht+='<strong><span style="font-size: 15px;font-family: 宋体">机构情况</span></strong>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="375" colspan="9" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="30">';
+                ht+='<p style="text-align:center">';
+                    ht+='<strong><span style="font-size: 15px;font-family: 宋体">队伍情况</span></strong>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="118" colspan="3" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="30">';
+               ht+='<p style="text-align:center">';
+                  ht+='  <strong><span style="font-size: 15px;font-family: 宋体">经费保障</span></strong>';
+               ht+=' </p>';
+            ht+='</td>';
+            ht+='<td width="355" colspan="9" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="30">';
+               ht+=' <p style="text-align:center">';
+                   ht+=' <strong><span style="font-size: 15px;font-family: 宋体">社区矫正工作任务落实情况</span></strong>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="158" colspan="4" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="30">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <strong><span style="font-size: 15px;font-family: 宋体">基地建设情况</span></strong>';
+               ht+=' </p>';
+           ht+=' </td>';
+           ht+=' <td width="118" colspan="3" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="30">';
+               ht+='<p style="text-align:center">';
+                    ht+='<strong><span style="font-size: 15px;font-family: 宋体">信息化建设情况</span></strong>';
+               ht+=' </p>';
+           ht+=' </td>';
+           ht+=' <td width="39" rowspan="3" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="30">';
+                ht+='<p style="text-align:center">';
+                    ht+='<strong><span style="font-size: 15px;font-family: 宋体">对拟适用社区矫正前的调查评估</span></strong>';
+                ht+='</p>';
+           ht+=' </td>';
+       ht+=' </tr>';
+        ht+='<tr style="height:25px">';
+           ht+=' <td width="39" rowspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">地市级</span>';
+                ht+='</p>';
+           ht+=' </td>';
+            ht+='<td width="39" rowspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">区县级</span>';
+               ht+=' </p>';
+            ht+='</td>';
+            ht+='<td width="40" rowspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">乡镇(街道)</span>';
+               ht+=' </p>';
+           ht+=' </td>';
+            ht+='<td width="39" rowspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">地市工作机构单列数</span>';
+                ht+='</p>';
+            ht+='</td>';
+           ht+=' <td width="39" rowspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                  ht+='  <span style="font-size: 15px;font-family: 宋体">区县工作机构单列数</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="39" rowspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">司法所</span>';
+                ht+='</p>';
+           ht+=' </td>';
+            ht+='<td width="39" rowspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">矫正小组</span>';
+                ht+='</p>';
+            ht+='</td>';
+           ht+=' <td width="46" rowspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">省（区、市）司法厅（局）专职工作人员</span>';
+               ht+=' </p>';
+           ht+=' </td>';
+           ht+=' <td width="46" rowspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">地（市、州）司法局专职工作人员</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="46" rowspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">县（市、区）司法局专职工作人员</span>';
+                ht+='</p>';
+           ht+=' </td>';
+            ht+='<td width="158" colspan="4" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">司法所社区矫正工作人员</span>';
+                ht+='</p>';
+            ht+='</td>';
+           ht+=' <td width="39" rowspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">社会工作者</span>';
+                ht+='</p>';
+           ht+=' </td>';
+            ht+='<td width="39" rowspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">社会志愿者</span>';
+                ht+='</p>';
+            ht+='</td>';
+           ht+=' <td width="118" colspan="3" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">列入本级财政预算</span>';
+                ht+='</p>';
+           ht+=' </td>';
+            ht+='<td width="40" rowspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">组织集中教育</span>';
+               ht+=' </p>';
+           ht+=' </td>';
+            ht+='<td width="39" rowspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">个别谈话教育</span>';
+               ht+=' </p>';
+            ht+='</td>';
+            ht+='<td width="39" rowspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">进行心理辅导</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="40" rowspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">组织社区服务</span>';
+               ht+=' </p>';
+            ht+='</td>';
+            ht+='<td width="39" rowspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">落实低保</span>';
+                ht+='</p>';
+           ht+=' </td>';
+            ht+='<td width="39" rowspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">落实承包田</span>';
+               ht+=' </p>';
+            ht+='</td>';
+            ht+='<td width="39" rowspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">技能培训</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="39" rowspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">指导就业或就学</span>';
+                ht+='</p>';
+           ht+=' </td>';
+            ht+='<td width="39" rowspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">其他</span>';
+               ht+=' </p>';
+           ht+=' </td>';
+            ht+='<td width="39" rowspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">已建立就业基地</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="39" rowspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">已建立教育基地</span>';
+                ht+='</p>';
+           ht+=' </td>';
+            ht+='<td width="39" rowspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                   ht+='<span style="font-size: 15px;font-family: 宋体">已建立社区服务基地</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="40" rowspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">已建立管理教育服务中心(中途之家)</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="79" colspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">开展地区</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="39" rowspan="2" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">发放定位手机数量</span>';
+               ht+=' </p>';
+            ht+='</td>';
+        ht+='</tr>';
+        ht+='<tr style="height:80px">';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="80">';
+                ht+='<p style="text-align:center">';
+                   ht+='<span style="font-size: 15px;font-family: 宋体">中央政法专项编人数</span>';
+                ht+='</p>';
+           ht+=' </td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="80">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">地方行政编人数</span>';
+                ht+='</p>';
+           ht+=' </td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="80">';
+               ht+=' <p style="text-align:center">';
+                  ht+='  <span style="font-size: 15px;font-family: 宋体">事业编制人数</span>';
+                ht+='</p>';
+            ht+='</td>';
+           ht+=' <td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="80">';
+                ht+='<p style="text-align:center"><span style="font-size: 15px;font-family: 宋体">其他身份人数</span></p></td>';
+              ht+=' <td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="80"><p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">省级</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="80">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">地市级</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="80">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">区县级</span>';
+               ht+=' </p>';
+           ht+=' </td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="80">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">地市级</span>';
+               ht+=' </p>';
+           ht+=' </td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="80">';
+               ht+=' <p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">区县级</span>';
+               ht+=' </p>';
+            ht+='</td>';
+        ht+='</tr>';
+        ht+='<tr style="height:25px">';
+           ht+=' <td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">个</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">个</span>';
+               ht+=' </p>';
+            ht+='</td>';
+           ht+=' <td width="40" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">个</span>';
+               ht+=' </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">个</span>';
+                ht+='</p>';
+           ht+=' </td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">个</span>';
+               ht+=' </p>';
+            ht+='</td>';
+           ht+=' <td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">个</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">个</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="46" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">人</span>';
+               ht+=' </p>';
+            ht+='</td>';
+            ht+='<td width="46" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">人</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="46" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">人</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">人</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">人</span>';
+               ht+=' </p>';
+           ht+=' </td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">人</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">人</span>';
+               ht+=' </p>';
+           ht+=' </td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">人</span>';
+                ht+='</p>';
+            ht+='</td>';
+           ht+=' <td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">人</span>';
+               ht+=' </p>';
+           ht+=' </td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                  ht+='  <span style="font-size: 15px;font-family: 宋体">个</span>';
+               ht+=' </p>';
+           ht+=' </td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">个</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">个</span>';
+                ht+='</p>';
+           ht+=' </td>';
+           ht+=' <td width="40" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">人次</span>';
+               ht+=' </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">人次</span>';
+               ht+=' </p>';
+            ht+='</td>';
+           ht+=' <td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">人次</span>';
+               ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="40" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">人次</span>';
+               ht+=' </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">人次</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">人次</span>';
+                ht+='</p>';
+           ht+=' </td>';
+           ht+=' <td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">人次</span>';
+               ht+=' </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">人次</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">人次</span>';
+               ht+=' </p>';
+           ht+=' </td>';
+           ht+=' <td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">个</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">个</span>';
+                ht+='</p>';
+           ht+=' </td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">个</span>';
+                ht+='</p>';
+            ht+='</td>';
+           ht+=' <td width="40" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体">个</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">个</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">个</span>';
+              ht+='  </p>';
+           ht+=' </td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体">个</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                  ht+='  <span style="font-size: 15px;font-family: 宋体">件</span>';
+               ht+=' </p>';
+           ht+=' </td>';
+       ht+=' </tr>';
+        ht+='<tr style="height:25px">';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>1</span>';
+              ht+='  </p>';
+          ht+='  </td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>2</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="40" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                 ht+='   <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>3</span>';
+               ht+=' </p>';
+           ht+=' </td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                 ht+='   <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>4</span>';
+              ht+='  </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+               ht+='  <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>5</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>6</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>7</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="46" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                 ht+='   <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>8</span>';
+                ht+='</p>';
+            ht+='</td>';
+           ht+=' <td width="46" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>9</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="46" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>10</span>';
+               ht+=' </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                    ht+='<span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>11</span>';
+                ht+='</p>';
+           ht+=' </td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                  ht+='  <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>12</span>';
+               ht+=' </p>';
+            ht+='</td>';
+           ht+=' <td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                ht+=' <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>13</span>';
+                ht+='</p>';
+            ht+='</td>';
+           ht+=' <td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                     ht+='<span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>14</span>';
+                ht+='</p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                 ht+='   <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>15</span>';
+               ht+=' </p>';
+           ht+=' </td>';
+           ht+=' <td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                  ht+='  <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>16</span>';
+               ht+=' </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>17</span>';
+                ht+='</p>';
+            ht+='</td>';
+           ht+=' <td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                ht+='    <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>18</span>';
+              ht+='  </p>';
+           ht+=' </td>';
+           ht+=' <td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+              ht+='  <p style="text-align:center">';
+              ht+='   <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>19</span>';
+               ht+=' </p>';
+           ht+=' </td>';
+           ht+=' <td width="40" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                  ht+='  <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>20</span>';
+                ht+='</p>';
+           ht+=' </td>';
+           ht+=' <td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                 ht+='   <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>21</span>';
+              ht+='  </p>';
+            ht+='</td>';
+           ht+=' <td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>22</span>';
+               ht+=' </p>';
+           ht+=' </td>';
+           ht+=' <td width="40" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                ht+='    <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>23</span>';
+              ht+='  </p>';
+           ht+=' </td>';
+           ht+=' <td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                ht+='    <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>24</span>';
+              ht+='  </p>';
+            ht+='</td>';
+           ht+=' <td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+              ht+='  <p style="text-align:center">';
+                  ht+='  <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>25</span>';
+              ht+='  </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+              ht+='  <p style="text-align:center">';
+                  ht+='  <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>26</span>';
+               ht+=' </p>';
+           ht+=' </td>';
+           ht+=' <td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                ht+='    <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>27</span>';
+              ht+='  </p>';
+           ht+=' </td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                   ht+=' <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>28</span>';
+               ht+=' </p>';
+           ht+=' </td>';
+           ht+=' <td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                  ht+='  <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>29</span>';
+               ht+=' </p>';
+           ht+=' </td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                ht+='    <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>30</span>';
+              ht+='  </p>';
+           ht+=' </td>';
+           ht+=' <td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+                ht+='<p style="text-align:center">';
+                 ht+='   <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>31</span>';
+              ht+='  </p>';
+            ht+='</td>';
+            ht+='<td width="40" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                ht+='    <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>32</span>';
+              ht+='  </p>';
+           ht+=' </td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+               ht+=' <p style="text-align:center">';
+                 ht+='   <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>33</span>';
+                ht+='</p>';
+           ht+=' </td>';
+           ht+=' <td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+              ht+='  <p style="text-align:center">';
+              ht+='      <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>34</span>';
+              ht+='  </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='        <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>35</span>';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='        <span style="font-size: 15px;font-family: 宋体;color:#7B7B7B"><i>36</span>';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='</tr>';
+	     for(var i=0;i<rs.length;i++){
+            ht+='<tr style="height:25px">';
+            ht+='<td width="45" style="border-right-color: black; border-bottom-color: black; border-left-color: black; border-width: 1px; border-style: solid; padding: 0px 7px; background: white;" height="25">';
+             ht+='   <p style="text-align:center">';
+            ht+='        <span style="font-size: 15px;font-family: 宋体">'+top.getDeptName(rs[i].dept_id)+'</span>';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='         <input type="text" style="text-align:center" id="q_c_1" value="'+rs[i].c_1+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='          <input type="text" style="text-align:center" id="q_c_2" value="'+rs[i].c_2+'" size="1" />';
+             ht+='   </p>';
+            ht+='</td>';
+            ht+='<td width="40" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='         <input type="text" style="text-align:center" id="q_c_3" value="'+rs[i].c_3+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='         <input type="text" style="text-align:center" id="q_c_4" value="'+rs[i].c_4+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+           ht+=' <td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='         <input type="text" style="text-align:center" id="q_c_5" value="'+rs[i].c_5+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='         <input type="text" style="text-align:center" id="q_c_6" value="'+rs[i].c_6+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='        <input type="text" style="text-align:center" id="q_c_7" value="'+rs[i].c_7+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="46" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+             ht+='   <p style="text-align:center">';
+             ht+='       <input type="text" style="text-align:center" id="q_c_8" value="'+rs[i].c_8+'" size="1" />';
+             ht+='   </p>';
+            ht+='</td>';
+            ht+='<td width="46" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+             ht+='   <p style="text-align:center">';
+            ht+='         <input type="text" style="text-align:center" id="q_c_9" value="'+rs[i].c_9+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="46" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+             ht+='   <p style="text-align:center">';
+             ht+='        <input type="text" style="text-align:center" id="q_c_10" value="'+rs[i].c_10+'" size="1" />';
+             ht+='   </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='       <input type="text" style="text-align:center" id="q_c_11" value="'+rs[i].c_11+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='        <input type="text" style="text-align:center" id="q_c_12" value="'+rs[i].c_12+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='         <input type="text" style="text-align:center" id="q_c_13" value="'+rs[i].c_13+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+             ht+='        <input type="text" style="text-align:center" id="q_c_14" value="'+rs[i].c_14+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='          <input type="text" style="text-align:center" id="q_c_15" value="'+rs[i].c_15+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='         <input type="text" style="text-align:center" id="q_c_16" value="'+rs[i].c_16+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+             ht+='        <input type="text" style="text-align:center" id="q_c_17" value="'+rs[i].c_17+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+             ht+='        <input type="text" style="text-align:center" id="q_c_18" value="'+rs[i].c_18+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='         <input type="text" style="text-align:center" id="q_c_19" value="'+rs[i].c_19+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="40" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+             ht+='   <p style="text-align:center">';
+             ht+='         <input type="text" style="text-align:center" id="q_c_20" value="'+rs[i].c_20+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='          <input type="text" style="text-align:center" id="q_c_21" value="'+rs[i].c_21+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='          <input type="text" style="text-align:center" id="q_c_22" value="'+rs[i].c_22+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="40" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='         <input type="text" style="text-align:center" id="q_c_23" value="'+rs[i].c_23+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='         <input type="text" style="text-align:center" id="q_c_24" value="'+rs[i].c_24+'" size="1" />';
+             ht+='   </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='         <input type="text" style="text-align:center" id="q_c_25" value="'+rs[i].c_25+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='          <input type="text" style="text-align:center" id="q_c_26" value="'+rs[i].c_26+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='          <input type="text" style="text-align:center" id="q_c_27" value="'+rs[i].c_27+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='         <input type="text" style="text-align:center" id="q_c_28" value="'+rs[i].c_28+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='         <input type="text" style="text-align:center" id="q_c_29" value="'+rs[i].c_29+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+           ht+=' <td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='         <input type="text" style="text-align:center" id="q_c_30" value="'+rs[i].c_30+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='          <input type="text" style="text-align:center" id="q_c_31" value="'+rs[i].c_31+'" size="1" />';
+            ht+='    </p>';
+            ht+='</td>';
+            ht+='<td width="40" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='    <p style="text-align:center">';
+            ht+='    <input type="text" style="text-align:center" id="q_c_32" value="'+rs[i].c_32+'" size="1" />';
+            ht+='    </p>';
+           ht+=' </td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+=' <p style="text-align:center">';
+            ht+='    <input type="text" style="text-align:center" id="q_c_33" value="'+rs[i].c_33+'" size="1" />';
+            ht+='  </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+            ht+='  <p style="text-align:center">';
+            ht+='  <input type="text" style="text-align:center" id="q_c_34" value="'+rs[i].c_34+'" size="1" />';
+            ht+='  </p>';
+            ht+='</td>';
+            ht+='<td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+             ht+=' <p style="text-align:center">';
+             ht+=' <input type="text" style="text-align:center" id="q_c_35" value="'+rs[i].c_35+'" size="1" />';
+            ht+='  </p>';
+            ht+=' </td>';
+            ht+=' <td width="39" style="border-style: solid; border-bottom-color: black; border-width: 1px; border-right-color: black; padding: 0px 7px; background: white;" height="25">';
+             ht+='<p style="text-align:center">';
+            ht+=' <input type="text" style="text-align:center" id="q_c_36" value="'+rs[i].c_36+'" size="1" />';
+            ht+='</p>';
+            ht+='</td>';
+            ht+=' </tr>';
+			}
+            ht+='</tbody>';
+			//alert(c_1);
+			$("#CountInfotable").html(ht);
+		}catch(e)
+		{
+			//alert(e.message);
+		}
+} 
+
+function saveBaseInfo(){
+     var aoData=[];
+	  aoData.push( { "name": "quarter_count.c_1", "value": $("#q_c_1").val()});
+	  aoData.push( { "name": "quarter_count.c_2", "value": $("#q_c_2").val()});
+	  aoData.push( { "name": "quarter_count.c_3", "value": $("#q_c_3").val()});
+	  aoData.push( { "name": "quarter_count.c_4", "value": $("#q_c_4").val()});
+	  aoData.push( { "name": "quarter_count.c_5", "value": $("#q_c_5").val()});
+	  aoData.push( { "name": "quarter_count.c_6", "value": $("#q_c_6").val()});
+	  aoData.push( { "name": "quarter_count.c_7", "value": $("#q_c_7").val()});
+	  aoData.push( { "name": "quarter_count.c_8", "value": $("#q_c_8").val()});
+	  aoData.push( { "name": "quarter_count.c_9", "value": $("#q_c_9").val()});
+	  aoData.push( { "name": "quarter_count.c_10", "value": $("#q_c_10").val()});
+	  aoData.push( { "name": "quarter_count.c_11", "value": $("#q_c_11").val()});
+	  aoData.push( { "name": "quarter_count.c_13", "value": $("#q_c_13").val()});
+	  aoData.push( { "name": "quarter_count.c_14", "value": $("#q_c_14").val()});
+	  aoData.push( { "name": "quarter_count.c_15", "value": $("#q_c_15").val()});
+	  aoData.push( { "name": "quarter_count.c_16", "value": $("#q_c_16").val()});
+	  aoData.push( { "name": "quarter_count.c_17", "value": $("#q_c_17").val()});
+	  aoData.push( { "name": "quarter_count.c_18", "value": $("#q_c_19").val()});
+	  aoData.push( { "name": "quarter_count.c_20", "value": $("#q_c_20").val()});
+	  aoData.push( { "name": "quarter_count.c_21", "value": $("#q_c_21").val()});
+	  aoData.push( { "name": "quarter_count.c_22", "value": $("#q_c_22").val()});
+	  aoData.push( { "name": "quarter_count.c_23", "value": $("#q_c_23").val()});
+	  aoData.push( { "name": "quarter_count.c_24", "value": $("#q_c_24").val()});
+	  aoData.push( { "name": "quarter_count.c_25", "value": $("#q_c_25").val()});
+	  aoData.push( { "name": "quarter_count.c_26", "value": $("#q_c_26").val()});
+	  aoData.push( { "name": "quarter_count.c_27", "value": $("#q_c_27").val()});
+	  aoData.push( { "name": "quarter_count.c_28", "value": $("#q_c_28").val()});
+	  aoData.push( { "name": "quarter_count.c_29", "value": $("#q_c_29").val()});
+	  aoData.push( { "name": "quarter_count.c_30", "value": $("#q_c_30").val()});
+	  aoData.push( { "name": "quarter_count.c_31", "value": $("#q_c_31").val()});
+	  aoData.push( { "name": "quarter_count.c_32", "value": $("#q_c_32").val()});
+	  aoData.push( { "name": "quarter_count.c_34", "value": $("#q_c_33").val()});
+	  aoData.push( { "name": "quarter_count.c_35", "value": $("#q_c_35").val()});
+	  aoData.push( { "name": "quarter_count.c_36", "value": $("#q_c_36").val()});
+	  aoData.push( { "name": "quarter_count.year", "value": $("#q_year").val()});
+	  aoData.push( { "name": "quarter_count.quarter", "value": $("#q_quarter").val()});
+	  aoData.push( { "name": "quarter_count.dept_id", "value":dept_id });
+	  top.sendAjaxRequest("/actions/Pro08Report.action?insertQuarterCountInfo",aoData,optCallback);
+	  
+}
+ function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	        isCreated = true;
+	        top.showInfoWinOK("操作成功");
+		    top.closeDialog();
+			 $("#td_entry").hide();
+	         $("#checkSpan").show();
+	         $("#q_submit").hide();
+	         $("#CountInfotable").hide();
+	         $("#checkSpan").html("本报表已经存在！");
+	    }else{
+	    	isCreated = false;
+	        top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		    top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   </script>
+	</head>
+	<body>
+	 <input type="hidden" id="deptId" value="" />
+		<div width="100%">
+		    <div style='border: 2px solid #89A1B9;'>
+			 <table  width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="200px">&nbsp;社区服刑人员信息情况统计表 &nbsp;</td>			
+				  <!--<td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>-->
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+				 <td align="right" width="5%">年份:</td><td align="center" width="5%"><span id="yearSpan" ></span></td>
+			      <td align="right" width="5%">时间:</td><td align="center" width="5%"><span id="quarterSpan" ></span></td>
+				  <td align="center"  width="10%" id="td_entry">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">录入</a></div>
+				  </td>
+				   <td align="left"  width="15%">
+				    <span id="checkSpan" ></span>
+				  </td>
+				  <!--<td align="right" width="15%">区域名称:</td><td align="left" width="50%">
+				  <input type="text" id="deptName" value="" style="width:300px" readonly onclick="selectDept()" />
+				  (选择统计区域后点击查询按钮)
+				  </td>
+				   <td width="20%" align="left" style="margin-right:10px"><div class="buttonTwo"><a href="javascript:openPrintView()">打印</a></div></td>-->
+				   <td  width="65%"></td>
+			     </tr>
+			 </table>
+			</div>
+		</div>
+		<table id="CountInfotable" cellpadding="0" cellspacing="0" style="background-color:#ffffff;margin:20px;">
+		</table>
+		<p align="center" id="optBtnArea">
+		   <table><tr  id="q_submit">
+					<td  align="center" width="2680px"><span id="okBtn" class="buttonTwo"><a href="javascript:saveBaseInfo()">提交</a></span></td>
+		   </tr></table>
+		</p>
+<p>
+    <br/>
+</p>
+	</body>
+</html>

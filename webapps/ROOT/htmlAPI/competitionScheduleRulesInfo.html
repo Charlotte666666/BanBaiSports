@@ -1,0 +1,91 @@
+<html>
+<head>
+    <meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>羽毛球比赛报名</title>
+	<link rel="stylesheet" href="../css/themes/default/jquery.mobile-1.4.5.min.css">
+	<script src="../js/jquery-1.10.2.min.js"></script>
+	<script src="../js/jquery.mobile-1.4.5.min.js"></script>
+
+  <script type="text/javascript">
+   var schedule_id=1;
+   var g_UrlBase="";
+   
+   $(document).ready(function() {
+       schedule_id=getUrlParam(document.URL,"id");
+	   try{
+	     var ind=document.URL.indexOf("htmlAPI");
+		 if ( ind != -1 ) {
+		   g_UrlBase=document.URL.substring(0,ind);
+		 }
+	   }catch(e){}
+	   var w=$(window).width();
+	   if ( schedule_id == 1440571183942 ) {
+	     var ht='<center><img src="http://banbaisport.oss-cn-beijing.aliyuncs.com/sz01.png" width="'+w+'px" /><br/>';
+		 $("#pcontest_rules").html( ht );
+	     return ;
+	   }
+	   
+	   var aoData=[];
+	   aoData.push( { "name": "info.id", "value": schedule_id } );
+	   doSendAjaxRequest("/actions/CompetitionSchedule.action?getDetailScheduleInfo",aoData,getScheduleInfoListCallback);
+   } );
+   
+   function getScheduleInfoListCallback(obj){
+       try{
+	     if ( obj.status == true ){
+           var o=obj.body;
+		   $("#pcontest_rules").html( toHTMLcode(o.contest_rules) ) ;
+		 }
+	   }catch(e){
+	   }
+   }
+   
+  function doSendAjaxRequest(xurl,param,fnCallback){
+	    if ( xurl.indexOf('http://') == -1 ) xurl = g_UrlBase+xurl;
+		$.ajax( {
+			"url":  xurl,
+			"data": param,
+			"timeout" : 10000,
+			"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+			"success": function (json) {
+				try{ fnCallback( json );}catch(e){}
+			},
+			"dataType": "json",
+			"cache": false,
+			"type": "POST",
+			"error": function (xhr, error, thrown) {
+			}
+		} );
+ }
+ 
+ function getUrlParam(xurl,name){
+	    var para="";
+	    if(xurl.lastIndexOf("?")>0){
+	        para=xurl.substring(xurl.lastIndexOf("?")+1,xurl.length);
+			var arr=para.split("&");
+			para="";
+			for(var i=0;i<arr.length;i++){
+			   if(arr[i].split("=")[0]==name) return arr[i].split("=")[1];
+			}
+			return "";
+	   }else{
+	        return "";
+	   }
+	}
+	
+	function toHTMLcode(str){
+	    if ( str == null ) return "";
+		str = str.replace(new RegExp("\n","gm"), "<BR/>");
+		return str;
+	}
+ 
+ </script> 
+</head>
+<body >
+<p style="margin:10px" id="pcontest_rules">
+  
+</p>
+</table>
+</body>
+</html>

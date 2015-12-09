@@ -1,0 +1,309 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>房源管理系统</title>
+<link href="css/login_css.css" rel="stylesheet" type="text/css">
+<link href="css/comm.css" rel="stylesheet" type="text/css" />
+<link href="css/map_css.css" rel="stylesheet" type="text/css" />
+<link href="css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<link href="css/commMenu.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="js/SimpleMap.js"></script>
+<script type="text/javascript" src="js/helpyouworkeasy-core.js"></script>
+<script type="text/javascript" src="js/md5.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.16.custom.min.js"></script>
+
+<script type="text/javascript">
+var adjustInter = -1;
+var userConfig = null;
+var interId = 0;
+var hasRunServers="";
+var g_allUsers=[];
+
+jQuery(document).ready(function() {
+    g_systemVersion="v1.0.0";
+    initGlobalData(true);
+	adjustPosition();
+	$("#userCode").focus();
+	window.onresize = function(){ adjustPosition(); };
+ });
+
+ function adjustPosition(){
+	if ( adjustInter != -1 ) {
+	   clearInterval( adjustInter );
+	   adjustInter = -1;
+	}
+    var wh=$(window).height();
+	var ww=$(window).width();
+	
+	$('#versionInfo').css("top",wh - 17);
+	$('#versionInfoTxt').html( "<font color='white'>版本:&nbsp;"+g_systemVersion+"</font>&nbsp;&nbsp;<span style='cursor:pointer' onclick='javascript:showHelpWin(550,370,\"pages/system/help.html\")'>系统帮助</span>" );
+    $('#loginMain').height(wh - 51);
+	$('#main_footer').css("top",wh - 18);
+	$('#mainContent').height(wh - 62);
+	$('#m_workbench').height(wh - 62);
+	$('#loginResult').css({"left":(ww - 100)/2+"px"});
+ }
+
+ function loginSuccess(){
+    sendAjaxRequest("/actions/User.action?getAllUserSimpleList",[],getAllUserCallback);
+    $("body").css({"background-image":"url(img/bg2_body1.png)"});
+	$('#loginTop').hide();
+	$('#loginClear').hide();
+	$('#loginMain').hide();
+	$('#ind_footer').hide();
+	$('#loginResult').hide();
+	$('#main').show();
+	$("#userPass").val("");
+	$('#loginResult').html("");
+	adjustInter = setInterval("adjustPosition()",500);
+	$("#workbenchContent").html( '<iframe id="workbenchFrame" src="pages/house/main.html" width="100%" style="position:absolute;left:0px;top:41px;background-color:#ffffff;" height="'+($("#workbenchContent").height()+1)+'" frameborder="0"></iframe>' );
+ }
+ 
+ function loginFail(){
+    $("body").css({"background-image":"url(img/bg1_home2.jpg)"});
+	$('#loginTop').show();
+	$('#loginClear').show();
+	$('#loginMain').show();
+	$('#ind_footer').show();
+	$('#loginResult').show();
+	$("#m_workbench").show();
+	$("#mainContent").hide();
+	$('#main').hide();
+ }
+ 
+ function toSysTab(xurl){
+   if ( xurl == 'workbench' ) {
+     $('#m_workbench').show();
+	 $('#mainContent').hide();
+	 return ;
+   }
+   $('#m_workbench').hide();
+   $("#mainContent").show();
+   $("#mainContent").html( '<iframe id="mainFrame" src="'+xurl+'" width="100%" height="'+($("#mainContent").height()+2)+'" style="position:absolute;left:0px;top:40px;background-color:#ffffff" frameborder="0"></iframe>' );
+ }
+ 
+ function doLogin(){
+   	   var userCode = $("#userCode").val();
+   	   var pass = $("#userPass").val();
+   	   if ( userCode == '' || pass == '' ) {
+   	 	 showInfoWin("请输入登录账号和密码");
+   	 	 return ;
+   	   }
+	   $('#loginResult').html("");
+	   var aoData=[];
+       aoData.push( { "name": "user.userCode", "value": userCode } );
+       aoData.push( { "name": "user.password", "value": hex_md5(pass) } );
+	   sendAjaxRequest("/actions/User.action?signon",aoData,loginCallback);
+ }
+ function loginCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	    	setCurrentUser(obj.body,obj.msg);
+			loginSuccess();
+	    }else{
+		  $('#loginResult').html("登录失败:"+obj.msg);
+	    }
+	   }catch(e){
+		  $('#loginResult').html("登录异常:"+e.message);
+	   }
+ }
+ 
+ function register(){
+    var xurl="pages/organization/userInfo.html?opt=register";
+	top.openDialog("用户注册",xurl,true,400,400,null);
+ }
+/**
+ * 初始化项目个性化全局缓存数据
+ */
+function proInitGlobalData(){
+	g_dictionary.put("EDIT_DIC_TYPEHOUSE_BELONG", new Code("HOUSE_BELONG","EDIT_DIC_TYPE","所属小区","1"));
+	g_dictionary.put("EDIT_DIC_TYPEHOUSE_ROOM_TYPE", new Code("HOUSE_ROOM_TYPE","EDIT_DIC_TYPE","房间类型","1"));
+	g_dictionary.put("EDIT_DIC_TYPEHOUSE_STYLE", new Code("HOUSE_STYLE","EDIT_DIC_TYPE","户型","1"));
+	g_dictionary.put("EDIT_DIC_TYPEHOUSE_STATUS", new Code("HOUSE_STATUS","EDIT_DIC_TYPE","出租房源状态","1"));
+	g_dictionary.put("EDIT_DIC_TYPECUST_STATUS", new Code("CUST_STATUS","EDIT_DIC_TYPE","出租客户状态","1"));
+	g_dictionary.put("EDIT_DIC_TYPECUST_BUY_STATUS", new Code("CUST_BUY_STATUS","EDIT_DIC_TYPE","买卖客户状态","1"));
+	g_dictionary.put("EDIT_DIC_TYPEHOUSE_PAY_TYPE", new Code("HOUSE_PAY_TYPE","EDIT_DIC_TYPE","交租方式","1"));
+	g_dictionary.put("EDIT_DIC_TYPEHOUSE_BUY_STATUS", new Code("HOUSE_BUY_STATUS","EDIT_DIC_TYPE","买卖房源状态","1"));
+    g_dictionary.put("EDIT_DIC_TYPEHOUSE_ROOM_STATUS", new Code("HOUSE_ROOM_STATUS","EDIT_DIC_TYPE","房间出租状态","1"));
+	g_dictionary.put("EDIT_DIC_TYPEHOUSE_FITMENT", new Code("HOUSE_FITMENT","EDIT_DIC_TYPE","装修情况","1"));
+	g_dictionary.put("EDIT_DIC_TYPEHOUSE_ORIENTATION", new Code("HOUSE_ORIENTATION","EDIT_DIC_TYPE","朝向","1"));
+	g_dictionary.put("EDIT_DIC_TYPEHOUSE_TYPE", new Code("HOUSE_TYPE","EDIT_DIC_TYPE","房屋类型","1"));
+	g_dictionary.put("EDIT_DIC_TYPEHOUSE_CATEGORY", new Code("HOUSE_CATEGORY","EDIT_DIC_TYPE","业务分类","1"));
+	g_dictionary.put("EDIT_DIC_TYPECONTRACT_STATUS", new Code("CONTRACT_STATUS","EDIT_DIC_TYPE","合同状态","1"));
+    g_dictionary.put("EDIT_DIC_TYPERENT_STATUS", new Code("RENT_STATUS","EDIT_DIC_TYPE","交租状态","1"));
+	g_dictionary.put("EDIT_DIC_TYPEPROPERTY_TYPE", new Code("PROPERTY_TYPE","EDIT_DIC_TYPE","房屋产权","1"));
+	g_dictionary.put("EDIT_DIC_TYPEHOUSE_DISTRICT", new Code("HOUSE_DISTRICT","EDIT_DIC_TYPE","区县","1"));
+	g_dictionary.put("EDIT_DIC_TYPEHOUSE_ESSENCE", new Code("HOUSE_ESSENCE","EDIT_DIC_TYPE","房源性质","1"));
+	g_dictionary.put("EDIT_DIC_TYPEHOUSE_STRUCTURE", new Code("HOUSE_STRUCTURE","EDIT_DIC_TYPE","房屋结构","1"));
+	g_dictionary.put("EDIT_DIC_TYPEHOUSE_FROM", new Code("HOUSE_FROM","EDIT_DIC_TYPE","房源来源","1"));
+	g_dictionary.put("EDIT_DIC_TYPEHOUSE_FACILITY", new Code("HOUSE_FACILITY","EDIT_DIC_TYPE","房屋设施","1"));
+	g_dictionary.put("EDIT_DIC_TYPEBUY_PAY_TYPE", new Code("BUY_PAY_TYPE","EDIT_DIC_TYPE","买卖房源付款方式","1"));
+	g_dictionary.put("EDIT_DIC_TYPEPRICE_TERMS", new Code("PRICE_TERMS","EDIT_DIC_TYPE","买卖房源价格条件","1"));
+	g_dictionary.put("EDIT_DIC_TYPECHECKING_WAY", new Code("CHECKING_WAY","EDIT_DIC_TYPE","看房方式","1"));
+	g_dictionary.put("EDIT_DIC_TYPEPERFORMANCE_TYPE", new Code("PERFORMANCE_TYPE","EDIT_DIC_TYPE","业绩类型","1"));
+}
+
+function openUserConfig(){
+  var xurl="pages/system/userConfig.html";
+  openDialog("个人设置",xurl,true,350,320,null);
+}
+
+function getHouseFacilityHtml(vs,cname,size){
+  if ( !size ) size=10;
+  var str="<table width='100%'><tr>";
+  var temp="";
+  var codes=top.getCodeListByType("HOUSE_FACILITY");
+  var n=0;
+  for ( var i=0;i<codes.length;i++ ) {
+     temp=codes[i].code;
+	 n++;
+     str += "<td><input type='checkbox' name='"+cname+"' value='"+temp+"' ";
+	 if ( vs.indexOf(temp+",") != -1 || vs.indexOf("," +temp) != -1 || vs == temp ) str += " checked ";
+	 str += "></input>"+temp+"</td>";
+	 if ( n >= size ) {
+	   str+="</tr><tr>";
+	   n=0;
+	 }
+  }
+  for (var i=n;i<size;i++) {
+     str+="<td></td>";
+  }
+  str+="</tr></table>";
+  return str;
+}
+
+ function getUserNameByCode(code){
+    if ( g_allUsers == null ) return code;
+	for ( var i=0;i<g_allUsers.length;i++ ) {
+	  if ( g_allUsers[i].userCode == code ) return g_allUsers[i].userName;
+	}
+	return code;
+ }
+ 
+ function getAllUserCallback(obj){
+    try{
+	  g_allUsers=obj.aaData;
+	}catch(e){
+	}
+ }
+ 
+ function getAllUserSelect(sid,initUserCode){
+    if ( !initUserCode ) initUserCode="";
+	var ht="<select id='"+sid+"' style='width:120px'>";
+	ht+="<option value=''></option>";
+    for(var i=0;i<g_allUsers.length;i++){
+	  ht+="<option value='"+g_allUsers[i].userCode+"'";
+	  if ( g_allUsers[i].userCode == initUserCode ) ht+=" selected ";
+	  ht+=">"+g_allUsers[i].userName+"</option>";
+	}
+	ht+="</select>";
+	return ht;
+ }
+</script>
+
+</head>
+<body>
+	<div id="loginTop"></div>
+	<div id="loginClear" class="clear"></div>
+	<div id="loginMain">
+	  <div class="ind_logo" style="padding-top: 75px;padding-left: 85px;"><img src="img/logo32.png" ></div>
+	  <div class="ind_info" style="margin-top: 20px;background-image: url(img/bg1_info_none.png);">
+	    <ul style="padding-top: 20px;padding-left: 100px;"><li>
+	      <font size="5" color="#006096"><b>一维慧动房源管理系统</b></font>
+		</li>
+		</ul>
+		<ul class="user_1" style="padding-top: 20px;">
+		  <li class="u1_1"><img src="img/pic1_user.png" width="29" height="35"></li>
+		  <li class="u1_2">账&nbsp;&nbsp;号：</li>
+		  <li class="u1_3">
+			<input type="text" name="textfield" id="userCode" style="width:160px;" onkeydown="if(event.keyCode==13) doLogin();" >
+		  </li>
+		</ul><div class="clear"></div>
+		<ul class="user_2">
+		  <li class="u2_1"><img src="img/pic_1user2.png" width="24" height="30"></li>
+		  <li class="u2_2">密&nbsp;&nbsp;码：</li>
+		  <li class="u2_3">
+			<input type="password" name="textfield" id="userPass" style="width:160px;" onkeydown="if(event.keyCode==13) doLogin();" >
+		  </li>
+		</ul>
+		<ul class="user_3"><li class="u3_1" onclick="doLogin()"><a href="javascript:void(0)">登&nbsp;录</a></li><li class="u3_2" onclick="register()"><a href="javascript:void(0)" >注&nbsp;册</a></li></ul>
+	  </div>
+	</div>
+	<div id="loginResult"></div>
+	<div id="ind_footer" style="float:center">
+	 <table width="100%"><tr><td width="100%" align="center"><font color="white">Copyright &copy; 北京一维慧动科技有限公司</font>
+	 </td></tr></table>
+	</div>
+
+<div id="main" style="display:none;background-image: url(img/empty.gif);">
+  <div id="header">
+     <div style="position: absolute; left:10px;top:5px;"><font size="5" color="#ffffff"><b>一维慧动房源管理系统</b></font></div>
+	    <ul class="nav">
+		  <li><a href="javascript:void(0)" onclick="javascript:toSysTab('workbench')"><span data-hover="首页">首页</span></a></li>
+		  <li class="hassubnav"><a href="javascript:void(0)"><span data-hover="房源管理">房源管理</span><em class="navicon"></em></a>
+			<ul>
+			    <li><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/house/houseSaleManage.html')">买卖房源</a></li>
+			    <li><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/house/houseManage.html')">内部出租房源</a></li>
+				<li><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/house/houseCooperationManage.html')">合作出租房源</a></li>
+				<li><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/house/houseRoomManage.html')">出租单间查询</a></li>
+			</ul>
+		  </li>
+		  <li name="menu" rightId="houseCustSys" id="c1" class="hassubnav"><a href="javascript:void(0)"><span data-hover="客户管理">客户管理</span><em class="navicon"></em></a>
+			 <ul>
+				<li name="menu" rightId="houseCust_ownerView" id="c2"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/house/houseownerManage.html')">业主信息管理</a></li>
+				<li name="menu" rightId="houseCust_rentView" id="c3"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/house/custInfoManage.html')">成交客户管理</a></li>
+			</ul>
+		  </li>
+		  <li name="menu" rightId="houseRentSys" id="r1" class="hassubnav"><a href="javascript:void(0)" ><span data-hover="租金管理">租金管理</span><em class="navicon"></em></a>
+		   <ul>
+				<li name="menu" rightId="houseRent_cust" id="r2"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/house/rentManagement.html')">收租管理</a></li>
+				<li name="menu" rightId="houseRent_owner" id="r3"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/house/ownerRentManage.html')">交租管理</a></li>
+		    </ul>
+		  </li>
+		  <li name="menu" rightId="houseContractSys" id="h1" class="hassubnav"><a href="javascript:void(0)" ><span data-hover="合同管理">合同管理</span><em class="navicon"></em></a>
+		    <ul>
+				<li name="menu" rightId="houseContract_rentView" id="h2"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/house/houseContractManage.html')">出租合同</a></li>
+				<li name="menu" rightId="houseContract_ownerView" id="h3"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/house/ownerContractManage.html')">承租合同</a></li>
+		    </ul>
+		  </li>
+		   <li class="hassubnav"><a href="javascript:void(0)" ><span data-hover="业绩管理">业绩管理</span><em class="navicon"></em></a>
+		    <ul>
+				<li><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/house/myPerformance.html')">我的业绩</a></li>
+				<li name="menu" rightId="housePerformance_count" id="y1"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/house/performanceStatistics.html')">业绩统计排名</a></li>
+		    </ul>
+		  </li>
+		  <li name="menu" rightId="coreSys" id="s1" class="hassubnav"><a href="javascript:void(0)"><span data-hover="系统管理">系统管理</span><em class="navicon"></em></a>
+			 <ul>
+				<li name="menu" rightId="userManage" id="s2"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/organization/userManage.html')">用户管理</a></li>
+				<li name="menu" rightId="deptManage" id="s3"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/organization/deptManage.html')">部门管理</a></li>
+				<li name="menu" rightId="rightManage" id="s4"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/organization/roleManage.html')">角色管理</a></li>
+				<li name="menu" rightId="sys_dicManage" id="s5"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/system/dicManage.html')">字典管理</a></li>
+				<li name="menu" rightId="sys_config" id="s6"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/system/parameterManage.html')">系统配置</a></li>
+				<li name="menu" rightId="sys_sysOperation" id="s9"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/system/operationManage.html')">操作日志</a></li>
+			</ul>
+		  </li>
+		  <li class="hassubnav"><a href="javascript:void(0)"><span data-hover="我的账号">我的账号</span><em class="navicon"></em></a>
+			  <ul>
+			    <li><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/house/rentCustManage.html')">我的出租客源</a></li>
+				<li><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/house/buyCustManage.html')">我的买卖客源</a></li>
+			    <li><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/notes/notesManage.html')">备忘录</a></li>
+				<li><a href="javascript:void(0)" onclick="javascript:g_changepass()">修改密码</a></li>
+				<li><a href="javascript:void(0)" onclick="javascript:isLogout()">退出系统</a></li>
+			 </ul>     
+		  </li>
+		</ul>
+  </div>
+  <div id="mainContent" style="padding: 0px 0px 0px 0px;"></div>
+  <div id="m_workbench" style="padding:0px;background-color:#C7EDCC;">
+	<div id="workbenchContent" style="padding:0px;background-color:#C7EDCC;height:100%"></div>
+  </div>
+  <div id="main_footer" style="padding-top: 0px;"><font color="white">
+    <table width="100%"><tr><td id="currentUserInfo" align="left" width="15%"></td><td width="85%" align="center">Copyright &copy; 北京一维慧动科技有限公司</td></tr></table></font>
+  </div>
+</div> <!-- end of main -->
+<div id="versionInfo" style="position: absolute;top:1000px;left:150px"><font color="white"><span id="versionInfoTxt" >v1.0.0</span></font></div>
+<script type="text/javascript" >writeCommonDiv();</script>
+</body>
+</html>

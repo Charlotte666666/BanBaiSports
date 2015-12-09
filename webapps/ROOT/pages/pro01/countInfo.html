@@ -1,0 +1,888 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link href="../../css/table_jui.css" rel="stylesheet" type="text/css"/>
+	<link href="../../css/comm.css" rel="stylesheet" type="text/css" />
+    <link href="../../css/redmond/jquery-ui-1.8.16.custom.css" rel="stylesheet" type="text/css"/>
+    <script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/jquery.ui.datepicker-zh-CN.js"></script>
+<style type="text/css">
+body {
+    font-size:13px;
+	color:#151515;
+    height:100%;
+    margin:0px;
+    padding:0px;
+	background-color:#cccccc;
+	background-image: url(resource/bg2_body1.png);
+	background-repeat: repeat;
+}
+#tabContent {
+    padding: 0 0 0 0;
+    margin: 0 0 0 0;
+    overflow-x: hidden; 
+    overflow-y: hidden;
+	left: 235px;
+	top:0px;
+	position: absolute;
+	background-color : transparent;
+}
+
+.rounded-left {
+	margin: 10px;
+	padding: 10px;
+	width:200px;
+	background-color : #F3F3F3;
+	border: 2px solid #89A1B9;
+	-moz-border-radius: 12px;
+	-webkit-border-radius: 12px;
+	border-radius: 12px;
+	overflow: auto;
+}
+
+fieldset {
+    padding:5px;
+    margin:2px;
+    border:solid 1px #cccccc;
+}
+legend {
+    color:#0778C5;
+    font-weight:800; 
+}
+
+</style>
+<script type="text/javascript">
+  	var oTable=null;
+    var d=null;
+    var nationalCode="";
+    var dataStr="";
+    var interId = 0;
+	var chartProvince=[];
+	 var isNational = null;
+	 var isProvince = "";
+	 var timeType = "";
+	 var year = "";
+	 var season="";
+	 var month="";
+	 var day="";
+	 var gsource = "";
+	 var s_type="1";
+	 var chartTitle="";
+	 var titleTime = "";
+	 var statRData=[];
+	 var gfeebackType=0;
+	 var detailListWidth = 0;
+	 
+	 var iaoColumns = [
+                               { "sTitle": "站号", "mDataProp": "V01000","sWidth": "15%","bSortable":false,
+                            	  "fnRender": function ( oObj ) {
+                                       return top.getCode2ASII(oObj.aData.V01000);
+                                  },
+                                  "bUseRendered": false
+                               },
+							   { "sTitle": "站名", "mDataProp": "stationName","sWidth": "20%","bSortable":false,"bUseRendered": false},
+                               { "sTitle": "时间(世界时)", "mDataProp": "timeStr", "sWidth": "20%","bSortable":false,"bUseRendered": false},
+                               { "sTitle": "要素", "mDataProp": "c_CODE", "sWidth": "20%","sClass": "center","bSortable":false,
+                                  "fnRender": function ( oObj ) {
+                                       return top.getCodeName( "CMA_ELE_CODE", oObj.aData.c_CODE );
+                                  },
+                                  "bUseRendered": false
+                               },
+                               { "sTitle": "观测值", "mDataProp": "V_VALUE", "sWidth": "15%","sClass": "center","bSortable":false },
+                               { "sTitle": "质控", "mDataProp": "F_1", "sWidth": "10%","sClass": "center","bSortable":false,
+                                  "fnRender": function ( oObj ) {
+								       if ( oObj.aData.F_1 == 0 ) return "正确";
+									   if ( oObj.aData.F_1 == 7 ) return "非考核站";
+									   if ( oObj.aData.F_1 == 1 ) return "可疑";
+									   if ( oObj.aData.F_1 == 8 ) return "缺测";
+									   if ( oObj.aData.F_1 == 2 ) return "错误";
+									   if ( oObj.aData.F_1 == 9 ) return "未质控";
+									   return oObj.aData.F_1;
+                                  },
+                                  "bUseRendered": false
+                               }
+      ];
+
+$(document).ready( function() {
+    var wh=$(window).height();
+	var ww=$(window).width();
+    $('#leftMenu').height( wh- 45);
+    $('#tabContent').height(wh);
+	$('#tabContent').width(ww - 235 );
+	$("#tabContent").html( '<iframe id="countFrame" src="../chartMulti.html" width="100%" height="100%" style="background: transparent;" frameborder="0"></iframe>' );
+
+	$.datepicker.setDefaults( $.datepicker.regional[ "zh-CN" ] );
+	$( "#datepicker1" ).datepicker();
+	$( "#datepicker1" ).datepicker( "option", "dateFormat", "yy-mm-dd" );
+	$( "#datepicker2" ).datepicker();
+	$( "#datepicker2" ).datepicker( "option", "dateFormat", "yy-mm-dd" );
+	
+	$( "#yearSpan1" ).html( top.get5YearSelectHtml("qyear1",false) );
+	$( "#yearSpan2" ).html( top.get5YearSelectHtml("qyear2",false) );
+	$( "#yearSpan3" ).html( top.get5YearSelectHtml("qyear3",false) );
+	detailListWidth=((ww - 255) / 2);
+	$("#nationalDetailList").css({"left":(245+detailListWidth)+"px","top":"60px","width":detailListWidth+"px","height":(wh-80)+"px"});
+
+	chartProvince[11]="北京";
+	chartProvince[12]="天津";
+	chartProvince[13]="河北";
+	chartProvince[14]="山西";
+	chartProvince[15]="内蒙";
+	chartProvince[21]="辽宁";
+	chartProvince[22]="吉林";
+	chartProvince[23]="黑龙江";
+	chartProvince[31]="上海";
+	chartProvince[32]="江苏";
+	chartProvince[33]="浙江";
+	chartProvince[34]="安徽";
+	chartProvince[35]="福建";
+	chartProvince[36]="江西";
+	chartProvince[37]="山东";
+	chartProvince[41]="河南";
+	chartProvince[42]="湖北";
+	chartProvince[43]="湖南";
+	chartProvince[44]="广东";
+	chartProvince[45]="广西";
+	chartProvince[46]="海南";
+	chartProvince[50]="重庆";
+	chartProvince[51]="四川";
+	chartProvince[52]="贵州";
+	chartProvince[53]="云南";
+	chartProvince[54]="西藏";
+	chartProvince[61]="陕西";
+	chartProvince[62]="甘肃";
+	chartProvince[63]="青海";
+	chartProvince[64]="宁夏";
+	chartProvince[65]="新疆";
+	chartProvince[71]="台湾";
+	chartProvince[81]="香港";
+	chartProvince[82]="澳门";
+	chartProvince[16]="辽宁";
+});
+
+
+function loadChartDone(){
+   top.sendAjaxRequest("/actions/ProCmaReport.action?getLatestDataTime",[],getLatestDataTimeCallback);
+}
+
+function getLatestDataTimeCallback(obj){
+	 try{
+	     if ( obj.status == true ) {
+		   if ( obj.body.year != '' ) {
+		    $("#qyear3").val( obj.body.year );
+      	    $("#qmonth").val( obj.body.month );
+			doCount();
+		   }
+		 }
+	 }catch(e){}
+}
+
+   function getProCodeByName(name){
+      for (var i=0;i<chartProvince.length;i++  ) {
+	     if ( chartProvince[i] == name ) return i +"" + "00";
+	  }
+	  return "";
+   }
+
+   function getChartProName(code){
+      try{
+	    var n=chartProvince[Number(code.substring(0,2))];
+		if (n) {
+		 return n;
+		} else return code;
+	  }catch(e){
+	    return code;
+	  }
+   }
+ 
+   function doCount(){
+     var aoData=[];
+	 isNational = $('input[name="isNational"]:checked').val(); 
+	 isProvince = "1";
+	 timeType = $('#timeType').val();
+	 year = "";
+	 season="";
+	 month="";
+	 day="";
+	 var sourceValue = top.getRadioValue(document.getElementsByName("sourceType"));
+	 switch ( timeType ) {
+	   case 'Y':
+	      year = $('#qyear1').val();
+		  titleTime = year+"年";
+	      break;
+	   case 'S':
+	      year = $('#qyear2').val();
+		  season = $('#qjidu').val();
+		  var tn="";
+		  if ( season == '01' ) {
+		     tn="第一季度";
+		  } else if ( season == '04' ) {
+		     tn="第二季度";
+		  } else if ( season == '07' ) {
+		     tn="第三季度";
+		  } else if ( season == '10' ) {
+		     tn="第四季度";
+		  } 
+		  titleTime = year+"年"+tn;
+	      break;
+	   case 'M':
+	      year = $('#qyear3').val();
+		  month = $('#qmonth').val();
+		  titleTime = year+"年"+month+"月";
+	      break;
+	   case 'N':
+	      if ( sourceValue == 1 ) {
+	          top.showInfoWinWarn("暂无统计数据");
+	          return ;
+	      }
+	      var d1 = $('#datepicker1').val();
+		  var d2 = $('#datepicker2').val();
+		  if ( d1 == '' || d2 == '' ) {
+		    top.showInfoWinWarn("请选择开始日期和结束日期");
+		    return ;
+		  }
+		  if ( d2 < d1 ) {
+		    top.showInfoWinWarn("开始日期不能晚于结束日期");
+		    return ;
+		  }
+		  var enddate=Date.parse(d1.replace(/-/g,"/"));
+		  var nowD=new Date();
+          var nowdate=nowD.getTime();
+		  if ( nowdate-enddate<0 ) {
+		      top.showInfoWinWarn("无数据");
+		      return ;
+		  }
+		  aoData.push( { "name": "date1", "value": d1 } );
+          aoData.push( { "name": "date2", "value": d2 } );
+		  titleTime = d1+"---"+d2;
+	      break;
+	   default: break;
+	 }
+	 
+	 s_type = top.getRadioValue(document.getElementsByName("ele"));
+
+	 chartTitle = "各省";
+	 chartTitle += (isNational == '1' ? "国家级自动站" : "区域自动站");
+	 if ( s_type == '1' ) {
+	   chartTitle += "资料质量";
+	 } else if ( s_type == '2' ) {
+	   chartTitle += "气温资料";
+	 } else if ( s_type == '3' ) {
+	   chartTitle += "降水资料";
+	 } else if ( s_type == '4' ) {
+	   chartTitle += "相对湿度资料";
+	 } else if ( s_type == '5' ) {
+	   chartTitle += "风资料";
+	 } else if ( s_type == '6' ) {
+	   chartTitle += "气压资料";
+	 } else if ( sourceValue == 1 ) {
+	   chartTitle += "日累计降水量数据";
+	 }
+
+     aoData.push( { "name": "isNational", "value": isNational } );
+     aoData.push( { "name": "isProvince", "value": isProvince } );
+     aoData.push( { "name": "timeType", "value": timeType } );
+     aoData.push( { "name": "year", "value": year } );
+     aoData.push( { "name": "season", "value": season } );
+     aoData.push( { "name": "month", "value": month } );
+	 aoData.push( { "name": "day", "value": day } );
+	 aoData.push( { "name": "s_type", "value": s_type } );
+
+	 if ( sourceValue == 1 ) { 
+	    aoData.push( { "name": "source", "value": "QAWPD" } );
+		gsource = "QAWPD";
+	 } else {
+	    if ( top.getRadioValue(document.getElementsByName("project")) == 5 ) {
+	        aoData.push( { "name": "source", "value": "QAWSR" } );
+			gfeebackType = top.getRadioValue(document.getElementsByName("radio_fankui"));
+			aoData.push( { "name": "feebackType", "value": gfeebackType } );
+			gsource = "QAWSR";
+		} else {
+		    aoData.push( { "name": "source", "value": "QAWSH" } );
+			gsource = "QAWSH";
+		}
+	 }
+	 top.showLoadingInfo(true);
+	 if ( gsource == "QAWSR" ) {
+	   if ( timeType == 'Y' || timeType == 'N' ) {
+	     top.showLoadingInfo(false);
+	     top.showInfoWinWarn("暂无统计数据");
+	     return ;
+	   }
+	   top.sendAjaxRequest("/actions/ProCmaReport.action?getStatChartRData",aoData,optRCallback);
+	 } else {
+	   top.sendAjaxRequest("/actions/ProCmaReport.action?getStatChartData",aoData,optCallback);
+	 }
+   }
+   
+   function optRCallback(obj){
+     top.showLoadingInfo(false);
+	 try{
+	    if ( obj.aaData.length == 0 ) {
+      	  top.showInfoWinWarn("没有数据");
+		  return ;
+		}
+		statRData = obj.aaData;
+		var txt=titleTime+"全国各省（区、市）自动站质量控制疑误信息反馈率平均为: "+obj.rateTotal+"%";
+
+		var xLabels="";
+		var value1="";
+		var value2="";
+		var value3="";
+		var value4="";
+		var rightMax=0;
+		var rightMin=100;
+		var rightStep = 1;
+		var avgRight = 99;
+		var totalRight = 0;
+		var v=0;
+		var len = 0;
+		var ncode=0;
+		var nname="";
+		for (var i=0;i<obj.aaData.length;i++) {
+		  if ( obj.aaData[i].nationalCode == '7100' || obj.aaData[i].nationalCode == '8100' || obj.aaData[i].nationalCode == '8200' ) {
+		    continue;
+		  }
+		  if ( len == 0 ) {
+		    ncode=obj.aaData[i].nationalCode;
+			nname=getChartProName(obj.aaData[i].nationalCode);
+		  }
+		  len ++;
+		  xLabels += getChartProName(obj.aaData[i].nationalCode)+",";
+		  if ( gfeebackType == 1 ) {
+		    v = obj.aaData[i].totalFbRate;
+		  } else if ( gfeebackType == 2 ) {
+		    v = obj.aaData[i].suspFbRate;
+		  } else {
+		    v = obj.aaData[i].errFbRate;
+		  }
+		  value1 += (v+",");
+		  if ( rightMax < v ) rightMax = v;
+		  if ( rightMin > v ) rightMin = v;
+		  totalRight += v;
+		}
+		avgRight = totalRight / len;
+
+		rightMax = getMMax(rightMax);
+		rightMin = getMMin(rightMin);
+		rightStep = getMStep( rightMax - rightMin );
+		
+		xLabels = xLabels.substring(0,xLabels.length -1);
+		value1 = value1.substring(0,value1.length -1);
+		
+		var tstr = "检验";
+		var tempN = "缺测率";
+		dataStr = '<chart title="质量控制疑误信息有效反馈率IBRI'+titleTime+'" types="bar" yTitle="" avgValue="'+avgRight+'" isAxisMultiline="1" ';
+		dataStr += ' xAxis="'+xLabels+'" yMax="'+rightMax+'," yMin="'+rightMin+'," yStep="'+rightStep+'">';
+		dataStr += '<data label="反馈率(%)" values="'+value1+'" /></chart>';
+       	drawChart( 1 );
+		
+		dataStr="HIDE";
+		drawChart( 2 );
+		drawChart( 3 );
+		drawChart( 4 );
+		
+		try{
+         var chartFrame = document.getElementById("countFrame");
+         if ( chartFrame.contentWindow.isLoaded() ) {
+           chartFrame.contentWindow.doDrawTxt( txt );
+         }
+        }catch(e){
+        }
+		setRnationalDetail( ncode, nname );
+	 }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	 }
+   }
+   
+   function optCallback(obj){
+     top.showLoadingInfo(false);
+	 $("#nationalDetailList").hide();
+	 try{
+	    if ( obj.aaData.length == 0 ) {
+      	  top.showInfoWinWarn("没有数据");
+		  return ;
+		}
+		var txt=titleTime+"全国统计：可用率 "+obj.rightRateTotal+"%、缺测率 "+obj.lackRateTotal+"%、错误率 "+obj.errorRateTotal+"%、可疑率 "+obj.suspRateTotal+"%";
+
+		var xLabels="";
+		var value1="";
+		var value2="";
+		var value3="";
+		var value4="";
+		var rightMax=0;
+		var rightMin=100;
+		var errorMax=0;
+		var errorMin=100;
+		var suspMax=0;
+		var suspMin=100;
+		var lackMax=0;
+		var lackMin=100;
+		var lackStep = 0.5;
+		var errorStep = 0.5;
+		var suspStep = 0.5;
+		var rightStep = 1;
+		var avgRight = 99;
+		var totalRight = 0;
+		var len = 0;
+		for (var i=0;i<obj.aaData.length;i++) {
+		  if ( obj.aaData[i].nationalCode == '7100' || obj.aaData[i].nationalCode == '8100' || obj.aaData[i].nationalCode == '8200' ) {
+		    continue;
+		  }
+		  len ++;
+		  xLabels += getChartProName(obj.aaData[i].nationalCode)+",";
+		  value1 += obj.aaData[i].right+",";
+		  value2 += obj.aaData[i].error+",";
+		  value3 += obj.aaData[i].susp+",";
+		  value4 += obj.aaData[i].lack+",";
+		  if ( rightMax < obj.aaData[i].right ) rightMax = obj.aaData[i].right;
+		  if ( errorMax < obj.aaData[i].error ) errorMax = obj.aaData[i].error;
+		  if ( suspMax < obj.aaData[i].susp ) suspMax = obj.aaData[i].susp;
+		  if ( lackMax < obj.aaData[i].lack ) lackMax = obj.aaData[i].lack;
+		  if ( rightMin > obj.aaData[i].right ) rightMin = obj.aaData[i].right;
+		  if ( errorMin > obj.aaData[i].error ) errorMin = obj.aaData[i].error;
+		  if ( suspMin > obj.aaData[i].susp ) suspMin = obj.aaData[i].susp;
+		  if ( lackMin > obj.aaData[i].lack ) lackMin = obj.aaData[i].lack;
+		  totalRight += obj.aaData[i].right;
+		}
+		avgRight = (len == 0)?0:(totalRight / len);
+
+		rightMax = getMMax(rightMax);
+		rightMin = getMMin(rightMin);
+		rightStep = getMStep( rightMax - rightMin );
+		
+		errorMax = getMMax(errorMax);
+		errorMin = getMMin(errorMin);
+		errorStep = getMStep( errorMax - errorMin );
+
+		suspMax = getMMax(suspMax);
+		suspMin = getMMin(suspMin);
+		suspStep = getMStep( suspMax - suspMin );
+		
+		lackMax = getMMax(lackMax);
+		lackMin = getMMin(lackMin);
+		lackStep = getMStep( lackMax - lackMin );
+		
+		xLabels = xLabels.substring(0,xLabels.length -1);
+		value1 = value1.substring(0,value1.length -1);
+		value2 = value2.substring(0,value2.length -1);
+		value3 = value3.substring(0,value3.length -1);
+		value4 = value4.substring(0,value4.length -1);
+		
+		var tstr = "检验";
+		var tempN = "缺测率";
+        if ( gsource == "QAWSR" ) {
+		 chartTitle = chartTitle + "反馈";
+		 tempN = "反馈率";
+		 tstr="";
+        }
+		dataStr = '<chart title="'+chartTitle+'可用率'+tstr+'结果IBRI'+titleTime+'" types="bar" yTitle="" avgValue="'+avgRight+'" isAxisMultiline="1" ';
+		dataStr += ' xAxis="'+xLabels+'" yMax="'+rightMax+'," yMin="'+rightMin+'," yStep="'+rightStep+'">';
+		dataStr += '<data label="可用率(%)" values="'+value1+'" /></chart>';
+       	drawChart( 1 );
+		
+		dataStr = '<chart title="'+chartTitle+'错误率'+tstr+'结果IBRI'+titleTime+'" types="bar" yTitle="" isAxisMultiline="1" colors="0xFF00FF,"';
+		dataStr += ' xAxis="'+xLabels+'" yMax="'+errorMax+'," yMin="'+errorMin+'," yStep="'+errorStep+'">';
+		dataStr += '<data label="错误率(%)" values="'+value2+'" /></chart>';
+		drawChart( 2 );
+		
+		dataStr = '<chart title="'+chartTitle+'可疑率'+tstr+'结果IBRI'+titleTime+'" types="bar" yTitle="" isAxisMultiline="1" colors="0x0000FF,"';
+		dataStr += ' xAxis="'+xLabels+'" yMax="'+suspMax+'," yMin="'+suspMin+'," yStep="'+suspStep+'">';
+		dataStr += '<data label="可疑率(%)" values="'+value3+'" /></chart>';
+		drawChart( 3 );
+
+		dataStr = '<chart title="'+chartTitle+""+tempN+''+tstr+'结果IBRI'+titleTime+'" types="bar" yTitle="" isAxisMultiline="1" colors="0x00FF00,"';
+		dataStr += ' xAxis="'+xLabels+'" yMax="'+lackMax+'," yMin="'+lackMin+'," yStep="'+lackStep+'">';
+		dataStr += '<data label="'+tempN+'(%)" values="'+value4+'" /></chart>';
+		drawChart( 4 );
+		
+		try{
+         var chartFrame = document.getElementById("countFrame");
+         if ( chartFrame.contentWindow.isLoaded() ) {
+           chartFrame.contentWindow.doDrawTxt( txt );
+         }
+        }catch(e){
+        }
+	 }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	 }
+   }
+   
+   function getMStep(d){
+      if ( d > 50 ) return 10;
+	  if ( d > 10 ) return 5;
+	  if ( d > 1 ) return 1;
+	  if ( d > 0.1 ) return 0.1;
+	  if ( d > 0.01 ) return 0.01;
+	  if ( d > 0.005 ) return 0.005;
+	  return 0.0005;
+   }
+   
+   function getMMin(m){
+      if ( m == 0 ) return 0;
+      for ( var i=1;i<15;i++ ) {
+	     if ( m > (100 - i*5) ) {
+		    m = (100 - i*5);
+			break;
+		 }
+	  }
+	  if ( m < 20 ) {
+	     for ( var i=1;i<16;i++ ) {
+			 if ( m > (20 - i) ) {
+				m = 20 - i;
+				break;
+			 }
+		 }
+	  }
+	  if ( m < 5 ) {
+	     for ( var i=1;i<10;i++ ) {
+			 if ( m > (5 - i*0.5) ) {
+				m = 5 - i*0.5;
+				break;
+			 }
+		 }
+	  }
+	  if ( m < 1 ) {
+	     for ( var i=1;i<10;i++ ) {
+			 if ( m > (1 - i*0.1) ) {
+				m = 1 - i*0.1;
+				break;
+			 }
+		 }
+	  }
+	  if ( m < 0.1 ) {
+	     for ( var i=1;i<10;i++ ) {
+			 if ( m > (0.1 - i*0.01) ) {
+				m = 0.1 - i*0.01;
+				break;
+			 }
+		 }
+	  }
+	  if ( m < 0 ) m = 0;
+	  return m;
+   }
+   
+   function getMMax(m){
+      if ( m == 0 ) return 1;
+      for ( var i=1;i<15;i++ ) {
+	     if ( m > (100 - i*5) ) {
+		    m = (100 - i*5) + 5;
+			break;
+		 }
+	  }
+	  if ( m < 20 ) {
+	     for ( var i=1;i<16;i++ ) {
+			 if ( m > (20 - i) ) {
+				m = 20 - i + 1;
+				break;
+			 }
+		 }
+	  }
+	  if ( m < 5 ) {
+	     for ( var i=1;i<10;i++ ) {
+			 if ( m > (5 - i*0.5) ) {
+				m = 5 - i*0.5 + 0.5;
+				break;
+			 }
+		 }
+	  }
+	  if ( m < 1 ) {
+	     for ( var i=1;i<10;i++ ) {
+			 if ( m > (1 - i*0.1) ) {
+				m = 1 - i*0.1 + 0.1;
+				break;
+			 }
+		 }
+	  }
+	  if ( m < 0.1 ) {
+	     for ( var i=1;i<10;i++ ) {
+			 if ( m > (0.1 - i*0.01) ) {
+				m = 0.1 - i*0.01 + 0.01;
+				break;
+			 }
+		 }
+	  }
+	  return m;
+   }
+
+   function drawChart(n){
+   	   if ( dataStr == '' ) return ;
+   	   try{
+         var chartFrame = document.getElementById("countFrame");
+         if ( chartFrame.contentWindow.isLoaded() ) {
+           clearInterval( interId );
+           chartFrame.contentWindow.doDrawChart( n+"@"+dataStr );
+         }
+       }catch(e){
+       }
+   }
+   
+  function changeType(v){
+       if ( v == 1 ) {
+		 document.getElementById("radioFeedback").style.display="none";
+		 document.getElementById("project_qc").checked = true;
+		 checkFankui(false);
+		 $('#timeType').val("M");
+		 document.getElementById("accordionType").style.display="none";
+		 changeTimeType();
+       } else {
+       	 document.getElementById("accordionType").style.display="";
+		 document.getElementById("radioFeedback").style.display="";
+       }
+   }
+  function doSelectCheck(id){
+	try{
+	    document.getElementById(id).checked = !document.getElementById(id).checked;
+	}catch(e){
+	    //alert(e.message);	
+	}
+  }
+  
+  function doChartClick(str){
+	  nationalCode = getProCodeByName( str );
+	  if ( gsource == "QAWSR" ) {
+	    setRnationalDetail( nationalCode,str );
+	  } else {
+        openDataListWin(str);
+	  }
+  }
+  
+  function setRnationalDetail(ncode,nationalName){
+      var str = '<chart title="'+nationalName+'反馈情况" types="pie" ><data labels="确认正确,确认错误,无法判断,未反馈" values="';
+      for ( var i=0;i<statRData.length;i++ ) {
+	     if ( statRData[i].nationalCode == ncode ) {
+		   if ( gfeebackType == 1 ) {
+		    str += ((statRData[i].suspRight + statRData[i].errRight) + ",");
+		    str += ((statRData[i].suspErr + statRData[i].errErr) + ",");
+		    str += ((statRData[i].suspSusp + statRData[i].errSusp) + ",");
+		    str += (statRData[i].susp + statRData[i].err - statRData[i].fbSusp - statRData[i].fbErr);
+		   } else if ( gfeebackType == 2 ) {
+		    str += (statRData[i].suspRight + ",");
+		    str += (statRData[i].suspErr + ",");
+		    str += (statRData[i].suspSusp + ",");
+		    str += (statRData[i].susp - statRData[i].fbSusp);
+		   } else {
+		    str += (statRData[i].errRight + ",");
+		    str += (statRData[i].errErr + ",");
+		    str += (statRData[i].errSusp + ",");
+		    str += (statRData[i].err - statRData[i].fbErr);
+		   }
+		   break;
+		 }
+	  }
+	  str += '" /></chart>';
+	  dataStr = str;
+	  drawChart( 5 );
+	  $("#nationalDetailList").show();
+      top.showLoadingInfo(true);
+      var surl=top.getUrlBase()+"/actions/ProCmaReport.action?getQAWSR_STA_List";
+	  oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnInitComplete": function(oSettings, json) {
+					  top.showLoadingInfo(false);
+				   },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								$("#nationalDetailListTxt").html("<font size='4'>"+nationalName+"未反馈的台站列表</font>");
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+							    top.showLoadingInfo(false);
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+			            aoData.push( { "name": "nationalCode", "value": ncode } );
+						aoData.push( { "name": "year", "value": year } );
+						aoData.push( { "name": "month", "value": (month==''?"1":month) } );
+						aoData.push( { "name": "feebackType", "value": gfeebackType } );
+						aoData.push( { "name": "isNational", "value": isNational } );
+						aoData.push( { "name": "season", "value": season } );
+						aoData.push( { "name": "timeType", "value": timeType } );
+			      },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumns
+	   } );
+  }
+
+  function openDataListWin(str){
+    if ( timeType == 'N' ) return ;
+	if ( gsource == "QAWSR" ) return ;
+    var v = 1;
+	var type = 1;
+	v = top.getRadioValue(document.getElementsByName("project"));
+	if ( v == 5 ) {
+	    v = top.getRadioValue(document.getElementsByName("radio_fankui"));
+		if ( v == 1 ) {
+		  type = 31;
+		} else if ( v == 2 ) {
+		  type = 32;
+		} else if ( v == 3 ) {
+		  type = 33;
+		}
+	}
+    var xurl=top.getUrlBase()+"/pages/pro01/dataListCount.html?type="+type+"&isNational="+isNational;
+	xurl += "&timeType="+timeType+"&year="+year+"&season="+season+"&month="+month+"&day="+day+"&nationalCode="+nationalCode+"&s_type="+s_type;
+    top.openDialog(str+"统计结果列表"+top.getDialogButtonHtml("导出",1),xurl,false,900,620,null);
+  }
+
+  function checkFankui(b){
+	 if ( b ) {
+	  $("#q_fankui").show();
+	  $("#accordionType").hide();
+	  $("#isNational_allSpan").show();
+	  top.initRadioValue( document.getElementsByName("isNational") , 2);
+	 } else {
+	  $("#q_fankui").hide();
+	  $("#accordionType").show();
+	  $("#isNational_allSpan").hide();
+	  top.initRadioValue( document.getElementsByName("isNational") , 1);
+	 }
+  }
+  function changeTimeType(){
+     var t = $('#timeType').val();
+	 $('#q_Y_s').hide();
+	 $('#q_S_s').hide();
+	 $('#q_M_s').hide();
+	 $('#q_N_s').hide();
+	 $('#q_'+t+'_s').show();
+  }
+  
+  function selectY(n){
+	 for(var i=1;i<6;i++){
+	    if ( i != n ) {
+	     $('#y'+i).hide();
+		 $('#a'+i).removeClass();
+		 $('#a'+i).addClass('a-tab');
+		} else {
+		 $('#y'+i).show();
+		 $('#a'+i).removeClass();
+		 $('#a'+i).addClass('a-tab selected');
+		}
+	 }
+  }
+  
+</script>
+</head>
+<body>
+
+<div id="leftMenu" class="rounded-left">
+    <div style="width:100%;padding:2px">
+	<fieldset>
+    <legend>统计种类</legend>
+	  <input type="radio" name="sourceType" value='2' checked onclick="changeType(2)" />自动站正点观测要素<br/>
+	  <input type="radio" name="sourceType" value='1' onclick="changeType(1)"/>20-20时累计降水量
+	</fieldset>
+	</div>
+	
+	<div style="width:100%;padding:2px">
+	<fieldset>
+	<legend>统计项目</legend>
+	<input type="radio" id="project_qc" name="project" value="1" onclick="checkFankui(false)" checked />数据质量&nbsp;
+    <span id="radioFeedback"><input type="radio" name="project" onclick="checkFankui(true)" value="5"/>反馈率</span>
+	</fieldset>
+    </div>
+ 
+	<div style="width:100%;padding:2px">
+	<fieldset>
+	<legend><font color="#0778C5">台站类型</font></legend>
+	<span id="isNational_allSpan" style="display:none"><input type="radio" name="isNational" value="2" >全部</input>&nbsp;<br/></span>
+	<input type="radio" name="isNational" checked value="1" >国家站</input>
+    &nbsp;<input type="radio" name="isNational" value="0" >区域站</input>
+	</fieldset>
+	</div>
+	
+	<div style="width:100%;padding:2px">
+	<fieldset>
+	<legend><font color="#0778C5">统计时间</font></legend>
+	    <div style="width:100%;padding:6px 6px 6px 0px">
+		  <select id="timeType" onchange="changeTimeType()">
+			<option value="Y">按年统计</option>
+			<option value="S">按季统计</option>
+			<option value="M" selected >按月统计</option>
+			<option value="N">任意时段</option>
+		  </select>
+        </div>
+		<div id="q_Y_s" style="display:none;width:100%;padding:6px 6px 6px 0px">
+		  <span id="yearSpan1"></span>&nbsp;年
+		</div>
+		<div id="q_S_s" style="display:none;width:100%;padding:6px 6px 6px 0px">
+			<span id="yearSpan2"></span>&nbsp;年
+			<select id="qjidu">
+				<option value="01">第一季度</option><option value="04">第二季度</option>
+				<option value="07">第三季度</option><option value="10">第四季度</option>
+			</select>
+		</div>
+		<div id="q_M_s" style="display:block;width:100%;padding:6px 6px 6px 0px">
+			<span id="yearSpan3"></span>&nbsp;年
+			<select id="qmonth">
+				<option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option>
+				<option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option>
+				<option value="11">11</option><option value="12">12</option>
+			</select>月
+		</div>
+		<div id="q_N_s" style="display:none;width:100%;padding:6px 6px 6px 0px">
+		   <div style="width:100%;padding:2px">
+			从&nbsp;<input type="text" id="datepicker1" size="10" style="width:70px"/>
+			</div>
+			<div style="width:100%;padding:2px">
+			到&nbsp;<input type="text" id="datepicker2" size="10" style="width:70px"/>
+			</div>
+		</div>
+	</fieldset>
+	</div>
+	
+	<div id="accordionType" style="width:100%;padding:1px">
+	<fieldset>
+	<legend>统计元素</legend>
+	  <input type="radio" name="ele" value='1' checked />全部要素<br/>
+	  <input type="radio" name="ele" value='2' />气温<br/>
+	  <input type="radio" name="ele" value='3' />降水<br/>
+	  <input type="radio" name="ele" value='4' />湿度<br/>
+	  <input type="radio" name="ele" value='5' />风<br/>
+	  <input type="radio" name="ele" value='6' />气压
+	</legend>
+	</div>
+	
+	<div id="q_fankui" style="display:none;width:100%;padding:2px">
+	<fieldset>
+	 <legend>反馈统计项目</legend>
+		   <input type="radio" name="radio_fankui" value="1" checked="true" />&nbsp;全部疑误数据<br>
+		   <input type="radio" name="radio_fankui" value="2" />&nbsp;可疑数据<br>
+		   <input type="radio" name="radio_fankui" value="3" />&nbsp;错误数据
+     </fieldset>
+	</div>
+	
+	<div style="width:100%;padding:2px"><span class="buttonTwo"><a href="javascript:doCount()">统计</a></span></div>
+</div>
+
+<div id="tabContent"></div>
+
+<div id="nationalDetailList" style="display:none;position: absolute;top:73px;left:900px;width:300px;height:500px;background-color:#ffffff;overflow: auto;">
+  <span id="nationalDetailListTxt">台站明细列表</span><br/>
+  <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+</div>
+</body>
+</html> 

@@ -1,0 +1,163 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var currentProcessid="";
+			$(document).ready(function() {
+			   var iaoColumns= [
+                               { "sTitle": "工程进度编号", "mDataProp": "process_code", "sWidth": "10%", "sClass": "center","bSortable":false,
+							      "fnRender":function(oObj){
+								     if(oObj.aData.process_code==""){
+									    return "<input id='process_code_"+oObj.aData.id+"' type='text' size='20' />";
+									 }else{
+									    return "<input id='process_code_"+oObj.aData.id+"' type='text' value='"+oObj.aData.process_code+"' />";
+									 }
+								  },
+							     "bUseRendered": false  
+                               },
+							   { "sTitle": "工程进度名称", "mDataProp": "process_name", "sWidth": "10%","sClass": "center","bSortable":false,
+							      "fnRender":function(oObj){
+								     if(oObj.aData.process_name==""){
+									    return "<input id='process_name_"+oObj.aData.id+"' type='text' size='20' />";
+									 }else{
+									    return "<input id='process_name_"+oObj.aData.id+"' type='text' value='"+oObj.aData.process_name+"' />";
+									 }
+								  },
+							      "bUseRendered": false 
+                               },
+							   { "sTitle": "工期(天)", "mDataProp": "process_days", "sWidth": "4%","sClass": "center","bSortable":false,
+							      "fnRender":function(oObj){
+								    if(oObj.aData.process_days=="" || oObj.aData.process_days=="0"){
+									    return "<input id='process_days_"+oObj.aData.id+"' type='text' size='20' />";
+									 }else{
+									    return "<input id='process_days_"+oObj.aData.id+"' type='text' value='"+oObj.aData.process_days+"' />";
+									 }
+								  },
+							   
+							      "bUseRendered": false 
+                               },
+							   { "sTitle": "操作", "mDataProp": "id", "sWidth": "10%","sClass": "center","bSortable":false,
+                                      "fnRender": function ( oObj ) {
+                                          var ht='<img src="../../img/save.bmp" style="cursor:pointer" onclick="saveInfo(\''+oObj.aData.id+'\','+(oObj.aData.id==''?"true":"false")+')" />';
+										  if ( oObj.aData.id!='' ){
+										    ht+='&nbsp;&nbsp;<img src="../../img/delete.gif" style="cursor:pointer" onclick="deleteInfo(\''+oObj.aData.id+'\')" />';
+										  }
+										  return ht;
+                                      },
+                                      "bUseRendered": false 
+                               }
+                 ];
+
+			   var surl=top.getUrlBase()+"/actions/ProjectOrder.action?getProcessInfoList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":100,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+						 
+			        },
+			      "sDom": "frt",
+				  "aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+			function deleteInfo(did){
+			    currentProcessid=did;
+			    top.showConfirm("您确定要删除该工程进度吗？", doDeleteProcess);
+			}
+			
+			// 执行删除操作
+		   function doDeleteProcess(){
+			   var aoData=[];
+			   aoData.push( { "name": "processInfo.id", "value":currentProcessid } );
+			   top.sendAjaxRequest("/actions/ProjectOrder.action?deleteProcess",aoData,optCallback);
+		   }
+			
+			function saveInfo(infoId,isCreate){
+			    var temp="";
+				if ( $("#process_code_"+infoId).val() == '' ) {
+				  temp += "请输入工程进度编码<br/>";
+				}
+				if ( $("#process_name_"+infoId).val() == '' ) {
+				  temp += "请输入工程进度名称<br/>";
+				}
+				if ( $("#process_days_"+infoId).val() == '' ) {
+				  temp += "请输入工期<br/>";
+				}
+				if ( $("#process_days_"+infoId).val() != '' && !IsNumber($("#process_days_"+infoId).val())){
+				  temp += "工期为数字类型<br/>";
+				}
+				if ( temp != '' ) {
+				   top.showInfoWinWarn(temp);
+				   return ;
+				}
+			   var aoData=[];
+			   aoData.push( { "name": "processInfo.process_code", "value": $("#process_code_"+infoId).val() } );
+			   aoData.push( { "name": "processInfo.process_name", "value": $("#process_name_"+infoId).val() } );
+			   aoData.push( { "name": "processInfo.process_days", "value": $("#process_days_"+infoId).val() } );
+			   if(infoId!=""){
+			     aoData.push( { "name": "processInfo.id", "value": infoId } );
+			   }
+			   top.sendAjaxRequest("/actions/ProjectOrder.action?"+(isCreate?"insertProdessInfo":"updateProcessInfo"),aoData,optCallback);
+			}
+			
+			function optCallback(obj){
+			       try{
+			        if ( obj.status == true ){
+			          top.showInfoWinOK("操作成功");
+					  doQuery();
+			        }else{
+			          top.showInfoWinError("操作失败 "+obj.msg);
+			        }
+			       }catch(e){
+			          top.showInfoWinError("处理异常:"+e.message);
+			       }
+		    }
+
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+	        <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

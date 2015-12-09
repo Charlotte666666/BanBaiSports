@@ -1,0 +1,96 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+    <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
+	<title>一维慧动---购买产品</title>
+    <link rel="stylesheet" type="text/css" media="all" href="http://helpyouworkeasy.com/_ui/css/main.css" />
+    <script type="text/javascript" src="http://helpyouworkeasy.com/includes/include.js"></script>
+	<script type="text/javascript" src="http://helpyouworkeasy.com/js/jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="http://helpyouworkeasy.com/_ui/js/jquery.colorbox-min.js"></script>
+	<script type="text/javascript" language="javascript" src="js/checkForm.js"></script>
+	<!--[if lte IE 7]>
+		<link rel="stylesheet" type="text/css" media="all" href="http://helpyouworkeasy.com/_ui/css/ie.css" />
+	<![endif]-->	
+	<!--[if lte IE 6]>
+		<link rel="stylesheet" type="text/css" media="all" href="http://helpyouworkeasy.com/_ui/css/ie6.css" />
+	<![endif]-->
+	<script type="text/javascript">
+	function doSubmit(){
+     var aoData=[];
+	 var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+     aoData.push( { "name": "cust.cust_name", "value": $("#cust_name").val() } );
+	 aoData.push( { "name": "cust.shop_name", "value": $("#shop_name").val() } );
+     aoData.push( { "name": "cust.email", "value": $("#email").val() } );
+     aoData.push( { "name": "cust.addr", "value": $("#addr").val() } );
+     aoData.push( { "name": "cust.memo", "value": $("#memo").val() } );
+	 aoData.push( { "name": "cust.status", "value": 0 } );
+	 aoData.push( { "name": "cust.telephone", "value": $("#telephone").val() } );
+	 aoData.push( { "name": "cust.mobile_phone", "value": $("#mobile_phone").val() } );
+ 
+	 $.ajax( {
+			"url":  "http://www.88jxc.com/actions/Customer.action?create",
+			"data": aoData,
+			"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+			"success": function (json) {
+				try{ optCallback( json ); }catch(e){}
+			},
+			"dataType": "json",
+			"cache": false,
+			"type": "POST",
+			"error": function (xhr, error, thrown) {
+				showMsg("处理异常,请稍后再试或把您的登记信息发送到我们的邮箱helpyouworkeasy@sina.cn");
+			}
+		} );
+   }
+   function optCallback(obj){
+       var str="";
+	   try{
+	    if ( obj.status == true ){
+	      str="登记成功，我们会及时与您联系";
+	    }else{
+	      str="登记失败，请稍后再试或把您的登记信息发送到我们的邮箱helpyouworkeasy@sina.cn";
+	    }
+	   }catch(e){
+		 str="处理异常,请稍后再试或把您的登记信息发送到我们的邮箱helpyouworkeasy@sina.cn";
+	   }
+	   showMsg(str);
+   }
+   function showMsg(str){
+       
+   }
+   </script>
+</head>
+<body>
+	<script type="text/javascript" >
+		writeHeader();
+    </script>
+	<div id="content">
+	<div class="container">
+		<div class="highlight-box box-about">
+			<div class="box-header">
+              <h2>登记购买意向</h2>
+			</div>
+			<div class="box-content-wrapper">
+				<div class="box-content">
+					<div class="box-about-intro2"><br>
+<p>
+ 
+</p>
+					</div>
+				</div><!-- box-content -->
+			</div><!-- box-content-wrapper -->
+		</div> <!-- highlight-box box-overview -->
+ 	</div><!-- /container -->
+    </div> <!-- /content -->
+<script type="text/javascript" >writeFooter();</script>
+
+ 
+	</body>
+</html>
+
+ 

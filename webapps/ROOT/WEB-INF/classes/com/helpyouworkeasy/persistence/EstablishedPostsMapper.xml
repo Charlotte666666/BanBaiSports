@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.helpyouworkeasy.persistence.EstablishedPostsMapper">
+  <insert id="insertEstablishedPosts" parameterType="EstablishedPosts">
+    INSERT INTO tbl_established_posts (dept_id,opt_user,id,opt_time,establish_member,allowable_value,job_title,is_deleted)
+    VALUES (#{dept_id}, #{opt_user}, #{id}, #{opt_time}, #{establish_member}, #{allowable_value},#{job_title},#{is_deleted})
+  </insert>
+
+  <update id="updateEstablishedPosts" parameterType="EstablishedPosts">
+    update tbl_established_posts set 
+    dept_id=#{dept_id},opt_user=#{opt_user},opt_time=#{opt_time},establish_member=#{establish_member},
+    allowable_value=#{allowable_value},job_title=#{job_title},is_deleted=#{is_deleted}
+    where id=#{id}
+  </update>
+
+  <select id="getEstablishedPostsListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_established_posts where is_deleted=0 
+    <if test="o.dept_id != '' and o.dept_id != null" >
+      and dept_id=#{o.dept_id}
+    </if>
+    <if test="o.id != -1" >
+      and id=#{o.id}
+    </if>
+    <if test="o.job_title != '' and o.job_title != null" >
+      and job_title=#{o.job_title}
+    </if>
+    <if test="time1 != -1" >
+      and opt_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=opt_time
+    </if>
+  </select>
+
+  <select id="getEstablishedPostsPageList" parameterType="map" resultType="EstablishedPosts">
+    select 
+    dept_id,opt_user,id,opt_time,establish_member,allowable_value,job_title,is_deleted
+    from tbl_established_posts where is_deleted=0 
+    <if test="o.dept_id != '' and o.dept_id != null" >
+      and dept_id=#{o.dept_id}
+    </if>
+    <if test="o.id != -1" >
+      and id=#{o.id}
+    </if>
+    <if test="o.job_title != '' and o.job_title != null" >
+      and job_title=#{o.job_title}
+    </if>
+    <if test="time1 != -1" >
+      and opt_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=opt_time
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+
+  <select id="getEstablishById" parameterType="EstablishedPosts" resultType="EstablishedPosts">
+    select *
+    from tbl_established_posts
+    where id=#{id}
+  </select>
+  
+  <update id="deleteEstablishById" parameterType="EstablishedPosts">
+    update tbl_established_posts set is_deleted=1 where id=#{id}
+  </update>
+  
+  <select id="getEstablishedTjByDept" parameterType="map" resultType="EstablishedPosts">
+    select dept_id,sum(establish_member) as establish_member,sum(allowable_value) as allowable_value
+    from tbl_established_posts
+    where is_deleted=0
+    <if test="dept_id != '' and dept_id != null">
+       and dept_id=#{dept_id}
+    </if>
+    group by dept_id
+  </select>
+  
+  <select id="getEstablishedPosts" parameterType="map" resultType="EstablishedPosts">
+     select *
+     from tbl_established_posts
+     where is_deleted=0
+     <if test="dept_id != '' and dept_id != null">
+       and dept_id in ( ${dept_id} )
+     </if>
+  </select>
+
+</mapper>

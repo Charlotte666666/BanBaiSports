@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery.dataTables.min.js"></script>
+
+<script type="text/javascript">
+var oTable = null;
+var teamList=[];
+var scheduleList=[];
+
+$(document).ready( function() {
+	// 加载赛程信息
+	top.sendAjaxRequest("/actions/CompetitionSchedule.action?getCompetitionScheduleList",[],getCompetitionScheduleListCallback);
+});
+
+ function getCompetitionScheduleListCallback(obj){
+     try{
+		  scheduleList=obj.aaData;
+		  $("#tdschedule").html( getScheduleSelectHtml('schedule_id') );
+	 }catch(e){
+	 }
+	 getTeamList();
+ }
+ 
+ function getTeamList(){
+    // load all team list
+	 var aoData=[];
+	 aoData.push( { "name": "iDisplayStart", "value": 0 } );
+	 aoData.push( { "name": "iDisplayLength", "value": 1000 } );
+	 aoData.push( { "name": "info.leader_id", "value": -1 } );
+	 aoData.push( { "name": "info.schedule_id", "value": top.g_GetNumValue( $("#schedule_id").val(), -1 ) } );
+	 top.sendAjaxRequest("/actions/Team.action?getTeamList",aoData,getTeamListCallback);
+ }
+
+ function getTeamListCallback(obj){
+     try{
+		  teamList=obj.aaData;
+	 }catch(e){
+	 }
+	 loadList();
+ }
+ 
+ function loadList(){
+    var iaoColumns= [
+	           { "sTitle": "名次", "mDataProp": "rank_order", "sWidth": "10%",
+                   "fnRender": function ( oObj ) {
+                     return '<input type="text" style="width:100%" id="rank_order_'+oObj.aData.id+'" value="'+oObj.aData.rank_order+'" />' ;
+                   },
+                   "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "榜单类型", "mDataProp": "rank_type", "sWidth": "10%", 
+			       "fnRender": function ( oObj ) {
+				     return top.getCodeSelectHtml("RANK_TYPE","rank_type_"+oObj.aData.id,true,oObj.aData.rank_type);
+                   },
+                   "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "球队名称", "mDataProp": "team_name", "sWidth": "20%","sClass": "center",
+                   "fnRender": function ( oObj ) {
+				     return getTeamSelectHtml("team_id_"+oObj.aData.id,oObj.aData.team_id);
+                   },
+                   "bUseRendered": false , "bSortable":false
+               },
+			   { "sTitle": "胜场", "mDataProp": "win_num", "sWidth": "10%", 
+			       "fnRender": function ( oObj ) {
+				     return '<input type="text" style="width:100%" id="win_num_'+oObj.aData.id+'" value="'+oObj.aData.win_num+'" />' ;
+                   },
+                   "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "负场", "mDataProp": "fail_num", "sWidth": "10%", 
+			       "fnRender": function ( oObj ) {
+				     return '<input type="text" style="width:100%" id="fail_num_'+oObj.aData.id+'" value="'+oObj.aData.fail_num+'" />' ;
+                   },
+                   "bUseRendered": false , "bSortable":false},
+				{ "sTitle": "积分", "mDataProp": "integration", "sWidth": "10%", 
+			       "fnRender": function ( oObj ) {
+				     return '<input type="text" style="width:100%" id="integration_'+oObj.aData.id+'" value="'+oObj.aData.integration+'" />' ;
+                   },
+                   "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "积分排名", "mDataProp": "integration_rank", "sWidth": "10%", 
+			       "fnRender": function ( oObj ) {
+				     return '<input type="text" style="width:100%" id="integration_rank_'+oObj.aData.id+'" value="'+oObj.aData.integration_rank+'" />' ;
+                   },
+                   "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "名次名称", "mDataProp": "rank_name", "sWidth": "10%", 
+			       "fnRender": function ( oObj ) {
+				     return '<input type="text" style="width:100%" id="rank_name_'+oObj.aData.id+'" value="'+oObj.aData.rank_name+'" />' ;
+                   },
+                   "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "操作", "mDataProp": "id", "sWidth": "10%","bSortable":false,
+                    "fnRender": function ( oObj ) {
+                       return '<span align="center" style="cursor:pointer;" onclick="saveInfo(\''+oObj.aData.id+'\')"><img src="../../img/save.bmp" />&nbsp;保存</span>';
+                    },
+                    "bUseRendered": false
+               }
+        ];
+ 	
+		oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": top.getUrlBase()+"/actions/CompetitionResult.action?getCompetitionRankList",
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+						 aoData.push( { "name": "competitionRank.schedule_id", "value": top.g_GetNumValue( $("#schedule_id").val(), -1 ) } );
+						 aoData.push( { "name": "competitionRank.team_id", "value":  -1 } );
+						 aoData.push( { "name": "optType", "value": "addRow" } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumns
+	   } );
+ }
+
+ function getScheduleSelectHtml(sid){
+    if ( !scheduleList ) return "";
+	var ht="<select id='"+sid+"' style='width:260px' onchange='getTeamList()'>";
+	for(var i=0;i<scheduleList.length;i++){
+	  ht+="<option value='"+scheduleList[i].id+"'";
+	  ht+=">"+scheduleList[i].title+"</option>";
+	}
+	ht+="</select>";
+	return ht;
+ }
+ 
+ function getTeamSelectHtml(sid, code){
+    if ( !teamList ) return "";
+	if ( !code ) code="";
+	var ht="<select id='"+sid+"' style='width:120px'>";
+	ht+="<option value='-1'></option>";
+	for(var i=0;i<teamList.length;i++){
+	  ht+="<option value='"+teamList[i].id+"'";
+	  if ( teamList[i].id == code ) ht+="selected ";
+	  ht+=">"+teamList[i].team_name;+"</option>";
+	}
+	ht+="</select>";
+	return ht;
+ }
+ 
+ function getTeamName(tid){
+    for(var i=0;i<teamList.length;i++){
+	  if ( teamList[i].id == tid ) return teamList[i].team_name;
+	}
+	return tid;
+ }
+
+ function saveInfo(code){
+    var aoData=[];
+	aoData.push( { "name": "competitionRank.id", "value": code } );
+	aoData.push( { "name": "competitionRank.team_name", "value": getTeamName( $("#team_id_"+code).val() ) } );
+    aoData.push( { "name": "competitionRank.rank_type", "value": $("#rank_type_"+code).val() } );
+	aoData.push( { "name": "competitionRank.rank_name", "value": $("#rank_name_"+code).val() } );
+	aoData.push( { "name": "competitionRank.schedule_id", "value": top.g_GetNumValue( $("#schedule_id").val(), -1 ) } );
+	aoData.push( { "name": "competitionRank.team_id", "value": top.g_GetNumValue( $("#team_id_"+code).val(), -1 ) } );
+	aoData.push( { "name": "competitionRank.rank_order", "value": top.g_GetNumValue( $("#rank_order_"+code).val(), -1 ) } );
+	aoData.push( { "name": "competitionRank.integration_rank", "value": $("#integration_rank_"+code).val() } );
+	aoData.push( { "name": "competitionRank.integration", "value": $("#integration_"+code).val() } );
+	aoData.push( { "name": "competitionRank.fail_num", "value": $("#fail_num_"+code).val() } );
+	aoData.push( { "name": "competitionRank.win_num", "value": $("#win_num_"+code).val() } );
+	var xurl="/actions/CompetitionResult.action?updateCompetitionRank";
+	if ( code == 0 ) {
+	  xurl="/actions/CompetitionResult.action?insertCompetitionRank";
+	}
+    top.sendAjaxRequest(xurl,aoData,optCallback);
+ }
+ 
+ function doQuery(){
+	oTable.fnDraw();
+ }
+ 
+ function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      top.showInfoWinOK("操作成功");
+		  doQuery();
+	    }else{
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+ }
+
+</script>
+</head>
+<body>
+            <div style='border: 1px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="180px">&nbsp;比赛名次&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+				  <td align="right" width="30%">赛程:</td><td align="left" width="70%" id="tdschedule"></td>
+				</tr>
+			 </table>
+			</div>
+<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+</body>
+</html> 

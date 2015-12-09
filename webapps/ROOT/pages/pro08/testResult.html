@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>社区矫正信息管理系统</title>
+	<link type="text/css" href="css/bootstrap.css" rel="stylesheet" />
+	<link type="text/css" href="css/common.css" rel="stylesheet" />
+	<link type="text/css" href="css/main.css" rel="stylesheet" />
+  <script type="text/javascript" src="js/jquery.min.js"></script>
+  <script src="js/html5shiv.js"></script>
+  
+<link type="text/css" href="css/test.css" rel="stylesheet" />
+
+</head>
+<body>
+
+	<div class="container test-container pd20 clearfix">
+		<form class="pdl10 pdr10" action="http://localhost/trunk/public/member/assessDemoResultSave" method="post" id="add_assess">
+		<input type="hidden" name="assess[member_id]" value="24" />
+		<div class="main test-main pdb20 clearfix">
+			<h2 class="fw-normal text-main-t text-center fs-20 pdb10 mgb10">矫正管理等级测定报告</h2>
+			<!-- test-cont -->
+			<ul class="test-cont unstyled clearfix mgb20">
+				<li class="test-sort">
+					<h3 class="sort-t fs-18 fw-normal">一、项目测定分值</h3>
+					<ul class="test-result test-result1 unstyled">
+						<li>1、家庭背景：<span class='score'>20</span>分<input type="hidden" name="assess[data1]" value="20" /></li>
+						<li>2、个性特点：<span class='score'>30</span>分<input type="hidden" name="assess[data2]" value="30" /></li>
+						<li>3、案件情况：<span class='score'>30</span>分<input type="hidden" name="assess[data3]" value="30" /></li>
+						<li>4、危害性认识：<span class='score'>8</span>分<input type="hidden" name="assess[data4]" value="8" /></li>
+						<li>5、矫正条件：<span class='score'>12</span>分<input type="hidden" name="assess[data5]" value="12" /></li>
+						<li>总分值：<span class='score'>100</span>分<input type="hidden" name="assess[data_sum]" value="100" /></li>
+					</ul>
+				</li>
+				<li class="test-sort">
+					<h3 class="sort-t fs-18 fw-normal">二、综合测定结果
+						<span class="help-inline fs-14">（在对应的方框内打勾。好<10分；10分≤中≤85分；差>85分）</span></h3>
+					<ul class="test-result test-result2 unstyled">
+						<li>
+							<span class="cont-list-t">矫正管理等级</span>
+							<label for="" class="radio"><input name="assess[result4]" type="radio" value="0">宽松管理等级（小于10分）</label>
+							<label for="" class="radio"><input name="assess[result4]" type="radio" value="1">普通管理等级（10至85分）</label>
+							<label for="" class="radio"><input name="assess[result4]" type="radio" checked value="2">严格管理等级（大于85分）</label>
+						</li>
+					</ul>
+
+				</li>
+			</ul>
+			<!-- test-cont end -->
+			<p>
+				<span class="work-p">测量人员：<input type="text" class="redress-name" name="assess[operator]" value="3"></span>
+				<span class="place">社矫办负责人：<input type="text" class="redress-name" name="assess[leader]"></span>
+			</p>
+			<!-- <p class="result-time text-right">
+				<input class="redress-name dline" type="text" name="time[year]">年<input class="redress-name dline" type="text" name="time[month]">月<input class="redress-name dline" type="text" name="time[day]">日
+			</p> -->
+			<br/>
+			<table border="1" cellpadding="3" cellspacing="1" width="100%" height="20%" align="center" style="background-color: #FF0000;">
+		        <tr style="text-align: center; COLOR: #0A0A0A; BACKGROUND-COLOR: #FFEFD5; font-weight: bold">
+					<td class="td-t" style="background:#E1E1E1;">宽管</td>
+					<td colspan="3">
+						每两周口头或电话汇报一次，每两个月到司法所报到一次，并上交书面汇报一份，参加教育学习8小时以上，参加社区服务8小时以上
+					</td>
+        		</tr>
+        		<tr style="text-align: center; COLOR: #0A0A0A; BACKGROUND-COLOR: #FFEFD5; font-weight: bold">
+					<td class="td-t" style="background:#E1E1E1;">普管</td>
+					<td colspan="3">
+						每周口头或者电话汇报一次，每一个月到司法所报到一次，并上交书面汇报一份，参加教育学习10小时以上，参加社区服务10小时以上
+					</td>
+        		</tr>
+        		<tr style="text-align: center; COLOR: #0A0A0A; BACKGROUND-COLOR: #FFEFD5; font-weight: bold">
+					<td class="td-t" style="background:#E1E1E1;">严管</td>
+					<td colspan="3">
+						每周口头或电话汇报两次，每半个月到司法所报到一次，并上交书面汇报一份，参加教育学习12小时以上，参加社区服务12小时以上，不得请假外出
+					</td>
+        		</tr>
+			</table> 	
+			<br/>
+			<p class="test-note clearfix"><a href="" class="btn submit">保存</a></p>
+		</div>
+		</form>
+	</div>
+	<script type="text/javascript" charset="utf-8">
+		$('.submit').click(function(){
+			$("#add_assess").submit();
+			return false;
+		});
+	</script>
+
+<script type="text/javascript" src="js/bootstrap.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+    <link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+    <link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+		    var optType="";
+			var objs=[];
+		    var queryDeptId='';
+			var area=null;
+			var areaId='';
+			var area_name="";
+			$(document).ready(function() {
+				getAreaList();
+			} );
+		
+			//查询区域列表
+			function getAreaList(){
+			
+		 var iaoColumns= [
+                            { "sTitle": "活动范围名称", "mDataProp": "area_name", "sWidth": "70%","bSortable":false,
+                                   "fnRender": function ( oObj ) {
+                                        return "<a href='javascript:void(0)' onclick='showArea(\""+oObj.aData.lon_lat+"\",\""+oObj.aData.area_name+"\",\""+oObj.aData.id+"\")'>"+oObj.aData.area_name+"</a>";
+                                   },
+                                   "bUseRendered": false
+                            }
+							/*,
+                            { "sTitle": "操作", "mDataProp": "id", "sWidth": "30%","bSortable":false,
+                                "fnRender": function ( oObj ) {
+                                  var ht= '';
+                                  ht='<img src="../../img/delete.gif" style="cursor:pointer" onclick=deleteArea(\''+oObj.aData.id+'\') />';
+                                  return ht;
+                                },
+                                "bUseRendered": false
+                            }*/
+            ];
+
+            oTable = $('#areas').dataTable( {
+                 "bProcessing": false,
+                 "bServerSide": true,
+                 "bJQueryUI": true,
+                 "bFilter": false,
+                 "bDestroy": true,
+                 "bLengthChange": false,
+                 "sAjaxSource": top.getUrlBase()+"/actions/ProMonitor.action?getProAreaInfoList",
+                 "oLanguage": {
+                     "sUrl": top.getUrlBase()+"/lang_zh.txt"
+                 },
+                 "fnServerData": function ( sUrl, aoData, fnCallback ) {
+                     $.ajax( {
+                         "url":  sUrl,
+                         "data": aoData,
+                         "success": function (json) {
+                             fnCallback( json );
+                         },
+                         "dataType": "json",
+                         "cache": false,
+                         "type": "POST",
+                         "error": function (xhr, error, thrown) {
+                             top.showInfoWinError("发生异常:"+error);
+                         }
+                     } );
+                 },
+                 "sDom": "frt",
+                 "sPaginationType": "full_numbers",
+                 "aoColumns": iaoColumns
+             } );
+
+			}
+			function deleteArea(id){
+				areaId = id;
+				top.showConfirm("您确定要删除该区域吗？", doDeleteArea);
+			}
+			function doDeleteArea(){
+			   var aoData=[];
+			   aoData.push( { "name": "areaInfo.id", "value":areaId } );
+			   areaId= "";
+			   top.sendAjaxRequest("/actions/ProMonitor.action?deleteProAreaInfo",aoData,deleteCallBack);
+			}
+			//地图显示
+			function showArea(str,name,id){
+				document.getElementById("baiduMapDrawIframe").contentWindow.clearAll();
+				document.getElementById("baiduMapDrawIframe").contentWindow.drawPolygon(str,name,id);
+			}
+			function deleteCallBack(obj){
+			   try{
+				if ( obj.status == true ){
+					isSaveOK = true;
+					top.showInfoWinOK("操作成功");
+					document.getElementById("baiduMapDrawIframe").contentWindow.clearAll();
+					getAreaList();
+				}else{
+					isSaveOK = false;
+					top.showInfoWinError("操作失败 "+obj.msg);
+				}
+			   }catch(e){
+				  top.showInfoWinError("处理异常:"+e.message);
+			   }
+			}
+			function saveCallBack(obj){
+			   try{
+				if ( obj.status == true ){
+					isSaveOK = true;
+					top.showInfoWinOK("操作成功");
+					getAreaList();
+					top.getAllArea();
+					if ( obj.msg != '' ) {
+					  document.getElementById("baiduMapDrawIframe").contentWindow.setAreaId(obj.msg);
+					}
+				}else{
+					isSaveOK = false;
+					top.showInfoWinError("操作失败 "+obj.msg);
+				}
+			   }catch(e){
+				  top.showInfoWinError("处理异常:"+e.message);
+			   }
+			}
+			function addArea1(){
+				top.showInputDialog("保存活动区域名称", "请输入活动区域名称", dosaveArea, area_name);
+			}
+			function dosaveArea(area_name){
+				addArea("",area_name);
+				document.getElementById("baiduMapDrawIframe").contentWindow.clearAll();
+				document.getElementById("baiduMapDrawIframe").contentWindow.setAreaName(area_name);
+			}
+			function addArea(points,areaName){
+				var aoData=[];
+				aoData.push( { "name": "areaInfo.area_name", "value": areaName} );
+				var str="";
+				if(points){
+					for(var i=0;i<points.length;i++){
+					if(i==0)
+					{
+						str+=points[i].lng+","+points[i].lat;
+					}else {
+						str+=","+points[i].lng+","+points[i].lat;
+					}
+					}
+					aoData.push( { "name": "areaInfo.lon_lat", "value": str } );
+				}
+				 
+				var xurl="/actions/ProMonitor.action?insertProAreaInfo";
+				top.sendAjaxRequest(xurl,aoData,saveCallBack);
+			}
+			function updateArea(points,areaName,id){
+				var str="";
+				if(points){
+					for(var i=0;i<points.length;i++){
+					if(i==0)
+					{
+						str+=points[i].lng+","+points[i].lat;
+					}else {
+						str+=","+points[i].lng+","+points[i].lat;
+					}
+					}
+				}
+				var aoData=[];
+				aoData.push( { "name": "areaInfo.id", "value": id});
+				aoData.push( { "name": "areaInfo.area_name", "value": areaName} );
+				aoData.push( { "name": "areaInfo.lon_lat", "value": str } );
+				var xurl="/actions/ProMonitor.action?updateProAreaInfo";
+				top.sendAjaxRequest(xurl,aoData,saveCallBack);
+			}
+			
+		</script>
+		<style type="text/css">
+		.versionStyle{background-color:#6CA6CD;margin-bottom:10px; text-align: center;color:#FFFFFF; width:100px;height:30px;}
+		.versionStyle2{background-color:#FF7F00;margin-bottom:10px; text-align: center;color:#FFFFFF; width:100px;height:30px;}
+		#areas table tr td{text-align:center}
+		</style>
+	</head>
+	<body width="100%">
+			<table width="100%" height="600px" style="background-color:white">
+				<tr>
+					<td style="width:20%;height:100%;border:1px;border-style: dotted;border-color: #A0CFEC;" valign="top">
+						  活动范围列表<br>
+						  <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+									<tr bgcolor="#C6DEFF">
+									  <td colspan="9">
+									   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+										<td>
+										<!--div id="createBtn" class="buttonDivTwo"><a href="javascript:addArea1()">创建</a></div-->
+										</td>
+									   </tr></table></td>
+								   </tr>
+						  </table>
+						  <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="areas"></table>
+					</td>
+					<td width="80%" height="600px">
+						<iframe id="baiduMapDrawIframe" src="baiduMapDraw2.html" width="100%" height="600px" style="background-color:#ffffff" frameborder="0"></iframe>
+					</td>
+				</tr>
+			
+			</table>
+
+	</body>
+</html>

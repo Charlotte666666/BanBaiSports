@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>色斑图</title>
+</head>
+<body>
+<div id="main" style="height:500px;width:700px"></div>
+    <script type="text/javascript" src="../js/echart/echarts.js"></script>
+    <script type="text/javascript">
+        require.config({
+            paths: {
+                echarts: '../js/echart'
+            }
+        });
+        require(
+            [
+                'echarts',
+                'echarts/chart/map',
+            ],
+            function (ec) {
+                 var myChart = ec.init(document.getElementById('main'));
+				 var option = {
+					title : {
+						text: '全国各省份数据质量',
+						subtext: ''
+					},
+					tooltip : {
+						trigger: 'item'
+					},
+					dataRange: {
+						orient: 'horizontal',
+						min: 0,
+						max: 100,
+						text:['高','低'],           // 文本，默认为数值文本
+						splitNumber:0
+					},
+					toolbox: {
+						show : true,
+						orient: 'vertical',
+						x:'right',
+						y:'center',
+						feature : {
+							mark : {show: true},
+							dataView : {show: true, readOnly: true}
+						}
+					},
+					series : [
+						{
+							name: '数据可用率(%)',
+							type: 'map',
+							mapType: 'china',
+							mapLocation: {
+								x: 'left'
+							},
+							selectedMode : 'multiple',
+							itemStyle:{
+								normal:{label:{show:true}},
+								emphasis:{label:{show:true}}
+							},
+							data:[
+								{name:'西藏', value:80},
+								{name:'青海', value:92},
+								{name:'宁夏', value:91},
+								{name:'海南', value:92},
+								{name:'甘肃', value:98},
+								{name:'贵州', value:91},
+								{name:'新疆', value:91},
+								{name:'云南', value:91},
+								{name:'重庆', value:91},
+								{name:'吉林', value:91},
+								{name:'山西', value:91},
+								{name:'天津', value:95.28},
+								{name:'江西', value:95.82},
+								{name:'广西', value:97.87},
+								{name:'陕西', value:97.3},
+								{name:'黑龙江', value:95},
+								{name:'内蒙古', value:97.88},
+								{name:'安徽', value:95.65},
+								{name:'北京', value:97.93},
+								{name:'福建', value:95.18},
+								{name:'上海', value:97.69},
+								{name:'湖北', value:95},
+								{name:'湖南', value:97.56},
+								{name:'四川', value:97.68},
+								{name:'辽宁', value:97.7},
+								{name:'河北', value:97.76},
+								{name:'河南', value:91},
+								{name:'浙江', value:91},
+								{name:'山东', value:91},
+								{name:'江苏', value:95},
+								{name:'广东', value:95}
+							]
+						}
+					],
+					animation: false
+				 };
+				 myChart.setOption(option, true);
+            }
+        );
+    </script>
+</body>
+</html>

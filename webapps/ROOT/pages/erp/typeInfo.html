@@ -1,0 +1,210 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var qNodeId="";
+   
+   
+   $(document).ready(function() {
+     initData();
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   function doSubmit(){
+	   var aoData=[];
+
+     if ( optType == 'insertUser' ) {
+       aoData.push( { "name": "user.password", "value": top.hex_md5("12345678") } );
+     } else if ( optType == 'register' ) {
+     	 if ( document.getElementById("pass1").value == '' ) {
+     	 	  top.showInfoWinWarn("请设置登录密码");
+     	 	  return ;
+     	 }
+     	 if ( document.getElementById("pass1").value != document.getElementById("pass2").value ) {
+     	 	  top.showInfoWinWarn("两次输入的密码不一致");
+     	 	  return ;
+     	 }
+     	 aoData.push( { "name": "user.password", "value": top.hex_md5( document.getElementById("pass1").value ) } );
+     }
+	 var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+     
+     aoData.push( { "name": "user.userName", "value": document.getElementById("userName").value } );
+     aoData.push( { "name": "user.deptId", "value":document.getElementById("deptId").value } );
+     aoData.push( { "name": "user.status", "value":document.getElementById("status").value } );
+     aoData.push( { "name": "user.email", "value":document.getElementById("email").value } );
+     aoData.push( { "name": "user.mobilePhone", "value":document.getElementById("mobilePhone").value } );
+	 aoData.push( { "name": "user.officePhone", "value":document.getElementById("officePhone").value } );
+     
+	 top.sendAjaxRequest("/actions/User.action?"+optType,aoData,optCallback);
+   }
+   
+   function checkForm(){
+     var msg = "";
+     var temp = "";
+	 temp = document.getElementById("email").value;
+	 if ( temp != '' && !IsEmail( document.getElementById("email"), "1" ) ) {
+	   msg += "E-mail格式不正确<br>";
+	 }
+	 temp = document.getElementById("mobilePhone").value
+	 if ( temp != '' && !checkPhone(temp) ) {
+	   msg += "移动电话号码格式不正确<br>";
+	 }
+	 temp = document.getElementById("officePhone").value
+	 if ( temp != '' && !checkPhone(temp) ) {
+	   msg += "办公电话号码格式不正确<br>";
+	 }
+	 temp = document.getElementById("userCode").value;
+	 if ( temp == '' ) {
+	   msg += "请填写用户账号<br>";
+	 }
+	 temp = document.getElementById("userName").value;
+	 if ( temp == '' ) {
+	   msg += "请输入姓名<br>";
+	 }
+	 temp = document.getElementById("deptId").value;
+	 if ( temp == '' ) {
+	   msg += "请选择部门<br>";
+	 }
+	 temp = document.getElementById("status").value;
+	 if ( temp == '' ) {
+	   msg += "请选择用户状态<br>";
+	 }
+     return msg;
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     if ( optType == 'register' ) {
+	     	 top.showInfoWinOK("注册成功,等待管理员激活账号.");
+	       top.closeDialog();
+	     } else top.showInfoWinOK("操作成功");
+	    }else{
+	    	isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   function initData(){
+	   try{
+		   optType=top.getUrlParam(document.URL,"opt");
+		   var qDeptId=top.getUrlParam(document.URL,"deptId");
+	     var qDeptName=decodeURI(top.getUrlParam(document.URL,"deptName"));
+	     document.getElementById("deptId").value = qDeptId;
+	     document.getElementById("deptName").value = qDeptName;
+		   if ( optType == 'updateUser' ) {
+			 document.getElementById("userCode").value = userCode;
+			 document.getElementById("userCode").disabled=true;
+			 var aoData=[];
+		     aoData.push( { "name": "user.userCode", "value":userCode } );
+		     top.sendAjaxRequest("/actions/User.action?getDetailUserInfo",aoData,userInfoCallback);
+		   } else {
+			 $( "#tdStatus" ).html( top.getCodeSelectHtml("USER_STATUS","status",true) );
+		   }
+		   var rightId="sys_addUser";
+	   	 if ( optType == 'updateUser' ) rightId="sys_editUser";
+	     if ( top.g_isPermit(rightId) || optType == 'register' ) {
+	     	 $( "#submitBtn" ).show();
+	     	 $( "#closeBtn" ).show();
+	     	 if ( optType == 'register' ) {
+	     	   	document.getElementById("tr_pass1").style.display="";
+	     	   	document.getElementById("tr_pass2").style.display="";
+	     	   	document.getElementById("tr_status").style.display="none";
+				document.getElementById("status").value = "0";
+	     	 }
+	     } else{
+	     	 $( "#submitBtn" ).hide();
+	     	 $( "#closeBtn" ).hide();
+	   	 }
+	   }catch(e){
+		   top.showInfoWinError(e.message);
+	   }
+   }
+   function userInfoCallback(obj){
+       try{
+        if ( obj.status == true ){
+          var user=obj.body;
+          document.getElementById("userName").value=user.userName;
+          document.getElementById("deptId").value=user.deptId;
+          document.getElementById("deptName").value= top.getDeptPath( user.deptId );
+          document.getElementById("email").value=user.email;
+          document.getElementById("mobilePhone").value=user.mobilePhone;
+		  document.getElementById("officePhone").value=user.officePhone;
+          $( "#tdStatus" ).html( top.getCodeSelectHtml("USER_STATUS","status",true,user.status) );
+        }else{
+          top.showInfoWinError("操作失败");
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+   
+   function selectType(){
+       var xurl="pages/organization/selectTreeNode.html?type=dept";
+       top.openSelectDialog("选择部门",xurl,300,450,selectDeptCallback);
+   }
+   function selectDeptCallback(){
+       try{
+         var obj = top.getTempValue();
+         if ( obj.nodeId == -1 ) return ;
+         if ( obj.nodeId == -2 ) {
+             qDeptId = "";
+             qDeptName = "";
+         } else {
+             qDeptId = obj.nodeId;
+             qDeptName = obj.nodeName;
+         }
+         document.getElementById("parentId").value = qDeptId;
+         document.getElementById("parentName").value = qDeptName;
+       }catch(e){
+       }
+   }
+  </script> 
+</head>
+<body>
+<input type="hidden" id="parentId" value="" />
+<br>
+<table width="100%" border="0" padding="0" spacing="0">
+ <tr>
+    <td align="right">分类名称(<font color="red">*</font>):</td>
+    <td align="left"><input type="text" id="typeName" value="" size="15" /></td>
+ </tr>
+ <tr>
+    <td align="right">上级类型(<font color="red">*</font>):</td>
+    <td align="left"><input type="text" id="parentName" readonly onclick="selectType()" /></td>
+ </tr>
+ <tr id="tr_status">
+    <td align="right">状态(<font color="red">*</font>):</td>
+    <td align="left" id="tdStatus"></td>
+ </tr>
+</table>
+<p align="center">
+   <table><tr>
+		    <td><span id="okBtn" class="buttonTwo"><a href="javascript:doSubmit()">提交</a></span></td>
+		    <td><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+   </tr></table>
+</p>
+</body>
+</html>

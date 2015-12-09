@@ -1,0 +1,138 @@
+<html>
+<head>
+    <meta charset="utf-8">
+	<!--<meta name="viewport" content="width=device-width, initial-scale=1">-->
+	<title>羽球达人</title>
+    <meta content="yes" name="apple-mobile-web-app-capable">
+    <meta name="format-detection" content="telephone=no"/>
+    <meta name="viewport" content="width=device-width,height=device-height,inital-scale=1.0,maximum-scale=1.0,user-scalable=no;">
+
+    <link rel="stylesheet" media="screen" href="css/base.css" />
+    <link rel="stylesheet" media="screen" href="css/color.css" />
+    <link rel="stylesheet" media="screen" href="css/layout.css" />
+    <link rel="stylesheet" media="screen" href="css/typography.css" />
+
+    <link rel="stylesheet" href="../css/themes/default/jquery.mobile-1.4.5.min.css">
+    <script src="../js/jquery-1.10.2.min.js"></script>
+    <script src="../js/jquery.mobile-1.4.5.min.js"></script>
+
+  <script type="text/javascript">
+   var schedule_id=1;
+   var g_UrlBase="";
+   var resultList=[];
+   
+   $(document).ready(function() {
+       schedule_id=getUrlParam(document.URL,"id");
+	   try{
+	     var ind=document.URL.indexOf("htmlAPI");
+		 if ( ind != -1 ) {
+		   g_UrlBase=document.URL.substring(0,ind);
+		 }
+	   }catch(e){}
+	   getResult();
+   } );
+   
+   function getResult(){
+       var aoData=[];
+	   aoData.push( { "name": "competitionRank.schedule_id", "value": schedule_id } );
+	   aoData.push( { "name": "competitionRank.team_id", "value":  -1 } );
+	   aoData.push( { "name": "iDisplayStart", "value": 0 } );
+	   aoData.push( { "name": "iDisplayLength", "value": 1000 } );
+	   doSendAjaxRequest("/actions/CompetitionResult.action?getCompetitionRankList",aoData,getCompetitionRankListCallback);
+   }
+   
+   function getCompetitionRankListCallback(obj){
+       try{
+        resultList=obj.aaData;
+		var ht='<table width="100%" cellspacing="0" cellpadding="5px" border="0" style="background-color: #ffffff;margin:8px auto;">';
+		var showMode=1;
+		if ( resultList.length > 0 && resultList[0].integration_rank > 0 ) {
+		  showMode=2;
+		}
+		
+		if ( showMode == 1 ) {
+		  ht+='<tr height="30px" bgcolor="#18b4ed">';
+		  ht+='<td width="50%" align="center" style="border-bottom:solid;border-width:0 0 1px 0;border-color:#18b4ed"><font color="white">名次</font></td>';
+		  ht+='<td width="50%" align="center" style="border-bottom:solid;border-width:0 0 1px 0;border-color:#18b4ed"><font color="white">球队</font></td>';
+		  ht+='</tr>';
+		} else {
+		  ht+='<tr height="30px" bgcolor="#18b4ed">';
+		  ht+='<td width="25%" align="center" style="border-bottom:solid;border-width:0 0 1px 0;border-color:#18b4ed"><font color="white">球队</font></td>';
+		  ht+='<td width="15%" align="center" style="border-bottom:solid;border-width:0 0 1px 0;border-color:#18b4ed"><font color="white">胜场</font></td>';
+		  ht+='<td width="15%" align="center" style="border-bottom:solid;border-width:0 0 1px 0;border-color:#18b4ed"><font color="white">负场</font></td>';
+		  ht+='<td width="15%" align="center" style="border-bottom:solid;border-width:0 0 1px 0;border-color:#18b4ed"><font color="white">积分</font></td>';
+		  ht+='<td width="15%" align="center" style="border-bottom:solid;border-width:0 0 1px 0;border-color:#18b4ed"><font color="white">积分排名</font></td>';
+		  ht+='<td width="15%" align="center" style="border-bottom:solid;border-width:0 0 1px 0;border-color:#18b4ed"><font color="white">综合排名</font></td>';
+		  ht+='</tr>';
+		}
+		var isOdd=true;
+       for ( var i=0;i<resultList.length;i++ ) {
+	      if ( isOdd ) {
+		    ht+='<tr height="30px" bgcolor="#ffffff">';
+			isOdd=false;
+		  } else {
+		    ht+='<tr height="30px" bgcolor="#e7f8ff">';
+			isOdd=true;
+		  }
+		  
+		 if ( showMode == 1 ) {
+		  ht+='<td width="50%" align="center" >'+resultList[i].rank_name+'</td>';
+		  ht+='<td width="50%" align="center" >'+resultList[i].team_name+'</td>';
+		 } else {
+		  ht+='<td width="25%" align="center" >'+resultList[i].team_name+'</td>';
+		  ht+='<td width="15%" align="center" >'+resultList[i].win_num+'</td>';
+		  ht+='<td width="15%" align="center" >'+resultList[i].fail_num+'</td>';
+		  ht+='<td width="15%" align="center" >'+resultList[i].integration+'</td>';
+		  ht+='<td width="15%" align="center" >'+resultList[i].integration_rank+'</td>';
+		  ht+='<td width="15%" align="center" >'+resultList[i].rank_order+'</td>';
+		 }
+		 ht+='</tr>';
+	    }
+	    ht+='</table>';
+	    $("#resultListDiv").html( ht );
+	   }catch(e){
+	   }
+   }
+   
+  function doSendAjaxRequest(xurl,param,fnCallback){
+	    if ( xurl.indexOf('http://') == -1 ) xurl = g_UrlBase+xurl;
+		$.ajax( {
+			"url":  xurl,
+			"data": param,
+			"timeout" : 10000,
+			"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+			"success": function (json) {
+				try{ fnCallback( json );}catch(e){}
+			},
+			"dataType": "json",
+			"cache": false,
+			"type": "POST",
+			"error": function (xhr, error, thrown) {
+			}
+		} );
+ }
+ 
+ function getUrlParam(xurl,name){
+	    var para="";
+	    if(xurl.lastIndexOf("?")>0){
+	        para=xurl.substring(xurl.lastIndexOf("?")+1,xurl.length);
+			var arr=para.split("&");
+			para="";
+			for(var i=0;i<arr.length;i++){
+			   if(arr[i].split("=")[0]==name) return arr[i].split("=")[1];
+			}
+			return "";
+	   }else{
+	        return "";
+	   }
+	}
+ 
+ </script> 
+</head>
+<body >
+<p style="margin:10px" id="resultListDiv">
+  
+</p>
+</table>
+</body>
+</html>

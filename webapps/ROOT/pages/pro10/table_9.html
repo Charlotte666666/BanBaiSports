@@ -1,0 +1,623 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title></title>
+<link href="../../css/comm.css" rel="stylesheet" type="text/css" />
+<link href="../../css/commBg.css" rel="stylesheet" type="text/css" />
+<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="../../js/SimpleMap.js"></script>
+<script type="text/javascript" src="../../js/helpyouworkeasy-core.js"></script>
+<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+<script type="text/javascript">
+var pros=[];
+var area="NAT";
+var min_1="10";
+var currentTime="";
+var currentProvince=0;
+var currentEleType="";
+var interChart=0;
+var dataStr="";
+var isKao="";
+var NOTEXAM="";
+var currentShowTimeStr="";
+var currentErr=0;
+var currentSusp=0;
+var currentLack=0;
+
+jQuery(document).ready(function() {
+	area=top.getUrlParam(document.URL,"area");
+	isKao=top.getUrlParam(document.URL,"isKao");
+	if ( isKao == 'N' ) {
+	   NOTEXAM="_NOTEXAM";
+	   $("#isKaoTxt").html("(非考核站)");
+	} else {
+	   NOTEXAM="";
+	   $("#isKaoTxt").html("(考核站)");
+	}
+	var today=new Date();
+    var y = today.getFullYear();
+    var m = today.getMonth() + 1;
+    var d = today.getDate();
+	var h = today.getHours();
+	if ( area == 'NAT' ) {
+	  if ( today.getMinutes() < 40 ) {
+	    h=h-1;
+	  }
+	} else {
+	  if ( today.getMinutes() < 40 ) {
+	    h=h-1;
+	  }
+	}
+	
+	today.setMinutes(0);
+    today.setSeconds(0);
+	today.setMilliseconds(0);
+	
+	$("#q_date").val( y+"-"+getTwoNumberStr(m)+"-"+getTwoNumberStr(d) );
+	$("#span_hour").html( parent.get24HourSelectHtml("q_hour",false,h,"doQuery()") );
+	
+	if ( !area ) area="NAT";
+	if ( area == 'NAT' ) {
+	  $("#min_1").html("10");
+	  min_1="10";
+	} else {
+	  $("#min_1").html("15");
+	  min_1="15";
+	}
+	pros=parent.getNationalList1600();
+	var wh=$(window).height();
+	$("#dataDiv").height( "1400px" );
+	currentTime=today.getTime();
+	$("#nextHourBtn").hide();
+    doQuery();
+
+ });
+
+function toHour(ah){
+  var str=$("#q_date").val();
+  var d=new Date();
+  d.setFullYear( Number(str.substring(0,4)) );
+  d.setMonth( Number(str.substring(5,7)) - 1 );
+  d.setDate( Number(str.substring(8,10)) );
+  d.setHours( Number( $("#q_hour").val() ) );
+  d.setMinutes(0);
+  d.setSeconds(0);
+  d.setMilliseconds(0);
+  d.setTime( d.getTime() + Number(ah)*60*60000 );
+  
+  var y = d.getFullYear();
+  var m = d.getMonth() + 1;
+  var day = d.getDate();
+  var h = d.getHours();
+  
+  $("#q_date").val( y+"-"+getTwoNumberStr(m)+"-"+getTwoNumberStr(day) );
+  $("#q_hour").val( h );
+  doQuery();
+  
+  if ( currentTime <= d.getTime() ) {
+    $("#nextHourBtn").hide();
+  } else {
+    $("#nextHourBtn").show();
+  }
+}
+
+function currentHour(){
+  var today=new Date();
+  var y = today.getFullYear();
+  var m = today.getMonth() + 1;
+  var d = today.getDate();
+  var h = today.getHours();//-8;
+  $("#q_date").val( y+"-"+getTwoNumberStr(m)+"-"+getTwoNumberStr(d) );
+  $("#q_hour").val( getTwoNumberStr( h ) );
+  doQuery();
+  $("#nextHourBtn").hide();
+}
+
+ function doQuery(){
+    try{
+	  var ht="";
+	  var row=0;
+
+	  area=parent.getRadioValue( document.getElementsByName("area") );
+	  if ( area == 'NAT' ) {
+	    $("#min_1").html("10");
+	    min_1="10";
+	  } else {
+	    $("#min_1").html("15");
+	    min_1="15";
+	  }
+	  
+  ht+='<tr bgcolor="#CEDAE8">';
+  ht+='<td width="80px" height="32px" align="center" rowspan="2">省（区、市）</td>';
+  ht+='<td id="staNumTd" width="80px" height="32px" align="center" rowspan="2">';
+  if ( isKao == 'N' ) {
+    ht+='非考核站数';
+  } else {
+    ht+='考核站数';
+  }
+  ht+='</td>';
+  ht+='<td width="90px" height="32px" align="center" rowspan="2">数据量(个)</td>';
+  ht+='<td width="300px" height="32px" align="center">整点后<span id="min_1">'+min_1+'</span>分钟</td>';
+  ht+='<td width="300px" height="32px" align="center">整点后2小时</td>';
+  ht+='<td width="300px" height="32px" align="center">整点后4小时</td>';
+  ht+='<td width="300px" height="32px" align="center">整点后24小时</td>';
+  ht+='</tr>';
+  ht+='<tr bgcolor="#CEDAE8">';
+  ht+='<td width="300px" height="32px" align="center" >';
+  ht+='<table width="100%" cellpadding="0" cellspacing="2px" border="1"><tr><td>可用率</td><td>错误</td><td>可疑</td><td>缺测</td><td>变化数</td></tr></table>';
+  ht+='</td>';
+  ht+='<td width="300px" height="32px" align="center" >';
+  ht+='<table width="100%" cellpadding="0" cellspacing="2px" border="1"><tr><td>可用率</td><td>错误</td><td>可疑</td><td>缺测</td><td>变化数</td></tr></table>';
+  ht+='</td>';
+  ht+='<td width="300px" height="32px" align="center" >';
+  ht+='<table width="100%" cellpadding="0" cellspacing="2px" border="1"><tr><td>可用率</td><td>错误</td><td>可疑</td><td>缺测</td><td>变化数</td></tr></table>';
+  ht+='</td>';
+  ht+='<td width="300px" height="32px" align="center" >';
+  ht+='<table width="100%" cellpadding="0" cellspacing="2px" border="1"><tr><td>可用率</td><td>错误</td><td>可疑</td><td>缺测</td><td>变化数</td></tr></table>';
+  ht+='</td>';
+  ht+='</tr>';
+
+	  for (var i=0;i<pros.length;i++) {
+			  ht+='<tr ';
+			  ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+			  ht+='>';
+			  ht+='<td width="75px" height="32px" bgcolor="#CEDAE8" style="border-width: 0px 0px 1px 0;padding:0 0 0 5px;border-style: none none dotted none;border-color: #89A1B9" align="left">'+pros[i].province_name+'</td>';
+			  ht+='<td width="80px" height="32px" align="center"><b><span id="'+pros[i].province_code+'_stanum"></span></b></td>';
+			  ht+='<td width="90px" height="32px" align="center"><b><span id="'+pros[i].province_code+'_receive"></span></b></td>';
+			  ht+='<td width="300px" height="32px" align="center">';
+			    ht+='<table width="100%" cellpadding="0" cellspacing="2px" border="1"><tr>';
+				ht+='<td align="center" width="60px"><b><span id="'+pros[i].province_code+'_'+min_1+'_right"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="'+pros[i].province_code+'_'+min_1+'_err"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="'+pros[i].province_code+'_'+min_1+'_susp"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="'+pros[i].province_code+'_'+min_1+'_lack"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="'+pros[i].province_code+'_'+min_1+'_change"></span></b></td>';
+				ht+='</tr></table>';
+			  ht+='</td>';
+		  
+			  ht+='<td width="300px" height="32px" align="center">';
+			    ht+='<table width="100%" cellpadding="0" cellspacing="2px" border="1"><tr>';
+				ht+='<td align="center" width="60px"><b><span id="'+pros[i].province_code+'_120_right"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="'+pros[i].province_code+'_120_err"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="'+pros[i].province_code+'_120_susp"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="'+pros[i].province_code+'_120_lack"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="'+pros[i].province_code+'_120_change"></span></b></td>';
+				ht+='</tr></table>';
+			  ht+='</td>';
+		  
+			  ht+='<td width="300px" height="32px" align="center">';
+			    ht+='<table width="100%" cellpadding="0" cellspacing="2px" border="1"><tr>';
+				ht+='<td align="center" width="60px"><b><span id="'+pros[i].province_code+'_240_right"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="'+pros[i].province_code+'_240_err"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="'+pros[i].province_code+'_240_susp"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="'+pros[i].province_code+'_240_lack"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="'+pros[i].province_code+'_240_change"></span></b></td>';
+				ht+='</tr></table>';
+			  ht+='</td>';
+		  
+			  ht+='<td width="300px" height="32px" align="center">';
+			    ht+='<table width="100%" cellpadding="0" cellspacing="2px" border="1"><tr>';
+				ht+='<td align="center" width="60px"><b><span id="'+pros[i].province_code+'_1200_right"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="'+pros[i].province_code+'_1200_err"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="'+pros[i].province_code+'_1200_susp"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="'+pros[i].province_code+'_1200_lack"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="'+pros[i].province_code+'_1200_change"></span></b></td>';
+				ht+='</tr></table>';
+			  ht+='</td>';
+			  ht+='</tr>';
+		  if ( row == 1 ) {
+			 row=0;
+		  } else {
+		     row=1;
+		  }
+	  }
+	  
+	  ht+='<tr ';
+			  ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+			  ht+='>';
+			  ht+='<td width="80px" height="32px" bgcolor="#CEDAE8" style="border-width: 0px 0px 1px 0;border-style: none none dotted none;border-color: #89A1B9" align="center">全国&nbsp;</td>';
+			  
+			  ht+='<td width="80px" height="32px" align="center"><b><span id="0_stanum"></span></b></td>';
+			  
+			  ht+='<td width="90px" height="32px" align="center"><b><span id="0_receive"></span></b></td>';
+			  ht+='<td width="300px" height="32px" align="center">';
+			    ht+='<table width="100%" cellpadding="0" cellspacing="2px" border="1"><tr>';
+				ht+='<td align="center" width="60px"><b><span id="0_'+min_1+'_right"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="0_'+min_1+'_err"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="0_'+min_1+'_susp"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="0_'+min_1+'_lack"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="0_'+min_1+'_change"></span></b></td>';
+				ht+='</tr></table>';
+			  ht+='</td>';
+		  
+			  ht+='<td width="300px" height="32px" align="center">';
+			    ht+='<table width="100%" cellpadding="0" cellspacing="2px" border="1"><tr>';
+				ht+='<td align="center" width="60px"><b><span id="0_120_right"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="0_120_err"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="0_120_susp"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="0_120_lack"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="0_120_change"></span></b></td>';
+				ht+='</tr></table>';
+			  ht+='</td>';
+		  
+			  ht+='<td width="300px" height="32px" align="center">';
+			    ht+='<table width="100%" cellpadding="0" cellspacing="2px" border="1"><tr>';
+				ht+='<td align="center" width="60px"><b><span id="0_240_right"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="0_240_err"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="0_240_susp"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="0_240_lack"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="0_240_change"></span></b></td>';
+				ht+='</tr></table>';
+			  ht+='</td>';
+		  
+			  ht+='<td width="300px" height="32px" align="center">';
+			    ht+='<table width="100%" cellpadding="0" cellspacing="2px" border="1"><tr>';
+				ht+='<td align="center" width="60px"><b><span id="0_1200_right"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="0_1200_err"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="0_1200_susp"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="0_1200_lack"></span></b></td>';
+				ht+='<td align="center" width="60px"><b><span id="0_1200_change"></span></b></td>';
+				ht+='</tr></table>';
+			  ht+='</td>';
+			  ht+='</tr>';
+	  
+	  
+	  $("#dataList").html( ht );
+	  
+	  var dateStr=$("#q_date").val();
+	  var hour= $("#q_hour").val();
+	  if ( hour < 10 ) hour="0"+hour;
+	  
+	  var aoData=[];
+	  
+	  var d=new Date(2013,1,1);
+		  d.setFullYear( Number(dateStr.substring(0,4)) );
+		  d.setMonth( Number(dateStr.substring(5,7)) - 1 );
+		  d.setDate( Number(dateStr.substring(8,10)) );
+		  d.setHours( Number(hour) );
+		  d.setMinutes(0);
+		  d.setSeconds(0);
+		  d.setMilliseconds(0);
+		  
+   if ( currentTime <= d.getTime() ) {
+    $("#nextHourBtn").hide();
+   } else {
+    $("#nextHourBtn").show();
+   }
+		  d.setTime( d.getTime() - 8*60*60000 );
+
+	  var year= d.getFullYear();
+	  var month= d.getMonth() + 1;
+	  var day= d.getDate();
+	  hour= d.getHours();
+	  if ( hour < 10 ) hour="0"+hour;
+	  
+	  aoData.push( { "name": "year", "value": year } );
+	  aoData.push( { "name": "month", "value": month } );
+	  aoData.push( { "name": "day", "value": day } );
+	  aoData.push( { "name": "hour", "value": hour } );
+	  aoData.push( { "name": "area", "value": area } );
+	  aoData.push( { "name": "notExam", "value": NOTEXAM } );
+	  top.showLoadingInfo(true);
+	  parent.sendAjaxRequest("/actions/CmaTable.action?getTable9List",aoData,callbackGetTableList);
+	}catch(e){
+	}
+ }
+ 
+ function getProvinceName(code){
+    if ( code == 0 ) return "全国";
+    for (var i=0;i<pros.length;i++) {
+	  if ( pros[i].province_code == code ) return pros[i].province_name;
+	}
+	return "";
+ }
+ 
+  function callbackGetTableList(obj){
+    top.showLoadingInfo(false);
+    var color="#000000";
+	var rv=0;
+	var ht="";
+	  
+    try{
+	  if ( obj.dataList ) {
+	    var staTotal=0;
+		var vtime=-1;
+	    for ( var i=0;i<obj.dataList.length;i++ ) {
+		  rv=Number(obj.dataList[i].vright);
+		  color="#000000";
+		  if( rv < 95 ){
+		    color="red";
+		  }
+		  if ( vtime == -1 ) vtime = obj.dataList[i].vtime;
+		  if ( obj.dataList[i].vtime == vtime ) {
+		    staTotal+=Number(obj.dataList[i].stationCount);
+			$("#"+obj.dataList[i].province_code+"_stanum").html( obj.dataList[i].stationCount );
+		  }
+
+		  $("#"+obj.dataList[i].province_code+"_receive").html( obj.dataList[i].receive );
+		  $("#"+obj.dataList[i].province_code+"_"+obj.dataList[i].vtime+"_right").html( "<input type='hidden' id='"+obj.dataList[i].province_code+"_"+obj.dataList[i].vtime+"_right_v' value='"+rv+"'></input><font color='"+color+"'>"+ to1fix( rv ) +"%</font>");
+		  rv=Number(obj.dataList[i].err);
+		  if ( rv > 0 && obj.dataList[i].province_code !='0' ) {
+		    rv='<a href="javascript:void(0)" onclick="showDetail('+obj.dataList[i].province_code+','+obj.dataList[i].vtime+',\'err\','+obj.dataList[i].err+','+obj.dataList[i].susp+','+obj.dataList[i].lack+')" >'+rv+'</a>';
+		  }
+		  $("#"+obj.dataList[i].province_code+"_"+obj.dataList[i].vtime+"_err").html( rv );
+		  
+		  rv=Number(obj.dataList[i].susp);
+		  if ( rv > 0 && obj.dataList[i].province_code != '0' ) {
+		    rv='<a href="javascript:void(0)" onclick="showDetail('+obj.dataList[i].province_code+','+obj.dataList[i].vtime+',\'susp\','+obj.dataList[i].err+','+obj.dataList[i].susp+','+obj.dataList[i].lack+')" >'+rv+'</a>';
+		  }
+		  $("#"+obj.dataList[i].province_code+"_"+obj.dataList[i].vtime+"_susp").html( rv );
+		  
+		  rv=Number(obj.dataList[i].lack);
+		  if ( rv > 0 && obj.dataList[i].province_code !='0' ) {
+		    rv='<a href="javascript:void(0)" onclick="showDetail('+obj.dataList[i].province_code+','+obj.dataList[i].vtime+',\'lack\','+obj.dataList[i].err+','+obj.dataList[i].susp+','+obj.dataList[i].lack+')" >'+rv+'</a>';
+		  }
+		  $("#"+obj.dataList[i].province_code+"_"+obj.dataList[i].vtime+"_lack").html( rv );
+		  
+		  rv=Number(obj.dataList[i].change);
+		  if ( rv > 0 && obj.dataList[i].province_code !='0' ) {
+		    rv='<a href="javascript:void(0)" onclick="showChangeDetail('+obj.dataList[i].province_code+','+obj.dataList[i].vtime+')" >'+rv+'</a>';
+		  }
+
+		  $("#"+obj.dataList[i].province_code+"_"+obj.dataList[i].vtime+"_change").html( rv );
+		}
+	  }
+	  $("#0_stanum").html( staTotal );
+	}catch(e){
+	}
+ }
+ 
+ function showProChart(proCode){
+	 var proName=getProvinceName( proCode )
+	 openChartDialog(proName+"统计",600,400);
+	 try{
+	 var min=100;
+	 var max=0;
+	 var step=10;
+	 var v=0;
+	 var vals="";
+	 
+	 v=Number($("#"+proCode+"_10_right_v").val());
+	 if ( !v ) v=999999;
+	 if ( min > v ) min = v;
+	 if ( max < v && v != 999999 ) max = v;
+	 vals+=to1fix(v);
+	 
+	 v=Number($("#"+proCode+"_120_right_v").val());
+	 if ( !v ) v=999999;
+	 if ( min > v ) min = v;
+	 if ( max < v && v != 999999 ) max = v;
+	 vals+=","+to1fix(v);
+	 
+	 v=Number($("#"+proCode+"_240_right_v").val());
+	 if ( !v ) v=999999;
+	 if ( min > v ) min = v;
+	 if ( max < v && v != 999999 ) max = v;
+	 vals+=","+to1fix(v);
+	 
+	 v=Number($("#"+proCode+"_1200_right_v").val());
+	 if ( !v ) v=999999;
+	 if ( min > v ) min = v;
+	 if ( max < v && v != 999999 ) max = v;
+	 vals+=","+to1fix(v);
+ 
+		if ( min > 95 ) {
+		 min=95;
+		 step=1;
+		} else if ( min > 90 ) {
+		 min=90;
+		 step=1;
+		} else if ( min > 80 ) {
+		 min=80;
+		 step=5;
+		} else if ( min > 70 ) {
+		 min=70;
+		 step=5;
+		} else if ( min > 60 ) {
+		 min=60;
+		 step=10;
+		} else if ( min > 50 ) {
+		 min=50;
+		 step=5;
+		} else if ( min > 40 ) {
+		 min=40;
+		 step=10;
+		} else if ( min > 30 ) {
+		 min=10;
+		 step=5;
+		} else if ( min > 20 ) {
+		 min=20;
+		 step=2;
+		} else if ( min > 10 ) {
+		 min=10;
+		 step=10;
+		} else if ( min > 0 ) {
+		 min=0;
+		 step=10;
+		}
+		
+		if ( max < 95 ) max=95;
+		if ( max > 95 ) max=100;
+		
+		if ( min == max ) {
+		  min = 0;
+		  max = 100;
+		  step=10;
+		}
+ 
+		 dataStr='<chart title="'+proName+'自动站数据可用率变化" types="line" yTitle="可用率(%)" ';
+		 dataStr+='xAxis="10分钟,2小时,4小时,第2日12点" ';
+		 dataStr+='yMax="'+max+'" yMin="'+min+'" yStep="'+step+'">';
+		 dataStr+='<data label="可用率" values="'+vals+'" />';
+		 dataStr+='</chart>';
+	 }catch(e){
+	    //alert(e.message);
+	 }
+
+	 drawChart();
+ }
+ 
+ function drawChart(){
+       try{ 
+	     var mid="chartFrame";
+         var chartFrame = document.getElementById( mid );
+         chartFrame.contentWindow.doDrawChart( dataStr );
+       }catch(e){
+       }
+ }
+ 
+ function getChartStr(){
+    return dataStr;
+ }
+ 
+ function openChartDialog(t,w,h){
+		if ( !h ) h=200;
+		if ( !w ) w=400;
+		$( "#dialog" ).dialog({
+			title: t,
+			height: h,
+			width: w,
+			modal: false,
+			resizable: false,
+            beforeClose: function(event, ui) {
+            	return true;
+            }
+		});
+	}
+ 
+  function toDetail(proviceCode,qc){
+    var isKao="N";
+	if ( NOTEXAM == '' ) {
+	  isKao="Y";
+	}
+  
+    parent.toUrl("pages/pro10/detailList.html?isKao="+isKao+"&proviceCode="+proviceCode+"&qc="+qc+"&area="+$("#q_area").val()+"&date="+$("#q_date").val()+"&hour="+$("#q_hour").val());
+  }
+
+  function to1fix(num){
+	return Math.round(num*10)/10;
+ }
+ 
+ function showChangeDetail(province_code,vtime){
+      var dateStr=$("#q_date").val();
+	  var hour= $("#q_hour").val();
+	  if ( hour < 10 ) hour="0"+hour;
+	  var d=new Date(2013,1,1);
+		  d.setFullYear( Number(dateStr.substring(0,4)) );
+		  d.setMonth( Number(dateStr.substring(5,7)) - 1 );
+		  d.setDate( Number(dateStr.substring(8,10)) );
+		  d.setHours( Number(hour) );
+		  d.setMinutes(0);
+		  d.setSeconds(0);
+		  d.setMilliseconds(0);
+		  d.setTime( d.getTime() - 8*60*60000 );
+
+	  var year= d.getFullYear();
+	  var month= d.getMonth() + 1;
+	  var day= d.getDate();
+	  hour= d.getHours();
+	  
+	  var xurl="pages/pro10/changeDetailData.html?year="+year+"&month="+month+"&day="+day+"&hour="+hour+"&area="+area+"&minute="+vtime+"&province_code="+province_code+"&notExam="+NOTEXAM;
+	  top.openDialog(getProvinceName(province_code)+"变化数明细",xurl,false,770,500,null);
+ }
+ 
+ function showDetail(province_code,vtime,type,err,susp,lack){
+	  currentProvince=province_code;
+      currentErr=err;
+	  currentSusp=susp;
+	  currentLack=lack;
+      var dateStr=$("#q_date").val();
+	  var hour= $("#q_hour").val();
+	  var bjhour=hour;
+	  if ( hour < 10 ) hour="0"+hour;
+	  var aoData=[];
+	  var d=new Date(2013,1,1);
+		  d.setFullYear( Number(dateStr.substring(0,4)) );
+		  d.setMonth( Number(dateStr.substring(5,7)) - 1 );
+		  d.setDate( Number(dateStr.substring(8,10)) );
+		  d.setHours( Number(hour) );
+		  d.setMinutes(0);
+		  d.setSeconds(0);
+		  d.setMilliseconds(0);
+		  d.setTime( d.getTime() - 8*60*60000 );
+
+	  var year= d.getFullYear();
+	  var month= d.getMonth() + 1;
+	  var day= d.getDate();
+	  hour= d.getHours();
+	  if ( hour < 10 ) hour="0"+hour;
+	  
+	  currentShowTimeStr=year+"-"+month+"-"+day+"日"+bjhour+"时";
+	  
+	  aoData.push( { "name": "year", "value": year } );
+	  aoData.push( { "name": "month", "value": month } );
+	  aoData.push( { "name": "day", "value": day } );
+	  aoData.push( { "name": "hour", "value": hour } );
+	  aoData.push( { "name": "area", "value": area } );
+	  aoData.push( { "name": "minute", "value": vtime } );
+	  aoData.push( { "name": "province_code", "value": province_code } );
+	  aoData.push( { "name": "notExam", "value": NOTEXAM } );
+      top.showLoadingInfo(true);
+	  parent.sendAjaxRequest("/actions/CmaTable.action?getProvinceDetail",aoData,callbackGetDetailList);
+ }
+ 
+ function callbackGetDetailList(obj){
+   top.showLoadingInfo(false);
+   try{
+     top.setTempValue(obj);
+     var xurl="pages/pro10/eleDetailData.html?err="+currentErr+"&susp="+currentSusp+"&lack="+currentLack;
+	 top.openDialog(getProvinceName(currentProvince)+"统计明细&nbsp;("+currentShowTimeStr+")",xurl,false,870,600,null);
+   }catch(e){
+   }
+ }
+ 
+  function onDateSelectChanged(o){
+    try{
+	   doQuery();
+	}catch(e){}
+ }
+</script>
+</head>
+
+<body style="width:100%;background-color : #F3F3F3;">
+<center>
+<div style="margin: 10px;padding: 10px;width:1270px;background-color : #ffffff;	border: 2px solid #89A1B9;-moz-border-radius: 12px;-webkit-border-radius: 12px;border-radius: 12px;overflow: auto;">
+<table cellpadding="0px" width="1250px" cellspacing="0px" border="0">
+ <tr><td colspan="4" align="center" ><font size="4"><b>各省自动站<span id="isKaoTxt"></span>整点资料质量控制结果统计</b></font></td></tr>
+ <tr bgcolor="#E1F2EC">
+  <td width="50%" align="center">
+   时间(北京时)：<input type="text" id="q_date" value="" onchange="doQuery()" onclick="new Calendar().show(this);" style="width:80px" size="15" /><span id="span_hour"></span>时&nbsp;&nbsp;
+   <input type="radio" checked name="area" value="NAT" onclick="doQuery()"/>国家站
+   &nbsp;<input type="radio" name="area" value="REG" onclick="doQuery()"/>区域站
+  </td>
+  <td width="15%" align="center">&nbsp;</td>
+  <td width="10%" align="center"><a href="javascript:toHour(-1)"><img src="../../img/go-lt-on.gif"></img></a></td>
+  <td width="15%" align="center"><div class="buttonDivSix"><a href="javascript:currentHour()">当前小时</a></div></td>
+  <td width="10%" align="center"><a id="nextHourBtn" href="javascript:toHour(1)"><img src="../../img/go-rt-on.gif"></img></a></td>  
+ </tr>
+</table>
+
+<div id="dataDiv" style="margin: 1px;padding:0;width:1270px;background-color:#ffffff;overflow: auto;">
+  <table id="dataList" width="1250px" cellpadding="0" cellspacing="2px" border="1" style="border-color:blue"></table>
+</div>
+  <br/>
+  <p align="left">统计说明：<br>1、各省考核站数依据观测司2014年5月22日的自动站考核信息表，各要素考核信息依据各省MDOS上报的自动站考核信息表；
+  <br/>2、可用率的分子对应于一体化数据质控码"0、3、4"，分母对应于各省考核要素个数；
+  <br/>3、错误对应于一体化数据质控码"2"的个数；
+  <br/>4、可疑对应于一体化数据质控码"1"的个数；
+  <br/>5、缺测由以下三部分数据累加得到：
+  <br/>&nbsp;&nbsp;&nbsp;&nbsp;(1)考核要素中，质控码为8的个数；
+  <br/>&nbsp;&nbsp;&nbsp;&nbsp;(2)考核要素中，质控码为7（无观测任务）的要素个数（即按照观测司标准需考核，但省级上传的质控码为7）；
+  <br/>&nbsp;&nbsp;&nbsp;&nbsp;(3)快速质控文件未上传的考核站的考核要素个数；
+  <br/>6、国家站评估的要素包括降水、气温、气压、相对湿度、风向风速、地温、能见度、蒸发等47个要素，区域站评估的要素包括降水、气温、气压、相对湿度、风向风速等17个要素。
+  <br/>7、可用率未达到95%以上的用红色数字表示。
+</div>
+
+<div id="dialog" title="" style="display:none;padding: 0 0 0 0;margin: 0 0 0 0;z-index:10000">
+    <iframe id="chartFrame" src="../chart.html" width="100%" height="300px" frameborder="0"></iframe>
+</div>
+</center>
+</body>
+</html>

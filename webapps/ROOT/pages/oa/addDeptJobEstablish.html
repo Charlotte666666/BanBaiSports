@@ -1,0 +1,209 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>添加部门岗位编制</title>
+	
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	
+	<script type="text/javascript" src="../../js/checkForm.js"></script>
+	<script type="text/javascript">
+	    var optType="";
+		var type="";
+		var info_id=0;
+		var num=1;
+		
+		$(document).ready(function(){
+		   optType=top.getUrlParam(document.URL,"optType");
+		   type=top.getUrlParam(document.URL,"type");
+		   if(type=="allow"){
+		     $(".allowTr").show();
+		   }else{
+		     $(".allowTr").hide();
+		   }
+		   info_id=top.getUrlParam(document.URL,"id");
+		   $("#tdjob_title").html(top.getCodeSelectHtml("SYS_POSITION","job_title",true,null,null,"全部"));
+		   if(optType=="update"){
+		     var aoData=[];
+			 aoData.push( { "name":"info.id","value":info_id } );
+		     top.sendAjaxRequest("/actions/EstablishedPosts.action?getEstablishById",aoData,getInfoCallback);
+		   }
+		  
+		});
+		
+		function getInfoCallback(obj){
+		  if(obj.status==true){
+		    var o=obj.body;
+			$("#deptname").val(top.getDeptPath(o.dept_id));
+			$("#dept").val(o.dept_id);
+			$("#job_title").val(o.job_title);
+			$("#establish_member").val(o.establish_member);
+			$("#allowable_value").val(o.allowable_value);
+		  }else{
+		    top.showInfoWinError("操作失败！");
+		  }
+		}
+		
+		function selectDept(){
+		   top.openSelectDialog("选择部门","pages/organization/selectTreeNode.html?type=dept",300,450,selectDeptCallback);
+		}
+		
+		function selectDeptCallback(){
+		  var qDeptId="";
+		  var qDeptName="";
+		  try{
+			 var obj = top.getTempValue();
+			 if ( obj.nodeId == -1 ) return ;
+			 if ( obj.nodeId == -2 ) {
+				 $("#dept").val("");
+				 $("#deptname").val("");
+			 } else {
+			     $("#dept").val(obj.nodeId);
+				 $("#deptname").val(obj.nodeName);
+			 }
+		   }catch(e){}
+		}
+		
+		function checkMsg(){
+		  var msg="";
+		  var job_title="";
+		  if($("#dept").val()==""){
+		    msg+="请选择部门!<br>";
+		  }
+		  if($("#establish_member").val()!="" && !IsNumber($("#establish_member").val())){
+		    msg+="岗位编制人数为数字！<br>";
+		  }
+		  if($("#allowable_value").val()!="" && !IsNumber($("#allowable_value").val())){
+		    msg+="允许岗位编制超额人数为数字！<br>";
+		  }
+		  if(num>1){
+		    for(var i=1;i<num;i++){
+			  if($("#job_title"+i).is(":visible")){
+				  if($("#job_title"+i).val()==""){
+					msg+="有多个岗位,请选择岗位!<br>";
+				  }
+				  if(job_title.indexOf($("#job_title"+i).val())!=-1){
+					msg+="多个岗位不能相同!<br>";
+				  }
+				  if($("#job_title"+i).val()!="" && job_title.indexOf($("#job_title"+i).val())==-1){
+				    job_title+=$("#job_title"+i).val();
+				  }
+			  }
+			}
+		  }
+		  return msg;
+		}
+		
+		function doSubmit(){
+		  var message=checkMsg();
+		  if(message!=""){
+		    top.showInfoWinWarn(message);return;
+		  }
+		  var job_title="";
+		  if($("#job_title").val()==""){
+		    job_title="all";
+		  }else{
+		    job_title=$("#job_title").val();
+		  }
+		  
+		  var aoData=[];
+		  aoData.push( { "name":"info.dept_id","value":$("#dept").val() } );
+		  
+		  if(num>1){
+		    for(var i=0;i<num;i++){
+			  if($("#job_title"+i).is(":visible")){
+			    if(job_title!=""){
+				  job_title+=",";
+				}
+			    job_title+=$("#job_title"+i).val();
+			  }
+			}
+		  }
+		  aoData.push( { "name":"info.job_title","value":job_title } );
+		  aoData.push( { "name":"info.establish_member","value":$("#establish_member").val() } );
+		  aoData.push( { "name":"info.allowable_value","value":$("#allowable_value").val() } );
+		  var xurl="/actions/EstablishedPosts.action?insertEstablishedPosts";
+		  
+		  if(info_id!=0){
+		    aoData.push( { "name":"info.id","value":info_id } );
+			xurl="/actions/EstablishedPosts.action?updateEstablishedPosts";
+		  }
+		
+		  top.sendAjaxRequest(xurl,aoData,doSubmitCallback);
+		}
+		
+		function doSubmitCallback(obj){
+		   if(obj.status==true){
+		     top.showInfoWinOK("操作成功！");
+			 top.closeDialog();
+		   }else{
+		     top.showInfoWinError("操作失败！");
+		   }
+		}
+		
+		function cancle(){
+		  top.closeDialog();
+		}
+		
+		function doBeforeClose(){
+		}
+		
+        function addJob_title(){
+		  $("#job_title_div").append("<label id='l_"+num+"'>+<span id='tdjob_title"+num+"'></span><a href='javascript:void(0)' style='cursor:pointer;text-decoration:none;' onclick='deleteJobTitle(\""+num+"\")'>删除</a></label>");
+		  $("#tdjob_title"+num).html(top.getCodeSelectHtml("SYS_POSITION","job_title"+num,true));
+		  num++;
+		}
+		
+		function deleteJobTitle(n){
+		  $("#l_"+n).remove();
+		  $("#tdjob_title"+n).remove();
+		}
+		
+	</script>
+  </head>
+  
+  <body>
+    <div id="main" style="margin:8px;">
+		<div  id="staffInTransferDiv">
+		   <table width="100%" border="1" cellpadding="3" cellspacing="1" style="background-color: #b9d8f3;"> 
+		      <tr class="tr_data" height="30px">
+			    <td width="40%" align="right" style="font-weight:bold;">部门</td>
+				<td width="60%" align="left"><input id="deptname" type="text" onclick="selectDept()" readonly size="20" /><input id="dept" type="hidden"/></td>
+			  </tr>
+			  <tr class="tr_data" height="30px">
+			    <td width="40%" align="right" style="font-weight:bold;">岗位</td>
+				<td width="60%" align="left">
+				      <div id="job_title_div"><span id="tdjob_title"></span></div>
+					  <a href="javascript:void(0)" onclick="addJob_title()" style='cursor:pointer;text-decoration:none;'>添加岗位</a>
+					  </td>
+			  </tr>
+			  <tr class="tr_data" height="30px">
+			    <td width="40%" align="right" style="font-weight:bold;">编制人数</td>
+				<td width="60%" align="left"><input id="establish_member" type="text" size="10"/>人</td>
+				
+			  </tr>
+			  <tr class="tr_data allowTr" height="30px">
+			    <td width="40%" align="right" style="font-weight:bold;">允许编制超过人数</td>
+				<td width="60%" align="left"><input id="allowable_value" type="text" size="10"/>人</td>
+			  </tr>
+			  <tr class="tr_data allowTr" height="30px">
+			    <td width="40%" align="right" style="font-weight:bold;">允许编制时间</td>
+				<td width="60%" align="left"><input id="allowable_value" type="text" size="10"/></td>
+			  </tr>
+		   </table>
+		</div>
+		
+		</div>
+		<div id="buttonDiv">
+		   <table width="100%">
+		       <tr class="tr_data">
+			      <td align="right" width="50%" colspan="3"><div class="buttonDivTwo"><a href="javascript:void(0)" onclick="doSubmit()">提交</a></div></td>
+				  <td align="left" width="50%" colspan="3"><div class="buttonDivTwo"><a href="javascript:void(0)" onclick="cancle()">取消</a></div></td>
+			   </tr>
+		   </table>
+		</div>
+	</div>
+  </body>
+</html>

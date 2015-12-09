@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery.dataTables.min.js"></script>
+
+<script type="text/javascript">
+var oTable = null;
+var teamList=[];
+
+$(document).ready( function() {
+   loadList();
+});
+ 
+ function loadList(){
+    var iaoColumns= [
+	           { "sTitle": "手机号码", "mDataProp": "telephone", "sWidth": "10%",
+                   "fnRender": function ( oObj ) {
+				      var str='<input type="text" style="width:100%" ';
+					  if ( oObj.aData.telephone == '' ) {
+					     str+='';
+					  }
+				      str += ' id="telephone_'+oObj.aData.id+'" value="'+oObj.aData.telephone+'" />' ;
+					  return str;
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+               { "sTitle": "登录账号", "mDataProp": "user_code", "sWidth": "23%", 
+			       "fnRender": function ( oObj ) {
+                     return '<input type="text" style="width:100%" disabled="false" id="user_code_'+oObj.aData.id+'" value="'+oObj.aData.user_code+'" />' ;
+                   },
+                   "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "姓名", "mDataProp": "real_name", "sWidth": "10%", 
+			       "fnRender": function ( oObj ) {
+                     return '<input type="text" style="width:100%" id="real_name_'+oObj.aData.id+'" value="'+oObj.aData.real_name+'" />' ;
+                   },
+                   "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "昵称", "mDataProp": "nick_name", "sWidth": "10%", 
+			       "fnRender": function ( oObj ) {
+                     return '<input type="text" style="width:100%" id="nick_name_'+oObj.aData.id+'" value="'+oObj.aData.nick_name+'" />' ;
+                   },
+                   "bUseRendered": false , "bSortable":false},
+               { "sTitle": "性别", "mDataProp": "sex", "sWidth": "10%",
+                   "fnRender": function ( oObj ) {
+				      return top.getCodeSelectHtml("SEX","sex_"+oObj.aData.id,true,oObj.aData.sex);
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "登录类型", "mDataProp": "login_type", "sWidth": "10%", "bUseRendered": false, "bSortable":false },
+			   { "sTitle": "级别", "mDataProp": "player_level", "sWidth": "10%",
+                   "fnRender": function ( oObj ) {
+				      return top.getCodeSelectHtml("PLAYER_LEVEL","player_level_"+oObj.aData.id,true,oObj.aData.player_level);
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "状态", "mDataProp": "status", "sWidth": "7%",
+                   "fnRender": function ( oObj ) {
+				      return top.getCodeName( "MEMBER_STATUS", oObj.aData.status );
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "操作", "mDataProp": "id", "sWidth": "10%","bSortable":false,
+                    "fnRender": function ( oObj ) {
+                       return '<span align="center" style="cursor:pointer;" onclick="saveInfo(\''+oObj.aData.id+'\')"><img src="../../img/save.bmp" />&nbsp;保存</span>';
+                    },
+                    "bUseRendered": false
+               }
+        ];
+ 	
+		oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": top.getUrlBase()+"/actions/Member.action?getMemberList",
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							//"contentType" : "application/x-www-form-urlencoded;charset=utf-8",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     aoData.push( { "name": "member.user_code", "value": $("#user_code").val() } );
+						 aoData.push( { "name": "member.real_name", "value": $("#real_name").val() } );
+						 aoData.push( { "name": "member.graduate_year", "value": -1 } );
+						 aoData.push( { "name": "member.badminton_age", "value": -1 } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumns
+	   } );
+ }
+
+ function saveInfo(code){
+    var aoData=[];
+	aoData.push( { "name": "member.id", "value": code } );
+	aoData.push( { "name": "member.user_code", "value": $("#user_code_"+code).val() } );
+    aoData.push( { "name": "member.nick_name", "value": $("#nick_name_"+code).val() } );
+	aoData.push( { "name": "member.sex", "value": $("#sex_"+code).val() } );
+	aoData.push( { "name": "member.real_name", "value": $("#real_name_"+code).val() } );
+	aoData.push( { "name": "member.player_level", "value": $("#player_level_"+code).val() } );
+	aoData.push( { "name": "member.telephone", "value": $("#telephone_"+code).val() } );
+	var xurl="/actions/Member.action?updateMember";
+    top.sendAjaxRequest(xurl,aoData,optCallback);
+ }
+ 
+ function deleteInfo(did){
+    
+ }
+ 
+ function doQuery(){
+	oTable.fnDraw();
+ }
+ 
+ function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      top.showInfoWinOK("操作成功");
+		  doQuery();
+	    }else{
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+ }
+
+</script>
+</head>
+<body>
+            <div style='border: 1px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="180px">&nbsp;会员信息查询&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+			      <td align="right" width="20%">账号:</td>
+				  <td align="left" width="30%"><input type="text" id="user_code" size="15" /></td>
+                  <td align="right" width="20%">姓名:</td>
+				  <td align="left" width="30%"><input type="text" id="real_name" size="15" /></td>					  
+			     </tr>
+			 </table>
+			</div>
+<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+</body>
+</html> 

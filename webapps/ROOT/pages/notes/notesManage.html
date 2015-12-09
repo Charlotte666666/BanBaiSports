@@ -1,0 +1,156 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery.ui.all.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" src="../../js/checkForm.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var objs=[];
+			var optType="";
+			$(document).ready(function() {
+			   optType=top.getUrlParam(document.URL,"optType");
+			   var iaoColumns= [
+							   { "sTitle": "备忘录内容", "mDataProp": "notes_desc", "sWidth": "60%","sClass": "left",
+                                      "fnRender": function ( oObj ) {
+									       objs[objs.length]=oObj.aData;
+                                           var ht='<img src="../../img/page_white_magnify.png" style="cursor:pointer" title="显示明细" onclick="showDetail(\''+oObj.aData.notes_id+'\')" />&nbsp;'+oObj.aData.notes_desc;
+										   return ht;
+                                      },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "创建人", "mDataProp": "user_code", "sWidth": "10%","sClass": "center"},
+							   { "sTitle": "创建时间", "mDataProp": "notes_id", "sWidth": "15%","sClass": "center",
+                            	   "fnRender": function ( oObj ) {
+                                      return top.getTimeStr( oObj.aData.notes_id );
+                                   },
+                                   "bUseRendered": false
+                               },
+							   { "sTitle": "提醒时间", "mDataProp": "remind_time", "sWidth": "15%","sClass": "center",
+                            	   "fnRender": function ( oObj ) {
+                                      return top.getTimeStr( oObj.aData.remind_time );
+                                   },
+                                   "bUseRendered": false
+                               }
+               ];
+
+			   var surl=top.getUrlBase()+"/actions/Notes.action?getNotesInfoList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"aaSorting": [[ 2, "desc" ]],
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     aoData.push( { "name": "time1", "value": $("#q_time1").val() } );
+						 aoData.push( { "name": "time2", "value": $("#q_time2").val() } );
+						 aoData.push( { "name": "time3", "value": $("#q_time3").val() } );
+						 aoData.push( { "name": "time4", "value": $("#q_time4").val() } );
+						 aoData.push( { "name": "info.notes_desc", "value": $("#q_notes_desc").val() } );
+						 aoData.push( { "name": "info.status", "value": -1 } );
+			        },
+			        "sDom": "frtlip",
+				    "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+			    objs=[];
+				oTable.fnDraw();
+			}
+
+			function addInfo(){
+			    var xurl="pages/notes/notesInfo.html?opt=create";
+				top.openDialog("添加备忘录",xurl,true,600,400,saveCallBack);
+			}
+			
+			function getObj(infoId){
+			   for ( var i=0;i<objs.length;i++ ) {
+			     if ( objs[i].notes_id == infoId ) return objs[i];
+			   }
+			   return null;
+			}
+			
+		   function showDetail(code){
+					top.setTempValue( getObj(code) );
+					var xurl="pages/notes/notesInfo.html?opt=update&infoId="+code;
+					top.openDialog("备忘录信息",xurl,true,600,400,saveCallBack);
+		   }
+			
+			function saveCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				  
+				}
+			}
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+		    <div style='border: 2px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="110px">&nbsp;备忘录查询&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0" >
+			     <tr class="tr_data">
+			      <td align="right" width="10%">创建时间从:</td><td align="left" width="25%"><input type="text" id="q_time1" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" />
+				     到:<input type="text" id="q_time2" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" /></td>
+				  <td align="right" width="10%">提醒时间从:</td><td align="left" width="25%"><input type="text" id="q_time3" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" />
+				     到:<input type="text" id="q_time4" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" /></td>
+				  <td align="right" width="10%">内容:</td><td align="left" width="25%"><input type="text" id="q_notes_desc" value="" size="15" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+			     </tr>
+			 </table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				    <td>&nbsp;查询结果列表&nbsp;</td>
+					<td><div id="createBtn" class="buttonDivTwo"><a href="javascript:addInfo()">添加</a></div></td>
+			       </tr></table></td>
+			  </tr>
+			</table>
+	        <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

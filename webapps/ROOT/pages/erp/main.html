@@ -1,0 +1,149 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+
+<script type="text/javascript">
+var objs=[];
+var interGetResult=0;
+
+$(document).ready( function() {
+   top.sendAjaxRequest("/actions/Customer.action?checkVersion",[],optCallback);
+   getNotesList();
+   getInventoryList();
+});
+
+function getInventoryList(){
+   objs=[];
+   $("#inventoryTD").html("");
+   var aoData=[];
+   aoData.push( { "name": "info.type1_id", "value": -1 } );
+   aoData.push( { "name": "info.type2_id", "value": -1 } );
+   aoData.push( { "name": "info.type3_id", "value": -1 } );
+   aoData.push( { "name": "info.status", "value": 0 } );
+   aoData.push( { "name": "alertInventory1", "value": -1 } );
+   aoData.push( { "name": "alertInventory2", "value": -1 } );
+   aoData.push( { "name": "queryAlertInventory", "value": 1 } );
+   top.sendAjaxRequest("/actions/ProGoods.action?getGoodsList",aoData,optGetInventoryCallback);
+   try{
+     clearInterval( interGetResult );
+	 interGetResult = setInterval("getInventoryList()", 180000 );
+   }catch(e){}
+}
+
+function getNotesList(){
+   objs=[];
+   $("#notesTD").html("");
+   var aoData=[];
+   aoData.push( { "name": "time4", "value": 'NOW' } );
+   aoData.push( { "name": "info.status", "value": 0 } );
+   top.sendAjaxRequest("/actions/Notes.action?getNotesInfoList",aoData,optGetNotesCallback);
+   try{
+     clearInterval( interGetResult );
+	 interGetResult = setInterval("getNotesList()", 120000 );
+   }catch(e){}
+}
+
+function optCallback(obj){
+   try{
+    if ( obj.status == true ){
+      $("#msg").html( obj.msg );
+    }
+   }catch(e){
+   }
+}
+
+function optGetInventoryCallback(obj){
+   try{
+    var iobjs=obj.aaData;
+	if ( iobjs.length == 0 ) return ;
+    var ht='<table width="100%" style="padding: 2px;" border="0"><tr bgcolor="#98AFC7"><td colspan="2" style="margin: 10px; padding: 10px;">库存告警提醒：</td></tr>';
+	var cl=0;
+	for ( var i=0;i<iobjs.length;i++ ) {
+	  if ( cl == 0 ) {
+	    ht+="<tr bgcolor='#ADD8E6'>";
+		cl=1;
+	  } else {
+	    ht+="<tr bgcolor='#67B0F9'>";
+		cl=0;
+	  }
+	  ht+="<td style='margin: 10px; padding: 10px;'>"+(i+1)+"、 "+iobjs[i].name+"</td><td style='margin: 10px; padding: 10px;'>剩余: "+iobjs[i].inventory+"</td></tr>";
+	}
+	ht+='</table>';
+	$("#inventoryTD").html( ht );
+   }catch(e){
+   }
+}
+
+function optGetNotesCallback(obj){
+   try{
+    objs=obj.aaData;
+	if ( objs.length == 0 ) return ;
+    var ht='<table width="100%" style="padding: 2px;" border="0"><tr bgcolor="#98AFC7"><td style="margin: 10px; padding: 10px;">备忘录提醒：</td></tr>';
+	var cl=0;
+	for ( var i=0;i<objs.length;i++ ) {
+	  if ( cl == 0 ) {
+	    ht+="<tr bgcolor='#ADD8E6'>";
+		cl=1;
+	  } else {
+	    ht+="<tr bgcolor='#67B0F9'>";
+		cl=0;
+	  }
+	  ht+="<td style='margin: 10px; padding: 10px;'>"+(i+1)+"、 <a href='javascript:void(0)' onclick=\"showNodesDetail("+objs[i].notes_id+")\" >"+objs[i].notes_desc+"</a></td></tr>";
+	}
+	ht+='</table>';
+	$("#notesTD").html( ht );
+   }catch(e){
+   }
+}
+
+function showNodesDetail(code){
+	top.setTempValue( getObj(code) );
+	var xurl="pages/notes/notesInfo.html?opt=update&infoId="+code;
+	top.openDialog("备忘录信息",xurl,true,600,400,viewCallBack);
+}
+
+function getObj(infoId){
+   for ( var i=0;i<objs.length;i++ ) {
+     if ( objs[i].notes_id == infoId ) return objs[i];
+   }
+   return null;
+}
+
+function viewCallBack(){
+	try{
+	  var obj = top.getTempValue();
+	  if ( obj.isSaveOK ) getNotesList();
+	}catch(e){
+	}
+}
+
+</script>
+<style>
+body {
+    background-color:#C6DEFF;
+	margin-top: 40px;
+	text-align: center;
+	font-size: 14px;
+	font-family: "Lucida Grande",Helvetica,Arial,Verdana,sans-serif;
+}
+
+</style>
+</head>
+<body>
+<br/><br/>
+ <p align="center"><font size="10" color="blue">欢迎使用一维慧动进销存软件！</font></p><br/>
+ <p align="center" id="msg"></p>
+ <center>
+ <table width="60%" border="0" padding="0" spacing="0">
+ <tr>
+ <td width="50%" id="notesTD" valign="top"></td>
+ <td width="50%" id="inventoryTD" valign="top"></td></tr>
+ </table>
+ </center>
+</body>
+</html> 

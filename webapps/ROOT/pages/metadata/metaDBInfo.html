@@ -1,0 +1,151 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+ 
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var gcode = "";
+   var gdb_service_id="";
+   var gdb_ip = "";
+   var gdb_port = "";
+   var gpass_word = "";
+   var guser_name = "";
+ 
+   $(document).ready(function() {
+        try{
+		  optType=top.getUrlParam(document.URL,"opt");
+		  gcode= decodeURI( top.getUrlParam(document.URL,"code") );
+		  gdb_service_id=top.getUrlParam(document.URL,"db_service_id");
+		  gdb_ip = top.getUrlParam(document.URL,"db_ip");
+		  gdb_port = top.getUrlParam(document.URL,"db_port");
+		  gpass_word = top.getUrlParam(document.URL,"pass_word");
+		  guser_name = top.getUrlParam(document.URL,"user_name");
+		}catch(e){
+		}
+		if ( optType != 'create' ) {
+		  $( "#gcode" ).val( gcode );
+		  document.getElementById("gcode").disabled=true;
+		  $( "#gdb_ip" ).val( gdb_ip );
+		  $( "#gdb_port" ).val( gdb_port );
+		  $( "#guser_name" ).val( guser_name );
+		  $( "#gpass_word" ).val( gpass_word );
+		  $( "#gdb_service_id" ).val( gdb_service_id );
+		}
+   } );
+ 
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   
+   function getAoData(){
+     var aoData=[];
+     aoData.push( { "name": "metaDB.code", "value": $("#gcode").val() } );
+     aoData.push( { "name": "metaDB.db_service_id", "value": $("#gdb_service_id").val() } );
+     aoData.push( { "name": "metaDB.db_ip", "value": $("#gdb_ip").val() } );
+     aoData.push( { "name": "metaDB.pass_word", "value": $("#gpass_word").val() } );
+	 aoData.push( { "name": "metaDB.user_name", "value": $("#guser_name").val() } );
+	 aoData.push( { "name": "metaDB.db_port", "value": $("#gdb_port").val() } );
+	 aoData.push( { "name": "metaDB.db_type", "value": "oracle" } );
+	 return aoData;
+   }
+   
+   function doSubmit(){
+	 var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+	 var url = "/actions/Metadata.action?updateMetaDB";
+	 if ( optType == 'create' ) url = "/actions/Metadata.action?insertMetaDB";
+
+	 top.sendAjaxRequest(url, getAoData(), optCallback);
+   }
+   
+   function dbTest(){
+     top.showLoadingInfo(true);
+     top.sendAjaxRequest("/actions/Metadata.action?dbTest", getAoData(), optTestDBCallback);
+   }
+
+   function checkForm(){
+     var msg = "";
+	 if ( $("#fileType").val() == '' ) {
+	   msg += "请输入标题<br>";
+	 }
+     return msg;
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      isSaveOK = true;
+	      top.showInfoWinOK("操作成功");
+	    }else{
+	      isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   function optTestDBCallback(obj){
+       top.showLoadingInfo(false);
+	   try{
+	    if ( obj.status == true ){
+	      top.showInfoWinOK("测试连接成功!");
+	    }else{
+	      top.showInfoWinError("测试连接失败!");
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+  </script> 
+</head>
+<body>
+<br>
+<table width="100%" border="0" padding="0" spacing="0">
+ <tr>
+    <td align="right">标识(<font color="red">*</font>):</td>
+    <td align="left"><input type="txt" id="gcode" value="" style="width:200px" size="25" /></td>
+ </tr>
+ <tr>
+    <td align="right">数据库IP(<font color="red">*</font>):</td>
+    <td align="left"><input type="txt" id="gdb_ip" value="" style="width:200px" size="25" /></td>
+ </tr>
+ <tr>
+    <td align="right">端口(<font color="red">*</font>):</td>
+    <td align="left"><input type="txt" id="gdb_port" value="" style="width:100px" size="25" /></td>
+ </tr>
+ <tr>
+    <td align="right">服务ID(<font color="red">*</font>):</td>
+    <td align="left"><input type="txt" id="gdb_service_id" value="" style="width:200px" size="25" /></td>
+ </tr>
+ <tr>
+    <td align="right">用户名(<font color="red">*</font>):</td>
+    <td align="left"><input type="txt" id="guser_name" value="" style="width:200px" size="25" /></td>
+ </tr>
+ <tr>
+    <td align="right">密码(<font color="red">*</font>):</td>
+    <td align="left"><input type="password" id="gpass_word" value="" style="width:200px" size="25" /></td>
+ </tr>
+</table>
+<p align="center">
+   <table><tr>
+            <td><span id="okBtn" class="buttonTwo"><a href="javascript:dbTest()">测试</a></span></td>
+		    <td><span id="okBtn" class="buttonTwo"><a href="javascript:doSubmit()">提交</a></span></td>
+		    <td><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+   </tr></table>
+</p>
+</body>
+</html>

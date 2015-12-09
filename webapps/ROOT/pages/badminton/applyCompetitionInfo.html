@@ -1,0 +1,173 @@
+<html>
+<head>
+    <meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>羽毛球比赛报名</title>
+	<link rel="stylesheet" href="../../css/themes/default/jquery.mobile-1.4.5.min.css">
+	<script src="../../js/jquery-1.10.2.min.js"></script>
+	<script src="../../js/jquery.mobile-1.4.5.min.js"></script>
+
+  <script type="text/javascript">
+   var schedule_id=1;
+   var g_UrlBase="";
+   
+   $(document).ready(function() {
+       schedule_id=getUrlParam(document.URL,"schedule_id");
+	   // 院校信息
+	   
+	   //doSendAjaxRequest("/actions/BaseInfo.action?getSchoolInfoList",aoData,getSchoolInfoListCallback);
+   } );
+   
+   function getSchoolInfoListCallback(obj){
+       
+   }
+
+   function doSubmit(){
+     var aoData=[];
+     aoData.push( { "name": "info.schedule_id", "value": schedule_id } );
+     aoData.push( { "name": "info.player_name", "value": $("#player_name").val() } );
+     aoData.push( { "name": "info.player_phone", "value":$("#player_phone").val() } );
+     aoData.push( { "name": "info.edu_level", "value":$("#edu_level").val() } );
+     aoData.push( { "name": "info.graduate_year", "value":$("#graduate_year").val() } );
+	 aoData.push( { "name": "info.school_code", "value":$("#school_code").val() } );
+	 aoData.push( { "name": "info.job_title", "value": $("#job_title").val() } );
+	 $("#optResultSpan").html("");
+	 doSendAjaxRequest("/actions/TeamMember.action?insertTeamMember",aoData,optCallback);
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      isSaveOK = true;
+		  $("#optResultSpan").html("报名成功！");
+		  $("#submitBtn").hide();
+	    } else {
+		  $("#optResultSpan").html("提交失败");
+		}
+	   }catch(e){
+		  $("#optResultSpan").html("提交失败");
+	   }
+   }
+   
+   function changeSchool(){
+       if ( $("#school_code").val() == 'else' ) {
+	     $("#else_tr").show();
+		 $("#school_tr").hide();
+	   } else {
+	     $("#else_tr").hide();
+		 $("#school_tr").show();
+	   }
+   }
+   
+    function doSendAjaxRequest(xurl,param,fnCallback){
+	    if ( xurl.indexOf('http://') == -1 ) xurl = g_UrlBase+xurl;
+		$.ajax( {
+			"url":  xurl,
+			"data": param,
+			"timeout" : 10000,
+			"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+			"success": function (json) {
+				try{ fnCallback( json );}catch(e){}
+			},
+			"dataType": "json",
+			"cache": false,
+			"type": "POST",
+			"error": function (xhr, error, thrown) {
+			}
+		} );
+ }
+ 
+ function getUrlParam(xurl,name){
+	    var para="";
+	    if(xurl.lastIndexOf("?")>0){
+	        para=xurl.substring(xurl.lastIndexOf("?")+1,xurl.length);
+			var arr=para.split("&");
+			para="";
+			for(var i=0;i<arr.length;i++){
+			   if(arr[i].split("=")[0]==name) return arr[i].split("=")[1];
+			}
+			return "";
+	   }else{
+	        return "";
+	   }
+	}
+  </script> 
+</head>
+<body >
+<br>
+
+<table width="100%" border="0" padding="0" spacing="0">
+ <tr class="tr_data">
+    <td align="right" width="25%">姓名:</td>
+    <td align="left" width="75%"><input type="text" id="player_name" value=""  /></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">手机号:</td>
+    <td align="left" ><input type="text" id="player_phone" value=""  /></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">毕业院校:</td>
+    <td align="left">
+	<select id="school_code" onchange="changeSchool()">
+	  <option value="1">清华大学</option><option value="2">北京大学</option>
+	  <option value="3">北京航空航天大学</option><option value="4">北京邮电大学</option>
+	  <option value="5">北京科技大学</option><option value="6">北京理工大学</option>
+	  <option value="else">其他</option>
+	</select>
+	</td>
+ </tr>
+ <tr class="tr_data" id="else_tr" style="display:none">
+	<td align="right">其他院校:</td>
+	<td align="left"><input type="text" id="school_else" value=""  /></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">毕业年份:</td>
+    <td align="left" >
+	 <select id="graduate_year">
+	  <option value="2015">2015</option><option value="2014">2014</option>
+	  <option value="2013">2013</option><option value="2012">2012</option>
+	  <option value="2011">2011</option><option value="2010">2010</option>
+	  <option value="2009">2009</option><option value="2008">2008</option>
+	  <option value="2007">2007</option><option value="2006">2006</option>
+	  <option value="2005">2005</option><option value="2004">2004</option>
+	  <option value="2003">2003</option><option value="2002">2002</option>
+	  <option value="2001">2001</option><option value="2000">2000</option>
+	  <option value="1999">1999</option><option value="1998">1998</option>
+	  <option value="1999">1997</option><option value="1998">1996</option>
+	  <option value="1999">1995</option><option value="1998">1994</option>
+	  <option value="1999">1993</option><option value="1998">1992</option>
+	  <option value="1999">1991</option><option value="1998">1990</option>
+	  <option value="1999">1989</option><option value="1998">1988</option>
+	  <option value="1999">1987</option><option value="1998">1986</option>
+	  <option value="1999">1985</option><option value="1998">1984</option>
+	  <option value="1999">1983</option><option value="1998">1982</option>
+	  <option value="1999">1981</option><option value="1998">1980</option>
+	  <option value="1999">1979</option><option value="1998">1978</option>
+	 </select>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">学历:</td>
+    <td align="left">
+	 <select id="edu_level">
+	  <option value="1">博士</option><option value="2">硕士</option>
+	  <option value="3">本科</option><option value="4">大专</option>
+	 </select>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">身份证:</td>
+    <td align="left" ><input type="text" id="identity_id" value="" /></td>
+ </tr>
+</table>
+<br/><br/>
+<p align="center">
+   <input type="button" id="submitBtn" onclick="doSubmit()" value="提交"></input>
+   <br/>
+   <span id="optResultSpan">
+     
+   </span>
+   <br/><br/>
+   技术支持：北京半百体育科技有限公司
+</p>
+
+</body>
+</html>

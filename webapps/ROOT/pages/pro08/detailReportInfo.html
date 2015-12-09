@@ -1,0 +1,574 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<!--link rel="stylesheet" type="text/css" href="../../css/fileuploader.css"-->
+<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css" media="print, projection, screen">
+<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+<script src="../../js/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+<!--script type="text/javascript" src="../../js/fileuploader.js"></script-->
+<script type="text/javascript">
+   var isCreated=false;
+   var optType="";
+   var infoId="";
+   var legalDocumentId=0;
+   var removeId=0;
+   var c=0;
+   var timeStamp=0;
+   var executionId=0;
+   var personalResumeId=0;
+   var isCanEdit=false;
+   var gUserStatus=0;
+   var str="";
+   var prisonInfo=null;
+   var currentOptStrategyId=0;
+   var reportId=0;
+   var checkeResult=0;
+   var newAddr="";
+   var prisonName="";
+   var correctType=0;
+   var str="";
+   var responseObj={};
+
+   $(document).ready(function() {
+       var d=new Date();
+		timeStamp=d.getTime();
+		correctType=decodeURI(top.getUrlParam(document.URL,"correctType"));
+		reportId=decodeURI(top.getUrlParam(document.URL,"id"));
+		if(correctType==1){
+			$("#kuansong").hide();
+			$("#putong").hide();
+			str="y_";
+		}else if(correctType==2){
+			$("#kuansong").hide();
+			$("#yange").hide();
+			str="p_";
+		}else{
+			$("#putong").hide();
+			$("#yange").hide();
+			str="k_";
+		}
+		
+		 $( "#y_tdcorrect_type" ).html( top.getCodeSelectHtml("CORRECT_TYPE","correct_type",true) );
+		 $( "#k_tdcorrect_type" ).html( top.getCodeSelectHtml("CORRECT_TYPE","correct_type",true) );
+		 $( "#p_tdcorrect_type" ).html( top.getCodeSelectHtml("CORRECT_TYPE","correct_type",true) );
+			var aoData=[];
+			var xurl="/actions/Prison.action?getReportInfoById";
+			aoData.push( { "name": "report.id", "value": reportId } );
+			top.sendAjaxRequest(xurl,aoData,reportInfoCallback);
+	   } );	 
+	   
+	   function reportInfoCallback(obj){
+	   try{
+		if(obj.status==true){
+			var o=obj.body;
+			responseObj=o.report;
+			$("#"+str+"prison_name").html(o.report.prison_name);
+			$("#"+str+"year").html(o.report.year);
+			$("#"+str+"month").html(o.report.month);
+			$("#"+str+"prison_code").val(o.report.prison_code);
+			$("#"+str+"prison_name").val(o.report.prison_name);
+			//$("#"+str+"tdcorrect_type" ).html( top.getCodeSelectHtml("CORRECT_TYPE","correct_type",true,o.report.next_level) );
+			
+			$("#"+str+"dept_id").val(o.report.dept_id);
+			/**$("#"+str+"reason1").val(o.report.reason1);
+			$("#"+str+"reason2").val(o.report.reason2);
+			$("#"+str+"reason3").val(o.report.reason3);
+			$("#"+str+"reason4").val(o.report.reason4);
+			$("#"+str+"reason5").val(o.report.reason5);
+			$("#"+str+"reason6").val(o.report.reason6);
+			$("#"+str+"reason7").val(o.report.reason7);
+			$("#"+str+"reason8").val(o.report.reason8);
+			$("#"+str+"add_reason").val(o.report.add_reason);
+			$("#"+str+"reason9").val(o.report.reason9);
+			$("#"+str+"next_level").val(o.report.next_level);
+			$("#"+str+"reason10").val(o.report.reason10);
+			$("#"+str+"reason11").val(o.report.reason11);
+			$("#"+str+"reason12").val(o.report.reason12);*/
+			$("#"+str+"total_score").html( o.report.total_score);
+			$("#"+str+"score1").html( o.report.score1);
+			$("#"+str+"score2").html( o.report.score2);
+			$("#"+str+"score3").html( o.report.score3);
+			$("#"+str+"score4").html( o.report.score4);
+			$("#"+str+"score5").html( o.report.score5);
+			$("#"+str+"score6").html( o.report.score6);
+			$("#"+str+"score7").html( o.report.score7);
+			$("#"+str+"score8").html( o.report.score8);
+			$("#"+str+"add_score").val( o.report.add_score);
+			$("#"+str+"score9").html( o.report.score9);
+			$("#"+str+"score10").html( o.report.score10);
+			$("#"+str+"score11").html( o.report.score11);
+			$("#"+str+"score12").html( o.report.score12);
+			$("#"+str+"year").html( o.report.year);
+			$("#"+str+"month").html( o.report.month);
+			var ht="";
+			if(o.report.score10<-30||o.report.score11<-30||o.report.score12<-30){
+			ht=' <font color="red">(建议收监执行)</font>';
+			}
+			$("#"+str+"tdcorrect_type" ).html( top.getCodeName("CORRECT_TYPE",o.report.next_level)+ht );
+			$("#"+str+"id").val( top.getTimeStr( o.report.id, true ) );
+		}
+	   }catch(e){}
+			
+	   }
+		
+   //保存报告信息
+	function saveReportInfo(){
+		var aoData=[];
+		aoData.push( { "name": "report.id", "value": reportId } );
+		aoData.push( { "name": "report.prison_code", "value":  responseObj.prison_code } );
+		aoData.push( { "name": "report.prison_name", "value": responseObj.prison_name } );
+		aoData.push( { "name": "report.correct_type", "value": responseObj.correctType } );
+	    aoData.push( { "name": "report.next_level", "value": responseObj.next_level } );
+		aoData.push( { "name": "report.dept_id", "value": responseObj.dept_id } );
+		aoData.push( { "name": "report.reason1", "value": $("#"+str+"reason1").val() } );
+		aoData.push( { "name": "report.reason2", "value": $("#"+str+"reason2").val() } );
+		aoData.push( { "name": "report.reason3", "value": $("#"+str+"reason3").val() } );
+		aoData.push( { "name": "report.reason4", "value": $("#"+str+"reason4").val() } );
+		aoData.push( { "name": "report.reason5", "value": $("#"+str+"reason5").val() } );
+		aoData.push( { "name": "report.reason6", "value": $("#"+str+"reason6").val() } );
+		aoData.push( { "name": "report.reason7", "value": $("#"+str+"reason7").val() } );
+		aoData.push( { "name": "report.reason8", "value": $("#"+str+"reason8").val() } );
+		//aoData.push( { "name": "report.add_reason", "value": $("#"+str+"add_reason").val() } );
+		aoData.push( { "name": "report.reason9", "value": $("#"+str+"reason9").val() } );
+		//aoData.push( { "name": "report.next_level", "value": $("#"+str+"next_level").val() } );
+		aoData.push( { "name": "report.reason10", "value": $("#"+str+"reason10").val() } );
+		aoData.push( { "name": "report.reason11", "value": $("#"+str+"reason11").val() } );
+		aoData.push( { "name": "report.reason12", "value": $("#"+str+"reason12").val() } );
+		aoData.push( { "name": "report.total_score", "value": responseObj.total_score } );
+		aoData.push( { "name": "report.score1", "value": responseObj.score1 } );
+		aoData.push( { "name": "report.score2", "value":responseObj.score2 } );
+		aoData.push( { "name": "report.score3", "value": responseObj.score3 } );
+		aoData.push( { "name": "report.score4", "value": responseObj.score4} );
+		aoData.push( { "name": "report.score5", "value": responseObj.score5 } );
+		aoData.push( { "name": "report.score6", "value": responseObj.score6} );
+		aoData.push( { "name": "report.score7", "value": responseObj.score7 } );
+		aoData.push( { "name": "report.score8", "value": responseObj.score8 } );
+	//	aoData.push( { "name": "report.add_score", "value": top.g_GetNumValue($("#"+str+"add_score").val()) } );
+		aoData.push( { "name": "report.score9", "value": responseObj.score9 } );
+		aoData.push( { "name": "report.score10", "value":responseObj.score10 } );
+		aoData.push( { "name": "report.score11", "value": responseObj.score11 } );
+		aoData.push( { "name": "report.score12", "value":responseObj.score12 } );
+		aoData.push( { "name": "report.year", "value": responseObj.year} );
+		aoData.push( { "name": "report.month", "value": responseObj.month } );
+			
+		var xurl="/actions/Prison.action?updateReportInfo";
+		top.sendAjaxRequest(xurl,aoData,optCallback);
+	}
+	
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功");
+		 
+		 parent.closeDialog();
+	    }else{
+	    	isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+     function doCancel(){
+		top.closeDialog();
+   }
+   
+   function comput(){
+	 var sum=0;
+	 for(var i=1;i<=12;i++){
+		var score=$("#"+str+"score"+i+"").val();
+		sum=Number(sum)+Number(score);
+	 }
+	 $("#"+str+"total_score").val(sum);
+   }
+  function doPrint(){
+		$("#printBtn").hide();
+		window.print();
+		$("#printBtn").show();
+	}
+
+  </script>
+ <style>
+  .table-d table{border:1px solid #000000;border-collapse: collapse}
+  .table-d table td{border:1px solid #000000;}
+ </style>
+</head>
+<body>
+<div>
+<br>
+     <div class="table-d">
+	<div id="yange"> 
+	<h3 align="center"><B>严格管理等级量化考核表</B></h3>
+	<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+		<tr class="tr_data" height="25px">
+			<td width="5%" colspan="3"  align="center"><B>服刑人员名字:<label id="y_prison_name"></label></B></td>
+			<td width="25%" colspan="3" align="center"><B>考核时间:<label id="y_year">&nbsp;&nbsp;</label>年<label id="y_month">&nbsp;&nbsp;</label>月</B></td>
+		</tr>	
+		<tr class="tr_data" height="25px">
+			<td width="5%">序号</td>
+			<td width="10%">项目</td>	
+			<td width="20%">考核内容</td>
+			<td width="25%">考核标准</td>
+			<td width="10%">分值</td>
+			<td width="5%">得分</td>
+		</tr>	
+		<tr class="tr_data" height="25px">
+			<td>1</td>
+			<td rowspan="8">基础项目</td>	
+			<td>汇报情况</td>
+			<td align="left">每周二次，每月八次，每次0.5分</td>
+			<td>4分</td>
+			<td><label id="y_score1"></label></td>
+		</tr>
+		<tr class="tr_data" height="25px">
+			<td>2</td>
+			<td>书面汇报</td>
+			<td align="left">半月一次，每月二次，每次1.5分</td>
+			<td>3分</td>
+			<td><label id="y_score2"></label></td>
+		</tr>	
+		<tr class="tr_data" height="25px">
+			<td>3</td>
+			<td>见面谈话</td>
+			<td align="left">半月一次，每月二次，每次1.5分</td>
+			<td>3分</td>
+			<td><label id="y_score3"></label></td>
+		</tr>	
+		<tr class="tr_data" height="25px">
+			<td>4</td>
+			<td>教育学习</td>
+			<td align="left">每月6次，12小时，每次0.5分</td>
+			<td>3分</td>
+			<td><label id="y_score4"></label></td>
+		</tr>	
+		<tr class="tr_data" height="25px">
+			<td>5</td>
+			<td>公益劳动</td>
+			<td align="left">每月6次，12小时，每次0.5分</td>
+			<td>3分</td>
+			<td><label id="y_score5"></td>
+		</tr>	
+		<tr class="tr_data" height="25px">
+			<td>6</td>
+			<td>请销假执行情况</td>
+			<td align="left">每违反一次扣1分。直至扣完为止。</td>
+			<td>3分</td>
+			<td><label id="y_score6"></label></td>
+		</tr>
+		<tr class="tr_data" height="25px">
+			<td>7</td>
+			<td>越区、限制活动</td>
+			<td align="left">每违反一次扣1分。直至扣完为止</td>
+			<td>3分</td>
+			<td><label id="y_score7"></label></td>
+		</tr>
+		<tr class="tr_data" height="25px">
+			<td>8</td>
+			<td>接受手机定位</td>
+			<td align="left">每违反一次扣1分。直至扣完为止</td>
+			<td>3分</td>
+			<td><label id="y_score8"></label></td>
+		</tr>	
+		<tr class="tr_data" height="25px">
+			<td>9</td>
+			<td>加分项目</td>
+			<td>加分</td>
+			<td align="left">当月基础分得满分的加5分，连续两个月得加分的可以晋升普通管理等级。</td>
+			<td>5分</td>
+			<td><label id="y_score9"></label></td>
+		</tr>		
+		<tr class="tr_data" height="25px">
+			<td>10</td>
+			<td rowspan="3">减分项目</td>
+			<td>警告处罚</td>
+			<td align="left">每次扣10分。累计扣分达到30分的提请收监执行</td>
+			<td>10－30分</td>
+			<td><label id="y_score10"></label></td>
+		</tr>	
+		<tr class="tr_data" height="25px">
+			<td>11</td>
+			<td >治安管理处罚</td>
+			<td align="left">每次扣15分，累计扣分达到30分的提请收监执行</td>
+			<td>15－30分</td>
+			<td><label id="y_score11"></label></td>
+		</tr>
+		<tr class="tr_data" height="25px">
+			<td>12</td>
+			<td>脱管连续超过30天</td>
+			<td align="left">脱管在15天以内的每次扣15分，脱管超过30天的每次扣分30分，累计扣分达到30分的提请收监执行</td>
+			<td>15－30分</td>
+			<td><label id="y_score12"></label></td>
+		</tr>			
+		<tr class="tr_data" height="25px">
+			<td>13</td>
+			<td>本月综合考核</td>
+			<td>本月累计</td>
+			<td>&nbsp;</td>
+			<td>30</td>
+			<td><label id="y_total_score"></label></td>
+		</tr>
+		<tr class="tr_data" height="25px">
+			<td>14</td>
+			<td>下月考核管理等级确定</td>
+			<td colspan="4" align="left" >&nbsp;&nbsp;<label id="y_tdcorrect_type"></label></td>
+		</tr>
+	</table>
+	</div>
+	
+	<div id="putong"> 
+	<h3 align="center"><B>普通管理等级量化考核表</B></h3>
+	<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+		<tr class="tr_data" height="25px">
+			<td width="5%" colspan="3" align="center"><B>服刑人员名字:<label id="p_prison_name"></label></B></td>
+			<td width="25%" colspan="3" align="center"><B>考核时间:<label id="p_year">&nbsp;&nbsp;</label>年<label id="p_month">&nbsp;&nbsp;</label>月</B></td>
+		</tr>	
+		<tr class="tr_data" height="25px">
+			<td width="5%">序号</td>
+			<td width="10%">项目</td>	
+			<td width="20%">考核内容</td>
+			<td width="25%">考核标准</td>
+			<td width="10%">分值</td>
+			<td width="5%">得分</td>
+		</tr>	
+		<tr class="tr_data" height="25px">
+			<td>1</td>
+			<td rowspan="8">项目</td>	
+			<td>汇报情况</td>
+			<td align="left">每周一次，每月四次，每次1分</td>
+			<td>4分</td>
+			<td><label id="p_score1"></label></td>
+		</tr>
+		<tr class="tr_data" height="25px">
+			<td>2</td>
+			<td>书面汇报</td>
+			<td align="left">每月一次，每次3分</td>
+			<td>3分</td>
+			<td><label id="p_score2"></label></td>
+		</tr>	
+		<tr class="tr_data" height="25px">
+			<td>3</td>
+			<td>见面谈话</td>
+			<td align="left">每月一次，每次3分</td>
+			<td>3分</td>
+			<td><label id="p_score3"></label></td>
+		</tr>	
+		<tr class="tr_data" height="25px">
+			<td>4</td>
+			<td>教育学习</td>
+			<td align="left">每月5次，10小时，每次0.6分</td>
+			<td>3分</td>
+			<td><label id="p_score4"></label></td>
+		</tr>	
+		<tr class="tr_data" height="25px">
+			<td>5</td>
+			<td>公益劳动</td>
+			<td align="left">每月5次，10小时，每次0.6分</td>
+			<td>3分</td>
+			<td><label id="p_score5"></label></td>
+		</tr>	
+		<tr class="tr_data" height="25px">
+			<td>6</td>
+			<td>请销假执行情况</td>
+			<td align="left">每违反一次扣1分。直至扣完为止</td>
+			<td>3分</td>
+			<td><label id="p_score6"></label></td>
+		</tr>
+		<tr class="tr_data" height="25px">
+			<td>7</td>
+			<td>越区、限制活动</td>
+			<td align="left">每违反一次扣1分。直至扣完为止</td>
+			<td>3分</td>
+			<td><label id="p_score7"></label></td>
+		</tr>
+		<tr class="tr_data" height="25px">
+			<td>8</td>
+			<td>接受手机定位</td>
+			<td align="left">每违反一次扣1分。直至扣完为止</td>
+			<td>3分</td>
+			<td><label id="p_score8"></label></td>
+		</tr>	
+		<tr class="tr_data" height="25px">
+			<td>9</td>
+			<td>加分项目</td>
+			<td>加分</td>
+			<td align="left">当月基础分得满分的加5分，连续两个月得加分的可以晋升宽松管理等级。</td>
+			<td>5分</td>
+			<td><label id="p_score9"></label></td>
+		</tr>		
+		<tr class="tr_data" height="25px">
+			<td>10</td>
+			<td rowspan="3">处罚项目</td>
+			<td>警告处罚</td>
+			<td align="left">每次扣10分。受到处罚的管理等级转变为严格管理。累计扣分达到30分的提请收监执行。</td>
+			<td>10－30分</td>
+			<td><label id="p_score10"></label></td>
+		</tr>	
+		<tr class="tr_data" height="25px">
+			<td>11</td>
+			<td >治安管理处罚</td>
+			<td align="left">每次扣15分，受到处罚的管理等级转变为严格管理。累计扣分达到30分的提请收监执行</td>
+			<td>15－30分</td>
+			<td><label id="p_score11"></label></td>
+		</tr>
+		<tr class="tr_data" height="25px">
+			<td>12</td>
+			<td>脱管连续超过30天</td>
+			<td align="left">脱管在15天以内的每次扣15分，受到处罚的管理等级转变为严格管理。脱管超过30天的每次扣分30分，累计扣分达到30分的提请收监执。</td>
+			<td>15－30分</td>
+			<td><label id="p_score12"></label></td>
+		</tr>			
+		<tr class="tr_data" height="25px">
+			<td>13</td>
+			<td>本月综合考核</td>
+			<td>本月累计</td>
+			<td>&nbsp;</td>
+			<td>30</td>
+			<td><label id="p_total_score"></label></td>
+		</tr>
+		<tr class="tr_data" height="25px">
+			<td>14</td>
+			<td>下月考核管理等级确定</td>
+			<td colspan="4" align="left">&nbsp;&nbsp;<label id="p_tdcorrect_type"></label></td>
+		</tr>
+	</table>
+	</div>
+	
+	<div id="kuansong"> 
+	<h3 align="center"><B>宽松管理等级量化考核表</B></h3>
+	<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+		<tr class="tr_data" height="25px">
+			<td width="5%" colspan="3" align="center"><B>服刑人员名字:<label id="k_prison_name"></label></B></td>
+			<td width="25%" colspan="3" align="center"><B>考核时间:<label id="k_year">&nbsp;&nbsp;</label>年<label id="k_month">&nbsp;&nbsp;</label>月</B></td>
+		</tr>	
+		<tr class="tr_data" height="25px">
+			<td width="5%">序号</td>
+			<td width="10%">项目</td>	
+			<td width="20%">考核内容</td>
+			<td width="25%">考核标准</td>
+			<td width="10%">分值</td>
+			<td width="5%">得分</td>
+		</tr>	
+		<tr class="tr_data" height="25px">
+			<td>1</td>
+			<td rowspan="8">项目</td>	
+			<td>汇报情况</td>
+			<td align="left">半月一次，每月二次，每次2分</td>
+			<td>4分</td>
+			<td><label id="k_score1"></label></td>
+		</tr>
+		<tr class="tr_data" height="25px">
+			<td>2</td>
+			<td>书面汇报</td>
+			<td align="left">每两月一次，每月3分</td>
+			<td>3分</td>
+			<td><label id="k_score2"></label></td>
+		</tr>	
+		<tr class="tr_data" height="25px">
+			<td>3</td>
+			<td>见面谈话</td>
+			<td align="left">每两月一次，每月3分</td>
+			<td>3分</td>
+			<td><label id="k_score3"></label></td>
+		</tr>	
+		<tr class="tr_data" height="25px">
+			<td>4</td>
+			<td>教育学习</td>
+			<td align="left">每月4次，8小时，每次0.75分</td>
+			<td>3分</td>
+			<td><label id="k_score4"></label></td>
+		</tr>	
+		<tr class="tr_data" height="25px">
+			<td>5</td>
+			<td>公益劳动</td>
+			<td align="left">每月4次，8小时，每次0.75分</td>
+			<td>3分</td>
+			<td><label id="k_score5"></label></td>
+		</tr>	
+		<tr class="tr_data" height="25px">
+			<td>6</td>
+			<td>请销假执行情况</td>
+			<td align="left">每违反一次扣1分。直至扣完为止。</td>
+			<td>3分</td>
+			<td><label id="k_score6"></label></td>
+		</tr>
+		<tr class="tr_data" height="25px">
+			<td>7</td>
+			<td>越区、限制活动</td>
+			<td align="left">每违反一次扣1分。直至扣完为止。</td>
+			<td>3分</td>
+			<td><label id="k_score7"></label></td>
+		</tr>
+		<tr class="tr_data" height="25px">
+			<td>8</td>
+			<td>接受手机定位</td>
+			<td align="left">每违反一次扣1分。直至扣完为止。</td>
+			<td>3分</td>
+			<td><label id="k_score8"></label></td>
+		</tr>	
+		<tr class="tr_data" height="25px">
+			<td>9</td>
+			<td>加分项目</td>
+			<td>加分</td>
+			<td align="left">当月基础分得满分的加5分，连续6个月得加分的可以提请减刑。</td>
+			<td>5分</td>
+			<td><label id="k_score9"></label></td>
+		</tr>		
+		<tr class="tr_data" height="25px">
+			<td>10</td>
+			<td rowspan="3">处罚项目</td>
+			<td>警告处罚</td>
+			<td align="left">每次扣10分。受到处罚的管理等级转变为普通管理。累计扣分达到30分的提请收监执行。</td>
+			<td>10－30分</td>
+			<td><label id="k_score10"></label></td>
+		</tr>	
+		<tr class="tr_data" height="25px">
+			<td>11</td>
+			<td >治安管理处罚</td>
+			<td align="left">每次扣15分，受到处罚的管理等级转变为普通管理。累计扣分达到30分的提请收监执行。</td>
+			<td>15－30分</td>
+			<td><label id="k_score11"></label></td>
+		</tr>
+		<tr class="tr_data" height="25px">
+			<td>12</td>
+			<td>脱管连续超过30天</td>
+			<td align="left">脱管在15天以内的每次扣15分，受到处罚的管理等级转变为普通管理。脱管超过30天的每次扣分30分，累计扣分达到30分的提请收监执行。</td>
+			<td>15－30分</td>
+			<td><label id="k_score12"></label></td>
+		</tr>			
+		<tr class="tr_data" height="25px">
+			<td>13</td>
+			<td>本月综合考核</td>
+			<td>本月累计</td>
+			<td>&nbsp;</td>
+			<td>30</td>
+			<td><label id="k_total_score"></label></td>
+		</tr>
+		<tr class="tr_data" height="25px">
+			<td>14</td>
+			<td>下月考核管理等级确定</td>
+			<td colspan="4" align="left">&nbsp;&nbsp;<label id="k_tdcorrect_type"></label></td>
+		</tr>
+	</table>
+	</div>
+	<div width="100%" id="printBtn" style="margin_top:10px;font-size:20px;position:absolute;left:30pxx;top:30px"><center><a style="text-decoration: none"href="javascript:doPrint()"><span>[ 打印 ]</span></a></center></div> </div>
+	<p align="center" id="optBtnArea" style="display:none">
+		<table><tr>
+			<td><span id="saveBaseBtn1" class="buttonTwo"><a href="javascript:saveReportInfo()">确定</a></span></td>
+				<td><span id="cancelBaseBtn" class="buttonTwo"><a href="javascript:doCancel()">取消</a></span></td>
+		</tr></table>
+	</p>
+</div>
+</div>
+</body>
+</html>

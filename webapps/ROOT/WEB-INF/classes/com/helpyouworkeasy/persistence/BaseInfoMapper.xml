@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.helpyouworkeasy.persistence.BaseInfoMapper">
+
+   <insert id="insertCompetitionArea" parameterType="CompetitionArea">
+    INSERT INTO tbl_competition_area (area_code,area_name,memo,stadiums,id,is_deleted)
+    VALUES (#{area_code}, #{area_name}, #{memo}, #{stadiums}, #{id}, #{is_deleted})
+  </insert>
+
+  <update id="updateCompetitionArea" parameterType="CompetitionArea">
+    update tbl_competition_area set 
+    area_code=#{area_code},area_name=#{area_name},memo=#{memo},stadiums=#{stadiums},is_deleted=#{is_deleted}
+    where id=#{id}
+  </update>
+
+  <select id="getCompetitionAreaListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_competition_area where 1=1 
+    <if test="o.area_code != '' and o.area_code != null" >
+      and area_code=#{o.area_code}
+    </if>
+    <if test="o.area_name != '' and o.area_name != null" >
+      and area_name=#{o.area_name}
+    </if>
+    <if test="o.stadiums != '' and o.stadiums != null" >
+      and stadiums=#{o.stadiums}
+    </if>
+  </select>
+
+  <select id="getCompetitionAreaPageList" parameterType="map" resultType="CompetitionArea">
+    select 
+    area_code,area_name,memo,stadiums,id,is_deleted
+    from tbl_competition_area where 1=1 
+    <if test="o.area_code != '' and o.area_code != null" >
+      and area_code=#{o.area_code}
+    </if>
+    <if test="o.area_name != '' and o.area_name != null" >
+      and area_name=#{o.area_name}
+    </if>
+    <if test="o.stadiums != '' and o.stadiums != null" >
+      and stadiums=#{o.stadiums}
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+
+  <insert id="insertSchoolInfo" parameterType="SchoolInfo">
+    INSERT INTO tbl_school_info (school_code,school_name)
+    VALUES (#{school_code}, #{school_name})
+  </insert>
+
+  <update id="updateSchoolInfo" parameterType="SchoolInfo">
+    update tbl_school_info set 
+    school_name=#{school_name}
+    where school_code=#{school_code}
+  </update>
+
+  <select id="getSchoolInfoListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_school_info where 1=1 
+    <if test="o.school_code != '' and o.school_code != null" >
+      and school_code=#{o.school_code}
+    </if>
+    <if test="o.school_name != '' and o.school_name != null" >
+      and school_name like '%${o.school_name}%'
+    </if>
+  </select>
+
+  <select id="getSchoolInfoPageList" parameterType="map" resultType="SchoolInfo">
+    select 
+    school_code,school_name
+    from tbl_school_info where 1=1 
+    <if test="o.school_code != '' and o.school_code != null" >
+      and school_code=#{o.school_code}
+    </if>
+    <if test="o.school_name != '' and o.school_name != null" >
+      and school_name like '%${o.school_name}%'
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+
+  <insert id="insertCompetitionJudge" parameterType="CompetitionJudge">
+    INSERT INTO tbl_competition_judge (judge_code,judge_name,img_url,schedule_id,id)
+    VALUES (#{judge_code}, #{judge_name}, #{img_url}, #{schedule_id}, #{id})
+  </insert>
+
+  <update id="updateCompetitionJudge" parameterType="CompetitionJudge">
+    update tbl_competition_judge set 
+    judge_code=#{judge_code},judge_name=#{judge_name},img_url=#{img_url},schedule_id=#{schedule_id}
+    where id=#{id}
+  </update>
+
+  <select id="getCompetitionJudgeListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_competition_judge where 1=1 
+    <if test="o.judge_code != '' and o.judge_code != null" >
+      and judge_code=#{o.judge_code}
+    </if>
+    <if test="o.judge_name != '' and o.judge_name != null" >
+      and judge_name=#{o.judge_name}
+    </if>
+    <if test="o.schedule_id != -1" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+  </select>
+
+  <select id="getCompetitionJudgePageList" parameterType="map" resultType="CompetitionJudge">
+    select 
+    judge_code,judge_name,img_url,schedule_id,id
+    from tbl_competition_judge where 1=1 
+    <if test="o.judge_code != '' and o.judge_code != null" >
+      and judge_code=#{o.judge_code}
+    </if>
+    <if test="o.judge_name != '' and o.judge_name != null" >
+      and judge_name=#{o.judge_name}
+    </if>
+    <if test="o.schedule_id != -1" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+  
+  <select id="getCompetitionJudgeListBySchedule" parameterType="map" resultType="CompetitionJudge">
+    select 
+    judge_code,judge_name,img_url,schedule_id,id
+    from tbl_competition_judge where schedule_id=#{o.schedule_id}
+    order by judge_name asc
+  </select>
+  
+  
+  <!-- 行业分类 -->
+  <insert id="insertIndustryCategory" parameterType="IndustryCategory">
+    INSERT INTO tbl_industry_category (code,cate_name,cate_type)
+    VALUES (#{code}, #{cate_name}, #{cate_type})
+  </insert>
+
+  <update id="updateIndustryCategory" parameterType="IndustryCategory">
+    update tbl_industry_category set 
+    cate_name=#{cate_name},cate_type=#{cate_type}
+    where code=#{code}
+  </update>
+
+  <select id="getIndustryCategoryListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_industry_category where 1=1 
+    <if test="o.cate_type != '' and o.cate_type != null" >
+      and cate_type=#{o.cate_type}
+    </if>
+  </select>
+
+  <select id="getIndustryCategoryPageList" parameterType="map" resultType="IndustryCategory">
+    select 
+    code,cate_name,cate_type
+    from tbl_industry_category where 1=1 
+    <if test="o.cate_type != '' and o.cate_type != null" >
+      and cate_type=#{o.cate_type}
+    </if>
+    <if test="orderName != '' " >
+      order by ${orderName} ${orderAZ}
+    </if>
+    limit #{pageStart},#{pageSize}
+  </select>
+
+  <insert id="insertCourtInfo" parameterType="CourtInfo">
+    INSERT INTO tbl_court_info (title,addr,city,open_time,phone,id,map_lat,map_lon,price)
+    VALUES (#{title}, #{addr}, #{city}, #{open_time}, #{phone}, #{id}, #{map_lat}, #{map_lon}, #{price})
+  </insert>
+
+  <update id="updateCourtInfo" parameterType="CourtInfo">
+    update tbl_court_info set 
+    title=#{title},addr=#{addr},city=#{city},open_time=#{open_time},phone=#{phone},map_lat=#{map_lat},map_lon=#{map_lon},price=#{price}
+    where id=#{id}
+  </update>
+  
+  <update id="updateCourtImg" parameterType="CourtInfo">
+    update tbl_court_info set 
+     img_url=#{img_url}
+    where id=#{id}
+  </update>
+
+  <select id="getCourtInfoListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_court_info where 1=1 
+    <if test="o.title != '' and o.title != null" >
+      and title like '%${o.title}%'
+    </if>
+    <if test="o.city != '' and o.city != null" >
+      and city=#{o.city}
+    </if>
+  </select>
+
+  <select id="getCourtInfoPageList" parameterType="map" resultType="CourtInfo">
+    select 
+    title,addr,city,open_time,phone,id,map_lat,map_lon,price,img_url
+    from tbl_court_info where 1=1 
+    <if test="o.title != '' and o.title != null" >
+      and title like '%${o.title}%'
+    </if>
+    <if test="o.city != '' and o.city != null" >
+      and city=#{o.city}
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+  
+  <select id="getCourtInfoAllList" resultType="CourtInfo">
+    select 
+    title,addr,city,open_time,phone,id,map_lat,map_lon,price,img_url
+    from tbl_court_info 
+  </select>
+
+  <select id="getCourtInfoById" parameterType="map" resultType="CourtInfo">
+    select 
+    title,addr,city,open_time,phone,id,map_lat,map_lon,price,img_url
+    from tbl_court_info where id=#{id}
+  </select>
+  
+  <update id="deleteCourtInfo" parameterType="map">
+    delete from tbl_court_info where id=#{id}
+  </update>
+
+</mapper>

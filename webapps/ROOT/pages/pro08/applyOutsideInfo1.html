@@ -1,0 +1,166 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<!--link rel="stylesheet" type="text/css" href="../../css/fileuploader.css"-->
+<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css" media="print, projection, screen">
+<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+<script src="../../js/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+<!--script type="text/javascript" src="../../js/fileuploader.js"></script-->
+<script type="text/javascript">
+   var isCreated=false;
+   var optType="";
+   var infoId="";
+   var legalDocumentId=0;
+   var removeId=0;
+   var c=0;
+   var timeStamp=0;
+   var executionId=0;
+   var personalResumeId=0;
+   var isCanEdit=false;
+   var gUserStatus=0;
+   var str="";
+   var prisonInfo=null;
+   var currentOptStrategyId=0;
+
+   $(document).ready(function() {
+       var d=new Date();
+		timeStamp=d.getTime();
+		$( "#tdcorrect_type" ).html( top.getCodeSelectHtml("CORRECT_TYPE","correct_type",false) + '<span id="correct_typeTxt" style="display:none"></span>' );
+		//$( "#tdstatus" ).html( top.getCodeSelectHtml( "CORRECT_STATUS","status",true) + '<span id="statusTxt" style="display:none"></span>' );
+		//$( "#tdcorrect_type" ).html(top.getCodeName( "CORRECT_TYPE",'0'));
+		$( "#tdstatus" ).html(top.getCodeName( "CORRECT_STATUS",'0'));
+		$( "#tdcharges" ).html( top.getCodeSelectHtml("CRIMINAL_TYPE","charges",true)+ '<span id="chargesTxt" style="display:none"></span>' );
+		$( "#tdprison_sex" ).html( top.getCodeSelectHtml("SEX","prison_sex") );
+		optType=top.getUrlParam(document.URL,"optType");
+		infoId= decodeURI(top.getUrlParam(document.URL,"infoId"));
+        //if ( optType == 'update' ) isCreated=true;
+		/**if ( optType == 'update' ) {
+		     $("#tdstatus").show();
+			 $("#prison_code").val(infoId);
+			 $("#prison_code").attr("disabled",true);
+			 var aoData=[];
+		     aoData.push( { "name": "prison.prison_code", "value": infoId } );
+		     top.sendAjaxRequest("/actions/Prison.action?updatePrisonInfo",aoData,infoCallback);
+			 $(".baseInfo").attr("disabled",true);
+			 $("#defendant_sex").attr("disabled",true);
+			 $("#criminal_type").attr("disabled",true);
+		   } */
+		
+        $( "#tabs ul" ).tabs();
+		$( "#prison_code" ).html( top.getCodeSelectHtml("PRISON_CODE","prison_code") );
+		$( "#prison_name" ).html( top.getCodeSelectHtml("PRISON_NAME","prison_name") );
+		$( "#tdprison_sex" ).html( top.getCodeSelectHtml("SEX","prison_sex") );
+
+		$("#tr_dept_id").hide();
+		$("#desc").hide();
+		if ( optType == 'update' ) {
+		  $("#tr_dept_id").show();
+		  $("#status").show();
+		  var aoData=[];
+		  aoData.push( { "name": "prison.prison_code", "value":infoId } );
+		  top.sendAjaxRequest("/actions/Prison.action?getPrisonInfoById",aoData,infoCallback);
+		} else if ( optType == 'insert' ){
+		 // $("#tdstatus").html(top.getCodeName( "CORRECT_STATUS", "0"));
+		}
+   } );
+   
+  </script> 
+</head>
+<body>
+<br><br>
+<div>
+<p style="text-align: center;">
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+</p>
+<p>
+    <span style="font-size: 20px;"></span>
+</p>
+<p>
+    <span style="font-size: 20px;"><strong>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;提请准予罪犯继续暂予监外执行建议书</strong></span>
+</p>
+<p>
+    <br/>
+</p>
+<p>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span style="font-size: 20px;">&nbsp;（ &nbsp;司矫暂建）〔 &nbsp; &nbsp;〕 &nbsp;号</span>
+</p>
+<p>
+    <br/>
+</p>
+<p>
+    <span style="font-size: 20px;">&nbsp; &nbsp; 社区服刑人员 <input type="text" id="prison_name" value="" size="20"/>，<input type="text" id="prison_name" value="" size="20"/>男（女）， <input type="text" id="start_date" value="" onclick="new Calendar().show(this);" size="15" />出生， <input type="text" id="prison_name" value="" size="10"/>族，<br>
+	居住地  <input type="text" id="prison_name" value="" size="70"/>，户籍地  <input type="text" id="prison_name" value="" size="60"/>。</span>
+</p>
+<p>
+    <span style="font-size: 20px;">因<input type="text" id="prison_name" value="" size="40"/>罪经 <input type="text" id="prison_name" value="" size="20"/>人民法院于 &nbsp; &nbsp;</span>
+    <span style="font-size: 20px;"><input type="text" id="start_date" value="" onclick="new Calendar().show(this);" size="15" />以（<input type="text" id="prison_name" value="" size="20"/>） <input type="text" id="prison_name" value="" size="20"/>字第 <input type="text" id="prison_name" value="" size="20"/>号刑事判决书判处<input type="text" id="prison_name" value="" size="70"/>，<br>附加<input type="text" id="prison_name" value="" size="70"/>，
+	刑期自<input type="text" id="start_date" value="" onclick="new Calendar().show(this);" size="15" />起至 <input type="text" id="start_date" value="" onclick="new Calendar().show(this);" size="15" />止。 <input type="text" id="start_date" value="" onclick="new Calendar().show(this);" size="15" />
+	由<input type="text" id="prison_name" value="" size="20"/>人民法院（公安局、监狱管理局）决定（批准）暂予监外执行。在暂予监外执行期间，依法实行社区矫正。社区矫正期限自<input type="text" id="start_date" value="" onclick="new Calendar().show(this);" size="15" />至 <input type="text" id="start_date" value="" onclick="new Calendar().show(this);" size="15" />。</span>
+</p>
+<p>
+    <span style="font-size: 20px;">&nbsp; &nbsp;该社区服刑人员在社区矫正期间表现与疾病治疗情况： &nbsp; &nbsp;</span>
+</p>
+<p>
+    <span style="font-size: 20px;">&nbsp; &nbsp; <textarea id="memo" rows="6" cols="100"></textarea></span>
+</p>
+<p>
+    <span style="font-size: 20px;">&nbsp;&nbsp;现因该人暂予监外执行期满（刑期未满），身体（病情）尚未好转，需要继续暂予监外执行治疗。根据《中华人民共和国刑事诉讼法》、《中华人民共和国监狱法》、《罪犯保外就医执行办法》等有关规定，提请建议对该社区服刑人员继续暂予监外执行。</span>
+</p>
+<p>
+    <br/>
+</p>
+<p>
+    <span style="font-size: 20px;">&nbsp; &nbsp;此致</span>
+</p>
+<p>
+    <span style="font-size: 20px;"><input type="text" id="prison_name" value="" size="20"/>人民法院（公安看守所、监狱）</span>
+</p>
+<p>
+    <br/>
+</p>
+<p>
+    <br/>
+</p>
+<p>
+    <br/>
+</p>
+<p>
+    <span style="font-size: 20px;">&nbsp; 司法局长签名： <input type="text" id="prison_name" value="" size="20"/>　　 &nbsp;　 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp;司法局</span>
+</p>
+<p>
+    <span style="font-size: 20px;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;日期：<input type="text" id="start_date" value="" onclick="new Calendar().show(this);" size="17" /></span>
+</p>
+<p>
+    <br/>
+</p>
+<p>
+    <br/>
+</p>
+<p>
+    <span style="font-size: 20px;">&nbsp; 注：抄送 <input type="text" id="prison_name" value="" size="20"/>人民检察院，<input type="text" id="prison_name" value="" size="20"/>公安（分）局。</span>
+</p>
+<p>
+    <br/>
+</p>
+<p>
+    <br/>
+</p>
+<p align="center" id="optBtnArea">
+		   <table><tr>
+					<td><span id="saveBaseBtn" class="buttonTwo"><a href="javascript:doCancel()">提交</a></span></td>
+					<td><span id="cancelBaseBtn" class="buttonTwo"><a href="javascript:doCancel()">取消</a></span></td>
+		   </tr></table>
+		</p>
+</div>
+</body>
+</html>

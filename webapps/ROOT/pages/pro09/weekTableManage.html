@@ -1,0 +1,347 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title></title>
+<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css"/>
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css"
+			media="print, projection, screen">
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+<script type="text/javascript">
+var nowWeek=0;
+var year=0;
+var today=new Date();
+
+$(document).ready(function() {
+	year=today.getFullYear();
+	computeDateOfweek();
+	$("#weekList").height($(window).height()-5);
+	$( "#tabs ul" ).tabs();
+	weekQuery(nowWeek);
+ });
+ function queryWeekTableCallback(obj){
+ $("#weekVisitCust").html(obj.aaData[0].weekVisitCust+" 位"); 
+ $("#ratVisitCust").html(obj.aaData[0].ratVisitCust+"%");
+ $("#remainCust").html(obj.aaData[0].remainCust+" 位");
+ $("#paperSucc").html(obj.aaData[0].paperSucc +"%");
+  try{
+	  signList=obj.aaData[0].signList;
+	  var ht="";
+	  var tMonney=0;
+	  var row=1;
+			
+			 for (var i=0;i<signList.length;i++) {
+			 tMonney+=signList[i].sum;
+			  ht+='<tr ';
+			  ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+			  ht+='>';
+			  ht+='<td width="12%" height="32px" align="center" style="word-break:break-all;">'+top.getTimeStr(signList[i].sign_date,true)+'</td>';
+			  ht+='<td width="10%" height="32px" align="center" style="word-break:break-all;">'+signList[i].custName+'</td>';
+			  ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+signList[i].design_fee+'</td>';
+			  ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+signList[i].product_amount+'</td>';
+			  ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+signList[i].project_amount+'</td>';
+			  ht+='<td width="7%" height="32px" align="center" style="word-break:break-all;">'+signList[i].sum+'</td>';
+			  ht+='<td width="10%" height="32px" align="center" style="word-break:break-all;">'+top.getUserNameByCode(signList[i].require_manager)+'</td>';
+			  ht+='<td width="10%" height="32px" align="center" style="word-break:break-all;">'+signList[i].contract_code+'</td>';
+			  ht+='<td width="22%" height="32px" align="center" style="word-break:break-all;">'+top.getTimeStr(signList[i].start_date,true)+'~'+top.getTimeStr(signList[i].end_date,true)+'</td>';
+			  ht+='<td width="8%" height="32px" align="center" style="word-break:break-all;">'+signList[i].circle/24/60/60000+'(天)</td>';
+			 ht+='</tr>';
+			  if ( row == 1 ) {
+				 row=0;
+			  } else {
+				 row=1;
+			  }
+	  }
+	   ht+='<tr ';
+	   ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+	   ht+='><td width="12%" height="32px" align="center" style="word-break:break-all;">合计</td><td height="32px"align="center" colspan="5" style="word-break:break-all;">本周收款产值 '+tMonney+' 元  </td><td colspan="5" align="center" style="word-break:break-all;">  本周签单合同数 '+signList.length+'</td></tr>';
+	  $("#tab0List").html( ht );
+	}catch(e){}
+	 try{
+	  designFee=obj.aaData[0].designFee;
+	  ht="";
+	  var designMoney=0;
+	  row=1;
+			 for (var i=0;i<designFee.length;i++) {
+			  designMoney+=designFee[i].designMoney;
+			  ht+='<tr ';
+			  ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+			  ht+='>';
+			  ht+='<td width="25%" height="32px" align="center" style="word-break:break-all;">'+top.getTimeStr(designFee[i].design_date,true)+'</td>';
+			  ht+='<td width="25%" height="32px" align="center" style="word-break:break-all;">'+designFee[i].custName+'</td>';
+			  ht+='<td width="25%" height="32px" align="center" style="word-break:break-all;">'+designFee[i].designMoney+'</td>';
+			  ht+='<td width="25%" height="32px" align="center" style="word-break:break-all;">'+top.getUserNameByCode(designFee[i].designer)+'</td>';
+			  ht+='</tr>';
+			  if ( row == 1 ) {
+				 row=0;
+			  } else {
+				 row=1;
+			  }
+			 }
+			  ht+='<tr ';
+			  ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+			  ht+='>';
+			  ht+='<td width="25%" height="32px" align="center" style="word-break:break-all;">合计</td><td width="100%" colspan="3" height="32px" align="center" style="word-break:break-all;">'+designMoney+'</td>';
+			  ht+='</tr>';
+		  $("#tab1List").html( ht );
+		}catch(e){}
+		
+	   try{
+	  custStream=obj.aaData[0].custStream;
+	  ht="";
+	  var a=0;
+	  var b=0;
+	  var c=0;
+	  row=1;
+			 for (var i=0;i<custStream.length;i++) {
+			  a+=custStream[i].a;
+			  b+=custStream[i].b;
+			  c+=custStream[i].c;
+			  ht+='<tr ';
+			  ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+			  ht+='>';
+			  ht+='<td width="25%" height="32px" align="center" style="word-break:break-all;">'+top.getUserNameByCode(custStream[i].manager)+'</td>';
+			  ht+='<td width="25%" height="32px" align="center" style="word-break:break-all;">'+custStream[i].a+'</td>';
+			  ht+='<td width="25%" height="32px" align="center" style="word-break:break-all;">'+custStream[i].b+'</td>';
+			  ht+='<td width="25%" height="32px" align="center" style="word-break:break-all;">'+custStream[i].c+'</td>';
+			  ht+='</tr>';
+			  if ( row == 1 ) {
+				 row=0;
+			  } else {
+				 row=1;
+			  }
+		      ht+='<tr ';
+			  ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+			  ht+='>';
+			  ht+='<td width="25%"  align="center"height="32px" style="word-break:break-all;">合计</td>';
+			  ht+='<td width="25%" height="32px" align="center" style="word-break:break-all;">'+a+'</td>';
+			  ht+='<td width="25%" height="32px" align="center" style="word-break:break-all;">'+b+'</td>';
+			  ht+='<td width="25%" height="32px" align="center" style="word-break:break-all;">'+c+'</td>';
+			  ht+='</tr>';
+	  }
+	  $("#tab2List").html( ht );
+	}catch(e){}
+	
+ }
+ function weekQuery(weekNum){
+	var startD=$("#week"+weekNum+"_start_date").val();
+	var endD=$("#week"+weekNum+"_end_date").val();
+	$(".weekNum").html("第"+weekNum+"周 "+startD+"~"+endD);
+	$("#tdWeek"+nowWeek).removeClass("selected");
+	$("#tdWeek"+nowWeek).addClass("week_td");
+	nowWeek=weekNum;
+	$("#tdWeek"+nowWeek).removeClass("week_td");
+	$("#tdWeek"+nowWeek).addClass("selected");
+	var aoData=[];
+	var enDMillon=parseInt(top.toTimestamp(endD))+24*60*60*1000;
+    aoData.push( { "name": "time1", "value": top.toTimestamp(startD) } );
+	aoData.push( { "name": "time2", "value": enDMillon } );
+	var xurl="/actions/CustInfo.action?getWeekTable";
+	top.sendAjaxRequest(xurl,aoData,queryWeekTableCallback);
+ }
+ //计算一年周
+function computeDateOfweek(){
+	    var ht="";
+		var weekNum=1;
+	    var sundayTimeStamp=0;
+		var yearEndTimeStamp=today.getTime();
+		var day7=7*24*60*60000;// 7天的毫秒数
+		var t=0;
+		var d=new Date();
+		if($("#year").val()){
+			if(year!=$("#year").val()){
+				yearEndTimeStamp=top.toTimestamp($("#year").val()+'-12-31');
+			}
+			d.setFullYear($("#year").val());
+		}else{
+			d.setFullYear(year);
+		}
+		//d.setFullYear(today.getFullYear());
+		d.setMonth(0);
+		d.setDate(1);
+		t=d.getTime();
+		// 一年第一周的计算
+		sundayTimeStamp=t+(7-d.getDay())*24*60*60000;
+		$("#week1_start_date").val(top.getTimeStr(t,true));
+		$("#week1_end_date").val(top.getTimeStr(sundayTimeStamp,true));
+		$("#lab1_week1_start_date").html(top.getTimeStr(t,true));
+		$("#lab1_week1_end_date").html(top.getTimeStr(sundayTimeStamp,true));
+		// 一年最后天的时间戳
+		//d.setFullYear(today.getFullYear());
+		//d.setMonth(11);
+		//d.setDate(31);
+		//yearEndTimeStamp=d.getTime();
+		 ht='</tr>'+ht;
+		 ht='<input type="hidden" id="week'+weekNum+'_end_date" value="'+top.getTimeStr(sundayTimeStamp,true)+'" size="10"/>)</td>'+ht;
+		 ht='<input type="hidden" id="week'+weekNum+'_start_date" value="'+top.getTimeStr(t,true)+'" size="10"/>'+ht;
+		 ht='<td class="week_td" id="tdWeek'+weekNum+'"><a href="javascript:weekQuery('+weekNum+')">第'+weekNum+'周('+top.getTimeStr(t,true)+'~'+top.getTimeStr(sundayTimeStamp,true)+')</a>'+ht;
+		 ht='<tr class="tr_data"  height="35px">'+ht;
+		 
+		
+		while ( yearEndTimeStamp > sundayTimeStamp ) {
+		 weekNum++;
+		 t=sundayTimeStamp+24*60*60000;
+		 sundayTimeStamp+=day7;
+		 
+		 if ( sundayTimeStamp > yearEndTimeStamp ) {
+		   sundayTimeStamp=yearEndTimeStamp;
+		 }
+		  ht='</tr>'+ht;
+		  ht='<input type="hidden" id="week'+weekNum+'_end_date" value="'+top.getTimeStr(sundayTimeStamp,true)+'" size="10"/></td>'+ht;
+		  ht='<input type="hidden" id="week'+weekNum+'_start_date" value="'+top.getTimeStr(t,true)+'" size="10"/>'+ht;
+		  ht='<td class="week_td" id="tdWeek'+weekNum+'"><a href="javascript:weekQuery('+weekNum+')">第'+weekNum+'周('+top.getTimeStr(t,true)+'~'+top.getTimeStr(sundayTimeStamp,true)+')</a>'+ht;
+		  ht='<tr class="tr_data" height="35px">'+ht;
+		 
+		}
+		nowWeek=weekNum;
+		ht='<tr class="tr_data" height="35px"><td style="background-color:#CEDAE8;font-weight:bold" class="selected">年份：'+top.get5YearSelectHtml('year',false,year,"queryFunnelReportList()")+'</td></tr>'+ht;
+		$("#weekTable").html(ht);
+	}
+	/*function weekQuery(weekNum){
+	var startD=$("#week"+weekNum+"_start_date").val();
+	var endD=$("#week"+weekNum+"_end_date").val();
+	$(".weekNum").html("第"+weekNum+"周 "+startD+"~"+endD);
+	$("#tdWeek"+nowWeek).removeClass("selected");
+	$("#tdWeek"+nowWeek).addClass("week_td");
+	nowWeek=weekNum;
+	$("#tdWeek"+nowWeek).removeClass("week_td");
+	$("#tdWeek"+nowWeek).addClass("selected");
+	var aoData=[];
+    aoData.push( { "name": "time1", "value": top.toTimestamp(startD) } );
+	aoData.push( { "name": "time2", "value": top.toTimestamp(endD) } );
+	var xurl="/actions/FunnelReport.action?insertFunnelReport";
+	top.sendAjaxRequest(xurl,aoData,null);
+ }
+	function insert(){
+		insertFunnelReport
+	}*/
+</script>
+<style type="text/css">
+.weekNum{
+		display:block;
+		font-size:18px;
+		margin:5px;
+		}
+ .selected{
+		background-color:#FF7F00;
+		color:#FFFFFF;
+ } 
+ .selected a{
+	color:#FFFFFF;
+	text-decoration:none;
+	padding:8px;
+ }
+ .week_td{
+	background-color:#6CA6CD;
+	color:#FFFFFF;
+ }
+  .week_td a{
+	color:#FFFFFF;
+	text-decoration:none;
+	padding:8px;
+ }
+</style>
+</head>
+<body style="width:100%;">
+	<table width="100%">
+		<tr>
+		<td width="25%" >
+		<!--周 列表 -->
+			<div width="100%" id="weekList" style="overflow-y:auto;border:2px;border-style dotted;border-color: #A0CFEC;">
+				<table border="2px solid #b9d8f3" cellpadding="3" cellspacing="1" style="background-color: #b9d8f3;" width="99%" id="weekTable"></table>
+			</div>
+		</td>
+		<!--数据列表 -->
+		<td width="75%" valign="top">
+		<center><span class="weekNum"></span></center>
+		<center>
+			<table width="100%">
+			<tr>
+			<td height="32px" style="word-break:break-all;background-color:#C9E4D6" align="center" width="25%">本周客户二次进店数</td>
+			<td style="word-break:break-all;background-color:#E5F4F9" width="25%" align="center" id="weekVisitCust"></td>
+			<td style="word-break:break-all;background-color:#C9E4D6" align="center" width="25%" align="center">客户二次进店率</td>
+			<td style="word-break:break-all;background-color:#E5F4F9" width="25%" align="center"id="ratVisitCust"></td></tr>
+			<tr>
+			<td height="32px" style="word-break:break-all;background-color:#C9E4D6" align="center">剩余客户数</td>
+			<td style="word-break:break-all;background-color:#E5F4F9" align="center" id="remainCust"></td>
+			<td style="word-break:break-all;background-color:#C9E4D6" align="center">派单成功率</td>
+			<td style="word-break:break-all;background-color:#E5F4F9" align="center" id="paperSucc"></td></tr>
+			</table>
+		</center>
+			<div id="tabs">
+				<ul>
+					<li id="picLi">
+						<a href="#tabs-0"><span>签单客户信息统计</span>
+						</a>
+					</li>
+					<li id="picLi1">
+						<a href="#tabs-1"><span>设计费缴纳客户统计</span>
+						</a>
+					</li>
+					<li id="picLi2">
+						<a href="#tabs-2"><span>客流统计</span>
+						</a>
+					</li>
+				</ul>
+		   </div>
+		   <div id="tabs-0">
+			<center>
+				<table cellpadding="0" width="99%" cellspacing="2px" border="1">
+				 <tr bgcolor="#CEDAE8">	
+				  <td rowspan="2" width="12%" height="32px" align="center">签单日期</td>				 
+				  <td rowspan="2" width="10%" height="32px" align="center">客户姓名</td>
+				  <td colspan="4" width="28%" height="32px" align="center">合同总金额</td>
+				  <td rowspan="2" width="10%" height="32px" align="center">设计师</td>
+				  <td rowspan="2" width="10%" height="32px" align="center">合同号</td>
+				  <td rowspan="2" width="22%" height="32px" align="center">开竣工日期</td>
+				  <td rowspan="2" width="8%" height="32px" align="center">签单周期(天)</td>
+				 </tr>
+				 <tr bgcolor="#CEDAE8">	<td height="32px" width="7%">设计费</td>
+				 <td width="7%">产品费</td>
+				 <td width="7%">工程费</td>
+				 <td width="7%">总额</td></tr>
+				</table>
+				  <div id="dataDiv" style="margin: 1px;padding:0;width:99%;background-color:#ffffff;overflow: auto;">
+				   <table id="tab0List" width="100%" cellpadding="0" cellspacing="2px" border="1" style="border-color:blue"></table>
+				  </div>
+			</center>
+		   </div>
+		   <div id="tabs-1">
+		   <center>
+				<table cellpadding="0" width="99%" cellspacing="2px" border="1">
+				 <tr bgcolor="#CEDAE8">			
+				  <td width="20%" height="32px" align="center">缴纳设计费日期</td>
+				  <td width="20%" height="32px" align="center">客户姓名</td>
+				  <td width="20%" height="32px" align="center">设计费</td>
+				  <td width="20%" height="32px" align="center">设计师</td>
+				 </tr>
+				</table>
+				  <div id="dataDiv" style="margin: 1px;padding:0;width:99%;background-color:#ffffff;overflow: auto;">
+				   <table id="tab1List" width="100%" cellpadding="0" cellspacing="2px" border="1" style="border-color:blue"></table>
+				  </div>
+			</center>
+		   </div>
+		   <div id="tabs-2">
+		   <center>
+				<table cellpadding="0" width="99%" cellspacing="2px" border="1">
+				 <tr bgcolor="#CEDAE8">
+				  <td width="25%" height="32px" align="center">客户经理</td>
+				  <td width="25%" height="32px" align="center">A类客户</td>
+				  <td width="25%" height="32px" align="center">B类客户</td>
+				  <td width="25%" height="32px" align="center">C类客户</td>
+				 </tr>
+				</table>
+				  <div id="dataDiv" style="margin: 1px;padding:0;width:99%;background-color:#ffffff;overflow: auto;">
+				   <table id="tab2List" width="100%" cellpadding="0" cellspacing="2px" border="1" style="border-color:blue"></table>
+				  </div>
+			</center>
+		   </div>
+		</td>
+		</tr>
+	</table>
+</body>
+</html>

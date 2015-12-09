@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.helpyouworkeasy.persistence.CompetitionGroupMapper">
+
+  <insert id="insertCompetitionGroup" parameterType="CompetitionGroup">
+    INSERT INTO tbl_competition_group (group_name,phases,id,schedule_id,is_deleted)
+    VALUES (#{group_name}, #{phases}, #{id}, #{schedule_id}, #{is_deleted})
+  </insert>
+
+  <update id="updateCompetitionGroup" parameterType="CompetitionGroup">
+    update tbl_competition_group set 
+    group_name=#{group_name},phases=#{phases},schedule_id=#{schedule_id}
+    where id=#{id}
+  </update>
+
+  <select id="getCompetitionGroupListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_competition_group where 1=1 
+    <if test="o.group_name != '' and o.group_name != null" >
+      and group_name=#{o.group_name}
+    </if>
+    <if test="o.phases != '' and o.phases != null" >
+      and phases=#{o.phases}
+    </if>
+    <if test="o.schedule_id != -1" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+  </select>
+
+  <select id="getCompetitionGroupPageList" parameterType="map" resultType="CompetitionGroup">
+    select 
+    group_name,phases,id,schedule_id,is_deleted
+    from tbl_competition_group where is_deleted=0 
+    <if test="o.group_name != '' and o.group_name != null" >
+      and group_name=#{o.group_name}
+    </if>
+    <if test="o.phases != '' and o.phases != null" >
+      and phases=#{o.phases}
+    </if>
+    <if test="o.schedule_id != -1" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+  
+  
+  <select id="getGroupInfoById" parameterType="long" resultType="CompetitionGroup">
+    select *
+    from tbl_competition_group
+    where id=#{id}
+  </select>
+  
+  <delete id="deleteGroupById" parameterType="long">
+    delete from tbl_competition_group where id=#{value}
+  </delete>
+  
+  <select id="getAllGroupSchedule" parameterType="map" resultType="CompetitionGroup">
+    select *
+    from tbl_competition_group
+    where is_deleted=0
+    <if test="phases != '' and phases !=null" >
+      and phases=#{phases}
+    </if>
+    <if test="schedule_id != -1">
+      and schedule_id=#{schedule_id}
+    </if>
+  </select>
+
+
+  <insert id="insertCompetitionGroupTeam" parameterType="CompetitionGroupTeam">
+    INSERT INTO tbl_competition_group_team  (id,schedule_id,team_id,group_id)
+    VALUES (#{id}, #{schedule_id}, #{team_id}, #{group_id})
+  </insert>
+
+  <update id="updateCompetitionGroupTeam" parameterType="CompetitionGroupTeam">
+    update tbl_competition_group_team  set 
+    schedule_id=#{schedule_id},team_id=#{team_id},group_id=#{group_id}
+    where id=#{id}
+  </update>
+
+  <select id="getCompetitionGroupTeamListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_competition_group_team  where 1=1 
+    <if test="o.id != 0" >
+      and id=#{o.id}
+    </if>
+    <if test="o.schedule_id != 0" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+    <if test="o.team_id != 0" >
+      and team_id=#{o.team_id}
+    </if>
+    <if test="o.group_id != 0" >
+      and group_id=#{o.group_id}
+    </if>
+  </select>
+
+  <select id="getCompetitionGroupTeamPageList" parameterType="map" resultType="CompetitionGroupTeam">
+    select 
+    id,schedule_id,team_id,group_id
+    from tbl_competition_group_team  where 1=1 
+    <if test="o.id != 0" >
+      and id=#{o.id}
+    </if>
+    <if test="o.schedule_id != 0" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+    <if test="o.team_id != 0" >
+      and team_id=#{o.team_id}
+    </if>
+    <if test="o.group_id != 0" >
+      and group_id=#{o.group_id}
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+  
+  <select id="getCompetitionGroupTeamListBySchedule" parameterType="map" resultType="CompetitionGroupTeam">
+    select 
+    id,schedule_id,team_id,group_id
+    from tbl_competition_group_team  where 1=1 
+    <if test="schedule_id != 0" >
+      and schedule_id=#{schedule_id}
+    </if>
+  </select>
+
+  <delete id="deleteGroupUserByTeamId" parameterType="map">
+    delete from tbl_competition_group_team  where group_id=#{group_id} and team_id=#{team_id}
+  </delete>
+  
+  <select id="getCompetitionGroupTeamByGroupId" parameterType="long" resultType="CompetitionGroupTeam">
+    select *
+    from tbl_competition_group_team 
+    where group_id=#{value}
+  </select>
+  
+</mapper>

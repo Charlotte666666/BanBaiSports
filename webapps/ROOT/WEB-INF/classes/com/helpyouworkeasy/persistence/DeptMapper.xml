@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.helpyouworkeasy.persistence.DeptMapper">
+  
+  <select id="getDeptAllList" parameterType="map" resultType="Department">
+   select
+     dept_id as deptId,
+     name,
+     parent_id as parentId,
+     sort_order as sortOrder,
+     dept_type,dept_area,addr,fax,phone,dept_code
+   from tbl_sys_dept 
+   where belong=#{belong} 
+   order by sort_order
+  </select>
+  
+  <select id="getDeptById" parameterType="map" resultType="Department">
+   select
+     dept_id as deptId,
+     name,
+     parent_id as parentId,
+     sort_order as sortOrder,
+     dept_type,dept_area,addr,fax,phone,dept_code
+   from tbl_sys_dept 
+   where dept_id=#{deptId} 
+  </select>
+  
+  <!-- 查询第一级部门列表 -->
+  <select id="getLevel1DeptList" parameterType="map" resultType="Department">
+   select
+     dept_id as deptId,
+     name,
+     parent_id as parentId,
+     sort_order as sortOrder,
+     dept_type,dept_area,addr,fax,phone,dept_code
+   from tbl_sys_dept 
+   where belong=#{belong} and parent_id=0 
+   order by sort_order
+  </select>
+  
+  <!-- 查询第二级及以下级别的部门列表 -->
+  <select id="getLevel2DeptList" parameterType="map" resultType="Department">
+   select
+     dept_id as deptId,
+     name,
+     parent_id as parentId,
+     sort_order as sortOrder,
+     dept_type,dept_area,addr,fax,phone,dept_code
+   from tbl_sys_dept 
+   where belong=#{belong} and parent_id!=0 and parent_id!=-1
+   order by sort_order
+  </select>
+  
+  <select id="getSubDeptUserList" parameterType="map" resultType="User">
+    select
+     user_code as userCode,
+     user_name as userName,
+     pass_word as password,
+     dept_id as deptId,
+     user_status as status,
+     last_login as lastLogin,
+     user_email as email,
+     mobile_phone as mobilePhone,
+     office_phone as officePhone,
+     avatar_path,entry_date,job_title,sex,job_level,card_no,
+     train_recd,contract_start,probation_end,contract_end,
+	 contract_renew_number,baby_state,current_housing_status,
+	 office_qq,current_residence_place,domicile_place,ever_company_name,
+	 education_background,major,graduate_institutions,emergency_contact_name,
+	 emergency_contact_phone,is_friends_in,friends_name,relationship,
+	 department_and_positions,transfer_situation,phase_change_record,
+	 leave_time,reason_to_leave,memo,position_status,integration_score,growth_process
+    from tbl_sys_users
+    where belong=#{belong} and is_deleted = 0 and user_status = 1
+          and dept_id in ( ${deptIds} )
+    order by job_title asc
+  </select>
+
+  <update id="updateDept" parameterType="Department">
+    UPDATE tbl_sys_dept SET
+      name=#{name}, parent_id=#{parentId}, sort_order=#{sortOrder},
+      dept_type=#{dept_type},dept_area=#{dept_area},addr=#{addr},fax=#{fax},phone=#{phone},dept_code=#{dept_code}
+    WHERE belong=#{belong} and dept_id=#{deptId}
+  </update>
+  
+  <update id="updateDeptName" parameterType="Department">
+    UPDATE tbl_sys_dept SET
+      name=#{name}
+    WHERE dept_id=#{deptId}
+  </update>
+  
+  <update id="updateDetailDept" parameterType="Department">
+    UPDATE tbl_sys_dept SET
+      dept_type=#{dept_type},dept_area=#{dept_area},addr=#{addr},fax=#{fax},phone=#{phone},dept_code=#{dept_code}
+    WHERE dept_id=#{deptId}
+  </update>
+
+  <insert id="insertDept" parameterType="Department">
+    INSERT INTO tbl_sys_dept (belong, dept_id, name, parent_id, sort_order,dept_type,dept_area,addr,fax,phone,dept_code)
+    VALUES (#{belong}, #{deptId}, #{name}, #{parentId}, #{sortOrder},#{dept_type},#{dept_area},#{addr},#{fax},#{phone},#{dept_code})
+  </insert>
+  
+  <delete id="deleteDept" parameterType="map">
+    delete from tbl_sys_dept
+    WHERE belong=#{belong} and dept_id = #{deptId}
+  </delete>
+  
+  <update id="updateOrderAndParent" parameterType="map">
+    UPDATE tbl_sys_dept SET
+      parent_id=#{parentId}, sort_order=#{sortOrder}
+    WHERE dept_id=#{deptId}
+  </update>
+  
+  <insert id="insertPosition" parameterType="Position">
+    INSERT INTO tbl_sys_position (id, dept_id, position_code, user_code)
+    VALUES (#{id}, #{dept_id}, #{position_code}, #{user_code})
+  </insert>
+  
+  <delete id="deletePosition" parameterType="map">
+    delete from tbl_sys_position
+    WHERE id = #{id}
+  </delete>
+  
+  <update id="updatePosition" parameterType="map">
+    UPDATE tbl_sys_position SET
+      position_code=#{position_code}, user_code=#{user_code}
+    WHERE id=#{id}
+  </update>
+  
+  <select id="getPositionByDeptList" parameterType="map" resultType="Position">
+    select id,dept_id,position_code,user_code from tbl_sys_position
+    where dept_id=#{dept_id} order by position_code
+  </select>
+  
+  <select id="getPositionListByDeptIds" parameterType="map" resultType="Position">
+    select id,dept_id,position_code,user_code from tbl_sys_position
+    where position_code = #{position_code} and dept_id in (${deptIds}) 
+  </select>
+  
+  <select id="getJobUserListByDeptIds" parameterType="map" resultType="User">
+    select
+     user_code as userCode,
+     user_name as userName,
+     dept_id as deptId,
+     user_status as status,
+     job_title
+   from tbl_sys_users
+    where job_title = #{position_code} and dept_id in (${deptIds}) 
+  </select>
+  
+</mapper>

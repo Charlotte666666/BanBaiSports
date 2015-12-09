@@ -1,0 +1,422 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>配送系统</title>
+<link href="css/login_css.css" rel="stylesheet" type="text/css">
+<link href="css/comm.css" rel="stylesheet" type="text/css" />
+<link href="css/map_css.css" rel="stylesheet" type="text/css" />
+<link href="css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<script type="text/javascript" src="js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="js/SimpleMap.js"></script>
+<script type="text/javascript" src="js/helpyouworkeasy-core.js"></script>
+<script type="text/javascript" src="js/md5.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.16.custom.min.js"></script>
+
+<script type="text/javascript">
+var sysMenuIndex = 4;
+var adjustInter = -1;
+var userConfig = null;
+var interId = 0;
+var g_objs=[];
+
+jQuery(document).ready(function() {
+    g_systemVersion = "v1.0.0";
+	g_FileResUrl="/fileRes/";
+    initGlobalData(true);
+	adjustPosition();
+	$("#userCode").focus();
+	window.onresize = function(){ adjustPosition(); };
+ });
+ 
+ function showSubMenu(n,index){
+    hideSubMenu();
+	if ( !index ) index = n;
+    $('#menu'+n).show();
+	$('#menu'+n).css({"left":(76*index)+"px","top":"67px"});
+	interId = setInterval("checkMouse()",4000);
+ }
+
+ function hideSubMenu(){
+   for ( var i=0;i<5;i++ ) {
+     if ( $('#menu'+i) ) $('#menu'+i).hide();
+   }
+   clearInterval( interId );
+ }
+
+ function checkMouse(){
+   hideSubMenu();
+ }
+
+ function adjustPosition(){
+	if ( adjustInter != -1 ) {
+	   clearInterval( adjustInter );
+	   adjustInter = -1;
+	}
+    var wh=$(window).height();
+	var ww=$(window).width();
+	
+	$('#versionInfo').css("top",wh - 18);
+	$('#versionInfoTxt').html( "<font color='white'>版本:&nbsp;"+g_systemVersion+"</font>" );
+    $('#loginMain').height(wh - 51);
+	var l = 120;
+
+	$('#main_footer').css("top",wh - 18);
+	$('#m_workbench').height(wh - 100);
+	$('#mainContent').height(wh - 100);
+	$('#workbenchFrame').height(wh - 100);
+	$('#loginResult').css({"left":(ww - 100)/2+"px"});
+ }
+
+ function loginSuccess(){
+    ininMenu();
+    $("body").css({"background-image":"url(img/bg2_body1.png)"});
+	$('#loginTop').hide();
+	$('#loginClear').hide();
+	$('#loginMain').hide();
+	$('#ind_footer').hide();
+	$('#loginResult').hide();
+	$('#main').show();
+	$("#userPass").val("");
+	$('#loginResult').html("");
+	adjustInter = setInterval("adjustPosition()",500);
+	userConfig = top.getUserConfig();
+	$("#workbenchContent").html( '<iframe id="workbenchFrame" src="pages/pro06/main.html" width="100%" height="100%" frameborder="0"></iframe>' );
+ }
+ 
+ function ininMenu(){
+	var last = "sysParameter";
+	$("#menu_td_userManage").addClass( "bottomLine" );
+	$("#menu_td_rightManage").addClass( "bottomLine" );
+	$("#menu_td_deptManage").addClass( "bottomLine" );
+	
+    if ( !g_isPermit('coreSys') ) {
+	   $('#menu_system').hide();
+	} else {
+	   $('#menu_system').show();
+	}
+	// 系统管理 
+	if ( !g_isPermit('userManage') ) {
+	   $('#menu_userManage').hide();
+	} else {
+	   $('#menu_userManage').show();
+	   last = "userManage";
+	}
+	
+	if ( !g_isPermit('rightManage') ) {
+	   $('#menu_rightManage').hide();
+	} else {
+	   $('#menu_rightManage').show();
+	   last = "rightManage";
+	}
+	
+	if ( !g_isPermit('deptManage') ) {
+	   $('#menu_deptManage').hide();
+	   first = "userManage";
+	} else {
+	   last = "deptManage";
+	   $('#menu_deptManage').show();
+	}
+
+	$("#menu_td_"+last).removeClass( "bottomLine" );
+ 
+	$("#menu_system").mouseover(function(){
+        showSubMenu( 3, 6 );
+    });
+ }
+ 
+ function loginFail(){
+    $("body").css({"background-image":"url(img/bg1_home2.jpg)"});
+	$('#loginTop').show();
+	$('#loginClear').show();
+	$('#loginMain').show();
+	$('#ind_footer').show();
+	$('#loginResult').show();
+	$("#mainContent").hide();
+    $("#m_workbench").show();
+	$('#main').hide();
+ }
+ 
+ function toSysTab(xurl){
+   hideSubMenu();
+   if ( xurl == 'workbench' ) {
+      $("#mainContent").hide();
+      $("#m_workbench").show();
+      return ;
+   }
+   $("#m_workbench").hide();
+   $("#mainContent").show();
+   $("#mainContent").html( '<iframe id="mainFrame" src="'+xurl+'" width="100%" height="100%" style="background-color:#ffffff" frameborder="0"></iframe>' );
+ }
+ 
+ function doLogin(){
+   	   var userCode = $("#userCode").val();
+   	   var pass = $("#userPass").val();
+   	   if ( userCode == '' || pass == '' ) {
+   	 	 showInfoWin("请输入登录账号和密码");
+   	 	 return ;
+   	   }
+	   $('#loginResult').html("");
+	   var aoData=[];
+       aoData.push( { "name": "user.userCode", "value": userCode } );
+       aoData.push( { "name": "user.password", "value": hex_md5(pass) } );
+	   top.showLoadingInfo(true);
+	   sendAjaxRequest("/actions/User.action?signon",aoData,loginCallback);
+ }
+ function loginCallback(obj){
+       top.showLoadingInfo(false);
+	   try{
+	    if ( obj.status == true ){
+	    	setCurrentUser(obj.body,obj.msg);
+			loginSuccess();
+	    }else{
+		  $('#loginResult').html("登录失败:"+obj.msg);
+	    }
+	   }catch(e){
+		  $('#loginResult').html("登录异常:"+e.message);
+	   }
+ }
+ 
+ function register(){
+    var xurl="pages/organization/userInfo.html?opt=register&isSys=no";
+	top.openDialog("用户注册",xurl,true,370,310,null);
+ }
+
+ 
+ function addTempObjs(o){
+   g_objs[g_objs.length]=o;
+ }
+ 
+ function getTempObjs(){
+   return g_objs;
+ }
+ 
+ function emptyObjs(){
+   g_objs=[];
+ }
+ 
+/**
+ * 初始化项目个性化全局缓存数据
+ */
+function proInitGlobalData(){
+}
+
+function addBug(){
+  var xurl="pages/bug/bugInfo.html?opt=create&from=index";
+  top.openDialog("报告系统问题或建议",xurl,true,600,350,null);
+}
+</script>
+
+<style type="text/css">
+* {
+    font-family: Arial, "Free Sans";
+}
+#box {
+    margin-top: 45px;
+	margin-left: 12px;
+}
+.bt, .clicked {
+    height: 20px;
+    color: #666;
+    font-size: 13px;
+    padding: 4px 10px;
+    text-decoration: none;
+    background: #f9f9f9;
+}
+#box .bt {
+    background: -moz-linear-gradient(top,  #fff,  #f3f3f3);
+    background: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#f3f3f3));
+
+    /* For Internet Explorer 5.5 - 7 */
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#ffffff, endColorstr=#f3f3f3);
+    /* For Internet Explorer 8 */
+    -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#ffffff, endColorstr=#f3f3f3)";
+}
+#box .bt:hover {
+    background: #f3f3f3;
+    background: -moz-linear-gradient(top,  #fff,  #e9e9e9);
+    background: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#e9e9e9));
+
+    /* For Internet Explorer 5.5 - 7 */
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#ffffff, endColorstr=#e9e9e9);
+    /* For Internet Explorer 8 */
+    -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#ffffff, endColorstr=#e9e9e9)";
+}
+#box .bt:active, .clicked {
+    background: #e9e9e9;
+    background: -moz-linear-gradient(top,  #e9e9e9,  #fff);
+    background: -webkit-gradient(linear, left top, left bottom, from(#e9e9e9), to(#fff));
+
+    /* For Internet Explorer 5.5 - 7 */
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#e9e9e9, endColorstr=#ffffff);
+    /* For Internet Explorer 8 */
+    -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#e9e9e9, endColorstr=#ffffff)";
+}
+.btleft {
+    border: 1px solid #e3e3e3;
+    -webkit-border-radius: .5em 0 0 .5em;
+    -moz-border-radius: .5em 0 0 .5em;
+    border-radius: .5em 0 0 .5em;
+}
+.btleft span {
+    font-size: 15px;
+}
+.btmiddle {
+    border: 1px solid #e3e3e3;
+    border-width: 1px 0;
+    margin: 0 -4px;
+}            
+.btright {
+    border: 1px solid #e3e3e3;
+    -webkit-border-radius: 0 .5em .5em 0;
+    -moz-border-radius: 0 .5em .5em 0;
+    border-radius: 0 .5em .5em 0;
+}
+.btmiddle span, .btright span {
+    font-size: 9px;
+    position: relative;
+    top: -2px;
+}
+.subMenu {
+    display: none;
+	z-index: 99;
+	position: absolute; 
+	left:7px;
+	top:77px;
+}
+.tooltip_menu {
+    background: #fff;
+    -webkit-border-radius: .5em;
+    -moz-border-radius: .5em;
+    border-radius: .5em;
+    width: 120px;
+    -webkit-box-shadow: 0px 0px 3px rgba(0,0,0,.5);
+    -moz-box-shadow: 0px 0px 3px rgba(0,0,0,.5);
+    box-shadow: 0px 0px 3px rgba(0,0,0,.5);
+    padding: 2px;
+	z-index: 99;
+}
+.tooltip_menu a {
+    z-index: 2;
+    padding: 5px 5px 5px 18px;
+    display: block;
+    text-decoration: none;
+    color: #0066cc;
+    font-size: 13px;
+}
+.tooltip_menu a:hover {
+    background: #0066cc;
+    color: #fff;
+}
+.tooltip_menu a img {
+    position: relative;
+    top: 5px;
+    border: 0;
+}
+.menu_top {
+    -webkit-border-radius: .5em .5em 0 0;
+    -moz-border-radius: .5em .5em 0 0;
+    border-radius: .5em .5em 0 0;
+}
+.menu_bottom {
+    -webkit-border-radius: 0 0 .5em .5em;
+    -moz-border-radius: 0 0 .5em .5em;
+    border-radius: 0 0 .5em .5em;
+}
+
+.bottomLine {
+  border:1px solid blue;
+  border-style:none none dotted none;
+}
+
+#loginMain .ind_info {
+	background-image: url(img/bg1_info.png);
+	background-repeat: no-repeat;
+	margin-left: 360px;
+	height: 500px;
+}
+</style>
+
+</head>
+
+<body>
+	<div id="loginTop"></div>
+	<div id="loginClear" class="clear"></div>
+	<div id="loginMain">
+	  <div class="ind_logo" style="height:70px"><font size="6" color="#ffffff">一维慧动</font></div>
+	  <div class="ind_info" style="margin-top: 20px;background-image: url(img/bg1_info_none.png);">
+	    <ul style="padding-top: 20px;padding-left: 120px;"><li>
+	      <font size="5" color="#006096"><b>配送系统</b></font>
+		</li>
+		</ul>
+		<ul class="user_1" style="padding-top: 20px;">
+		  <li class="u1_1"><img src="img/pic1_user.png" width="29" height="35"></li>
+		  <li class="u1_2">账&nbsp;&nbsp;号：</li>
+		  <li class="u1_3">
+			<input type="text" name="textfield" id="userCode" style="width:160px;" onkeydown="if(event.keyCode==13) doLogin();" >
+		  </li>
+		</ul><div class="clear"></div>
+		<ul class="user_2">
+		  <li class="u2_1"><img src="img/pic_1user2.png" width="24" height="30"></li>
+		  <li class="u2_2">密&nbsp;&nbsp;码：</li>
+		  <li class="u2_3">
+			<input type="password" name="textfield" id="userPass" style="width:160px;" onkeydown="if(event.keyCode==13) doLogin();" >
+		  </li>
+		</ul>
+		<ul class="user_3"><li class="u3_1" onclick="doLogin()"><a href="javascript:void(0)">登&nbsp;录</a></li><li class="u3_2" onclick="register()"><a href="javascript:void(0)" >注&nbsp;册</a></li></ul>
+	  </div>
+	</div>
+	<div id="loginResult"></div>
+	<div id="ind_footer" style="text-align:center"><font color="white">&nbsp;Copyright © 2013 北京一维慧动科技有限公司 版权所有</font></div>
+<div id="main" style="display:none">
+  <div id="top" style="background-image: url(img/empty.gif);">
+    <div class="t_left">
+	    <div style="position: absolute; left:10px;top:5px;"><font size="5" color="#ffffff"><b>配送系统</b></font></div>
+	    <div id="box">
+		    <span class="bt btleft"></span>
+			<a id="menu_main" href="javascript:toSysTab('workbench')" class="bt btmiddle">首页</a>
+			<a id="menu_a" href="javascript:toSysTab('pages/pro06/saleManage.html')" class="bt btmiddle">销售记录查询</a>
+			<a id="menu_a" href="javascript:toSysTab('pages/pro06/drugManage.html')" class="bt btmiddle">药品信息管理</a>
+			<a id="menu_a" href="javascript:toSysTab('pages/pro06/custManage.html')" class="bt btmiddle">患者信息管理</a>
+			<a id="menu_b" href="javascript:toSysTab('pages/pro06/shopManage.html')" class="bt btmiddle">药店信息管理</a>
+			<a id="menu_system" href="javascript:void(0)" class="bt btmiddle">系统管理</a>
+			<span class="bt btright"></span>
+		</div>
+	</div>
+
+    <div class="t_right" style="width: 260px;">
+      <p id="currentUserInfo"></p>
+      <ul>
+	    <li class="u_0" style="background-image:url(img/empty.gif);">&nbsp;</li>
+        <li class="u_1" onclick="g_changepass()"><a href="javascript:void(0)">修改密码</a></li>
+        <li class="u_2" onclick="isLogout()"><a href="javascript:void(0)">注销</a></li>
+      </ul><div class="clear"></div>
+    </div>
+    <div class="clear"></div>
+  </div>
+
+  <div id="menu3" class="subMenu">
+			<div class="tooltip_menu">
+			  <table width="100%">
+			   <tr id="menu_userManage"><td id="menu_td_userManage" class="bottomLine"><a id="menu_a_userManage" href="javascript:toSysTab('pages/organization/userManage.html')" class="menu_top">用户管理</a></td></tr>
+			   <tr id="menu_rightManage"><td id="menu_td_rightManage" class="bottomLine"><a id="menu_a_rightManage" href="javascript:toSysTab('pages/organization/roleManage.html')">角色权限管理</a></td></tr>
+			   <tr id="menu_sysOperation"><td class="bottomLine"><a href="javascript:toSysTab('pages/system/operationManage.html')">操作日志</a></td></tr>
+			   <tr id="menu_deptManage"><td id="menu_td_deptManage"><a id="menu_a_deptManage" href="javascript:toSysTab('pages/organization/deptManage.html')" class="menu_bottom">部门管理</a></td></tr>
+			  </table>
+			</div>
+  </div>
+  
+  <div id="mainContent"></div>
+
+  <div id="m_workbench" style="padding:0px;background-color:#C7EDCC;">
+	<div id="workbenchContent" style="padding:0px;background-color:#C7EDCC;"></div>
+  </div>
+  <div id="main_footer" style="text-align:center"><font color="white">Copyright © 2013 北京一维慧动科技有限公司 版权所有</font></div>
+</div> <!-- end of main -->
+
+<div id="versionInfo" style="position: absolute;top:1000px;left:10px"><font color="white"><span id="versionInfoTxt" >v1.0.0</span></font></div>
+
+<script type="text/javascript" >writeCommonDiv();</script>
+
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery.ui.all.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" src="../../js/checkForm.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var currentTypeId2="";// 当前第二分类ID
+			var dialogLevel="1";
+			
+			$(document).ready(function() {
+			   var iaoColumns= [
+				   { "sTitle": "商品名称", "mDataProp": "goods_id", "sWidth": "30%",
+					  "fnRender": function ( oObj ) {
+						   return '<a href="javascript:void(0)" onclick=\'goodsInfo('+oObj.aData.goods_id+')\' >&nbsp;'+oObj.aData.name+"</a>";
+					  },
+					  "bUseRendered": false
+					},
+					{ "sTitle": "商品分类", "mDataProp": "type2_id", "sWidth": "16%","sClass": "center","bSortable":false,
+					  "fnRender": function ( oObj ) {
+						   return top.getTypeNameById( oObj.aData.type2_id );
+					  },
+					  "bUseRendered": false
+					},
+					{ "sTitle": "单位", "mDataProp": "unit", "sWidth": "8%","sClass": "center","bSortable":false,
+					  "fnRender": function ( oObj ) {
+						   return top.getCodeName( "ERP_GOODS_UNIT", oObj.aData.unit );
+					  },
+					  "bUseRendered": false
+					},
+					{ "sTitle": "规格", "mDataProp": "specification", "sWidth": "10%","sClass": "center","bUseRendered": false},
+					{ "sTitle": "条形编码", "mDataProp": "barcode", "sWidth": "10%","sClass": "center","bUseRendered": false},
+					{ "sTitle": "剩余库存", "mDataProp": "inventory", "sWidth": "8%","sClass": "center","bUseRendered": false},
+					{ "sTitle": "库存告警值", "mDataProp": "offPrice", "sWidth": "8%","sClass": "center","bSortable":false,
+					  "fnRender": function ( oObj ) {
+						   return (oObj.aData.alertInventory==-1?"":oObj.aData.alertInventory);
+					  },
+					  "bUseRendered": false
+					},
+					{ "sTitle": "状态", "mDataProp": "status", "sWidth": "10%","sClass": "center","bSortable":false,
+					  "fnRender": function ( oObj ) {
+						   return top.getCodeName( "ERP_GOODS_STATUS", oObj.aData.status );
+					  },
+					  "bUseRendered": false
+					}
+				];
+
+			   var surl=top.getUrlBase()+"/actions/ProGoods.action?getGoodsList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"aaSorting": [[ 0, "asc" ]],
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+						 aoData.push( { "name": "info.type1_id", "value": -1 } );
+	                     aoData.push( { "name": "info.type2_id", "value": (currentTypeId2==''?-1:currentTypeId2) } );
+					     aoData.push( { "name": "info.type3_id", "value": -1 } );
+					     aoData.push( { "name": "info.status", "value": -1 } );
+						 aoData.push( { "name": "info.name", "value": $("#q_name").val() } );
+						 var  temp=$("#q_k1").val();
+						 if ( temp == '' ) {
+						   temp = -1;
+						 } else if ( !IsFloat(temp) ) {
+						   temp = -1;
+						 } else if ( temp < 0 ) {
+						   temp = -1;
+						 }
+						 if ( temp == -1 ) $("#q_k1").val( "" );
+						 aoData.push( { "name": "alertInventory1", "value": temp } );
+						 
+						 temp=$("#q_k2").val();
+						 if ( temp == '' ) {
+						   temp = -1;
+						 } else if ( !IsFloat(temp) ) {
+						   temp = -1;
+						 } else if ( temp < 0 ) {
+						   temp = -1;
+						 }
+						 if ( temp == -1 ) $("#q_k2").val( "" );
+						 aoData.push( { "name": "alertInventory2", "value": temp } );
+						 
+						 if ( document.getElementById("queryAlertInventory").checked ) {
+						    temp = 1;
+						 } else {
+						    temp = 0;
+						 }
+						 aoData.push( { "name": "queryAlertInventory", "value": temp } );
+			        },
+			        "sDom": "frtlip",
+				    "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+
+			function selectGoodsType(){
+			   var xurl="pages/erp/selectGoodsType.html?type=lev2";
+	           top.openSelectDialog("选择商品类型",xurl,300,450,selectTypeCallback);
+			}
+			
+			function selectTypeCallback(){
+			   try{
+	             var obj = top.getTempValue();
+	             if ( obj.nodeId == -1 ) return ;
+				 var sid="";
+				 var sname="";
+	             if ( obj.nodeId == -2 ) {
+	                 sid = "";
+	                 sname = "";
+	             } else {
+	            	 sid = obj.nodeId;
+                     sname = obj.nodeName;
+	             }
+	             currentTypeId2 = sid;
+	             $("#q_goods_types_name").val( sname );
+	           }catch(e){
+	           }
+		   }
+
+function goodsInfo(goodsId){
+	var xurl="pages/erp/goodsInfo.html?opt=update&goodsId="+goodsId;
+	top.openDialog("商品信息",xurl,true,530,500,optGoodsCallBack);
+}
+
+function optGoodsCallBack(){
+	try{
+		var obj = top.getTempValue();
+		if(obj.isSaveOK) {
+		  doQuery();
+		  top.loadAllGoodsData();
+		}
+	}catch(e){
+	}
+}
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			     <tr id="queryArea">
+			      <td align="right" width="10%">商品名称:</td><td align="left" width="15%"><input type="text" id="q_name" value="" size="20" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+				  <td align="right" width="10%">商品分类:</td><td align="left" width="15%"><input type="text" id="q_goods_types_name" value="" readonly onclick="selectGoodsType()" size="20" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+				  <td align="right" width="10%">剩余库存范围:</td><td align="left" width="15%">
+				  <input type="text" id="q_k1" value="" size="4" onkeydown="if(event.keyCode==13) doQuery();" />&nbsp;--&nbsp;<input type="text" id="q_k2" value="" size="4" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+				  <td align="center" width="25%"><input type="checkbox" id="queryAlertInventory" value="1" />只显示到达库存告警值的商品</td><td align="center" width="10%"><span class="buttonTwo"><a href="javascript:doQuery()">查询</a></span></td>
+			     </tr>
+				 <tr bgcolor="#C6DEFF">
+			      <td colspan="9">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				    <td>&nbsp;商品库存查询列表</td>
+				   </tr></table></td>
+			     </tr>
+			</table>
+	        <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

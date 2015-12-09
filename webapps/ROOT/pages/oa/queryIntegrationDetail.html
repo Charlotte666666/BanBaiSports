@@ -1,0 +1,168 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"  src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var employee_code="";
+			var employee_name="";
+			var filiale="";
+			$(document).ready(function() {
+			  employee_code=top.getUrlParam(document.URL,"user");
+			  employee_name=decodeURI(top.getUrlParam(document.URL,"userName"));
+			  filiale=top.getUrlParam(document.URL,"filiale");
+			  $( "#tdsource_award_points" ).html( top.getCodeSelectHtml("SOURCE_AWARD_POINTS","source_award_points",true) );
+			  var iaoColumns= [
+			                { "sTitle": "姓名", "mDataProp": "employee_name", "sWidth": "8%","sClass": "left",
+							    "fnRender":function(oObj){
+								  return "<a href='javascript:void(0)' onclick='updateInfo(\""+oObj.aData.id+"\")'>"+oObj.aData.employee_name+"</a>"
+								},
+								"bUseRendered": false
+							},
+							{ "sTitle": "所在部门", "mDataProp": "dept", "sWidth": "15%","sClass": "center",
+							    "fnRender":function(oObj){
+								   return top.getDeptPath( oObj.aData.dept );
+								},
+								   "bUseRendered": false
+							},
+							{ "sTitle": "所在分公司", "mDataProp": "filiale", "sWidth": "15%","sClass": "center",
+							    "fnRender":function( oObj ){
+								  return top.getDeptPath( oObj.aData.filiale);
+								},
+								"bUseRendered": false
+							},
+							{ "sTitle": "积分项目内容", "mDataProp": "integration_item", "sWidth": "30%","sClass": "left",
+								   "bUseRendered": false
+							},
+                            { "sTitle": "奖扣分来源", "mDataProp": "source_award_points", "sWidth": "8%", "sClass": "center",
+							  "fnRender": function (oObj){
+							    return top.getCodeName("SOURCE_AWARD_POINTS",oObj.aData.source_award_points);
+							  },
+							  "bUseRendered": false
+							},
+							{ "sTitle": "奖/扣分", "mDataProp": "reward_points", "sWidth": "8%","sClass": "center",
+							        "fnRender": function ( oObj ) {
+                                        if(oObj.aData.reward_points=="0"){
+										  return "扣分";
+										}else{
+										  return "奖分";
+										}
+										
+                                  },
+								   "bUseRendered": false
+							},
+							{ "sTitle": "分数", "mDataProp": "score", "sWidth": "8%","sClass": "center","bUseRendered": false
+							},
+							{ "sTitle": "日期", "mDataProp": "opt_time", "sWidth": "8%","sClass": "center",
+							  "fnRender":function( oObj ){
+							    return top.getTimeStr(oObj.aData.opt_time,true);
+							  },  
+							  "bUseRendered": false
+							}
+               ];			
+			   var surl=top.getUrlBase()+"/actions/IntegrationItem.action?getIntegrationList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData=getParamDate(aoData);
+			    },
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			} );
+			
+	       
+		
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+			function updateInfo(id){
+				top.openDialog("积分记录","pages/oa/addIntegrationRecord.html?optType=query&id="+id,true,600,430,doQuery()); 
+			}
+
+		    function getParamDate(aoData){
+			    aoData.push( { "name": "item.source_award_points", "value":$("#source_award_points").val() } );
+			    aoData.push( { "name": "item.employee_code", "value":employee_code } );
+			    aoData.push( { "name": "item.employee_name", "value":employee_name } );
+			    aoData.push( { "name": "item.id", "value":-1 } );
+			    aoData.push( { "name": "item.filiale", "value":filiale } );
+			    aoData.push( { "name": "time1", "value":$("#time1").val() } );
+			    aoData.push( { "name": "time2", "value":$("#time2").val() } );
+				return aoData;
+			}
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+			<div style='border: 1px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="1px" id="queryTab"
+					cellspacing="1px" border="0">
+					<tr class="tr_data">
+					    <td align="right">奖扣分来源:</td>
+						<td align="left" id="tdsource_award_points">
+						</td>
+						<td align="right">时间:</td>
+						<td align="left"><input id="time1" type="text" onclick="top.selectDate(this)" size="15"/>--<input id="time2" type="text" onclick="top.selectDate(this)" size="15"/></td>
+						<td align="center" width="10%">
+						   <div class="buttonDivTwo">
+								<a href="javascript:doQuery()">查询</a>
+						   </div>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0"
+				border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									&nbsp;查询结果列表&nbsp;
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

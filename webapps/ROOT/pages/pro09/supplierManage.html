@@ -1,0 +1,270 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css"	href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"	src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var queryCtlMark=0;//查询条件显示收缩标志变量
+			$(document).ready(function() {
+			   $( "#td_status" ).html( top.getCodeSelectHtml("SUPPLIERSTATUS","status",true,'') );
+			   $( "#td_city" ).html( top.getCodeSelectHtml("CITY","city",true,'') );
+			   if(!top.g_isPermit('09_update_supplier')){
+			   $("#tr_supplier").hide();
+			   }
+			   var iaoColumns= [
+							{ "sTitle": "供应商编号", "mDataProp": "supplier_id", "sWidth": "10%","sClass": "left",
+							        "fnRender": function ( oObj ) {
+									var str="";
+                                     if(top.g_isPermit('09_update_supplier')){ 									
+										str+='<input type=\'checkbox\' name=\'checkId\' value=\''+oObj.aData.supplier_id+'\' />';
+										}
+										str+='<a href=\'javascript:void(0)\' onclick="updateInfo(\''+oObj.aData.supplier_id+'\')" >'+oObj.aData.supplier_id+'</a>';
+                                   return str;
+								 },
+								   "bUseRendered": false
+							   },
+			                { "sTitle": "供应商全称", "mDataProp": "supplier_name", "sWidth": "15%","sClass": "left","bUseRendered": false },
+							{ "sTitle": "城市", "mDataProp": "city", "sWidth": "8%","sClass": "center",
+								 "fnRender": function ( oObj ) {
+                                          return top.getCodeName( "CITY", oObj.aData.city );
+                                     },
+							"bUseRendered": false },
+			                { "sTitle": "地址", "mDataProp": "address", "sWidth": "12%","sClass": "left","bUseRendered": false },
+							{ "sTitle": "联系人", "mDataProp": "contacts", "sWidth": "9%","sClass": "center", "bUseRendered": false },  
+							{ "sTitle": "邮编", "mDataProp": "zip_code", "sWidth": "8%","sClass": "center","bUseRendered": false },
+							{ "sTitle": "电话", "mDataProp": "tel", "sWidth": "8%","sClass": "center","bUseRendered": false },
+					        { "sTitle": "传真", "mDataProp": "fax", "sWidth": "8%","sClass": "center","bUseRendered": false },
+							{ "sTitle": "状态", "mDataProp": "status", "sWidth": "6%","sClass": "center",
+								 "fnRender": function ( oObj ) {
+                                          return top.getCodeName( "SUPPLIERSTATUS", oObj.aData.status );
+                                     },
+							  "bUseRendered": false }
+							 
+               ];
+			   
+			   var surl=top.getUrlBase()+"/actions/Purchase.action?getSupplierInfoList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData=getParamDate(aoData);
+			    },
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+			function addInfo(){
+				var xurl="pages/pro09/supplierInfo.html?optType=insert";
+				top.openDialog("添加供应商信息",xurl,true,750,550,saveCallBack);
+			}
+			
+			function updateInfo(id){
+				var xurl="pages/pro09/supplierInfo.html?optType=update&id="+id;
+				top.openDialog("修改供应商信息",xurl,true,750,550,saveCallBack);
+			}
+
+			function saveCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				}
+			}
+			
+			function optCallback(obj){
+			       try{
+			        if ( obj.status == true ){
+			          top.showInfoWin("操作成功");
+			          doQuery();
+			        }else{
+			          top.showInfoWin("操作失败 "+obj.msg);
+			        }
+			       }catch(e){
+			          top.showInfoWin("处理异常:"+e.message);
+			       }
+		  }
+
+		    function getParamDate(aoData){
+			    aoData.push( { "name": "supplier.supplier_name", "value":$("#supplier_name").val() } );
+				aoData.push( { "name": "supplier.status", "value":$("#status").val() } );
+				aoData.push( { "name": "supplier.supplier_id", "value":$("#supplier_id").val() } );
+				aoData.push( { "name": "supplier.supplier_type", "value":$("#supplier_type").val() } );
+				aoData.push( { "name": "supplier.brand", "value":$("#brand").val() } );
+				aoData.push( { "name": "supplier.city", "value":$("#city").val() } );
+				return aoData;
+			} 
+			function deleteInfo()
+			{
+				var ids=top.getAllCheckedValue( document.getElementsByName('checkId') );
+				if (ids.length > 0) {
+					top.showConfirm("您确定要删除选中的供应商信息吗？", doDeleteDesigner);
+				}else{
+					top.showInfoWinWarn("请选择要删除的供应商");
+				}
+			}
+			//执行删除供应商的方法
+			function doDeleteDesigner(){
+				var ids=top.getAllCheckedValue( document.getElementsByName('checkId') )+",";
+				if ( ids == ',' ) {
+				  top.showInfoWinWarn("请选择要删除的供应商");
+				  return ;	
+				}
+				var aoData=[];
+				aoData.push( { "name": "codes", "value": ids} );
+				top.sendAjaxRequest("/actions/Purchase.action?deleteSupplierById",aoData,optCallback);
+			}
+			
+			function frozenInfo()
+			{
+				var ids=top.getAllCheckedValue( document.getElementsByName('checkId') );
+				if (ids.length > 0) {
+					top.showConfirm("您确定要冻结选中的供应商吗？", doFrozenDesigner);
+				}else{
+					top.showInfoWinWarn("请选择要冻结的供应商");
+				}
+			}
+			//执行冻结供应商的方法
+			function doFrozenDesigner(){
+				var ids=top.getAllCheckedValue( document.getElementsByName('checkId') )+",";
+				if ( ids == ',' ) {
+				  top.showInfoWinWarn("请选择要冻结的供应商");
+				  return ;	
+				}
+				var aoData=[];
+				aoData.push( { "name": "codes", "value": ids} );
+				top.sendAjaxRequest("/actions/Purchase.action?frozenSupplierById",aoData,optCallback);
+			}
+			
+			//查询条件的展开与收缩
+			function dwOup(){
+					if(queryCtlMark==0){//展开
+						$("#queryCtlIcon").attr("src","../../img/icons/arrow-up.gif"); 
+						$("#queryTab").slideToggle();
+						queryCtlMark=1;
+					}else{//收缩
+						$("#queryCtlIcon").attr("src","../../img/icons/arrow-down.gif"); 
+						$("#queryTab").slideToggle();
+						queryCtlMark=0;
+					}
+			}
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+			<div style='border: 1px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="150px">
+							&nbsp;供应商管理&nbsp;
+						</td>
+						<td align="right">
+							<div class="buttonDivTwo">
+								<a href="javascript:doQuery()">查询</a>
+							</div>
+						</td>
+						<td width="2px">
+							&nbsp;
+						</td>
+					</tr>
+				</table>
+				<table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" id="queryTab">
+					<tr class="tr_data">
+					<td align="right">
+							供应商编号
+						</td>
+						<td align="left" >
+							<input type="text" id="supplier_id" value="" size="15" onkeydown="if(event.keyCode==13) doQuery();"/>
+						</td>
+						<td align="right">
+							供应商全称
+						</td>
+						<td align="left" >
+							<input type="text" id="supplier_name" value="" size="15" onkeydown="if(event.keyCode==13) doQuery();"/>
+						</td>
+						<td align="right">
+							城市
+						</td>
+						<td align="left" id="td_city">
+						</td>
+						<td align="right">
+							供应商状态
+						</td>
+						<td align="left" id="td_status"></td>
+					</tr>
+				</table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0"
+				border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr id ="tr_supplier">
+								<td>
+									<input type="checkbox" name="checkAll" id="checkAll" onclick="top.checkAll(this.checked,document.getElementsByName('checkId') )"/>全选
+								</td>
+								<td>
+									<div id="createBtn" class="buttonDivTwo">
+										<a href="javascript:addInfo()">新建</a>
+									</div>
+								</td>
+								<!--td>
+									<div id="createBtn" class="buttonDivTwo">
+										<a href="javascript:deleteInfo()">删除</a>
+									</div>
+								</td-->
+								<td>
+									<div id="createBtn" class="buttonDivTwo">
+										<a href="javascript:frozenInfo()">冻结</a>
+									</div>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<table cellpadding="0" width="100%" cellspacing="0" border="0"
+				class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

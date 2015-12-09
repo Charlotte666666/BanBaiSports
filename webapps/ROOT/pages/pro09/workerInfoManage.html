@@ -1,0 +1,220 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var currentWorkerCode="";
+			$(document).ready(function() {
+			   var iaoColumns= [
+                               { "sTitle": "工人编号", "mDataProp": "worker_code", "sWidth": "10%", "sClass": "center","bSortable":false,
+                                   "fnRender": function ( oObj ) {
+								      if ( oObj.aData.worker_code =='' ) {
+								        return '<input type="text" id="worker_code_'+oObj.aData.worker_code+'" size="10" value="" />';
+									  } else {
+									    return '<input type="hidden" id="worker_code_'+oObj.aData.worker_code+'" value="'+oObj.aData.worker_code+'" />'+oObj.aData.worker_code;
+									  }
+                                   },
+                                   "bUseRendered": false  
+                               },
+							   { "sTitle": "姓名", "mDataProp": "worker_name", "sWidth": "10%","sClass": "left","bSortable":false,
+                                      "fnRender": function ( oObj ) {
+                                           return '<input type="text" id="worker_name_'+oObj.aData.worker_code+'" size="20" value="'+oObj.aData.worker_name+'" />';
+				                      },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "性别", "mDataProp": "worker_sex", "sWidth": "4%","sClass": "left","bSortable":false,
+                                      "fnRender": function ( oObj ) {
+									       return top.getCodeSelectHtml("SEX","worker_sex_"+oObj.aData.worker_code,true,oObj.aData.worker_sex,null,"","40px");
+	                                  },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "年龄", "mDataProp": "worker_age", "sWidth": "4%","sClass": "left","bSortable":false,
+                                      "fnRender": function ( oObj ) {
+									        var value=oObj.aData.worker_age==0?"":oObj.aData.worker_age;
+									       return "<input type='text' id='worker_age_"+oObj.aData.worker_code+"' size='8' value='"+value+"'/>";
+	                                  },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "身份证号", "mDataProp": "worker_ID", "sWidth": "10%","sClass": "left","bSortable":false,
+                                      "fnRender": function ( oObj ) {
+                                           return '<input type="text" id="worker_ID_'+oObj.aData.worker_code+'" size="20" value="'+oObj.aData.worker_ID+'" />';
+	                                  },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "联系方式", "mDataProp": "worker_tel", "sWidth": "10%","sClass": "left","bSortable":false,
+                                      "fnRender": function ( oObj ) {
+                                           return '<input type="text" id="worker_tel_'+oObj.aData.worker_code+'" size="15" value="'+oObj.aData.worker_tel+'" />';
+	                                  },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "是否在职", "mDataProp": "is_on_job", "sWidth": "6%","sClass": "left","bSortable":false,
+                                      "fnRender": function ( oObj ) {
+                                           return top.getCodeSelectHtml("ISYESORNO","is_on_job_"+oObj.aData.worker_code,true,oObj.aData.is_on_job,null,"","40px");
+	                                  },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "星级", "mDataProp": "worker_level", "sWidth": "6%","sClass": "left","bSortable":false,
+                                      "fnRender": function ( oObj ) {
+                                           return "<input type='text' id='worker_level_"+oObj.aData.worker_code+"' size='5' value='"+oObj.aData.worker_level+"'/>";
+	                                  },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "照片", "mDataProp": "worker_photo", "sWidth": "10%","sClass": "center","bSortable":false,
+                                      "fnRender": function ( oObj ) {
+									       var path="../../img/photos.png";
+										   if(oObj.aData.worker_photo!=""){
+										      path=top.getUrlBase()+"/download?filePath="+oObj.aData.worker_photo;
+										   }
+                                           return "<input id='worker_photo1_"+oObj.aData.worker_code+"' type='hidden'/><input type='image' src='"+path+"' id='worker_photo_"+oObj.aData.worker_code+"'  height='30px' onclick='addWorkerPhoto(\""+oObj.aData.worker_code+"\")'/>";
+	                                  },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "操作", "mDataProp": "worker_code", "sWidth": "10%","sClass": "center","bSortable":false,
+                                      "fnRender": function ( oObj ) {
+                                          var ht='<img src="../../img/save.bmp" style="cursor:pointer" onclick="saveInfo(\''+oObj.aData.worker_code+'\','+(oObj.aData.worker_code==''?"true":"false")+')" />';
+										  if ( oObj.aData.worker_code!='' ){
+										    ht+='&nbsp;&nbsp;<img src="../../img/delete.gif" style="cursor:pointer" onclick="deleteInfo(\''+oObj.aData.worker_code+'\')" />';
+										  }
+										  return ht;
+                                      },
+                                      "bUseRendered": false 
+                               }
+                 ];
+
+			   var surl=top.getUrlBase()+"/actions/ProjectOrder.action?getWorkerInfoList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":100,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+						 
+			        },
+			      "sDom": "frt",
+				  "aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+			function deleteInfo(did){
+			    currentWorkerCode=did;
+			    top.showConfirm("您确定要删除该工人吗？", doDeleteWorker);
+			}
+			
+			// 执行删除操作
+		   function doDeleteWorker(){
+			   var aoData=[];
+			   aoData.push( { "name": "worker.worker_code", "value":currentWorkerCode } );
+			   top.sendAjaxRequest("/actions/ProjectOrder.action?deleteWorker",aoData,optCallback);
+		   }
+			
+			function saveInfo(infoId,isCreate){
+			    var temp="";
+				if ( $("#worker_code_"+infoId).val() == '' ) {
+				  temp += "请输入工人编码<br/>";
+				}
+				if ( $("#worker_name_"+infoId).val() == '' ) {
+				  temp += "请输入工人姓名<br/>";
+				}
+				if( $("#worker_age_"+infoId).val()!="" && !IsNumber($("#worker_age_"+infoId).val())){
+				  temp += "年龄应为数字类型<br/>";
+				}
+				temp += checkString($("#worker_tel_"+infoId).val(),false,20,"联系方式");
+				if( $("#worker_tel_"+infoId).val()!="" && !IsNumber($("#worker_tel_"+infoId).val())){
+				  temp += "联系方式中存在非法字符<br/>";
+				}
+				var isIDCard=/^[1-9]\d{5}[1-9]\d{3}((0\d)|(1[0-2]))(([0|1|2]\d)|3[0-1])\d{3}(\d|x|X)$/;
+				if($("#worker_ID_"+infoId).val()!=""){
+				  if(!isIDCard.test($("#worker_ID_"+infoId).val())){
+				      temp += "身份证号格式错误<br/>";
+				  }
+				}
+				if ( temp != '' ) {
+				   top.showInfoWinWarn(temp);
+				   return ;
+				}
+			   var aoData=[];
+			   aoData.push( { "name": "worker.worker_code", "value": $("#worker_code_"+infoId).val() } );
+			   aoData.push( { "name": "worker.worker_name", "value": $("#worker_name_"+infoId).val() } );
+			   aoData.push( { "name": "worker.worker_sex", "value": $("#worker_sex_"+infoId).val() } );
+			   aoData.push( { "name": "worker.worker_age", "value": $("#worker_age_"+infoId).val() } );
+			   aoData.push( { "name": "worker.worker_ID", "value": $("#worker_ID_"+infoId).val() } );
+			   aoData.push( { "name": "worker.worker_tel", "value": $("#worker_tel_"+infoId).val() } );
+			   aoData.push( { "name": "worker.is_on_job", "value": $("#is_on_job_"+infoId).val() } );
+			   aoData.push( { "name": "worker.worker_level", "value": $("#worker_level_"+infoId).val() } );
+			   aoData.push( { "name": "worker.worker_photo", "value": $("#worker_photo1_"+infoId).val() } );
+			   top.sendAjaxRequest("/actions/ProjectOrder.action?"+(isCreate?"insertWorker":"updateWorker"),aoData,optCallback);
+			}
+			
+			function optCallback(obj){
+			       try{
+			        if ( obj.status == true ){
+			          top.showInfoWinOK("操作成功");
+					  doQuery();
+			        }else{
+			          top.showInfoWinError("操作失败 "+obj.msg);
+			        }
+			       }catch(e){
+			          top.showInfoWinError("处理异常:"+e.message);
+			       }
+		    }
+			
+			function addWorkerPhoto(infoId){
+			  currentWorkerCode=infoId;
+			  var d=new Date().getTime();
+			  top.openDialog("上传照片","pages/uploadFile.html?belong_id0="+d+"&belong_id="+d+"&belong_id2="+d,true,500,200,addWorkerPhotoCallBack);
+			}
+			
+			function addWorkerPhotoCallBack(obj){
+			   try{
+				   var obj=top.getTempValue();
+				   if ( obj.isSaveOK ) {
+					  $("#worker_photo_"+currentWorkerCode).attr("src",top.getUrlBase()+"/download?filePath="+obj.filePath );
+					  $("#worker_photo1_"+currentWorkerCode).val(obj.filePath);
+				   }
+				}catch(e){}
+			}
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+	        <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

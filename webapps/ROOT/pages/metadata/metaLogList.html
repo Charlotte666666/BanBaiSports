@@ -1,0 +1,173 @@
+<!DOCTYPE HTML>
+<html>
+ <head>
+ <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+ <link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+ <link rel="stylesheet" type="text/css" href="../../css/redmond/jquery.ui.all.css">
+ <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+ <link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+ <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+ <script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+ <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+ <script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+ <script type="text/javascript" charset="utf-8">
+	 var oTable=null;
+	 var currentDeleteId=-1;
+	 $(document).ready(function() {
+			   $( "#tdStatus" ).html( top.getCodeSelectHtml("META_IMP_STATUS","q_status",true) );
+			   $( "#tdOptType" ).html( top.getCodeSelectHtml("LOG_OPT_TYPE","q_optType",true) );
+			   $( "#gopt_server_td" ).html( top.getRunServerCodeSelectHtml("qopt_server") );
+			   var tempStr = "";
+			   var iaoColumns= [
+							   { "sTitle": "操作类型", "mDataProp": "opt_type", "sWidth": "10%","sClass": "center","bUseRendered": false,"bSortable":false,
+							      "fnRender": function ( oObj ) {
+                                      return "<img src='../../img/delete.gif' onclick='deleteMetaLog("+oObj.aData.log_id+")' />&nbsp;"+top.getCodeName( "LOG_OPT_TYPE", oObj.aData.opt_type );
+                                   }
+							   },
+							   { "sTitle": "标题", "mDataProp": "task_title", "sWidth": "20%","sClass": "left","bSortable":false},
+			                   { "sTitle": "文件", "mDataProp": "file_path", "sWidth": "20%","sClass": "left","bUseRendered": false,"bSortable":false},
+			                   { "sTitle": "表名", "mDataProp": "table_name", "sWidth": "10%","sClass": "left","bUseRendered": false,"bSortable":false},
+							   { "sTitle": "数据库", "mDataProp": "db_code", "sWidth": "10%","sClass": "center","bUseRendered": false,"bSortable":false},
+							   { "sTitle": "总数", "mDataProp": "line_count", "sWidth": "10%","sClass": "center","bUseRendered": false,"bSortable":false},
+							   { "sTitle": "操作时间", "mDataProp": "opt_time", "sWidth": "10%","sClass": "center","bUseRendered": false,"bSortable":false,
+							      "fnRender": function ( oObj ) {
+                                      return top.getTimeStr( oObj.aData.opt_time );
+                                   }
+							   },
+                               { "sTitle": "状态", "mDataProp": "status", "sWidth": "10%", "sClass": "center","bSortable":false,
+                                   "fnRender": function ( oObj ) {
+                                        return top.getCodeName( "META_IMP_STATUS", oObj.aData.status );
+                                   },
+                                   "bUseRendered": false  
+                               }
+               ];
+ 
+			   var surl=top.getUrlBase()+"/actions/Metadata.action?getMetaLogList";
+
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+			            var sta = $("#q_status").val();
+						if ( sta == undefined || sta == '' ) sta = "-1";
+						var dbcode = $("#q_db_codes").val();
+						if ( !dbcode ) dbcode = '';
+			            aoData.push( { "name": "metaConfig.table_name", "value":$("#q_table_name").val() } );
+						aoData.push( { "name": "metaConfig.db_codes", "value": dbcode } );
+						aoData.push( { "name": "metaConfig.status", "value": sta } );
+						aoData.push( { "name": "time1", "value":$("#q_time1").val() } );
+						aoData.push( { "name": "time2", "value":$("#q_time2").val() } );
+						aoData.push( { "name": "metaConfig.opt_type", "value":$("#q_optType").val() } );
+						aoData.push( { "name": "metaConfig.opt_server", "value": $("#qopt_server").val() } );
+			      },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumns
+				} );
+                top.sendAjaxRequest("/actions/Metadata.action?getMetaDBList",[],optGetDBListCallback);
+   } );
+
+   function doQuery(){
+	  oTable.fnDraw();
+   }
+			
+   function optGetDBListCallback(obj){
+     try{
+	   var str="<select id='q_db_codes'><option value=''></option>";
+	   var temp = "";
+	   for ( var i=0;i<obj.aaData.length;i++ ) {
+	     temp = obj.aaData[i].code;
+		 str += "<option value='"+temp+"'>"+temp+"</option>";
+	   }
+	   str+="</select>";
+	   $( "#q_db_codesTD" ).html( str );
+	 }catch(e){}
+   }
+   
+   function deleteMetaLog(logId){
+     currentDeleteId = logId;
+     top.showConfirm("您确定要删除选中的日志吗？", doDeleteMetaLog);
+   }
+   function doDeleteMetaLog(){
+     var aoData=[];
+     aoData.push( { "name": "metaConfig.code", "value": currentDeleteId } );
+     top.sendAjaxRequest("/actions/Metadata.action?deleteMetaLog",aoData,optCallbackDeleteMetaLog);
+   }
+   function optCallbackDeleteMetaLog(obj){
+                  try{
+			        if ( obj.status == true ){
+			          top.showInfoWinOK("操作成功");
+			          doQuery();
+			        }else{
+			          top.showInfoWinError("操作失败 "+obj.msg);
+			        }
+			       }catch(e){
+			          top.showInfoWinError("处理异常:"+e.message);
+			       }
+   }
+ </script>
+ </head>
+	<body>
+		<div width="100%">
+            <div style='border: 2px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="110px">&nbsp;导入日志查询&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0" >
+			     <tr class="tr_data">
+			      <td align="right" width="15%">启用策略的服务器:</td><td align="left" width="10%" id="gopt_server_td"></td>
+				  <td align="right" width="10%">操作类型:</td><td align="left" width="15%" id="tdOptType"></td>
+				  <td align="right" width="10%">数据库:</td><td align="left" width="15%" id="q_db_codesTD"></td>
+				  <td align="right" width="10%">表名:</td><td align="left" width="15%"><input type="text" id="q_table_name" value="" size="20" onkeydown="if(event.keyCode==13) doQuery();"/></td>
+                 </tr><tr class="tr_data">
+			      <td align="right">操作时间从:</td><td align="left"><input type="text" id="q_time1" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" /></td>
+			      <td align="right">操作时间到:</td><td align="left"><input type="text" id="q_time2" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" /></td>
+				  <td align="right">状态:</td><td colspan="3" align="left" id="tdStatus"></td>
+				 </tr>
+			 </table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				    <td>&nbsp;查询结果列表&nbsp;</td>
+					<td>&nbsp;</td>
+			       </tr></table></td>
+			  </tr>
+			</table>
+	        <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

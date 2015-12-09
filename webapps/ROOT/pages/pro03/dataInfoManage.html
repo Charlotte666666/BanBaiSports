@@ -1,0 +1,365 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+		    var optType="";
+			var opt="";
+			var currentUserCode="";
+			var isAdminRight=false;
+			var currentSelectInfoId=0;
+			var objs=[];
+			
+			$(document).ready(function() {
+			   $( "#tdInfoType" ).html( top.getCodeSelectHtml("03_INFO_TYPE","info_type",true,null,null,"全部") );
+			   $( "#tdSourceType" ).html( top.getCodeSelectHtml("02_SOURCE_TYPE","source_type",true,null,null,"全部") );
+			   $( "#tdSaveType" ).html( top.getCodeSelectHtml("02_SAVE_TYPE","save_type",true,null,null,"全部") );
+			   
+			   var u=top.getCurrentUser();
+			   if ( u!=null ) currentUserCode=u.userCode;
+			   isAdminRight=top.g_isPermit("cma_one_admin");
+			   
+			   optType=top.getUrlParam(document.URL,"opt");
+			   if ( top.g_isPermit("cma_one_user") || isAdminRight ) {
+			     $("#createBtn").show();
+			   } else {
+			     $("#createBtn").hide();
+			   }
+			   var iaoColumns= [
+                               { "sTitle": "资料类别", "mDataProp": "info_type", "sWidth": "13%","sClass": "center",
+                            	   "fnRender": function ( oObj ) {
+								     objs[objs.length]=oObj.aData;
+								     if ( checkDuty( oObj.aData.duty_officer ) || oObj.aData.info_name=='' ) {
+								      return top.getCodeSelectHtml("03_INFO_TYPE","info_type_"+oObj.aData.info_id,true,oObj.aData.info_type);
+									 } else {
+									  return top.getCodeName( "03_INFO_TYPE", oObj.aData.info_type );
+									 }
+                                   },
+                                   "bUseRendered": false
+                               },
+							   { "sTitle": "资料名称", "mDataProp": "info_name", "sWidth": "13%","sClass": "left",
+                                      "fnRender": function ( oObj ) {
+									     if ( checkDuty( oObj.aData.duty_officer ) || oObj.aData.info_name=='' ) {
+                                           return '<input type="text" id="info_name_'+oObj.aData.info_id+'" size="20" value="'+oObj.aData.info_name+'" />';
+										 } else {
+										   return oObj.aData.info_name;
+										 }
+                                      },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "详细信息", "mDataProp": "info_id", "sWidth": "6%","sClass": "center","bSortable":false,
+                                      "fnRender": function ( oObj ) {
+									     if ( checkDuty( oObj.aData.duty_officer ) || oObj.aData.info_name=='' ) {
+                                           return '<a href=\'javascript:void(0)\' onclick="detail1(\''+oObj.aData.info_id+'\',true)" >详细信息</a>';
+										 } else {
+										   return '<a href=\'javascript:void(0)\' onclick="detail1(\''+oObj.aData.info_id+'\',false)" >详细信息</a>';
+										 }
+                                      },
+                                      "bUseRendered": false 
+                               },
+                               { "sTitle": "资料类型", "mDataProp": "source_type", "sWidth": "10%", "sClass": "center",
+                                   "fnRender": function ( oObj ) {
+								     if ( checkDuty( oObj.aData.duty_officer ) || oObj.aData.info_name=='' ) {
+								      return top.getCodeSelectHtml("02_SOURCE_TYPE","source_type_"+oObj.aData.info_id,true,oObj.aData.source_type);
+									 } else {
+									  return top.getCodeName( "02_SOURCE_TYPE", oObj.aData.source_type );
+									 }
+                                   },
+                                   "bUseRendered": false  
+                               },
+							   { "sTitle": "数据量(MB/月)", "mDataProp": "data_size", "sWidth": "10%","sClass": "left",
+                                      "fnRender": function ( oObj ) {
+									     if ( checkDuty( oObj.aData.duty_officer ) || oObj.aData.info_name=='' ) {
+                                           return '<input type="text" id="data_size_'+oObj.aData.info_id+'" size="6" value="'+oObj.aData.data_size+'" />';
+										 } else {
+										   return oObj.aData.data_size;
+										 }
+                                      },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "表占用(MB/月)", "mDataProp": "table_size", "sWidth": "10%","sClass": "left",
+                                      "fnRender": function ( oObj ) {
+									    if ( checkDuty( oObj.aData.duty_officer ) || oObj.aData.info_name=='' ) {
+                                           return '<input type="text" id="table_size_'+oObj.aData.info_id+'" size="6" value="'+oObj.aData.table_size+'" />';
+										} else {
+										   return oObj.aData.table_size;
+										}
+                                      },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "存储策略", "mDataProp": "info_id", "sWidth": "6%","sClass": "center","bSortable":false,
+                                      "fnRender": function ( oObj ) {
+									     if ( checkDuty( oObj.aData.duty_officer ) || oObj.aData.info_name=='' ) {
+                                           return '<a href=\'javascript:void(0)\' onclick="detail2(\''+oObj.aData.info_id+'\',true)" >存储策略</a>';
+										 } else {
+										   return '<a href=\'javascript:void(0)\' onclick="detail2(\''+oObj.aData.info_id+'\',false)" >存储策略</a>';
+										 }
+                                      },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "责任人", "mDataProp": "duty_officer", "sWidth": "14%","sClass": "center",
+                                      "fnRender": function ( oObj ) {
+									      if ( checkDuty( oObj.aData.duty_officer ) || oObj.aData.info_name=='' ) {
+                                           return '<input type="text" id="duty_officer_'+oObj.aData.info_id+'" size="12" value="'+oObj.aData.duty_officer+'" /><a href="javascript:void(0)" onclick="selectUser('+oObj.aData.info_id+')" >选择</a>';
+										  } else {
+										   return oObj.aData.duty_officer;
+										  }
+                                      },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "归档现状", "mDataProp": "info_id", "sWidth": "6%","sClass": "center","bSortable":false,
+                                      "fnRender": function ( oObj ) {
+									     if ( checkDuty( oObj.aData.duty_officer ) || oObj.aData.info_name=='') {
+                                           return '<a href=\'javascript:void(0)\' onclick="detail3(\''+oObj.aData.info_id+'\',true)" >归档现状</a>';
+										 } else {
+										   return '<a href=\'javascript:void(0)\' onclick="detail3(\''+oObj.aData.info_id+'\',false)" >归档现状</a>';
+										 }
+                                      },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "操作", "mDataProp": "info_id", "sWidth": "8%","sClass": "center","bSortable":false,
+                                      "fnRender": function ( oObj ) {
+									       if ( checkDuty( oObj.aData.duty_officer ) || oObj.aData.info_name=='' ) {
+                                             return '<a href=\'javascript:void(0)\' onclick="saveInfo(\''+oObj.aData.info_id+'\','+(oObj.aData.info_name==''?"true":"false")+')" >保存</a>';
+										   } else {
+										     return "";
+										   }
+                                      },
+                                      "bUseRendered": false 
+                               }
+                 ];
+			   
+
+			   var surl=top.getUrlBase()+"/actions/ProCmaDataInfo.action?getCmaDataInfoList";
+
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+								$("#sum_data_size").html( Math.round(Number(json.data_size) * 10000) / 10000 );
+					            $("#sum_table_size").html( Math.round(Number(json.table_size) * 10000) / 10000 );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     aoData.push( { "name": "info.info_type", "value": $("#info_type").val() } );
+						 aoData.push( { "name": "info.source_type", "value": $("#source_type").val() } );
+						 aoData.push( { "name": "info.info_name", "value": $("#info_name").val() } );
+						 aoData.push( { "name": "info.save_type", "value": $("#save_type").val() } );
+						 aoData.push( { "name": "opt", "value": opt } );
+						 aoData.push( { "name": "info.data_size", "value": -1 } );
+						 aoData.push( { "name": "info.table_size", "value": -1 } );
+						 opt="";
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function checkDuty(dutyUser){
+			   if ( !dutyUser ) return false;
+			   if ( currentUserCode == '' ) return false;
+			   if ( isAdminRight ) return true; 
+			   if ( !dutyUser ) return false;
+			   return ( dutyUser.indexOf( ","+currentUserCode+"," ) != -1 || dutyUser.startWith( currentUserCode+",") || dutyUser == currentUserCode ); 
+			}
+			
+			function selectUser(infoId){
+			    currentSelectInfoId = infoId;
+				var xurl="pages/organization/selectUser.html";
+				top.openSelectDialog("选择责任人",xurl,1060,600,doSelectedUser);
+			}
+			function doSelectedUser(){
+				var so = top.getTempValue();
+				var v=$("#duty_officer_"+currentSelectInfoId).val();
+				if ( v != '' ) {
+				 if ( v.endWith( "," ) ) {
+				   v = v + so.userCodes;
+				 } else { 
+				   v = v + "," + so.userCodes;
+				 }
+				} else {
+				 v = so.userCodes;
+				}
+				$("#duty_officer_"+currentSelectInfoId).val( v  );
+			}
+			
+			function doQuery(){
+			    objs=[];
+				oTable.fnDraw();
+			}
+			
+			function addInfo(){
+				opt="addRow";
+				doQuery();
+			}
+			
+			function saveInfo(infoId,isCreate){
+			    var temp="";
+				if ( $("#info_type_"+infoId).val() == '' ) {
+				  temp += "请选择资料类别<br/>";
+				}
+				if ( $("#source_type_"+infoId).val() == '' ) {
+				  temp += "请选择资料类型<br/>";
+				}
+				if ( $("#info_name_"+infoId).val() == '' ) {
+				  temp += "请输入资料名称<br/>";
+				}
+				if ( $("#duty_officer_"+infoId).val() == '' ) {
+				  temp += "请输入责任人<br/>";
+				}
+				if ( !IsFloat($("#data_size_"+infoId).val()) ) {
+				  temp += "数据量应为数据类型<br/>";
+				}
+				if ( !IsFloat($("#table_size_"+infoId).val()) ) {
+				  temp += "表占用应为数据类型<br/>";
+				}
+				if ( temp != '' ) {
+				   top.showInfoWinWarn(temp);
+				   return ;
+				}
+				
+				var aoData=[];
+				aoData.push( { "name": "info.info_id", "value": infoId } );
+				aoData.push( { "name": "info.info_type", "value": $("#info_type_"+infoId).val() } );
+				aoData.push( { "name": "info.source_type", "value": $("#source_type_"+infoId).val() } );
+				aoData.push( { "name": "info.info_name", "value": $("#info_name_"+infoId).val() } );
+				aoData.push( { "name": "info.data_size", "value": $("#data_size_"+infoId).val() } );
+				aoData.push( { "name": "info.table_size", "value": $("#table_size_"+infoId).val() } );
+				aoData.push( { "name": "info.duty_officer", "value": $("#duty_officer_"+infoId).val() } );
+				top.sendAjaxRequest("/actions/ProCmaDataInfo.action?"+(isCreate?"insertDataInfo":"updateDataInfo1"),aoData,optCallback);
+			}
+			
+			function detail1(infoId,isUpdate){
+			    var o=getObj(infoId);
+				if ( o.info_name == '' ) {
+				  top.showInfoWinWarn("请先保存资料基本信息");
+				  return ;
+				}
+			    top.setTempValue( o );
+			    var xurl="pages/pro03/dataInfo1.html?infoId="+infoId+"&opt="+(isUpdate?"update":"view");
+				top.openDialog(o.info_name+" 详细信息",xurl,true,750,620,saveCallBack);
+			}
+			
+			function detail2(infoId,isUpdate){
+			    var o=getObj(infoId);
+				if ( o.info_name == '' ) {
+				  top.showInfoWinWarn("请先保存资料基本信息");
+				  return ;
+				}
+			    top.setTempValue( o );
+			    var xurl="pages/pro03/dataInfo2.html?infoId="+infoId+"&opt="+(isUpdate?"update":"view");
+				top.openDialog(o.info_name+" 存储策略",xurl,true,750,620,saveCallBack);
+			}
+			
+			function detail3(infoId,isUpdate){
+			    var o=getObj(infoId);
+				if ( o.info_name == '' ) {
+				  top.showInfoWinWarn("请先保存资料基本信息");
+				  return ;
+				}
+			    top.setTempValue( o );
+			    var xurl="pages/pro03/dataInfo3.html?infoId="+infoId+"&opt="+(isUpdate?"update":"view");
+				top.openDialog(o.info_name+" 归档现状",xurl,true,750,320,saveCallBack);
+			}
+
+			function getObj(infoId){
+			   for ( var i=0;i<objs.length;i++ ) {
+			     if ( objs[i].info_id == infoId ) return objs[i];
+			   }
+			   return null;
+			}
+			
+			function saveCallBack(o){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				  
+				}
+			}
+			
+			function optCallback(obj){
+			       try{
+			        if ( obj.status == true ){
+			          top.showInfoWinOK("操作成功");
+					  doQuery();
+			        }else{
+			          top.showInfoWinError("操作失败 "+obj.msg);
+			        }
+			       }catch(e){
+			          top.showInfoWinError("处理异常:"+e.message);
+			       }
+		    }
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+		    <div style='border: 2px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="110px">&nbsp;资料查询&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0" >
+			   <tr class="tr_data">
+			      <td align="right" width="10%">资料类别:</td><td align="left" width="15%" id="tdInfoType"></td>
+			      <td align="right" width="10%">关键字搜索:</td><td align="left" width="15%"><input type="text" id="info_name" value="" size="13" onkeydown="if(event.keyCode==13) doQuery();"/></td>
+			      <td align="right" width="10%">数据来源:</td><td align="left" width="15%" id="tdSourceType"></td>
+				  <td align="right" width="10%">存储方式:</td><td align="left" width="15%" id="tdSaveType"></td>
+				</tr>
+			 </table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				    <td>&nbsp;查询结果列表&nbsp;</td>
+					<td><div id="createBtn" class="buttonDivTwo"><a href="javascript:addInfo()">创建</a></div></td>
+			       </tr></table></td>
+			  </tr>
+			</table>
+	        <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+		<br/><br/><br/>
+		<p>&nbsp;&nbsp;数据量总计:&nbsp;<span id="sum_data_size" >0</span>&nbsp;MB</p>
+		<p>&nbsp;&nbsp;表空间占用总计:&nbsp;<span id="sum_table_size" >0</span>&nbsp;MB</p>
+		<br><br>
+	</body>
+</html>

@@ -1,0 +1,344 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>实时数据库综合监控系统</title>
+<link href="css/login_css.css" rel="stylesheet" type="text/css">
+<link href="css/comm.css" rel="stylesheet" type="text/css" />
+<link href="css/map_css.css" rel="stylesheet" type="text/css" />
+<link href="css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<script type="text/javascript" src="js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="js/SimpleMap.js"></script>
+<script type="text/javascript" src="js/helpyouworkeasy-core.js"></script>
+<script type="text/javascript" src="js/md5.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript" language="javascript" src="js/checkForm.js"></script>
+
+<script type="text/javascript">
+var adjustInter = -1;
+var interId = 0;
+var alertMap = new SimpleMap();
+var dataList=[];
+var errList=[];
+var currentAlertObjs=[];
+
+function addAlertObj(code){
+  try{
+      code = code.replace(new RegExp(" ","gm"), "");
+	  var s = alertMap.get(code);
+	  if ( !s || s == "" ) {
+		alertMap.put(code,"0");
+	  } else {
+	    var lm=Number(s) - 3;
+		if ( lm <= 0 ) {
+		 lm ="0";
+		}
+		alertMap.put(code, lm);
+	  }
+  }catch(e){
+  }
+}
+
+function getAlertSize(){
+    alert( alertMap.keySet().length );
+}
+
+function refreshAlertMap(){
+    var keys=alertMap.keySet();
+	var has = false;
+	var noKeys = [];
+	for(var i=0;i<keys.length;i++ ) {
+	    has = false; 
+		for ( var j=0;j<currentAlertObjs.length;j++ ) {
+		  if ( keys[i] == currentAlertObjs[j] ) {
+		    has = true;
+		  }
+		}
+		if ( !has ) noKeys[noKeys.length] = keys[i];
+    }
+	for(var i=0;i<noKeys.length;i++ ) {
+	    alertMap.remove( noKeys[i] );
+	}
+}
+
+/**
+  返回是否需要显示 “取消报警” 按钮
+*/
+function checkAlertObj(code){
+   try{
+      if ( !code ) return false;
+	  code = code.replace(new RegExp(" ","gm"), "");
+	  var s = alertMap.get(code);
+	  if ( s == "" ) {
+		return false;
+	  } else {
+	    var lm=Number(s);
+		if ( lm > 0 ) {
+		  return false;
+		} else {
+		  return true;
+		}
+	  }
+  }catch(e){
+  }
+  return false;
+}
+
+function cancelAlertObj(code,category,rule,obj,info_type,server_id,callback){
+  try{
+	  code = code.replace(new RegExp(" ","gm"), "");
+	  var s = alertMap.get(code);
+	  if ( s == "" ) {
+		return ;
+	  } else {
+		alertMap.remove(code);
+	  }
+	  callback.apply();
+	  var aoData=[];
+      aoData.push( { "name": "result.category", "value": category } );
+	  aoData.push( { "name": "result.rule", "value": rule } );
+	  aoData.push( { "name": "result.obj", "value": obj } );
+	  aoData.push( { "name": "result.info_type", "value": info_type } );
+	  aoData.push( { "name": "result.server_id", "value": server_id } );
+	  
+      top.sendAjaxRequest("/actions/RdbData.action?updateRdbMonitorResult",aoData,null);
+  }catch(e){
+  }
+}
+
+function checkNeedAlert(){
+    var keys=alertMap.keySet();
+	var s=null;
+	for(var i=0;i<keys.length;i++ ) {
+		s = alertMap.get(keys[i]);
+		if ( s == '0' || s == '' ) {
+		  return true;
+		}
+    }
+	return false;
+}
+
+function getAlertMap(){
+  return alertMap;
+}
+
+
+function getErrList(){
+  return errList;
+}
+
+function setErrList(list){
+  errList = list;
+  var errCode="";
+  currentAlertObjs=[];
+  for (var i=0;i<errList.length;i++ ) {
+	  errCode=errList[i].system_name+"_"+errList[i].server_name+"_"+errList[i].info_type+"_"+errList[i].rule+"_"+errList[i].obj;
+	  errCode = errCode.replace(new RegExp(" ","gm"), "");
+	  addAlertObj( errCode );
+	  if ( errList[i].is_alarm == '1' ) {
+        currentAlertObjs[currentAlertObjs.length] = errCode;
+	  }
+  }
+}
+
+jQuery(document).ready(function() {
+    g_systemVersion="v1.0.0";
+    selfInitGlobalData();
+    $("body").css({"background-image":"url(img/bg2_body1.png)"});
+	$('#main').show();
+	adjustInter = setInterval("adjustPosition()",500);
+    adjustPosition();
+	window.onresize = function(){ adjustPosition(); };
+ });
+ 
+ function selfInitGlobalData(){
+	    var ind=document.URL.indexOf("/index_");
+		if ( ind == -1 ) ind = document.URL.indexOf("/index.html");
+	    if ( ind != -1 ) {
+		  g_UrlBase = document.URL.substring(0,ind);
+		} else g_UrlBase = document.URL;
+		try{
+			proInitGlobalData();
+		}catch(e){
+		}
+		top.sendAjaxRequest("/actions/System.action?getCodeList",[],selfLoadCodesCallback,true);
+ }
+ 
+	/**
+	 * 加载常用编码 回调函数
+	 * @param obj
+	 */
+	function selfLoadCodesCallback(obj){
+        if ( obj ) {
+        	for ( var i=0;i<obj.aaData.length;i++ ){
+        		g_dictionary.put(obj.aaData[i].type+obj.aaData[i].code, 
+        				new Code(obj.aaData[i].code, obj.aaData[i].type, obj.aaData[i].name, obj.aaData[i].isSys));
+        	}
+        }
+		toSysTab('pages/pro02/currentResult.html');
+	}
+
+ function adjustPosition(){
+	if ( adjustInter != -1 ) {
+	   clearInterval( adjustInter );
+	   adjustInter = -1;
+	}
+    var wh=$(window).height();
+	var ww=$(window).width();
+	
+	$('#versionInfo').css("top",wh - 19);
+	$('#versionInfoTxt').html( "<font color='white'>版本:&nbsp;"+g_systemVersion+"</font>&nbsp;&nbsp;<span style='cursor:pointer' onclick='javascript:showHelpWin(450,270)'>系统帮助</span>" );
+	$('#main_footer').css("top",wh - 19);
+	$('#mainContent').height(wh - 107);
+ }
+ 
+ function toSysTab(xurl){
+   $("#mainContent").show();
+   $("#mainContent").html( '<iframe id="mainFrame" src="'+xurl+'" width="100%" height="100%" style="background-color:#ffffff" frameborder="0"></iframe>' );
+ }
+
+ //////////////////////////////////////////////////////////
+function proInitGlobalData(){
+	g_dictionary.put("EDIT_DIC_TYPEBUSS_NAME", new Code("BUSS_NAME","EDIT_DIC_TYPE","数据类型","1"));
+}
+
+function setDataList(ds){
+   dataList=ds;
+}
+
+function showDetail(){
+
+}
+
+ function getDataList(){
+    return dataList;
+ }
+ 
+ function openDialog2(t,xurl,isModal,w,h,callback){
+		if ( isModal == undefined ) isModal=true;
+		if ( !h ) h=200;
+		if ( !w ) w=400;
+		$( "#dialog2" ).dialog({
+			title: t,
+			height: h,
+			width: w,
+			modal: isModal,
+			resizable: false,
+		    beforeClose: function(event, ui) {
+		        try{
+		            document.getElementById("self_iframe2").contentWindow.doBeforeClose();
+		            if ( callback ) callback.apply();
+		        }catch(e){
+		        }
+		        return true;
+		    }
+		});
+		document.getElementById("self_iframe2").src = xurl;
+    }
+	
+  function closeDialog2(){
+		$( "#dialog2" ).dialog( "close" );
+  }
+ 
+</script>
+
+<style type="text/css">
+* {
+    font-family: Arial, "Free Sans";
+}
+
+.bt, .clicked {
+    height: 20px;
+    color: #666;
+    font-size: 13px;
+    padding: 4px 10px;
+    text-decoration: none;
+    background: #f9f9f9;
+}
+
+.btleft {
+    border: 1px solid #e3e3e3;
+    -webkit-border-radius: .5em 0 0 .5em;
+    -moz-border-radius: .5em 0 0 .5em;
+    border-radius: .5em 0 0 .5em;
+}
+.btleft span {
+    font-size: 15px;
+}
+.btmiddle {
+    border: 1px solid #e3e3e3;
+    border-width: 1px 0;
+    margin: 0 -4px;
+}            
+.btright {
+    border: 1px solid #e3e3e3;
+    -webkit-border-radius: 0 .5em .5em 0;
+    -moz-border-radius: 0 .5em .5em 0;
+    border-radius: 0 .5em .5em 0;
+}
+.btmiddle span, .btright span {
+    font-size: 9px;
+    position: relative;
+    top: -2px;
+}
+.subMenu {
+    display: none;
+	z-index: 99;
+	position: absolute; 
+	left:7px;
+	top:77px;
+}
+.menu_top {
+    -webkit-border-radius: .5em .5em 0 0;
+    -moz-border-radius: .5em .5em 0 0;
+    border-radius: .5em .5em 0 0;
+}
+.menu_bottom {
+    -webkit-border-radius: 0 0 .5em .5em;
+    -moz-border-radius: 0 0 .5em .5em;
+    border-radius: 0 0 .5em .5em;
+}
+.bottomLine {
+  border:1px solid blue;
+  border-style:none none dotted none;
+}
+</style>
+
+</head>
+
+<body>
+
+<div id="main" style="display:none">
+  <div id="top" style="background-image: url(img/empty.gif);">
+    <div class="t_left">
+	    <div style="position: absolute; left:10px;top:5px;"><font size="5" color="#ffffff"><b>实时数据库综合监控系统</b></font></div>
+	    <div style="position: absolute; left:10px;top:46px;">
+		   <a href="javascript:void(0)" onclick="toSysTab('pages/pro02/currentResult.html')" ><font color="#ffffff" size="2">实时监视</font></a>
+		   &nbsp;&nbsp;<a href="javascript:void(0)" onclick="toSysTab('pages/pro02/resultList.html')" ><font color="#ffffff" size="2">历史结果查询</font></a>
+		   &nbsp;&nbsp;<a href="javascript:void(0)" onclick="toSysTab('pages/system/dicManage.html')" ><font color="#ffffff" size="2">字典管理</font></a>
+	    </div>
+	</div>
+
+    <div class="t_right">
+      <p id="currentUserInfo"></p>
+      <div class="clear"></div>
+    </div>
+    <div class="clear"></div>
+  </div>
+
+  <div id="mainContent"></div>
+  <div id="main_footer" style="padding-top: 0px;">
+    <table width="100%"><tr><td width="100%" align="center"><font color="white">Copyright &copy; 中国气象局 国家气象信息中心</font>
+	 </td></tr></table>
+  </div>
+</div> <!-- end of main -->
+ 
+<div id="versionInfo" style="position: absolute;top:1000px;left:10px"><font color="white"><span id="versionInfoTxt" >v1.0.0</span></font></div>
+
+<div id="dialog2" title="" style="display:none;padding: 0 0 0 0;margin: 0 0 0 0;z-index:10000">
+    <iframe id="self_iframe2" src="about:blank" width="100%" height="96%" frameborder="0"></iframe>
+</div>
+ 
+<script type="text/javascript" >writeCommonDiv();</script>
+
+</body>
+</html>

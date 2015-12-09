@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+body, html,#allmap {margin:10px;width: 100%;height: 100%;overflow: hidden;hidden;margin:0;}
+</style>
+<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=OBRxzWlMWAK4phVNAnL55Cj3"></script>
+<title>mark map</title>
+</head>
+<body>
+<div id="allmap"></div>
+</body>
+</html>
+<script type="text/javascript">
+var isInited=false;
+var map = new BMap.Map("allmap");
+var myIcon = new BMap.Icon("../../img/green.png", new BMap.Size(16,16));
+var iconStart = new BMap.Icon("../../img/qidian.png", new BMap.Size(42,42));
+var iconEnd = new BMap.Icon("../../img/zhong.png", new BMap.Size(42,42));
+//var iconTrace = new BMap.Icon("../../img/lanBaiSe.gif", new BMap.Size(32,32));
+var iconTrace = new BMap.Icon("../../img/dot15.gif", new BMap.Size(15,15));
+var iconPoint= new BMap.Icon("../../img/point.png", new BMap.Size(32,32));
+var warnIcon = new BMap.Icon("../../img/icon-warning.gif", new BMap.Size(31,32));
+var bp=[];
+var playIndex=0;
+var carMk=null;
+
+
+map.enableScrollWheelZoom(); 
+map.addControl(new BMap.NavigationControl()); 
+map.centerAndZoom(new BMap.Point( top.getCenterLon(), top.getCenterLat() ), top.getDefaultMapLevel() );
+var myIcon1 = new BMap.Icon("images/man.png", new BMap.Size(32, 70), {    //小车图片
+    //offset: new BMap.Size(0, -5),    //相当于CSS精灵
+    imageOffset: new BMap.Size(0, 0)    //图片的偏移量。为了是图片底部中心对准坐标点。
+  });
+
+			
+function inite(){
+ var a1=116.4209976196289;
+ var a12=40.062599182128906;
+ var a2=116.4219970703125;
+  var a22=40.1388476164646;
+  var a3=117.4229970703125;
+  var a32=40.1888476164646;
+  var ps=[];
+ ps[0]=[a1,a12];
+ ps[1]=[a2,a22];
+ ps[2]=[a3,a32];
+ drawDotsAndLink(ps);
+ }
+ 
+function drawDotsAndLink(ps){
+   try{
+	var lastLon=0;
+	var lastLat=0;
+	for (var j=0; j<ps.length ; j++) {
+	 if ( ps[j][1] == 999999 || ps[j][1] == 0 ) continue;
+	 if ( lastLon != ps[j][0] || lastLat != ps[j][1] ) {
+		  bp[bp.length]=new BMap.Point(ps[j][0],ps[j][1]);
+		  lastLon = ps[j][0];
+		  lastLat = ps[j][1];
+		}
+	}
+	map.clearOverlays(); 
+	var polyline = new BMap.Polyline(bp, {strokeColor:"blue", strokeWeight:5, strokeOpacity:0.5});
+	map.addOverlay(polyline);
+	if ( lastLon != 0 && !isInited ) {
+	  map.panTo(new BMap.Point(lastLon,lastLat));
+	  isInited=true;
+	}
+	for (var i=0; i<bp.length; i++ ) {
+	     if ( bp.length > 1 ) {
+		   if ( i == 0 ) {
+		     map.addOverlay(new BMap.Marker(bp[i],{icon:iconStart}));
+		   } else if ( i == bp.length - 1 ) {
+		     map.addOverlay(new BMap.Marker(bp[i],{icon:iconEnd}));
+		   } else {
+		     map.addOverlay(new BMap.Marker(bp[i],{icon:myIcon}));
+		   }
+		 } else {
+		   map.addOverlay(new BMap.Marker(bp[i],{icon:myIcon}));
+		 }
+	}
+	if ( bp.length > 0 ) {
+	 carMk = new BMap.Marker(bp[0],{icon:myIcon1});
+     map.addOverlay(carMk);
+	}
+   }catch(e){}
+}
+
+function drawDots(ps){
+   try{
+	var bp=[];
+	var lastLon=0;
+	var lastLat=0;
+	var labels=[];
+	for (var j=0; j<ps.length ; j++) {
+	    if ( ps[j][1] == 999999 || ps[j][1] == 0 ) continue;
+	    if ( lastLon != ps[j][0] || lastLat != ps[j][1] ) {
+		  bp[bp.length]=new BMap.Point(ps[j][0],ps[j][1]);
+		  labels[labels.length] = ps[j][2];
+		  lastLon = ps[j][0];
+		  lastLat = ps[j][1];
+		}
+	}
+	map.clearOverlays(); 
+	if ( lastLon != 0 && !isInited ) {
+	  map.panTo(new BMap.Point(lastLon,lastLat));
+	  isInited=true;
+	}
+	for (var i=0; i<bp.length; i++ ) {
+	    var marker = new BMap.Marker(bp[i],{icon:iconPoint});
+		map.addOverlay(marker);
+		marker.setLabel(new BMap.Label(labels[i],{offset:new BMap.Size(20,-10)}));
+	}
+   }catch(e){}
+}
+function drawForbiddenDots(ps){
+   try{
+	var bp=[];
+	var lastLon=0;
+	var lastLat=0;
+	var labels=[];
+	for (var j=0; j<ps.length ; j++) {
+	    if ( ps[j][1] == 999999 || ps[j][1] == 0 ) continue;
+	    if ( lastLon != ps[j][0] || lastLat != ps[j][1] ) {
+		  bp[bp.length]=new BMap.Point(ps[j][0],ps[j][1]);
+		  labels[labels.length] = ps[j][2];
+		  lastLon = ps[j][0];
+		  lastLat = ps[j][1];
+		}
+	}
+	for (var i=0; i<bp.length; i++ ) {
+	    var marker = new BMap.Marker(bp[i],{icon:warnIcon});
+		map.addOverlay(marker);
+		marker.setLabel(new BMap.Label(labels[i],{offset:new BMap.Size(20,-10)}));
+	}
+   }catch(e){}
+}
+function drawAndCenterDot(lon,lat){
+    try{
+      map.clearOverlays(); 
+	  if ( lon != 0 && !isInited ) {
+	    map.panTo(new BMap.Point(lon,lat));
+		isInited=true;
+	  }
+	  map.addOverlay(new BMap.Marker(new BMap.Point(lon,lat),{icon:iconTrace}));
+	}catch(e){}
+	  
+}
+function play(){
+   try{
+			playIndex=0;
+            setTimeout(function(){
+            resetMkPoint();
+        },1000);
+	}catch(e){
+	}
+}
+function resetMkPoint(){
+     carMk.setPosition(bp[playIndex]);
+     if(playIndex < bp.length){
+         setTimeout(function(){
+          playIndex++;
+          resetMkPoint(playIndex);
+         },1000);
+     }
+ }
+ 
+ function drawPolygon(str,name,id){
+		//clearDraw();
+		//document.getElementById("area_name").value=name;
+		//areaId=id;
+		if ( str!=''&&str!=null ) {
+			var ps=str.split(",");
+			var pois=[];
+			for(var i=0;i<ps.length;i=i+2)
+			{
+				pois.push(new BMap.Point(ps[i],ps[i+1]));
+			}
+			var polygon = new BMap.Polygon(pois,{strokeColor:"red", strokeWeight:5, strokeOpacity:0.5});
+			//overlays.push(polygon);
+			map.addOverlay(polygon);
+			//map.centerAndZoom(pois[0], top.getDefaultMapLevel()-3);
+			//points=pois;
+		}
+	}	
+//inite();
+</script>

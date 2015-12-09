@@ -1,0 +1,90 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+  <head>
+    <title>日历控件</title>
+	
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<link rel="stylesheet" type="text/css" href="../../js/fullcalendar/fullcalendar.css">
+	<link rel="stylesheet" type="text/css" href="../../js/fullcalendar/fullcalendar.print.css" media='print'>
+    <script type="text/javascript" language="javascript" src="../../js/fullcalendar/lib/moment.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/fullcalendar/lib/jquery.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/fullcalendar/fullcalendar.min.js"></script>
+	<script type="text/javascript">
+	  var calendarContent=[];
+	  var message=[];
+	  $(document).ready(function(){
+	    $('#calendar').fullCalendar({
+			header: {
+				left: 'prev,next,today',
+				center: 'title',
+				right: 'month,agendaWeek,agendaDay'
+			},
+			defaultDate: new Date(),
+			selectable: true,
+			selectHelper: true,
+			editable: true,
+			eventLimit: true, 
+			events: calendarContent,
+			buttonText:{
+				prev: '上一月', 
+				next: '下一月',  
+				today: '今天',
+				month: '月',
+				week: '周',
+				day: '天'
+				},
+			monthNames:['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'],
+			dayNamesShort:['一','二','三','四','五','六','日'],
+			dayNames:['星期一','星期二','星期三','星期四','星期五','星期六','星期日'],
+			columnFormat:{
+			    day:'dddd M/d'
+			},
+			aspectRatio:1.2,
+			eventClick:function(calEvent, jsEvent, view){
+				parent.$("#tabs ul li").eq(0).removeClass("ui-tabs-selected");//ui-tabs-hide
+				parent.$("#tabs ul li").eq(1).addClass("ui-tabs-selected");
+				var href_1=parent.$("#tabs ul li").eq(0).children().attr("href");
+				var href_2=parent.$("#tabs ul li").eq(1).children().attr("href");
+				parent.$(""+href_1).addClass("ui-tabs-hide");
+				parent.$(""+href_1).attr("style","");
+				parent.$(""+href_2).removeClass("ui-tabs-hide");
+				parent.setTime1(top.getTimeStr(calEvent.start,true)+" 00:00:00");
+				parent.setTime2(top.getTimeStr(calEvent.start,true)+" 23:59:59");
+				parent.getWorkRemindList();
+			   //top.openOptPage(calEvent.param1,calEvent.param2,calEvent.param3,calEvent.param4);
+			}
+		});
+		
+		initData();
+		
+      });
+		
+		function initData(){
+		   var aoData=[];
+		   aoData.push( { "name": "workRemind.status", "value":"01" } );
+		   top.sendAjaxRequest("/actions/DailyManage.action?getWorkRemindCalendarList",aoData,initDataCallBack);
+		}
+		
+		function initDataCallBack(obj){
+		   if(obj.status==true){
+		       if(obj.body){
+			      //calendarContent=obj.body.remindList;
+				  message=obj.body.map;
+				  for(var i=0;i<message.length;i++){
+				      message[i].title=message[i].title+"提醒信息";
+					  $("#calendar").fullCalendar("renderEvent", message[i], true); 
+				  }
+			   }
+		   }else{
+		      
+		   }
+		}
+	</script>
+  </head>
+  
+  <body>
+     <div id="calendar" style="width:100%;padding:0;margin:0;">
+		  
+	 </div>
+  </body>
+</html>

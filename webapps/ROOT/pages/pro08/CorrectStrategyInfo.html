@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+		    var optType="";
+			var prison_code="";
+			var objs=[];
+			var isSaveOK =false;
+			
+$(document).ready(function() {
+        var d=new Date();
+		timeStamp=d.getTime();
+		optType=top.getUrlParam(document.URL,"optType");
+		infoId=top.getUrlParam(document.URL,"infoId");
+		prison_code=top.getUrlParam(document.URL,"prison_code");
+		var report_time=top.getUrlParam(document.URL,"report_time");
+		if(!report_time)  report_time = "";
+		var addr=decodeURI( top.getUrlParam(document.URL,"addr") );
+		if(!addr)  addr = "";
+		var duration=top.getUrlParam(document.URL,"duration");
+		if ( !duration ) duration="";
+		var strategy_type=top.getUrlParam(document.URL,"strategy_type");
+		if ( !strategy_type ) strategy_type="";
+		$("#report_time").val(top.getTimeStr(report_time,true));
+		$("#addr").val( addr );
+		$("#duration").val( duration );
+		$("#tdstrategy_type").html( top.getCodeSelectHtml("STRATEGY_TYPE","strategy_type",false,strategy_type,null,"全部") );
+   } );
+   
+function saveCorrectStratepyInfo(){
+	 var aoData=[];
+	     aoData.push( { "name": "correct.prison_code", "value": prison_code } );
+	     aoData.push( { "name": "correct.strategy_id", "value": infoId } );
+         aoData.push( { "name": "correct.report_time", "value": top.toTimestamp($("#report_time").val())} );
+		 aoData.push( { "name": "correct.addr", "value": $("#addr").val() } );
+		 aoData.push( { "name": "correct.duration", "value": $("#duration").val() } );
+		 aoData.push( { "name": "correct.strategy_type", "value": $("#strategy_type").val() } );
+	  var xurl="/actions/Prison.action?updateCorrectStrategy";
+
+	 top.sendAjaxRequest(xurl,aoData,optCallback);
+   }
+   
+    function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功");
+		 parent.closeDialog();
+	    }else{
+	    	isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+     function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+	function doCancel(){
+	   parent.closeDialog();
+   }
+		</script>
+		
+	</head>
+	<body>
+		<div width="100%">
+		    <div style='border: 2px solid #89A1B9;margin:5px;margin-top:25px'>
+			<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				<tr class="tr_data">
+					<td width="20%">时间</td><td align="left"><input type="text" id="report_time" value="" onclick="new Calendar().show(this);"  size="20"></input></td>
+					<td width="20%">地点</td><td align="left"><input type="text" id="addr" value=""  size="40"/></td>
+				</tr>
+				<tr class="tr_data">
+				  <td width="20%">时长</td><td align="left"><input type="text" id="duration" value=""  size="20"/></td>
+                  <td width="20%">类型</td><td align="left" id="tdstrategy_type"></td>
+				</tr>
+		</table>
+		<p>
+		   <table  width="100%" align="center"><tr>
+					<td align="right"><span id="okBtn" class="buttonTwo"><a href="javascript:saveCorrectStratepyInfo()">提交</a></span></td>
+					<td align="left"><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">取消</a></span></td>
+		   </tr></table>
+		   </p>
+		</div>
+	</body>
+</html>

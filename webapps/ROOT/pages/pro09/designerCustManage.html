@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"	src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var optType="";
+			var userCode="";
+			$(document).ready(function() {
+			optType=top.getUrlParam(document.URL,"optType");
+			userCode=top.getUrlParam(document.URL,"user_code");
+			   var iaoColumns= [
+			                   { "sTitle": "客户编号", "mDataProp": "code", "sWidth": "10%","sClass": "center","bSortable":false,
+							        "fnRender": function ( oObj ) {
+                                        //return '<a href=\'javascript:void(0)\' onclick="updateInfo(\''+oObj.aData.code+'\')" >'+oObj.aData.code+'</a>';
+										return oObj.aData.code;
+										
+                                   },
+								   "bUseRendered": false
+							   },
+			                  { "sTitle": "客户姓名", "mDataProp": "cust_name", "sWidth": "10%","sClass": "center","bUseRendered": false, "bSortable":false, },
+							  { "sTitle": "登记日期", "mDataProp": "register_date", "sWidth": "10%", "sClass": "center","bSortable":false,
+								    "fnRender": function ( oObj ) {
+                                           return top.getTimeStr(oObj.aData.register_date ,true);
+                                     },
+							  "bUseRendered": false},
+                               { "sTitle": "工程地址", "mDataProp": "cust_phone", "sWidth": "32%", "sClass": "left","bSortable":false,
+							   "fnRender": function ( oObj ) {
+                                        return top.getCodeName( "DISTRICT", oObj.aData.cust_mobile )+oObj.aData.cust_phone;
+                                   },"bUseRendered": false},
+							   { "sTitle": "客户级别", "mDataProp": "cust_type", "sWidth": "10%", "sClass": "center","bSortable":false,
+                                   "fnRender": function ( oObj ) {
+                                        return top.getCodeName( "CUST_TYPE", oObj.aData.cust_type );
+                                   },
+                                   "bUseRendered": false  
+                               },
+							    { "sTitle": "客户状态", "mDataProp": "cust_status", "sWidth": "10%", "sClass": "center","bSortable":false,
+                                   "fnRender": function ( oObj ) {
+                                        return  top.getCodeName("CUST_STATUS",oObj.aData.cust_status)
+                                   },
+                                   "bUseRendered": false  
+                               }
+							 
+               ];
+			   
+			   var surl=top.getUrlBase()+"/actions/CustInfo.action?designerCustInfoList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": false,
+					"bPaginate": false, 
+					"bInfo": false,
+					//"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData=getParamDate(aoData);
+			    },
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+			   var str ='';
+               str +=top.getAllCheckedValue( document.getElementsByName("cust_type"));
+			   if(str==''){
+			    top.showInfoWinWarn("请选择客户类型！");
+			     return;
+			   }
+				oTable.fnDraw();
+			}
+			
+			function checkCustInfo(id){
+			var xurl="pages/pro09/custUpdate.html?optType=update&id="+id;
+				top.openDialog("我的客户详细信息",xurl,true,900,600,saveCallBack);
+			}
+			function addInfo(){
+				var xurl="pages/pro09/custUpdate.html?optType=insert";
+				top.openDialog("我的客户登记表",xurl,true,900,600,saveCallBack);
+			}
+			
+			function updateInfo(id){
+				var xurl="pages/pro09/custUpdate.html?optType=update&id="+id;
+				top.openSelectDialog("我的客户详细信息",xurl,900,600,saveCallBack);
+			}
+
+			function saveCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				}
+			}
+
+		    function getParamDate(aoData){
+					aoData.push( { "name": "custRequire.require_manager", "value": userCode } );
+				return aoData;
+			}
+		</script>
+	</head>
+	<body>
+	<br>
+			<table cellpadding="0" width="100%" cellspacing="0" border="0"	class="display" id="dataTable"></table>
+	</body>
+</html>

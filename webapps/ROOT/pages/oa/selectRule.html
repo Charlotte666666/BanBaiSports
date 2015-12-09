@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+			
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var currentOptId="";
+			var currentOptName="";
+
+			$(document).ready(function() {
+			   var iaoColumns= [
+							  { "sTitle": "标题", "mDataProp": "logic_id", "sWidth": "30%",
+                                      "fnRender": function ( oObj ) {
+										     return '<a href="javascript:void(0)" onclick="selectRule(\''+oObj.aData.logic_id+'\',\''+oObj.aData.logic_title+'\')">'+oObj.aData.logic_title+'</a>';
+                                      },
+                                      "bUseRendered": false
+                               },
+                               { "sTitle": "描述", "mDataProp": "memo", "sWidth": "70%", "sClass": "center", "bUseRendered": false}
+               ];
+
+			   var surl=top.getUrlBase()+"/actions/WorkOrder.action?getWOFlowLogicList";
+			  
+
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+						aoData.push( { "name": "logic.logic_title", "value":$("#logic_title").val() } );
+					},
+			      "sDom": "frtip",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+               });
+
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+	      function doBeforeClose(){
+		    var obj={
+    	        "ruleId":currentOptId,
+    	        "ruleName":currentOptName
+    	    };
+    	    top.setTempValue(obj);
+          }
+		  
+		  function selectRule(sid,sname){
+		    currentOptId=sid;
+			currentOptName=sname;
+			top.closeSelectDialog();
+		  }
+		</script>
+	</head>
+	<body>
+	  <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0">
+			 <tr class="tr_data">
+				 <td width="30%" align="right">标题：</td><td align="left" width="70%"><input type="text" id="logic_title" onkeydown="if(event.keyCode==13) doQuery();"/></td>
+			 </tr>
+	  </table>
+	  <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>	
+	</body>
+</html>

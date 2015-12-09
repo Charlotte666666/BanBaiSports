@@ -1,0 +1,168 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css"
+			href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			
+			$(document).ready(function() {
+			$( "#tdsource_award_points" ).html( top.getCodeSelectHtml("SOURCE_AWARD_POINTS","source_award_points",true) );
+			 var iaoColumns= [
+			                { "sTitle": "积分管理员", "mDataProp": "integration_manager", "sWidth": "10%","sClass": "left",
+							        "fnRender": function ( oObj ) {
+                                        return '<input name="checkId" type="checkbox" value=\''+oObj.aData.id+'\'/><a href=\'javascript:void(0)\' onclick="updateInfo(\''+oObj.aData.id+'\')" >'+top.getUserNameByCode(oObj.aData.integration_manager)+'</a>';
+										
+                                  },
+								   "bUseRendered": false
+							},
+							{ "sTitle": "部门", "mDataProp": "dept", "sWidth": "15%","sClass": "left",
+							        "fnRender": function ( oObj ) {
+                                        return top.getDeptPath(oObj.aData.dept);
+										
+                                    },
+								   "bUseRendered": false
+							},
+							{ "sTitle": "职位", "mDataProp": "job_title", "sWidth": "10%","sClass": "left",
+							        "fnRender": function ( oObj ) {
+                                        return top.getCodeName("SYS_POSITION",oObj.aData.job_title);
+										
+                                  },
+								   "bUseRendered": false
+							},
+							{ "sTitle": "奖励上限", "mDataProp": "reward_upper_limit", "sWidth": "10%","sClass": "center",
+								   "bUseRendered": false
+							},
+							{ "sTitle": "剩余奖励分数", "mDataProp": "current_reward_score", "sWidth": "10%","sClass": "center",
+								   "bUseRendered": false
+							},
+							{ "sTitle": "积分奖励明细", "mDataProp": "reward_detail", "sWidth": "25%","sClass": "left",
+								   "bUseRendered": false
+							},
+                            { "sTitle": "扣分底限", "mDataProp": "points_floor_level", "sWidth": "10%", "sClass": "center",
+							  "bUseRendered": false
+							},
+							{ "sTitle": "剩余扣分分数", "mDataProp": "current_points_score", "sWidth": "10%","sClass": "center",
+								   "bUseRendered": false
+							}
+               ];			
+			   var surl=top.getUrlBase()+"/actions/IntegrationRight.action?getIntegrationRightList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData.push( { "name":"info.id","value": -1} );
+			    },
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+			function updateInfo(id){
+				top.openDialog("修改积分管理人员权限","pages/oa/addIntegrationRight.html?optType=update&id="+id,true,700,350,doQuery()); 
+			}
+
+		 
+		 function addIntegrationRight(){
+            top.openDialog("添加积分管理人员权限","pages/oa/addIntegrationRight.html?optType=insert",true,700,350,doQuery); 		 
+		 }
+		 
+		 function deleteIntegrationRight(){
+		    var ids=top.getAllCheckedValue( document.getElementsByName('checkId') );
+			if (ids.length > 0){
+				top.showConfirm("您确定要删除选中的积分权限信息吗？", doDeleteIntegrationRight);
+			}else{
+				top.showInfoWinWarn("请选择要删除的积分权限信息");
+			} 
+		 }
+		 
+		 function doDeleteIntegrationRight(){
+		    var ids=top.getAllCheckedValue( document.getElementsByName('checkId') );
+			var aoData=[];
+			aoData.push( { "name":"ids","value":ids} );
+			top.sendAjaxRequest("/actions/IntegrationRight.action?deleteIntegrationRight",aoData,doDeleteIntegrationRightCallback);
+		 }
+		 
+		 function doDeleteIntegrationRightCallback(obj){
+		    if(obj.status==true){
+			   top.showInfoWinOK("操作成功!");
+			   doQuery();
+			}else{
+			   top.showInfoWinError("操作失败！");
+			}
+		 }
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+			<table width="100%" align="center" cellpadding="0" cellspacing="0"
+				border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									&nbsp;积分管理人员权限列表&nbsp;
+								</td>
+								<td>
+								  <div class="buttonDivTwo">
+								    <a href="javascript:void(0)" onclick="addIntegrationRight()">添加</a>
+								  </div>
+								</td>
+								<td>
+								  <div class="buttonDivTwo">
+								    <a href="javascript:void(0)" onclick="deleteIntegrationRight()">删除</a>
+								  </div>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

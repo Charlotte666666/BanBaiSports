@@ -1,0 +1,530 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet"
+			type="text/css"/>
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css"
+			media="print, projection, screen"/>
+		<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" charset="utf-8">
+		    var ids="";
+			var money=0;
+			var list=null;
+			var customize_list=null;
+			var pro_type="1";
+			var current_brand="";
+			$(document).ready(function() {
+			    if(!top.g_isPermit('09_purchase_order')){
+				$("#td_check").hide();
+				$("#td_purchase").hide();
+				}
+				$( "#tabs ul" ).tabs();
+				getPurchseList();
+				getPurchseProCustomizeList();
+				doNotCheckQuery();
+			// purOrderList();
+			} );
+			function getPurchseList(){
+				var aoData=[];
+				//aoData.put();
+				xurl="/actions/ProductOrder.action?getOrderDetailList";
+				top.sendAjaxRequest(xurl,aoData,getPurchseListCallback);
+				//$("#tdProduct_class").html(top.getCodeSelectHtml("CUST_TYPE","cust_type",true,'0'));
+			}
+			function getPurchseListCallback(obj){
+				//ids=obj.aaData[0].ids;
+				//var order_ids=ids.split(",");
+			    list=obj.aaData;
+				var ht="";
+				ht+='<tr class="tr_data" height="32px">';
+				ht+='<td>品牌</td>';
+				ht+='<td>产品类别</td>';
+				//ht+='<td>产品品牌</td>';
+				ht+='<td>产品名称</td>';
+				ht+='<td>产品规格</td>';
+				ht+='<td>产品型号</td>';
+				ht+='<td>产品单位</td>'
+				ht+='<td>产品数量</td>';
+				ht+='<td>采购价</td>';
+				ht+='<td>产品金额</td>';
+				ht+='<td>操作</td>';
+				ht+='</tr>';
+				if(list){
+				    var brand="";
+					var n=[][2];
+					var j=0;
+				    for(var i=0;i<list.length;i++){
+					   if(brand.indexOf(list[i].product_brand)==-1){
+					     if(brand!=""){
+  						     brand+=",";
+						 }
+					     brand+=list[i].product_brand;
+					   }
+					}
+					var brand_num=brand.split(",");
+					for(var i=0;i<brand_num.length;i++){
+					   var t=brand_num[i];
+					   brand_num[i]=new Array();
+					   brand_num[i][0]=t;
+					   brand_num[i][1]=0;
+					   for(var j=0;j<list.length;j++){
+					      if(brand_num[i][0]==list[j].product_brand){
+						     brand_num[i][1]++;
+						  }
+					   }
+					}
+                    var content=new Array(brand_num.length);
+					for(var j=0;j<brand_num.length;j++){
+					        var k=brand_num[j][1];
+					        content[j]="";
+						for(var i=0;i<list.length;i++){
+						    if(brand_num[j][0]==list[i].product_brand){
+							  
+							  content[j]+="<tr class='tr_data "+brand_num[j][0]+"' height='32px'>";
+							  if(k==brand_num[j][1]){
+							    content[j]+="<td rowspan='"+brand_num[j][1]+"'>"+top.getSupplierNameById(brand_num[j][0])+"</td>";
+							  }
+							  content[j]+='<td align="left"><input type="hidden" value="'+list[i].order_id+'" id="order_ids_'+list[i].product_id+'"/><input type="checkBox" name="products" checked value="'+i+'"><span id="product_class_'+list[i].product_id+'">'+list[i].product_class+'</span></td>';
+							  content[j]+='<td id=product_name_'+list[i].product_id+'>'+list[i].product_name+'</td>';
+							  content[j]+='<td id=product_size_'+list[i].product_id+'>'+list[i].product_size+'</td>';
+							  content[j]+='<td id=product_model_'+list[i].product_id+'>'+list[i].product_model+'</td>';
+							  content[j]+='<td><input type="hidden" id="unit_'+list[i].product_id+'" value="'+list[i].unit+'"/>'+top.getCodeName("UNIT",list[i].unit)+'</td>';
+							  content[j]+='<td id=product_count_'+list[i].product_id+'>'+list[i].product_count+'</td>';
+							  content[j]+='<td id=price_'+list[i].product_id+'>'+list[i].price+'</td>';
+							  content[j]+='<td id=money_'+list[i].product_id+'>'+list[i].money+'</td>';
+							  if(k==brand_num[j][1]){
+							     content[j]+="<td align='center' rowspan='"+brand_num[j][1]+"'><div class='buttonDivTwo'><a href='javascript:void(0)' onclick='doPurchase(\""+brand_num[j][0]+"\")'>下单</a></div></td>";
+							  }
+							  k--;
+							}
+							//ht+='<tr class="tr_data" height="32px">';
+							//ht+='<td align="left"><input type="hidden" value="'+list[i].order_id+'" id="order_ids_'+list[i].product_id+'"/><input type="checkBox" name="products" value="'+i+'"><span id="product_class_'+list[i].product_id+'">'+list[i].product_class+'</span></td>';
+							//ht+='<td><input type="hidden" id="product_brand_'+list[i].product_id+'" value="'+list[i].product_brand+'"/>'+top.getSupplierNameById(list[i].product_brand)+'</td>';
+							//ht+='<td id=product_name_'+list[i].product_id+'>'+list[i].product_name+'</td>';
+							//ht+='<td id=product_size_'+list[i].product_id+'>'+list[i].product_size+'</td>';
+							//ht+='<td id=product_model_'+list[i].product_id+'>'+list[i].product_model+'</td>';
+							//ht+='<td><input type="hidden" id="unit_'+list[i].product_id+'" value="'+list[i].unit+'"/>'+top.getCodeName("UNIT",list[i].unit)+'</td>';
+							//ht+='<td id=product_count_'+list[i].product_id+'>'+list[i].product_count+'</td>';
+							//ht+='<td id=price_'+list[i].product_id+'>'+list[i].price+'</td>';
+							//ht+='<td id=money_'+list[i].product_id+'>'+list[i].money+'</td>';
+							////ht+='<td id=money_'+list[i].product_id+'>'+list[i].stock_num+'</td>';
+							//ht+='</tr>';
+						}
+						content[j]+="</tr>";
+						ht+=content[j];
+					}
+				}else{
+				 ht+='<tr class="tr_data" height="32px" colspan="8">没有需要下单的产品！</tr>';
+				}
+				$("#purOrderList").html(ht);
+				
+			}
+			
+			//定制产品采购列表
+			function getPurchseProCustomizeList(){
+			   var aoData=[];
+			   aoData.push({ "name":"customize.status","value":"1"});
+			   xurl="/actions/ProductOrder.action?getProductCustomizePurchseList";
+			   top.sendAjaxRequest(xurl,aoData,getPurchseProCustomizeListCallback);
+			}
+			function getPurchseProCustomizeListCallback(obj){
+			    customize_list=obj.aaData;
+				var ht="";
+				ht+='<tr class="tr_data" height="32px">';
+				ht+='<td>品牌</td>';
+				ht+='<td>产品类别</td>';
+				ht+='<td>产品名称</td>';
+				ht+='<td>产品规格</td>';
+				ht+='<td>产品型号</td>';
+				ht+='<td>产品单位</td>'
+				ht+='<td>产品数量</td>';
+				ht+='<td>采购价</td>';
+				ht+='<td>产品金额</td>';
+				ht+='<td>操作</td>';
+				ht+='</tr>';
+				if(customize_list){
+				    var brand="";
+					var n=[][2];
+					var j=0;
+				    for(var i=0;i<customize_list.length;i++){
+					   if(brand.indexOf(customize_list[i].product_brand)==-1){
+					     if(brand!=""){
+  						     brand+=",";
+						 }
+					     brand+=customize_list[i].product_brand;
+					   }
+					}
+					var brand_num=brand.split(",");
+					for(var i=0;i<brand_num.length;i++){
+					   var t=brand_num[i];
+					   brand_num[i]=new Array();
+					   brand_num[i][0]=t;
+					   brand_num[i][1]=0;
+					   for(var j=0;j<customize_list.length;j++){
+					      if(brand_num[i][0]==customize_list[j].product_brand){
+						     brand_num[i][1]++;
+						  }
+					   }
+					}
+                    var content=new Array(brand_num.length);
+					for(var j=0;j<brand_num.length;j++){
+					     var k=brand_num[j][1];
+					     content[j]="";
+						for(var i=0;i<customize_list.length;i++){
+						
+						    if(brand_num[j][0]==customize_list[i].product_brand){
+							  
+							  content[j]+="<tr class='tr_data "+brand_num[j][0]+"' height='32px'>";
+							  if(k==brand_num[j][1]){
+							    content[j]+="<td rowspan='"+brand_num[j][1]+"'>"+top.getSupplierNameById(brand_num[j][0])+"</td>";
+							  }
+							  content[j]+='<td align="left"><input type="hidden" value="'+customize_list[i].order_id+'" id="order_ids_'+customize_list[i].product_id+'"/><input type="checkBox" name="custProducts" checked value="'+i+'"><span id="product_class_'+customize_list[i].product_id+'">'+customize_list[i].product_class+'</span></td>';
+							 // content[j]+='<td><input type="hidden" id="product_brand_'+customize_list[i].product_id+'" value="'+customize_list[i].product_brand+'"/>'+top.getSupplierNameById(customize_list[i].product_brand)+'</td>';
+							  content[j]+='<td id=product_name_'+customize_list[i].product_id+'>'+customize_list[i].product_name+'</td>';
+							  content[j]+='<td id=product_size_'+customize_list[i].product_id+'>'+customize_list[i].product_size+'</td>';
+							  content[j]+='<td id=product_model_'+customize_list[i].product_id+'>'+customize_list[i].product_model+'</td>';
+							  content[j]+='<td><input type="hidden" id="unit_'+customize_list[i].product_id+'" value="'+customize_list[i].unit+'"/>'+top.getCodeName("UNIT",customize_list[i].unit)+'</td>';
+							  content[j]+='<td id=product_count_'+customize_list[i].product_id+'>'+customize_list[i].product_count+'</td>';
+							  content[j]+='<td id=price_'+customize_list[i].product_id+'>'+customize_list[i].price+'</td>';
+							  content[j]+='<td id=money_'+customize_list[i].product_id+'>'+customize_list[i].money+'</td>';
+							  if(k==brand_num[j][1]){
+							     content[j]+="<td align='center' rowspan='"+brand_num[j][1]+"'><div class='buttonDivTwo'><a href='javascript:void(0)' onclick='doCustPurchase(\""+brand_num[j][0]+"\")'>下单</a></div></td>";
+							  }
+							  k--;
+							}
+							//ht+='<tr class="tr_data" height="32px">';
+							//ht+='<td align="left"><input type="hidden" value="'+customize_list[i].order_id+'" id="order_ids_'+customize_list[i].product_id+'"/><input type="checkBox" name="custProducts" value="'+i+'"><span id="product_class_'+customize_list[i].product_id+'">'+customize_list[i].product_class+'</span></td>';
+							//ht+='<td><input type="hidden" id="product_brand_'+customize_list[i].product_id+'" value="'+customize_list[i].product_brand+'"/>'+top.getSupplierNameById(customize_list[i].product_brand)+'</td>';
+							//ht+='<td id=product_name_'+customize_list[i].product_id+'>'+customize_list[i].product_name+'</td>';
+							//ht+='<td id=product_size_'+customize_list[i].product_id+'>'+customize_list[i].product_size+'</td>';
+							//ht+='<td id=product_model_'+customize_list[i].product_id+'>'+customize_list[i].product_model+'</td>';
+							//ht+='<td><input type="hidden" id="unit_'+customize_list[i].product_id+'" value="'+customize_list[i].unit+'"/>'+top.getCodeName("UNIT",customize_list[i].unit)+'</td>';
+							//ht+='<td id=product_count_'+customize_list[i].product_id+'>'+customize_list[i].product_count+'</td>';
+							//ht+='<td id=price_'+customize_list[i].product_id+'>'+customize_list[i].price+'</td>';
+							//ht+='<td id=money_'+customize_list[i].product_id+'>'+customize_list[i].money+'</td>';
+							//ht+='</tr>';
+						}
+						content[j]+="</tr>";
+						ht+=content[j];
+					}
+				}else{
+				 ht+='<tr class="tr_data" height="32px" colspan="8">没有需要下单的产品！</tr>';
+				}
+				$("#purProCustomizeOrderList").html(ht);
+			}
+			function doPurchase(brand){
+			   current_brand=brand;
+			   if($("."+current_brand+" input[name='products']:checked").length>0){
+			     getPurOrderInfoIdCallBack();
+			   }else{
+			     top.showInfoWinWarn("请勾选该品牌需要下采购单的产品！");
+			   }
+			  //if($('input[name="products"]:checked').length>0){
+			  //// top.showConfirm("确定为选择的"+$('input[name="products"]:checked').length+"项产品类别下采购单吗？", getPurOrderInfoIdCallBack);
+			  // getPurOrderInfoIdCallBack();
+			  //}else{
+			  // top.showInfoWinWarn("请勾选需要下采购单的产品！");
+			 // }
+			}
+			function confirmPurchase(){
+				var product_id="";
+				top.sendAjaxRequest("/actions/ProductOrder.action?createPurOrderInfoID",null,getPurOrderInfoIdCallBack);
+			}
+			function getPurOrderInfoIdCallBack(){
+			  try{
+				pro_type="1"
+				var products = new Array();
+				var i=0;
+				$("."+current_brand+" input[name='products']:checked").each(function(){
+				   products[i++]=list[$(this).val()];
+				});
+			   // $('input[name="products"]:checked').each(function(){    
+				//	 products[i++]=list[$(this).val()];
+				//});
+				getProductInfoList(products);
+				showPurOrder();
+				//getPurchseProCustomizeList();
+			
+			  }catch(e){
+				 top.showInfoWinError("处理异常:"+e.message);
+			   }
+			}
+			function doCustPurchase(brand){
+			    current_brand=brand;
+				pro_type="2";
+				if($('.'+current_brand+' input[name="custProducts"]:checked').length>0){
+				    var products = new Array();
+					var i=0;
+					$('.'+current_brand+' input[name="custProducts"]:checked').each(function(){ 
+						products[i++]=customize_list[$(this).val()];
+					});
+					getProductInfoList(products);
+					showPurOrder();
+				  }else{
+				   top.showInfoWinWarn("请勾选需要下采购单的产品！");
+				  }
+			}
+			
+			function addPurchaseOrder(order_id,ids,money){
+			    var aoData=[];
+				   aoData.push( { "name": "purInfo.order_id", "value":order_id} );
+				   aoData.push( { "name": "ids", "value":ids} );
+				   aoData.push( { "name": "purInfo.money", "value":money} );
+				   top.sendAjaxRequest("/actions/ProductOrder.action?insertPurchaseOrder",aoData,optCallback);
+			}
+		   // 新建、删除或修改操作回调函数
+       function optCallback(obj){
+           try{
+            if ( obj.status == true ){
+              top.showInfoWinOK("操作成功");
+			  if(pro_type=="1"){
+				getPurchseList();
+			  }else{
+				getPurchseProCustomizeList();
+			  }
+			  //doNotCheckQuery();
+			 // purOrderList();
+			 // top.closeDialog();
+            }else{
+              top.showInfoWinError("操作失败");
+            }
+           }catch(e){
+              top.showInfoWinError("处理异常:"+e.message);
+           }
+       }
+	    function docheck(){
+		  if( $("[name = selectAll]:checkbox").attr("checked")){// 全选
+				$("[name = products]:checkbox").attr("checked", true);
+			}else{ 
+                $("[name = products]:checkbox").attr("checked",false );
+			}
+		}
+		function doCustomCheck(){
+		  if( $("[name = custSelectAll]:checkbox").attr("checked")){// 全选
+				$("[name = custProducts]:checkbox").attr("checked", true);
+			}else{ 
+                $("[name = custProducts]:checkbox").attr("checked",false );
+			}
+		}
+		function doNotCheckQuery(){
+		     var iaoColumns= [
+			                    { "sTitle": "采购单号", "mDataProp": "order_id", "sWidth": "15%", "sClass": "center",
+								 "fnRender": function ( oObj ) {
+                                           return  '<a href=\'javascript:void(0)\' onclick="checkPurOrderInfo(\''+oObj.aData.order_id+'\',\''+oObj.aData.is_customized+'\')" >'+oObj.aData.order_id+'</a>&nbsp';
+                                      },
+								"bUseRendered": false },
+							   { "sTitle": "供应商", "mDataProp": "product_supplier","sWidth": "20%","sClass": "center","bUseRendered": false },
+                               { "sTitle": "采购金额", "mDataProp": "money","sWidth": "10%","sClass": "center","bUseRendered": false },
+                               { "sTitle": "状态", "mDataProp": "product_status","sWidth": "10%","sClass": "center",
+							      "fnRender": function ( oObj ) {
+                                           return top.getCodeName( "PURCHASE_STATUS", oObj.aData.product_status);
+                                      },
+							   "bUseRendered": false },
+							    { "sTitle": "下单人员", "mDataProp": "opt_user","sWidth": "15%","sClass": "center",
+								 "fnRender": function ( oObj ) {
+                                           return top.getUserNameByCode(oObj.aData.opt_user)
+                                      },
+									  "bUseRendered": false },
+							   { "sTitle": "下单时间", "mDataProp": "order_time","sWidth": "15%","sClass": "center",
+								   "fnRender": function ( oObj ) {
+											   return top.getTimeStr(oObj.aData.order_time,false);
+										  },
+								   "bUseRendered": false },
+							   { "sTitle": "操作", "mDataProp": "order_time","sWidth": "15%","sClass": "center",
+								   "fnRender": function ( oObj ) {
+								   if(top.g_isPermit('09_order_check')){
+									     return '<a href=\'javascript:void(0)\' onclick="checkPurOrder(\''+oObj.aData.order_id+'\',\''+oObj.aData.is_customized+'\')" >验收</a>&nbsp';
+									 }
+								 else{
+										 return "";
+									}
+							    },
+							 "bUseRendered": false }
+             ];
+			   
+			  var surl=top.getUrlBase()+"/actions/ProductOrder.action?getPurchaseOrderList";
+
+			   oTable = $('#table_not_check').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+						//aoData.push( { "name": "purInfo.product_name", "value":$("#product_name").val() } );
+						//aoData.push( { "name": "purInfo.product_class", "value":$("#product_class").val() } );
+						//aoData.push( { "name": "time1", "value":$("#time1").val() } );
+						//aoData.push( { "name": "time2", "value":$("#time2").val() } );
+						aoData.push( { "name": "purInfo.product_status", "value":'01' } );
+					},
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+		}
+		function checkPurOrder(order_id,is_customized){
+		  var xurl="pages/pro09/purOrderCheckInfo.html?infoId="+order_id+"&is_customized="+is_customized;
+				top.openDialog("采购验收",xurl,true,600,500,checkCallBack);
+		
+		}
+		function checkCallBack(obj){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK){
+					  if(pro_type=="1"){
+						getPurchseList();
+					  }else{
+						getPurchseProCustomizeList();
+					  }
+				 } 
+				  //doNotCheckQuery();
+				 // $("#tabs-2").html('<iframe  id="iframe" src="purOrderManage.html" width="100%" height="500px" frameborder="0"></iframe>');
+				}catch(e){
+				}
+		  }
+		  
+		  function showPurOrder(){
+		   var xurl="pages/pro09/purchaseOrderInfo.html?optType=insert&type="+pro_type+"&brand="+current_brand;
+		   top.openDialog("采购单",xurl,true,800,500,checkCallBack);
+		  }
+		  function checkPurOrderInfo(order_id,is_customized){
+		   var xurl="pages/pro09/purchaseOrderInfo.html?optType=check&order_id="+order_id+"&is_customized="+is_customized;
+		   top.openDialog("采购单",xurl,true,800,500,checkCallBack);
+		  }
+		  function getProductInfoList(obj){
+		      top.setTempValue(obj);
+		  }
+		  //定制与非定制产品下单菜单切换
+		  function changBtBind(title){
+		     switch(title){
+			     case 'non-customized':
+				     pro_type="1";
+					 //$("#tabs-0 input[name = products]:checkbox").attr("checked",false );
+					  break;
+				 case 'customized':
+				     pro_type="2";
+					  //$("#tabs-3 input[name = products]:checkbox").attr("checked",false );
+					 break;
+			 }
+		  }
+		  //onclick="changBtBind('customized')" 
+		 // onclick="changBtBind('non-customized')"
+		</script>
+	</head>
+	<body>
+		<div id="tabs" style="margin: 10px 0px 0px 0px;">
+			<ul>
+				<li>
+					<a  href="#tabs-0"><span>下采购单(非定制产品)</span>
+					</a>
+				</li>
+				<li>
+					<a href="#tabs-3"><span>下采购单(定制产品)</span>
+					</a>
+				</li>
+				<!--<li>
+					<a href="#tabs-1"><span>采购验收</span>
+					</a>
+				</li>
+				<li>
+					<a href="#tabs-2"><span>采购单查询</span>
+					</a>
+				</li>!-->
+			</ul>
+		</div>
+		<div id="tabs-0">
+				<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+					<tr bgcolor="#C6DEFF">
+						<td id="td_check" align="left" width="150px">
+							<!--&nbsp;<input type="checkBox" name="selectAll" value="全选" onclick="docheck()" >全选</input>&nbsp;&nbsp;&nbsp;-->
+						</td>
+						<td  id="td_purchase" align="left">
+							<!--<div class="buttonDivTwo">
+							    <a href="javascript:doPurchase()">下单</a>
+							</div>-->
+						</td>
+						<td align="left" width="120px">
+							<div class="buttonDivTwo">
+							    <a href="javascript:getPurchseList()">刷新</a>
+							</div>
+						</td>
+						<td>
+							&nbsp;
+						</td>
+					</tr>
+					
+				</table>
+				<table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" id="purOrderList">
+				</table>
+	</div>
+	<div id="tabs-3">
+	    <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+					<tr bgcolor="#C6DEFF">
+						<td id="td_check" align="left" width="150px">
+							<!--&nbsp;<input type="checkBox" name="custSelectAll" value="全选" onclick="doCustomCheck()" >全选</input>&nbsp;&nbsp;&nbsp;-->
+						</td>
+						<td align="left" width="120px">
+						<!--<div class="buttonDivTwo">
+							    <a href="javascript:doCustPurchase()">下单</a>
+							</div>-->
+						</td>
+						<td align="left" width="120px">
+							<div class="buttonDivTwo">
+							    <a href="javascript:getPurchseProCustomizeList()">刷新</a>
+								<!--<a href="javascript:showPurOrder()">下单</a>-->
+							</div>
+						</td>
+						<td>
+							&nbsp;
+						</td>
+					</tr>
+					
+				</table>
+				<table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" id="purProCustomizeOrderList">
+				</table>
+	</div>
+	<!--<div id="tabs-1">
+	<table cellpadding="0" width="100%" cellspacing="0" border="0"	class="display" id="table_not_check"></table>
+	</div>	
+	<div id="tabs-2">
+	 <iframe  id="iframe" src="purOrderManage.html" width="100%" height="500px" frameborder="0"></iframe>
+	</div>		!-->
+	</body>
+</html>

@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.helpyouworkeasy.persistence.OANoticeMapper">
+
+  <insert id="insertOANoticeInfo" parameterType="OANoticeInfo">
+    INSERT INTO tbl_oa_notice (notice_type,notice_title,notice_content,publisher,sendee,sendee_names,emergency,is_immediately,attention_type,modify_user,area,id,create_time,publish_time,modify_time,is_deleted,is_save_rela)
+    VALUES (#{notice_type}, #{notice_title}, #{notice_content}, #{publisher}, #{sendee}, #{sendee_names}, #{emergency}, #{is_immediately}, #{attention_type}, #{modify_user}, #{area}, #{id}, #{create_time}, #{publish_time}, #{modify_time}, 0, 0)
+  </insert>
+
+  <update id="updateOANoticeInfo" parameterType="OANoticeInfo">
+    update tbl_oa_notice set 
+        notice_type=#{notice_type},notice_title=#{notice_title},notice_content=#{notice_content},sendee=#{sendee},sendee_names=#{sendee_names},emergency=#{emergency},is_immediately=#{is_immediately},attention_type=#{attention_type},modify_user=#{modify_user},modify_time=#{modify_time}
+    where id=#{id}
+  </update>
+  
+  <update id="deleteOANoticeInfo" parameterType="OANoticeInfo">
+    update tbl_oa_notice set 
+       is_deleted=1
+    where id=#{id}
+  </update>
+
+  <select id="getOANoticeInfoListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_oa_notice where 1=1 
+    <if test="o.notice_type != '' and o.notice_type != null" >
+      and notice_type=#{o.notice_type}
+    </if>
+    <if test="o.notice_title != '' and o.notice_title != null" >
+      and notice_title like '%${o.notice_title}%'
+    </if>
+    <if test="o.publisher != '' and o.publisher != null" >
+      and publisher=#{o.publisher}
+    </if>
+    <if test="o.emergency != '' and o.emergency != null" >
+      and emergency=#{o.emergency}
+    </if>
+    <if test="o.is_immediately != '' and o.is_immediately != null" >
+      and is_immediately=#{o.is_immediately}
+    </if>
+    <if test="o.attention_type != '' and o.attention_type != null" >
+      and attention_type=#{o.attention_type}
+    </if>
+    <if test="o.modify_user != '' and o.modify_user != null" >
+      and modify_user=#{o.modify_user}
+    </if>
+    <if test="o.area != '' and o.area != null" >
+      and area=#{o.area}
+    </if>
+    <if test="o.is_deleted != -1" >
+      and is_deleted=#{o.is_deleted}
+    </if>
+    <if test="o.is_save_rela != -1" >
+      and is_save_rela=#{o.is_save_rela}
+    </if>
+    <if test="time1 != -1" >
+      and publish_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=publish_time
+    </if>
+  </select>
+
+  <select id="getOANoticeInfoPageList" parameterType="map" resultType="OANoticeInfo">
+    select 
+    notice_type,notice_title,publisher,emergency,is_immediately,attention_type,modify_user,area,id,create_time,publish_time,modify_time,is_deleted,is_save_rela
+    from tbl_oa_notice where 1=1 
+    <if test="o.notice_type != '' and o.notice_type != null" >
+      and notice_type=#{o.notice_type}
+    </if>
+    <if test="o.notice_title != '' and o.notice_title != null" >
+      and notice_title like '%${o.notice_title}%'
+    </if>
+    <if test="o.publisher != '' and o.publisher != null" >
+      and publisher=#{o.publisher}
+    </if>
+    <if test="o.emergency != '' and o.emergency != null" >
+      and emergency=#{o.emergency}
+    </if>
+    <if test="o.is_immediately != '' and o.is_immediately != null" >
+      and is_immediately=#{o.is_immediately}
+    </if>
+    <if test="o.attention_type != '' and o.attention_type != null" >
+      and attention_type=#{o.attention_type}
+    </if>
+    <if test="o.modify_user != '' and o.modify_user != null" >
+      and modify_user=#{o.modify_user}
+    </if>
+    <if test="o.area != '' and o.area != null" >
+      and area=#{o.area}
+    </if>
+    <if test="o.is_deleted != -1" >
+      and is_deleted=#{o.is_deleted}
+    </if>
+    <if test="o.is_save_rela != -1" >
+      and is_save_rela=#{o.is_save_rela}
+    </if>
+    <if test="time1 != -1" >
+      and publish_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=publish_time
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+  
+  <select id="getOANoticeInfoById" parameterType="map" resultType="OANoticeInfo">
+    select 
+    notice_type,notice_title,notice_content,publisher,sendee,sendee_names,emergency,is_immediately,attention_type,modify_user,area,id,create_time,publish_time,modify_time,is_deleted,is_save_rela
+    from tbl_oa_notice where id=#{o.id}
+  </select>
+  
+  <insert id="insertOANoticeUser" parameterType="OANoticeUser">
+    INSERT INTO tbl_oa_notice_user (id,user_code,notice_id,publish_time,status)
+    VALUES (#{id}, #{user_code}, #{notice_id}, #{publish_time}, 0)
+  </insert>
+
+  <update id="updateOANoticeUserStatus" parameterType="OANoticeUser">
+    update tbl_oa_notice_user set 
+     status=1
+    where user_code=#{user_code} and notice_id=#{notice_id}
+  </update>
+
+  <select id="getOANoticeUserListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_oa_notice_user where 1=1 
+    <if test="o.user_code != '' and o.user_code != null" >
+      and user_code=#{o.user_code}
+    </if>
+     <if test="o.status != -1" >
+      and status=#{o.status}
+    </if>
+    <if test="time1 != -1" >
+      and publish_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=publish_time
+    </if>
+  </select>
+
+  <select id="getOANoticeUserPageList" parameterType="map" resultType="OANoticeUser">
+    select notice_id,status from tbl_oa_notice_user where 1=1 
+    <if test="o.user_code != '' and o.user_code != null" >
+      and user_code=#{o.user_code}
+    </if>
+    <if test="o.status != -1" >
+      and status=#{o.status}
+    </if>
+    <if test="time1 != -1" >
+      and publish_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=publish_time
+    </if>
+    order by publish_time desc
+    limit #{pageStart},#{pageSize}
+  </select>
+  
+  <select id="getOANoticeInfoListByIds" parameterType="map" resultType="OANoticeInfo">
+   select 
+    notice_type,notice_title,publisher,emergency,is_immediately,attention_type,modify_user,area,id,create_time,publish_time,modify_time,is_deleted,is_save_rela
+   from tbl_oa_notice where id in ( ${ids}  ) order by publish_time desc
+  </select>
+  
+  <delete id="deleteNoticeUserByNoticeId" parameterType="map">
+	delete from tbl_oa_notice_user where notice_id=#{notice_id}
+  </delete>
+  
+
+</mapper>

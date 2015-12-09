@@ -1,0 +1,15 @@
+INFO 2013-11-12 22:59:22 [hsqldb.db.HSQLDB424CD2F07E.ENGINE] -Checkpoint start 
+INFO 2013-11-12 22:59:22 [hsqldb.db.HSQLDB424CD2F07E.ENGINE] -checkpointClose start 
+INFO 2013-11-12 22:59:22 [hsqldb.db.HSQLDB424CD2F07E.ENGINE] -checkpointClose end 
+INFO 2013-11-12 22:59:22 [hsqldb.db.HSQLDB424CD2F07E.ENGINE] -Checkpoint end 
+ERROR 2013-11-12 22:59:22 [com.damon.log.LogUtil] -java.sql.SQLSyntaxErrorException: user lacks privilege or object not found: TBL_SYS_USERS 
+INFO 2013-11-12 23:32:49 [hsqldb.db.HSQLDB424CD2F07E.ENGINE] -checkpointClose start 
+INFO 2013-11-12 23:32:49 [hsqldb.db.HSQLDB424CD2F07E.ENGINE] -checkpointClose end 
+INFO 2013-11-12 23:49:30 [hsqldb.db.HSQLDB424CD2F07E.ENGINE] -checkpointClose start 
+INFO 2013-11-12 23:49:30 [hsqldb.db.HSQLDB424CD2F07E.ENGINE] -checkpointClose end 
+INFO 2013-11-13 10:48:11 [hsqldb.db.HSQLDB424CD2F07E.ENGINE] -checkpointClose start 
+INFO 2013-11-13 10:48:11 [hsqldb.db.HSQLDB424CD2F07E.ENGINE] -checkpointClose end 
+INFO 2013-11-13 10:52:06 [hsqldb.db.HSQLDB424CD2F07E.ENGINE] -checkpointClose start 
+INFO 2013-11-13 10:52:06 [hsqldb.db.HSQLDB424CD2F07E.ENGINE] -checkpointClose end 
+INFO 2014-02-25 15:28:33 [hsqldb.db.HSQLDB424CD2F07E.ENGINE] -checkpointClose start 
+INFO 2014-02-25 15:28:33 [hsqldb.db.HSQLDB424CD2F07E.ENGINE] -checkpointClose end 

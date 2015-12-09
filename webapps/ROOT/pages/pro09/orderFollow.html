@@ -1,0 +1,440 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet"
+			type="text/css"/>
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css"
+			media="print, projection, screen"/>
+		<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" charset="utf-8">
+		    var ids="";
+			var oTable=null;
+			var queryCtlMark1=0;//查询条件显示收缩标志变量
+			var queryCtlMark2=0;//查询条件显示收缩标志变量
+			$(document).ready(function() {
+			$( "#tabs ul" ).tabs();
+			initData();
+			} );
+	 	function initData(){
+		   $( "#tdstatus" ).html( top.getCodeSelectHtml("ORDER_STATUS","status",true) );
+		   $( "#span_follow_status" ).html( top.getCodeSelectHtml("FOLLOW_STATUS","follow_status",true,0) );
+		   doQuery();
+		   doProductNotBuyQuery();
+		}
+		function doQuery(){
+		 var iaoColumns= [
+			                { "sTitle": "订单编号", "mDataProp": "id", "sWidth": "10%","sClass": "center",
+							        "fnRender": function ( oObj ) {
+                                        return '<a href=\'javascript:void(0)\' onclick="checkOrderInfo(\''+oObj.aData.id+'\')" >'+oObj.aData.id+'</a>';
+										
+                                  },
+								   "bUseRendered": false
+							},
+			                { "sTitle": "客户姓名", "mDataProp": "cust_name", "sWidth": "10%","sClass": "center",
+								"fnRender": function ( oObj ) {
+                                        return '<a href=\'javascript:void(0)\' onclick="top.openCustDetailPage(\''+oObj.aData.cust_code+'\',\'0-0\',\'update\',\'客户详细信息\')" >'+oObj.aData.cust_name+'</a>';
+										
+                                  },
+									"bUseRendered": false 
+							},
+			                { "sTitle": "设计师", "mDataProp": "designerCode", "sWidth": "10%", 
+							 "fnRender": function ( oObj ) {
+                                          return top.getUserNameByCode(oObj.aData.designerCode);
+                                     },
+							"bUseRendered": false},
+                            { "sTitle": "客户状态", "mDataProp": "cust_status", "sWidth": "8%", "sClass": "center",
+							 "fnRender": function ( oObj ) {
+                                          return top.getCodeName("CUST_STATUS",oObj.aData.cust_status);
+                                     },
+							"bUseRendered": false},
+							{ "sTitle": "工程状态", "mDataProp": "project_status", "sWidth": "8%", "sClass": "center",
+							"fnRender": function ( oObj ) {
+                                          return top.getCodeName("PRO_STATUS",oObj.aData.project_status);
+                                     },
+							"bUseRendered": false   },
+							{ "sTitle": "订单状态", "mDataProp": "status", "sWidth": "8%","sClass": "center",
+								"fnRender": function ( oObj ) {
+                                          return top.getCodeName("ORDER_STATUS",oObj.aData.status);
+                                     },
+									"bUseRendered": false 
+							},
+							{ "sTitle": "日期", "mDataProp": "order_date", "sWidth": "10%", "sClass": "center",
+								 "fnRender": function ( oObj ) {
+                                           return top.getTimeStr(oObj.aData.order_date ,true);
+                                     },
+							"bUseRendered": false}
+							
+               ];			
+			   var surl=top.getUrlBase()+"/actions/ProductOrder.action?getProductSaleInfoList";
+			   oTable = $('#dataTable0').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				   aoData.push( { "name": "orderInfo.cust_name", "value":$("#cust_name").val() } );
+				   aoData.push( { "name": "orderInfo.designerCode", "value":$("#designerCode").val() } );
+				   aoData.push( { "name": "orderInfo.status", "value":$("#status").val() } );
+			    },
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			}
+			function checkCustInfo(id){
+			var xurl="pages/pro09/custUpdate.html?optType=update&id="+id;
+		    top.openDialog("客户详细信息",xurl,true,900,600,checkCallBack);
+			}
+			
+			function checkCallBack(obj){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				}
+		  }
+		   // 新建、删除或修改操作回调函数
+       function optCallback(obj){
+           try{
+            if ( obj.status == true ){
+              top.showInfoWinOK("操作成功");
+			  //getPurchseList();
+			 // purOrderList();
+			 // top.closeDialog();
+            }else{
+              top.showInfoWinError("操作失败");
+            }
+           }catch(e){
+              top.showInfoWinError("处理异常:"+e.message);
+           }
+       }
+	   function doProductNotBuyQuery(){
+	    var iaoColumns= [
+			                   /*{ "sTitle": "订单编号", "mDataProp": "order_id", "sWidth": "15%","sClass": "center",
+							     "fnRender": function ( oObj ) {
+                                        return '<a href=\'javascript:void(0)\' onclick="checkOrderInfo(\''+oObj.aData.order_id+'\')" >'+oObj.aData.order_id+'</a>';
+                                      }, "bUseRendered": false},*/
+							   { "sTitle": "客户姓名", "mDataProp": "cust_name", "sWidth": "15%","sClass": "center",
+									"fnRender": function ( oObj ) {
+											return '<a href=\'javascript:void(0)\' onclick="top.openCustDetailPage(\''+oObj.aData.cust_code+'\',\'4-0\',\'update\',\'客户详细信息\')" >'+oObj.aData.cust_name+'</a>';
+											
+									  },
+										"bUseRendered": false 
+							   },
+			                  { "sTitle": "产品类型", "mDataProp": "product_model", "sWidth": "15%", "sClass": "center","bUseRendered": false},
+							  { "sTitle": "备注", "mDataProp": "follow_time", "sWidth": "30%","sClass": "center",
+                                      "fnRender": function ( oObj ) {
+                                        return '<input type="text" id="memo_'+oObj.aData.id+'" size="40" value="'+oObj.aData.memo+'" />';
+                                      },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "跟进状态", "mDataProp": "follow_status", "sWidth": "15%", "sClass": "center", 
+							    "fnRender": function ( oObj ) {
+                                           return top.getCodeName( "FOLLOW_STATUS",oObj.aData.follow_status);
+                                      },
+									  "bUseRendered": false},
+						       { "sTitle": "操作", "mDataProp": "follow_status", "sWidth": "10%", "sClass": "center", "bSortable": false,
+							    "fnRender": function ( oObj ) {
+                                           return '<a href=\'javascript:void(0)\' onclick="checkNotBuyInfo(\''+oObj.aData.id+'\')" >查看</a>&nbsp'+
+										   '<a href=\'javascript:void(0)\' onclick="updateNotBuyInfo(\''+oObj.aData.id+'\')" >保存</a>';
+                                      },
+									  "bUseRendered": false}
+               ];
+			   
+			   var surl=top.getUrlBase()+"/actions/ProductOrder.action?getProductNotBuyList";
+			    oTable = $('#dataTable2').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				   aoData.push( { "name": "notBuyInfo.cust_name", "value":$("#cust_name1").val() } );
+					aoData.push( { "name": "notBuyInfo.order_id", "value":$("#order_id").val() } );
+					aoData.push( { "name": "notBuyInfo.follower", "value":$("#follower").val() } );
+					aoData.push( { "name": "notBuyInfo.follow_status", "value":$("#follow_status").val() } );
+			    },
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			}
+	     function checkOrderInfo(id){
+			var xurl="pages/pro09/proOrderInfo.html?optType=update&id="+id;
+				top.openDialog("产品订单信息",xurl,true,1100,600,checkProductCallBack);
+			}
+			function checkCustInfo(id){
+			var xurl="pages/pro09/custUpdate.html?optType=update&id="+id;
+				top.openDialog("客户详细信息",xurl,true,900,600,checkProductCallBack);
+			}
+			function checkNotBuyInfo(id){
+			var xurl="pages/pro09/productNotBuyInfo.html?infoId="+id;
+				top.openDialog("客户追销信息",xurl,true,600,400,checkProductCallBack);
+			}
+			function checkProductCallBack(obj){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doProductNotBuyQuery();
+				}catch(e){
+				}
+		  }
+		  
+			function updateNotBuyInfo(infoId){
+			  var aoData=[];
+			  aoData.push( { "name": "notBuyInfo.memo", "value":$("#memo_"+infoId).val() } );
+			  aoData.push( { "name": "notBuyInfo.id", "value":infoId } );
+			  top.sendAjaxRequest("/actions/ProductOrder.action?updateProductNotBuyMemo",aoData,saveCallBack);
+			}
+
+			function saveCallBack(obj){
+				try{
+			if ( obj.status == true ){
+				isSaveOK = true;
+				top.showInfoWinOK("操作成功");
+			}else{
+				isSaveOK = false;
+				top.showInfoWinError("操作失败 "+obj.msg);
+			}
+		   }catch(e){
+			  top.showInfoWinError("处理异常:"+e.message);
+		   }
+		  }
+        function getAllProductTypeList(){
+		   top.sendAjaxRequest("/actions/ProductOrder.action?updateProductNotBuyMemo",aoData,saveCallBack);
+		}
+		//查询条件的展开与收缩
+		function dwOup(num){
+				if(num==0){
+					if(queryCtlMark1==0){//展开
+						$("#queryCtlIcon1").attr("src","../../img/icons/arrow-up.gif"); 
+						$("#queryTab1").slideToggle();
+						queryCtlMark1=1;
+					}else{//收缩
+						$("#queryCtlIcon1").attr("src","../../img/icons/arrow-down.gif"); 
+						$("#queryTab1").slideToggle();
+						queryCtlMark1=0;
+					}
+				}else if(num==1){
+					if(queryCtlMark2==0){//展开
+						$("#queryCtlIcon2").attr("src","../../img/icons/arrow-up.gif"); 
+						$("#queryTab2").slideToggle();
+						queryCtlMark=1;
+					}else{//收缩
+						$("#queryCtlIcon2").attr("src","../../img/icons/arrow-down.gif"); 
+						$("#queryTab2").slideToggle();
+						queryCtlMark2=0;
+					}
+				}
+		}
+		</script>
+	</head>
+	<body>
+		<div id="tabs" style="margin: 5px 0px 0px 0px;">
+			<ul>
+				<li>
+					<a href="#tabs-0"><span>销售统计</span>
+					</a>
+				</li>
+				<!--
+				<li>
+					<a href="#tabs-1"><span>订单明细</span>
+					</a>
+				</li>
+				!-->
+				<li>
+					<a href="#tabs-2"><span>客户追销</span>
+					</a>
+				</li>
+			</ul>
+		</div>
+		<div id="tabs-0">
+				<div style='border: 1px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="150px">
+							&nbsp;销售统计查询&nbsp;
+						</td>
+						<td align="right">
+							<div class="buttonDivTwo">
+								<a href="javascript:doQuery()">查询</a>
+							</div>
+						</td>
+						<td width="2px">
+							&nbsp;
+						</td>
+						<td width="2px">
+							<span><image id="queryCtlIcon1" src="../../img/icons/arrow-down.gif" alt="展开" onclick="javascript:dwOup('0');"/></span>
+						</td>
+					</tr>
+				</table>
+				<table width="100%" align="center" cellpadding="1px"
+					cellspacing="1px" border="0" id="queryTab1" style="display:none">
+					<tr class="tr_data">
+						<td align="right">
+							客户姓名
+						</td>
+						<td align="left" id="custId">
+							<input type="text" id="cust_name" value="" size="15"
+								onkeydown="if(event.keyCode==13) doQuery();" />
+						</td>
+						<td align="right">设计师</td>
+						<td align="left">
+						<input type="text" id="designerCode" value="" size="15"
+								onkeydown="if(event.keyCode==13) doQuery();" /></td>
+						<td align="right">订单状态</td>
+						<td align="left" id="tdstatus"></td>
+					</tr>
+				</table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0"
+				border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									&nbsp;查询结果列表&nbsp;
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<table cellpadding="0" width="100%" cellspacing="0" border="0"
+				class="display" id="dataTable0"></table>
+	</div>
+	<div id="tabs-1">
+	</div>	
+	
+	<div id="tabs-2" >
+	 <div style='border: 2px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="150px">
+							&nbsp;客户追销查询&nbsp;
+						</td>
+						<td align="right">
+							<div class="buttonDivTwo">
+								<a href="javascript:doProductNotBuyQuery()">查询</a>
+							</div>
+						</td>
+						<td width="2px">
+							&nbsp;
+						</td>
+						<td width="2px">
+							<span><image id="queryCtlIcon2" src="../../img/icons/arrow-down.gif" alt="展开" onclick="javascript:dwOup('1');"/></span>
+						</td>
+					</tr>
+				</table>
+				<table width="100%" align="center" cellpadding="1px"
+					cellspacing="1px" border="0" id="queryTab2" style="display:none">
+					<tr class="tr_data">
+					<td align="right">
+						   订单编号
+						</td>
+						<td align="left" >
+							<input type="text" id="order_id" value="" size="15" />
+						</td>
+						<td align="right">
+						  客户姓名
+						</td>
+						<td align="left" >
+							<input type="text" id="cust_name1" value="" size="15" />
+						</td>
+						<td align="right">
+						  跟进人
+						</td>
+						<td align="left" >
+							<input type="text" id="follower" value="" size="15" />
+						</td>
+						<td align="right">
+						  跟进状态
+						</td>
+						<td align="left">
+							<span id="span_follow_status"></span>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0"
+				border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									&nbsp;查询结果列表&nbsp;
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<table cellpadding="0" width="100%" cellspacing="0" border="0"
+				class="display" id="dataTable2"></table>
+		</div>
+	</div>		
+	</body>
+</html>

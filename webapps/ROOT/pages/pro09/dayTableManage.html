@@ -1,0 +1,196 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title></title>
+<link href="../../css/comm.css" rel="stylesheet" type="text/css" />
+<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+<script type="text/javascript">
+var queryCtlMark=0;//查询条件显示收缩标志变量
+
+$(document).ready(function() {
+	var day=0;
+	var ds=[];
+	//var wh=$(window).height();
+	var today=new Date();
+	var t2=today.getTime();
+	var t1=t2-7*24*60*60000;
+	$("#time1").val( top.getTimeStr(t1,true));
+	$("#time2").val( top.getTimeStr(t2,true));
+	doQuery();
+ });
+
+ function doQuery(){
+	var msg="";
+	if($("#time1").val()==""){
+	 msg += "开始时间不能为空！<br>";
+	}
+	if($("#time2").val()==""){
+	 msg +="结束时间不能为空！<br>";
+	}
+	if ( msg != '' ) {
+	    op.showInfoWinWarn(msg);
+       return ;
+	}
+    var aoData=[];
+    aoData.push( { "name": "time1", "value": top.toTimestamp($("#time1").val()) } );
+	aoData.push( { "name": "time2", "value": top.toTimestamp($("#time2").val()) } );
+	var xurl="/actions/CustInfo.action?getDayTable";
+	top.sendAjaxRequest(xurl,aoData,queryDayTableCallback);
+ }
+ function queryDayTableCallback(obj){
+    try{
+	  ds=obj.aaData;
+	  var ht="";
+	  var row=1;
+	  var a=0;
+	  var b=0;
+	  var c=0;
+	  var d=0;
+	  var payed=0;
+	  var signed=0;
+			 for (var i=0;i<ds.length;i++) {
+			  ht+='<tr ';
+			  ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+			  ht+='>';
+			  ht+='<td width="14%" height="32px" align="center" style="word-break:break-all;">'+ds[i].date_stat+'</td>';
+			  ht+='<td width="14%" height="32px" align="center" style="word-break:break-all;">'+ds[i].a+'</td>';
+			  ht+='<td width="14%" height="32px" align="center" style="word-break:break-all;">'+ds[i].b+'</td>';
+			  ht+='<td width="14%" height="32px" align="center" style="word-break:break-all;">'+ds[i].c+'</td>';
+			  ht+='<td width="14%" height="32px" align="center" style="word-break:break-all;">'+ds[i].d+'</td>';
+			  ht+='<td width="14%" height="32px" align="center" style="word-break:break-all;">'+ds[i].payed+'</td>';
+			  ht+='<td width="14%" height="32px" align="center" style="word-break:break-all;">'+ds[i].signed+'</td>';
+				a+=ds[i].a;
+				b+=ds[i].b;
+				c+=ds[i].c;
+				d+=ds[i].d;
+				payed+=ds[i].payed;
+				signed+=ds[i].signed;
+			ht+='</tr>';
+			  if ( row == 1 ) {
+				 row=0;
+			  } else {
+				 row=1;
+			  }
+	  }
+	   ht+='<tr ';
+			  ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+			  ht+='>';
+			  ht+='<td width="14%" height="32px" align="center" style="word-break:break-all;">合计</td>';
+			  ht+='<td width="14%" height="32px" align="center" style="word-break:break-all;">'+a+'</td>';
+			  ht+='<td width="14%" height="32px" align="center" style="word-break:break-all;">'+b+'</td>';
+			  ht+='<td width="14%" height="32px" align="center" style="word-break:break-all;">'+c+'</td>';
+			  ht+='<td width="14%" height="32px" align="center" style="word-break:break-all;">'+d+'</td>';
+			  ht+='<td width="14%" height="32px" align="center" style="word-break:break-all;">'+payed+'</td>';
+			  ht+='<td width="14%" height="32px" align="center" style="word-break:break-all;">'+signed+'</td>';
+			 ht+='</tr>';
+	  $("#dataList").html( ht );
+	}catch(e){}
+ }
+ 
+
+	//导出
+ 	function exportData(){
+		var aoData=[];
+		 aoData.push( { "name": "year", "value": $("#year").val() } );
+		 aoData.push( { "name": "month", "value": $("#month").val() } );
+		 aoData.push( { "name": "day", "value": day } );
+		 aoData.push( { "name": "total_length", "value": ds.length } );
+		 
+		top.showLoadingInfo(true);
+		top.sendAjaxRequest("/actions/DesignPlan.action?exportDesignerBill",aoData,callBackExportData);
+	}
+	
+	function callBackExportData(obj){
+     top.showLoadingInfo(false);
+	 try{
+	    if ( obj.status == true ){
+		   var downUrl=top.getUrlBase()+"/download?filePath="+obj.msg+"&fileName=设计师每日接单统计.xls";
+		   document.location.href=downUrl;
+	    }else{
+		   top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	 }catch(e){
+	    top.showInfoWinError("处理异常:"+e.message);
+	 }
+ } 
+ //查询条件的展开与收缩
+	function dwOup(){
+		if(queryCtlMark==0){//展开
+			$("#queryCtlIcon").attr("src","../../img/icons/arrow-up.gif"); 
+			$("#queryTab").slideToggle();
+			queryCtlMark=1;
+		}else{//收缩
+			$("#queryCtlIcon").attr("src","../../img/icons/arrow-down.gif"); 
+			$("#queryTab").slideToggle();
+			queryCtlMark=0;
+		}
+	}	
+</script>
+</head>
+<body style="width:100%;">
+	<div style='border: 1px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="150px">
+							&nbsp;日报查询&nbsp;
+						</td>
+						<td align="right">
+							<div class="buttonDivTwo">
+								<a href="javascript:doQuery()">查询</a>
+							</div>
+						</td>
+						<td width="2px">
+							&nbsp;
+						</td>
+						<td width="2px">
+							<span><image id="queryCtlIcon" src="../../img/icons/arrow-down.gif" alt="展开" onclick="javascript:dwOup();"/></span>
+						</td>
+					</tr>
+				</table>
+				<table id="queryTab"  style="display:none" width="100%" align="center" cellpadding="1px"
+					cellspacing="1px" border="0">
+					<tr class="tr_data">
+						<td align="right">
+							开始日期
+						</td>
+						<td align="left" id="custId">
+							<input type="text" id="time1"
+							onclick="new Calendar().show(this);" readonly="true"/>
+						</td>
+						<td align="right">
+							结束日期
+						</td>
+						<td align="left">
+							<input type="text" id="time2"
+							onclick="new Calendar().show(this);" readonly="true"/>
+						</td>
+					</tr>
+				</table>
+			</div>
+
+<center>
+<table cellpadding="0" width="99%" cellspacing="2px" border="1">
+ <tr bgcolor="#CEDAE8">
+  <td width="14%" rowspan="2" height="64px" align="center">日期</td>
+   <td width="56%" colspan="4" height="32px" align="center">客流</td>
+  <td width="14%" rowspan="2"  height="64px" align="center">缴纳定金数</td>
+  <td width="14%" rowspan="2"  height="64px" align="center">签单数量</td>
+ </tr>
+ <tr bgcolor="#CEDAE8">
+  <td height="32px" align="center">A类客户</td>
+  <td  align="center">B类客户</td>
+  <td  align="center">C类客户</td>
+  <td  align="center">D类客户</td>
+ </tr>
+</table>
+  <div id="dataDiv" style="margin: 1px;padding:0;width:99%;background-color:#ffffff;overflow: auto;">
+   <table id="dataList" width="100%" cellpadding="0" cellspacing="2px" border="1" style="border-color:blue"></table>
+  </div>
+</center>
+</body>
+</html>

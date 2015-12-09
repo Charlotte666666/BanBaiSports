@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+<script type="text/javascript" charset="utf-8">
+
+$(document).ready(function() {
+    var wh=$(window).height();
+	var ww=$(window).width();
+	$('#map').css("height",wh - 50);
+
+	var today=new Date();
+    var year = today.getFullYear();
+    var month = today.getMonth() + 1;
+    var day = today.getDate();
+    if ( month < 10 ) month = "0" + month;
+    if ( day < 10 ) day = "0" + day;
+	$('#q_time1').val(year+"-"+month+"-"+day);
+	$('#spanHour1').html( top.get24HourSelectHtml("hour1",false,8) );
+	$('#spanHour2').html( top.get24HourSelectHtml("hour2",false,18) );
+} );
+
+function doQuery(){
+     var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+    var aoData=[];
+    aoData.push( { "name": "time1", "value": $("#q_time1").val() } );
+	aoData.push( { "name": "hour1", "value": $("#hour1").val() } );
+	aoData.push( { "name": "hour2", "value": $("#hour2").val() } );
+	aoData.push( { "name": "traceRecd.device_id", "value": $("#deviceId").val() } );
+	top.sendAjaxRequest("/actions/TraceClient.action?getTraceRecdList",aoData,getBathPathCallback, true);
+}
+function checkForm(){
+     var temp = "";
+	 temp += checkString($("#q_time1").val(),true,20,"查询日期");
+	 temp += checkString($("#deviceId").val(),true,20,"设备编号");
+	 return temp;
+}
+
+function getBathPathCallback(obj){
+	if ( obj ) {
+		var ps=[];
+		for (var i=0; i<obj.aaData.length ; i++) {
+			ps[i]=[obj.aaData[i].lon,obj.aaData[i].lat];
+		}
+		var mapFrame = document.getElementById("mapFrame");
+		try{
+		  if ( mapFrame ) mapFrame.contentWindow.drawAndCenterDots( ps );
+		}catch(e){
+		}
+	}
+}
+</script>
+</head>
+<body>
+<div width="100%">
+	        <div style='border: 2px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="150px">&nbsp;轨迹查询&nbsp;</td>
+				  <td align="right">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			     <tr class="tr_data">
+				   <td align="right" width="15%">设备编号:</td><td align="left"><input type="text" id="deviceId" /></td>
+				  </td><td align="left" width="25%">时间:
+				    <input type="text" id="q_time1" value="" onclick="new Calendar().show(this);" size="8" />
+					&nbsp;<span id="spanHour1"></span>时~<span id="spanHour2"></span>时
+				  </td>
+				  <td align="left" width="20%">
+				   <div id="queryBtn" class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+			     </tr>
+			 </table>
+			</div>
+</div>
+<div id="map">
+  <iframe id="mapFrame" src="../baiduMaps.html" width="100%" height="100%" style="background-color:#ffffff" frameborder="0"></iframe>
+</div>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" language="JavaScript1.2"	src="../../js/Calendar3.js"></script>
+
+<script type="text/javascript">
+var oTable = null;
+
+$(document).ready( function() {
+   $("#tdstatus").html( top.getCodeSelectHtml("LUCKMONEY_STATUS","status",true,"0") );
+   loadList();
+});
+ 
+ function loadList(){
+    var iaoColumns= [
+               { "sTitle": "创建时间", "mDataProp": "create_time", "sWidth": "20%",
+                   "fnRender": function ( oObj ) {
+				      return top.getTimeStr(oObj.aData.create_time);
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "红包金额", "mDataProp": "amount", "sWidth": "20%","bUseRendered": false, "bSortable":false },
+			   { "sTitle": "验证码", "mDataProp": "favorable_code", "sWidth": "20%","bUseRendered": false, "bSortable":false },
+			   { "sTitle": "红包详情", "mDataProp": "content", "sWidth": "30%","bUseRendered": false, "bSortable":false },
+			   { "sTitle": "状态", "mDataProp": "status", "sWidth": "10%",
+                   "fnRender": function ( oObj ) {
+				      return top.getCodeName( "LUCKMONEY_STATUS", oObj.aData.status );
+                   },
+                   "bUseRendered": false, "bSortable":false
+               }
+        ];
+ 	
+		oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": top.getUrlBase()+"/actions/Member.action?getLuckyMoneyList",
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     aoData.push( { "name": "time1", "value": $("#q_time1").val()} );
+		                 aoData.push( { "name": "time2", "value": $("#q_time2").val() } );
+						 aoData.push( { "name": "luckyMoney.user_id", "value": -1 } );
+						 aoData.push( { "name": "luckyMoney.status", "value": top.g_GetNumValue( $("#status").val(), -1 ) } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumns
+	   } );
+ }
+ 
+ function doQuery(){
+	oTable.fnDraw();
+ }
+
+</script>
+</head>
+<body>
+            <div style='border: 1px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="180px">&nbsp;红包信息查询&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+				<tr class="tr_data">
+				  <td align="right" width="10%">红包状态:</td>
+				  <td align="left" width="20%" id="tdstatus"></td>	
+                  <td align="right" width="10%">创建时间:</td>
+				  <td align="left" width="60%" colspan="3">
+				  <input type="text" id="q_time1" value="" size="15" onclick="new Calendar().show(this);" readonly="true"/><b>&nbsp;--</b>
+				  <input type="text" id="q_time2" value="" size="15" onclick="new Calendar().show(this);" readonly="true"/>
+				  </td>
+			     </tr>
+			 </table>
+			</div>
+<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+</body>
+</html> 

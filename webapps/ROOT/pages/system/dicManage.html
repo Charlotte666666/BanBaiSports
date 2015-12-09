@@ -1,0 +1,214 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script src="../../js/ui/jquery.ui.widget.js"></script>
+        <script src="../../js/ui/jquery.ui.mouse.js"></script>
+        <script src="../../js/ui/jquery.ui.selectable.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+<style>
+	#selectable .ui-selecting { background: #FECA40; }
+	#selectable .ui-selected { background: #F39814; color: white; }
+	#selectable { list-style-type: none; margin: 0; padding: 0; }
+	#selectable li { margin: 3px; padding: 2px; float: left; width: 150px; height: 20px; font-size: 13px; text-align: center; }
+</style>
+		
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var opt="";
+			var objs=[];
+			var dic_type="";
+			
+			$(document).ready(function() {
+			    //$( "#tdDicType" ).html( top.getCodeSelectHtml("EDIT_DIC_TYPE","dic_type",false) );
+			    
+			    var dics=top.getCodeListByType("EDIT_DIC_TYPE");
+				if ( dics != null ) {
+				  var pht='';
+				  for ( var i=0;i<dics.length;i++ ) {
+					pht+='<li class="ui-state-default ';
+					if ( i == 0 ) {
+					  pht+='ui-selected';
+					  dic_type=dics[i].code;
+					}
+					pht+='" onclick="selectType(\''+dics[i].code+'\',\''+dics[i].name+'\')">'+dics[i].name+'</li>';
+				  }
+				  $('#selectable').html( pht );
+				}
+				
+				$( "#selectable" ).selectable();
+
+			   $("#createBtn").show();
+			   
+			   var iaoColumns= [
+                               { "sTitle": "字典类型", "mDataProp": "type", "sWidth": "30%", "sClass": "center","bSortable":false,
+                                   "fnRender": function ( oObj ) {
+								     if ( oObj.aData.code == '' ) {
+								      return top.getCodeSelectHtml("EDIT_DIC_TYPE","type_"+oObj.aData.code,true, dic_type);
+									 } else {
+									  return top.getCodeName( "EDIT_DIC_TYPE", oObj.aData.type );
+									 }
+                                   },
+                                   "bUseRendered": false  
+                               },
+							   { "sTitle": "编码", "mDataProp": "code", "sWidth": "20%","sClass": "left","bSortable":false,
+                                      "fnRender": function ( oObj ) {
+									     if ( oObj.aData.code == '' ) {
+                                           return '<input type="text" id="code_'+oObj.aData.code+'" size="10" value="'+oObj.aData.code+'" />';
+										 } else {
+										   return oObj.aData.code;
+										 }
+                                      },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "名称", "mDataProp": "name", "sWidth": "30%","sClass": "left","bSortable":false,
+                                      "fnRender": function ( oObj ) {
+                                           return '<input type="text" id="name_'+oObj.aData.code+'" size="10" value="'+oObj.aData.name+'" />';
+	                                  },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "操作", "mDataProp": "code", "sWidth": "20%","sClass": "center","bSortable":false,
+                                      "fnRender": function ( oObj ) {
+                                          return '<a href=\'javascript:void(0)\' onclick="saveInfo(\''+oObj.aData.code+'\',\''+oObj.aData.type+'\','+(oObj.aData.code==''?"true":"false")+')" >保存</a>';
+                                      },
+                                      "bUseRendered": false 
+                               }
+                 ];
+			   
+
+			   var surl=top.getUrlBase()+"/actions/System.action?getCodeList";
+
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     aoData.push( { "name": "code.type", "value": dic_type } );
+						 aoData.push( { "name": "optType", "value": opt } );
+						 opt="";
+			        },
+			      "sDom": "frt",
+				  "aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+			function addInfo(){
+				opt="addRow";
+				doQuery();
+			}
+			
+			function selectType(code,name){
+			    dic_type=code;
+				doQuery();
+			}
+			
+			function saveInfo(infoId,infoType,isCreate){
+			    var temp="";
+				if ( $("#type_"+infoId).val() == '' ) {
+				  temp += "请选择字典类型<br/>";
+				}
+				if ( $("#code_"+infoId).val() == '' ) {
+				  temp += "请输入字典编码<br/>";
+				}
+				if ( $("#name_"+infoId).val() == '' ) {
+				  temp += "请输入名称<br/>";
+				}
+				if ( temp != '' ) {
+				   top.showInfoWinWarn(temp);
+				   return ;
+				}
+				
+				var aoData=[];
+				if ( isCreate ) {
+				 aoData.push( { "name": "code.code", "value": $("#code_"+infoId).val() } );
+				 aoData.push( { "name": "code.type", "value": $("#type_"+infoId).val() } );
+				} else {
+				 aoData.push( { "name": "code.code", "value": infoId } );
+				 aoData.push( { "name": "code.type", "value": infoType } );
+				}
+				aoData.push( { "name": "code.name", "value": $("#name_"+infoId).val() } );
+				top.sendAjaxRequest("/actions/System.action?"+(isCreate?"insertCode":"updateCode"),aoData,optCallback);
+			}
+			
+			function saveCallBack(o){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				  
+				}
+			}
+			
+			function optCallback(obj){
+			       try{
+			        if ( obj.status == true ){
+			          top.showInfoWinOK("操作成功");
+					  doQuery();
+			        }else{
+			          top.showInfoWinError("操作失败 "+obj.msg);
+			        }
+			       }catch(e){
+			          top.showInfoWinError("处理异常:"+e.message);
+			       }
+		    }
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left">
+					<div id="createBtn" class="buttonDivTwo"><a href="javascript:addInfo()">添加</a></div>
+			      </td>
+			  </tr>
+			</table>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr >
+			    <td align="left" valign="top" width="60%"  id="tdDicType" >
+				    <ol id="selectable">
+                   </ol>
+				</td>
+			    <td align="center" width="40%" valign="top">
+	               <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+				</td>
+			 </tr>
+			</table>
+		</div>
+	</body>
+</html>

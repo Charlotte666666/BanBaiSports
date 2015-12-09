@@ -1,0 +1,619 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+  <script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var type_id="";
+   var type_name="";
+   var info_id=0;
+   var cust_code="";
+   var require_id=0;
+   var cust_name="";
+   var cust_mobile ="";
+   var project_addr ="";
+   var o;
+   $(document).ready(function() {
+     initData();
+   } );
+   function initData(){
+		cust_code=decodeURI(top.getUrlParam(document.URL,"cust_code"));
+		info_id=top.getUrlParam(document.URL,"id");
+		optType = top.getUrlParam(document.URL,"optType");
+		$("#tdproduct_progress").html(top.getCodeSelectHtml("PRODUCT_PROGRESS","product_progress",false));
+		$("#tdstatus").html(top.getCodeSelectHtml("EXAMINE_STATUS","status",false));
+		if(!top.g_isPermit('09_money_change_examine')){
+			   $("#examine_opinion").attr("disabled",true);
+				$("#status").attr("disabled",true);
+				$("#financial_examine").attr("disabled",true);
+		}
+		if ( optType=="update") {//若请求是update则页面显示款项变更的详细信息，根据用户操作进行响应
+		$("#printTable").hide();
+		$("#printBtn").hide();
+		$("input").hide();
+		$("textarea").hide();
+		$("select").hide();
+		$("span").show();
+		$("input[type='checkbox']").show();
+		$("input[type='checkbox']").attr("disabled",true);
+		//$("select").attr("disabled",true);
+			var aoData=[];
+		    aoData.push( { "name": "moneyChange.id", "value":info_id } );
+		    top.sendAjaxRequest("/actions/CustInfo.action?getMoneyChangeInfoById",aoData,moneyChangeInfoCallback);
+		}
+		else if(optType=="insert"){
+		$("#okBtn a").text("保存");
+		$("#printTable").hide();
+		$("#printBtn").hide();
+	       var aoData=[];
+		    aoData.push( { "name": "custInfo.code", "value":cust_code } );
+		    top.sendAjaxRequest("/actions/CustInfo.action?getFitmentCustInfo",aoData,querycustInfoCallBack);
+		}
+		else if(optType=="print"){
+		$("#dataTable").hide();
+		$("#submitTable").hide();
+			var aoData=[];
+		    aoData.push( { "name": "moneyChange.id", "value":info_id } );
+		    top.sendAjaxRequest("/actions/CustInfo.action?getMoneyChangeInfoById",aoData,printChangeInfoCallback);
+		}
+	}
+	function querycustInfoCallBack(obj){
+	    try{
+        if ( obj.status == true ){
+			var o=obj.body;
+			$("#cust_name").html(o.cust_name);
+			$("#cust_mobile").html(o.cust_mobile);
+			cust_name = o.cust_name;
+			cust_mobile = o.cust_mobile;
+			require_id = o.requireInfo.id;
+			project_addr = top.getCodeName( "DISTRICT", o.requireInfo.district )+o.requireInfo.project_addr;
+			$("#project_addr").html(project_addr);
+		}else{
+          top.showInfoWinError("操作失败");
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+   function moneyChangeInfoCallback(obj){
+       try{
+        if ( obj.status == true ){//列出所有详细信息
+			o=obj.body;
+			cust_name = o.cust_name;
+			cust_code = o.cust_code;
+			cust_mobile = o.cust_mobile;
+			require_id = o.require_id;
+			project_addr = o.project_addr;
+			
+			
+			$("#id").html(o.id);
+			$("#c_d").text(top.getTimeStr(o.change_date,true));
+			$("#cust_name").html(o.cust_name);
+			$("#cust_mobile").html(o.cust_mobile);
+			$("#project_addr").html(o.project_addr);
+			$("#project_progress").html(o.project_progress);
+			$("#pj_c_c").text(o.project_contract_cod);
+			$("#pj_p").text(o.project_pay);
+		    $("#pj_a").text(o.project_amount);
+			$("#pj_s_p").text(o.project_should_pay);
+			$("#pd_a").text(o.product_amount);
+			$("#pd_s_p").text(o.product_should_pay);
+			$("#pd_p").text(o.product_pay);
+			$("#pd_c_c").text(o.product_contract_cod);
+			$("#p_t").text(o.product_type);
+			$("#c_m1").text(o.change_matter1);
+			$("#c_m2").text(o.change_matter2);
+			$("#m_d").text(o.main_designer);
+			$("#d_m").text(o.design_manager);
+			$("#f_e").text(o.financial_examine);
+			$("#e_o").text(o.examine_opinion);
+			$("#tdstatus").append("<span id='tds'></span>");
+			$("#tds").text(top.getCodeName("EXAMINE_STATUS",o.status));
+			$("#tdproduct_progress").append("<span id='td_p'></span>");
+			$("#td_p").text(top.getCodeName("PRODUCT_PROGRESS",o.product_progress));
+			
+			
+			$("#examine_time").html(top.getTimeStr(o.examine_time,true));
+			if(o.is_first_pay=="1"){
+			     $("#is_first_pay").attr("checked",true);
+			}
+			if(o.is_second_pay=="1"){
+			     $("#is_second_pay").attr("checked",true);
+			}
+			if(o.is_final_pay=="1"){
+			     $("#is_final_pay").attr("checked",true);
+			}
+			if(o.product_to_project=="1"){
+			     $("#product_to_project").attr("checked",true);
+			}
+			if(o.product_to_project=="1"){
+			     $("#product_to_project").attr("checked",true);
+			}
+			if(top.g_isPermit('09_money_change_examine')){
+			    if(o.status!="01"&&o.status!=""){
+				$("#examine_opinion").attr("disabled",true);
+				$("#status").attr("disabled",true);
+				$("#financial_examine").attr("disabled",true);
+                $("#status").val(o.status);				
+				}
+			}
+			   
+		}else{
+          top.showInfoWinError("操作失败");
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	
+   function printChangeInfoCallback(obj){
+     try{
+        if ( obj.status == true ){
+			var o=obj.body;
+			cust_name = o.cust_name;
+			cust_code = o.cust_code;
+			cust_mobile = o.cust_mobile;
+			require_id = o.require_id;
+			project_addr = o.project_addr;
+			$("#print_id").html(o.id);
+			$("#print_change_date").html(top.getTimeStr(o.change_date,true));
+			$("#print_cust_name").html(o.cust_name);
+			$("#print_cust_mobile").html(o.cust_mobile);
+			$("#print_project_addr").html(o.project_addr);
+			$("#print_project_contract_cod").html(o.project_contract_cod);
+			$("#print_project_pay").html(o.project_pay);
+		    $("#print_project_amount").html(o.project_amount);
+			$("#print_project_should_pay").html(o.project_should_pay);
+			$("#print_product_amount").html(o.product_amount);
+			$("#print_product_should_pay").html(o.product_should_pay);
+			$("#print_product_pay").html(o.product_pay);
+			$("#print_product_contract_cod").html(o.product_contract_cod);
+			$("#print_product_type").html(o.product_type);
+			$("#print_product_progress").html(o.product_progress);
+			$("#print_change_matter1").html("变更具体事项:<br>"+o.change_matter1);
+			$("#print_change_matter2").html("变更具体事项:<br>"+o.change_matter2);
+			 $("#print_design_manager").html(o.design_manager);
+			  $("#print_financial_examine").html(o.financial_examine);
+			  $("#print_main_designer").html(o.main_designer);
+			 // $("#print_status").html(top.getCodeName(o.status));
+			  // $("#print_examine_opinion").html(o.examine_opinion);
+			   $("#print_examine_time").html(top.getTimeStr(o.examine_time,true));
+			   if(o.is_first_pay=="1"){
+			     $("#print_is_first_pay").attr("checked",true);
+			   }
+			   if(o.is_second_pay=="1"){
+			     $("#print_is_second_pay").attr("checked",true);
+			   }
+			   if(o.is_final_pay=="1"){
+			     $("#print_is_final_pay").attr("checked",true);
+			   }
+			   if(o.product_to_project=="1"){
+			     $("#print_product_to_project").attr("checked",true);
+			   }
+			   if(o.product_to_project=="1"){
+			     $("#print_product_to_project").attr("checked",true);
+			   }
+			   //if(top.g_isPermit('09_money_change_examine')){
+			   // if(o.status!="01"&&o.status!=""){
+				//$("#examine_opinion").attr("disabled",true);
+				//$("#status").attr("disabled",true);
+				//$("#financial_examine").attr("disabled",true);	
+				//}
+			 //  }
+			   
+		}else{
+          top.showInfoWinError("操作失败");
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+   //编辑按钮和保存按钮的切换
+   function doSubmit(){
+	   var aoData=[];
+	 
+	   if($("#okBtn a").text()=="编辑"){//单击编辑按钮时，则将应该修改的信息处于编辑状态，并显示取消按钮
+	      $("#okBtn a").text("保存");
+		  $("input").show();
+		  $("input[type='checkbox']").attr("disabled",false);
+		  $("textarea").show();
+		  $("select").show();
+		  if(!top.g_isPermit('09_money_change_examine')){
+			   $("#examine_opinion").attr("disabled",true);
+				$("#status").attr("disabled",true);
+				$("#financial_examine").attr("disabled",true);
+		  }
+		  $("span").hide();
+		  $("#okBtn").show();
+		  $("#cancelBtn").show();
+		  $("#cancle").show();
+		  $("#gvBtn").show();
+			
+			
+	      $("#change_date").val(top.getTimeStr(o.change_date,true));
+		  $("#project_contract_cod").val(o.project_contract_cod);
+		  $("#project_pay").val(o.project_pay);
+		  $("#project_amount").val(o.project_amount);
+		  $("#project_should_pay").val(o.project_should_pay);
+		  $("#product_amount").val(o.product_amount);
+		  $("#product_should_pay").val(o.product_should_pay);
+		  $("#product_pay").val(o.product_pay);
+		  $("#product_contract_cod").val(o.product_contract_cod);
+		  $("#product_type").val(o.product_type);
+		  $("#product_progress").val(o.product_progress);
+		  $("#change_matter1").val(o.change_matter1);
+		  $("#change_matter2").val(o.change_matter2);
+		  $("#main_designer").val(o.main_designer);
+		  $("#design_manager").val(o.design_manager);
+		  $("#financial_examine").val(o.financial_examine);
+		  $("#status").val(o.status);
+		  $("#examine_opinion").val(o.examine_opinion);
+	   }else{//保存，先对填写数据进行校验，然后将填写的信息进行封装，提交请求
+	      
+	      // 检查
+			var checkMsg = checkFormDoSubmit();
+				if ( checkMsg != '' ) {
+				   top.showInfoWinWarn(checkMsg);
+				   return ;
+				}
+		aoData.push( { "name": "moneyChange.id", "value": info_id } );
+		aoData.push( { "name": "moneyChange.cust_code", "value": cust_code } );
+		aoData.push( { "name": "moneyChange.cust_name", "value": cust_name} );
+		aoData.push( { "name": "moneyChange.require_id", "value": require_id } );
+		aoData.push( { "name": "moneyChange.cust_mobile", "value": cust_mobile } );
+		aoData.push( { "name": "moneyChange.project_addr", "value": project_addr } );
+		aoData.push( { "name": "moneyChange.change_date", "value": top.toTimestamp($("#change_date").val()) } );
+		aoData.push( { "name": "moneyChange.project_contract_cod", "value": $("#project_contract_cod").val() } );
+		aoData.push( { "name": "moneyChange.project_pay", "value": top.g_GetNumValue($("#project_pay").val()) } );
+		aoData.push( { "name": "moneyChange.project_amount", "value": top.g_GetNumValue($("#project_amount").val()) } );
+		aoData.push( { "name": "moneyChange.project_should_pay", "value": top.g_GetNumValue($("#project_should_pay").val()) } );
+		aoData.push( { "name": "moneyChange.product_amount", "value": top.g_GetNumValue($("#product_amount").val()) } );
+		aoData.push( { "name": "moneyChange.product_should_pay", "value": top.g_GetNumValue($("#product_should_pay").val()) } );
+		aoData.push( { "name": "moneyChange.product_pay", "value": top.g_GetNumValue($("#product_pay").val()) } );
+		aoData.push( { "name": "moneyChange.product_contract_cod", "value": $("#product_contract_cod").val() } );
+		aoData.push( { "name": "moneyChange.product_type", "value": $("#product_type").val() } );
+		aoData.push( { "name": "moneyChange.product_progress", "value": $("#product_progress").val() } );
+		aoData.push( { "name": "moneyChange.change_matter1", "value": $("#change_matter1").val() } );
+		aoData.push( { "name": "moneyChange.change_matter2", "value": $("#change_matter2").val() } );
+		aoData.push( { "name": "moneyChange.design_manager", "value": $("#design_manager").val() } );
+		aoData.push( { "name": "moneyChange.main_designer", "value": $("#main_designer").val() } );
+		aoData.push( { "name": "moneyChange.financial_examine", "value": $("#financial_examine").val() } );
+		aoData.push( { "name": "moneyChange.status", "value": $("#status").val()} );
+		aoData.push( { "name": "moneyChange.examine_opinion", "value": $("#examine_opinion").val()} );
+		if(document.getElementById("is_first_pay").checked){
+		aoData.push( { "name": "moneyChange.is_first_pay", "value": "1"} );
+		}
+		if(document.getElementById("is_second_pay").checked){
+		aoData.push( { "name": "moneyChange.is_second_pay", "value": "1"} );
+		}
+		
+		if(document.getElementById("is_final_pay").checked){
+		aoData.push( { "name": "moneyChange.is_final_pay", "value": "1"} );
+		}
+		
+		if(document.getElementById("product_to_project").checked){
+		aoData.push( { "name": "moneyChange.product_to_project", "value": "1"} );
+		}
+		
+		if(document.getElementById("product_to_project").checked){
+		aoData.push( { "name": "moneyChange.product_to_project", "value": "1"} );
+		}
+		
+		if(info_id==0){
+		var xurl="/actions/CustInfo.action?insertMoneyChange";
+		}
+		else{
+		var xurl="/actions/CustInfo.action?updateMoneyChange";
+		}
+		
+		top.sendAjaxRequest(xurl,aoData,optCallback);
+	   }
+     }
+	 //取消按钮
+	 function abolish(){
+	    $("#cancle").hide();
+		$("#gvBtn").hide();
+		$("#okBtn a").text("编辑");
+		initData();
+	 }
+	 //数据检验
+	 function checkFormDoSubmit(){
+		var msg="";
+		msg += checkString($("#change_date").val(),true,20,"申请时间");
+		msg += checkString($("#design_manager").val(),true,20,"申请人");
+		msg += checkString($("#project_contract_cod").val(),true,20,"工程合同");
+		msg += checkString($("#product_contract_cod").val(),true,20,"产品合同");
+		if(!IsFloat( $("#project_amount").val()))msg += "工程总价款应为数字类型<br>";
+		if(!IsFloat( $("#project_pay").val()))msg += "工程已交金额应为数字类型<br>";
+		if(!IsFloat( $("#project_should_pay").val()))msg += "工程应交金额应为数字类型<br>";
+		if(!IsFloat( $("#product_amount").val()))msg += "产品总价款应为数字类型<br>";
+		if(!IsFloat( $("#product_pay").val()))msg += "产品已交金额应为数字类型<br>";
+		if(!IsFloat( $("#product_should_pay").val()))msg += "产品应交金额应为数字类型<br>";
+		if(document.getElementById("is_final_pay").checked==false&&
+		document.getElementById("is_second_pay").checked==false&&
+		document.getElementById("is_first_pay").checked==false) msg+="请选择工程进展<br>";
+		
+		if(document.getElementById("product_to_project").checked==false&&
+		document.getElementById("project_to_product").checked==false) msg+="请选择款项变更用途";
+		return msg;
+	 }
+   //请求返回时，若是更新返回，将最新的数据信息呈现出来，并将保存按钮显示为编辑按钮，取消按钮隐藏；
+   //若是新增返回，则给出提示信息，并关闭当前窗口
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+		 if(o!=null){
+		    $("#okBtn a").text("编辑");
+			$("#cancle").hide();
+		    $("#gvBtn").hide();
+			$("#tdproduct_progress").html(top.getCodeSelectHtml("PRODUCT_PROGRESS","product_progress",false));
+		    $("#tdstatus").html(top.getCodeSelectHtml("EXAMINE_STATUS","status",false));
+		    if(!top.g_isPermit('09_money_change_examine')){
+			   $("#examine_opinion").attr("disabled",true);
+				$("#status").attr("disabled",true);
+				$("#financial_examine").attr("disabled",true);
+			   }
+		    $("input").hide();
+		    $("textarea").hide();
+		    $("span").show();
+		    $("input[type='checkbox']").show();
+		    $("input[type='checkbox']").attr("disabled",true);
+			var aoData=[];
+		    aoData.push( { "name": "moneyChange.id", "value":info_id } );
+		    top.sendAjaxRequest("/actions/CustInfo.action?getMoneyChangeInfoById",aoData,moneyChangeInfoCallback);
+		 }else{
+	       top.showInfoWinOK("操作成功");
+		   $("#id").html(obj.msg);
+		   info_id = obj.msg;
+		   top.closeSelectDialog();
+		 }
+         
+	    }else{
+	    	isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+		  top.closeSelectDialog()
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+	
+	function getTypeNameById(pid){
+			  var type_name="";
+			  try{
+			    type_name=top.getProductTypeNameById(pid);
+			  }catch(e){
+			    alert(e.message);
+			  }
+			  return type_name;
+    }
+	function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	  top.closeSelectDialog()();
+   }
+   
+   function printMoneyChange(){
+		$("#printBtn").hide();
+		window.print();
+		$("#printBtn").show();
+   }
+  </script> 
+</head>
+<body>
+
+<table  id = "dataTable" width="99%"  border="1" cellpadding="3" cellspacing="1" style="background-color: #b9d8f3;">
+	  <tr class="tr_data">
+		<td align="center" >单据编号</td>
+		<td align="left" id="id" colspan="2" ></td>
+        <td align="center" >申请时间</td>
+		<td align="left" colspan="3" ><span id="c_d"></span><input type="text" id="change_date" onclick="new Calendar().show(this);" readonly="true"/></td>
+		</tr>
+	  <tr class="tr_data" height="30px">
+		<td align="center">客户姓名</td>
+		<td  align="left" id="cust_name" colspan="2"></td>
+		<td align="center" >客户电话</td>
+		<td  align="left" colspan="3" id="cust_mobile" ></td>
+	 </tr>
+	  <tr class="tr_data">
+		<td align="center" rowspan="3" >工程施工</td>
+		<td align="center">施工合同编号</td>
+		<td align="left" ><span id="pj_c_c"></span><input type="text" id="project_contract_cod" size="10"/></td>
+		<td align="center" >施工地址</td>
+		<td align="left" id="project_addr" colspan="3" ></td>
+	 </tr>
+	  <tr class="tr_data"  height="28px">
+		<td align="center">工程进展</td>
+		<td align="center" colspan="5">
+		<input type="checkbox" id="is_first_pay" />已交首期款
+		<input type="checkbox" id="is_second_pay"  />已交中期款
+        <input type="checkbox" id="is_final_pay"  />已交尾款
+		</td>
+	 </tr>
+	 <tr class="tr_data">
+	 <td align="center">工程总价款（元）</td>
+	 <td align="left"><span id="pj_a"></span><input type="text" id="project_amount" size="5"></td>
+	 <td align="center">已交金额（元）</td>&nbsp;&nbsp;
+	 <td align="left"><span id="pj_p"></span><input type="text" id="project_pay"  size="5"></td>
+	 <td align="center">应交金额（元）</td>&nbsp;&nbsp;
+	 <td align="left"><span id="pj_s_p"></span><input type="text" id="project_should_pay"  size="5"></td>
+	 </tr>
+	 <tr class="tr_data">
+		<td align="center" rowspan="3">产品代办</td>
+		<td align="center">产品合同编号</td>
+		<td align="left"><span id="pd_c_c"></span><input type="text" id="product_contract_cod" size="10"/></td>
+		<td align="center">产品名称、型号</td>
+		<td align="left" colspan="3"><span id="p_t"></span><input type="text" id="product_type" size="35"/></td>
+	 </tr>
+	  <tr class="tr_data">
+		<td align="center">产品进展</td>
+		<td align="left" colspan="5" id="tdproduct_progress">
+		
+		</td>
+	 </tr>
+	 <tr class="tr_data">
+	 <td align="center">产品总价款（元）</td>
+	 <td align="left"><span id="pd_a"></span><input type="text" id="product_amount" size="5"></td>
+	 <td align="center">已交金额（元）</td>&nbsp;&nbsp;
+	 <td align="left"><span id="pd_p"></span><input type="text" id="product_pay"  size="5"></td>
+	 <td align="center">应交金额（元）</td>&nbsp;&nbsp;
+	 <td align="left"><span id="pd_s_p"></span><input type="text" id="product_should_pay"  size="5"></td>
+	 </tr>
+	 <tr class="tr_data" height="28px">
+	 <td align="center" colspan="3"><input type="checkbox" id="product_to_project" />产品款转工程款 </td>
+	 <td align="center" colspan="4"><input type="checkbox" id="project_to_product" />工程款转产品款 </td>
+	 </tr>
+	 <tr class="tr_data">
+	 <td align="left" colspan="3">变更具体事项：<br><span id="c_m1"></span><textarea id="change_matter1"  cols="45" rows="4"></textarea></td>
+	 <td align="left" colspan="4">变更具体事项：<br><span id="c_m2"></span><textarea id="change_matter2" cols="55" rows="4"></textarea></td>
+	 </tr>
+	 <tr class="tr_data">
+	 <td align="center">设计部经理（申请人）：</td>
+	 <td align="left" colspan="2"><span id="d_m"></span><input type="text" id="design_manager" ></td>
+	 <td align="center">主案设计师：</td>
+	 <td align="left" colspan="3"><span id="m_d"></span><input type="text" id="main_designer" ></td>
+	 </tr>
+	  <tr class="tr_data">
+	 <td align="center">财务审核：</td>
+	 <td align="left" colspan="2"><span id="f_e"></span><input type="text" id="financial_examine" ></td>
+	 <td align="center">审核日期</td>
+	 <td align="left" colspan="3" id="examine_time"></td>
+	 </tr>
+	 <tr class="tr_data">
+	 <td align="center">审核状态：</td>
+	 <td align="left" colspan="2" id="tdstatus"></td>
+	 <td align="center">审核意见</td>
+	 <td align="left" colspan="3"><span id="e_o"></span><textarea id="examine_opinion" cols="40" rows="2"></textarea></td>
+	 </tr>
+</table>
+<p align="center" id="submitTable">
+   <table><tr>
+            <td id="cancle" style="display:none;" ><span id="gvBtn" class="buttonTwo"><a href="javascript:abolish()">取消</a></span></td>
+		    <td><span id="okBtn" class="buttonTwo"><a href="javascript:doSubmit()">编辑</a></span></td>
+		    <td><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+   </tr></table>
+</p>
+<div id="printBtn" class="buttonDivTwo">
+<a href="javascript:printMoneyChange()">打印</a>
+</div>
+<table id="printTable" width="99%" cellpadding="0" cellspacing="0" border="0">
+      <tr class="tr_data" height="30px">
+	  <td colspan="7" align="center" style=" border-width: 1px; border-style: solid;"><font size="5"><b>款项用途变更单</b></font>
+	  </td>
+	  </tr>
+	  <tr class="tr_data" height="30px">
+		<td align="center" style=" border-width: 1px; border-style: solid;">单据编号</td>
+		<td align="left" id="print_id" colspan="2" style=" border-width: 1px; border-style: solid;" ></td>
+        <td align="center" style=" border-width: 1px; border-style: solid;">申请时间</td>
+		<td align="left" colspan="3" id="print_change_date" style=" border-width: 1px; border-style: solid;"></td>
+		</tr>
+	 <tr class="tr_data" height="30px">
+	  <td colspan="7" align="left" style=" border-width: 1px; border-style: solid;">
+	  说明：此单据由主案设计师根据客户款项用途变更内容填写，设计部经理复核后交于财务、总经理审批。客户签字确认后，此单据方生效。
+	  </td>
+	  </tr>
+	   <tr class="tr_data" height="30px">
+	  <td colspan="7" align="center" style=" border-width: 1px; border-style: solid;">
+	  客户交款基本信息
+	  </td>
+	  </tr>
+	  <tr class="tr_data" height="30px">
+		<td align="center" style=" border-width: 1px; border-style: solid;">客户姓名</td>
+		<td  align="left" id="print_cust_name" colspan="2" style=" border-width: 1px; border-style: solid;"></td>
+		<td align="center" style=" border-width: 1px; border-style: solid;">客户电话</td>
+		<td  align="left" colspan="3" id="print_cust_mobile" style=" border-width: 1px; border-style: solid;" ></td>
+	 </tr>
+	  <tr class="tr_data" height="30px">
+		<td align="center" rowspan="3" style=" border-width: 1px; border-style: solid;" >工程施工</td>
+		<td align="center" style=" border-width: 1px; border-style: solid;">施工合同编号</td>
+		<td align="left"  id="print_project_contract_cod" style=" border-width: 1px; border-style: solid;"></td>
+		<td align="center" style=" border-width: 1px; border-style: solid;">施工地址</td>
+		<td align="left" id="print_project_addr" colspan="3" style=" border-width: 1px; border-style: solid;"></td>
+	 </tr>
+	  <tr class="tr_data"  height="28px">
+		<td align="center" style=" border-width: 1px; border-style: solid;">工程进展</td>
+		<td align="center" colspan="5" style=" border-width: 1px; border-style: solid;">
+		<input type="checkbox" id="print_is_first_pay" />已交首期款
+		<input type="checkbox" id="print_is_second_pay"  />已交中期款
+        <input type="checkbox" id="print_is_final_pay"  />已交尾款
+		</td>
+	 </tr>
+	 <tr class="tr_data" height="30px">
+	 <td align="center" style=" border-width: 1px; border-style: solid;">工程总价款（元）</td>
+	 <td align="left" id="print_project_amount" style=" border-width: 1px; border-style: solid;"></td>
+	 <td align="center" style=" border-width: 1px; border-style: solid;">已交金额（元）</td>&nbsp;&nbsp;
+	 <td align="left" id="print_project_pay" style=" border-width: 1px; border-style: solid;"></td>
+	 <td align="center" style=" border-width: 1px; border-style: solid;">应交金额（元）</td>&nbsp;&nbsp;
+	 <td align="left" id="print_project_should_pay" style=" border-width: 1px; border-style: solid;"></td>
+	 </tr>
+	 <tr class="tr_data" height="30px">
+		<td align="center" rowspan="3" style=" border-width: 1px; border-style: solid;">产品代办</td>
+		<td align="center" style=" border-width: 1px; border-style: solid;">产品合同编号</td>
+		<td align="left" id="print_product_contract_cod" style=" border-width: 1px; border-style: solid;"></td>
+		<td align="center" style=" border-width: 1px; border-style: solid;">产品名称、型号</td>
+		<td align="left" colspan="3" id="print_product_type" style=" border-width: 1px; border-style: solid;"></td>
+	 </tr>
+	  <tr class="tr_data" height="30px">
+		<td align="center" style=" border-width: 1px; border-style: solid;">产品进展</td>
+		<td align="left" colspan="5" id="print_tdproduct_progress" style=" border-width: 1px; border-style: solid;">
+		
+		</td>
+	 </tr>
+	 <tr class="tr_data" height="30px">
+	 <td align="center" style=" border-width: 1px; border-style: solid;">产品总价款（元）</td>
+	 <td align="left" id="print_product_amount" style=" border-width: 1px; border-style: solid;"></td>
+	 <td align="center" style=" border-width: 1px; border-style: solid;">已交金额（元）</td>&nbsp;&nbsp;
+	 <td align="left" id="print_product_pay" style=" border-width: 1px; border-style: solid;"></td>
+	 <td align="center" style=" border-width: 1px; border-style: solid;">应交金额（元）</td>&nbsp;&nbsp;
+	 <td align="left" id="print_product_should_pay" style=" border-width: 1px; border-style: solid;"></td>
+	 </tr>
+	  </tr>
+	   <tr class="tr_data" height="30px">
+	  <td colspan="7" align="center" style=" border-width: 1px; border-style: solid;">
+	  预变更事项
+	  </td>
+	  </tr>
+	 <tr class="tr_data" height="28px">
+	 <td align="center" colspan="3" style=" border-width: 1px; border-style: solid;"><input type="checkbox" id="print_product_to_project" />产品款转工程款 </td>
+	 <td align="center" colspan="4" style=" border-width: 1px; border-style: solid;"><input type="checkbox" id="print_project_to_product" />工程款转产品款 </td>
+	 </tr>
+	 <tr class="tr_data" height="60px">
+	 <td align="left" colspan="3" id="print_change_matter1" style=" border-width: 1px; border-style: solid;">变更具体事项：<br></td>
+	 <td align="left" colspan="4" id="print_change_matter2" style=" border-width: 1px; border-style: solid;">变更具体事项：<br></td>
+	 </tr>
+	 <tr class="tr_data" height="30px">
+	 <td align="center" style=" border-width: 1px; border-style: solid;">设计部经理（申请人）：</td>
+	 <td align="left" colspan="2" id="print_design_manager" style=" border-width: 1px; border-style: solid;"></td>
+	 <td align="center" style=" border-width: 1px; border-style: solid;">主案设计师：</td>
+	 <td align="left" colspan="3" id="print_main_designer" style=" border-width: 1px; border-style: solid;"></td>
+	 </tr>
+	  <tr class="tr_data"height="30px">
+	 <td align="center" style=" border-width: 1px; border-style: solid;">财务审核：</td>
+	 <td align="left" colspan="2" id="print_financial_examine" style=" border-width: 1px; border-style: solid;"></td>
+	 <td align="center" style=" border-width: 1px; border-style: solid;">审核日期</td>
+	 <td align="left" colspan="3" id="print_examine_time" style=" border-width: 1px; border-style: solid;"></td>
+	 </tr>
+	 <tr class="tr_data" height="30px">
+	 <td align="center" style=" border-width: 1px; border-style: solid;">总经理签批：</td>
+	 <td align="left" colspan="2"  style=" border-width: 1px; border-style: solid;"></td>
+	 <td align="center" style=" border-width: 1px; border-style: solid;">客户签字确认：</td>
+	 <td align="left" colspan="3"  style=" border-width: 1px; border-style: solid;"></td>
+	 </tr>
+</table>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready( function() {
+    if ( top.g_isPermit("bussSysAddA") ) {
+	   $( "#createA" ).show();
+	} else {
+	   $( "#createA" ).hide();
+	}
+
+    if ( top.g_isPermit("bussSysAddB") ) {
+	   $( "#createB" ).show();
+	} else {
+	   $( "#createB" ).hide();
+	}
+});
+function addA(){
+	var xurl="pages/pro05/aInfo.html?opt=create";
+	var titleHt="添加移植数据信息&nbsp;";
+    titleHt+=top.getDialogButtonHtml("保存",1,'img/save.bmp');
+	top.openDialog(titleHt,xurl,true,1100,650,null);
+}
+
+function addB(){
+    var xurl="pages/pro05/bInfo.html?opt=create";
+	var titleHt="血液科数据明细信息&nbsp;";
+	titleHt+=top.getDialogButtonHtml("保存",1,'img/save.bmp');
+	top.openDialog(titleHt,xurl,true,1100,650,null);
+}
+</script>
+<style>
+  body {
+	background-color:#ffffff;
+  }
+</style>
+</head>
+<body>
+<br/>
+ <p align="center"><img src="logo3.png" /></p>
+ <br/><br/>
+ <p align="center">
+   <table width="100%" align="center" cellpadding="2px" cellspacing="2px" border="0"><tr>
+     <td align="right"><div id="createA" class="buttonDivSix"><a href="javascript:addA()">添加移植数据</a></div></td>
+     <td align="left"><div id="createB" class="buttonDivSix"><a href="javascript:addB()">添加血液科数据</a></div></td>
+   </table>
+ </p>
+
+</body>
+</html> 

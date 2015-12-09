@@ -1,0 +1,294 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title></title>
+<link href="../../css/comm.css" rel="stylesheet" type="text/css" />
+<link href="../../css/commBg.css" rel="stylesheet" type="text/css" />
+<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+<script src="../../js/ui/jquery.ui.widget.js"></script>
+<script src="../../js/ui/jquery.ui.mouse.js"></script>
+<script src="../../js/ui/jquery.ui.selectable.js"></script>
+<script type="text/javascript" src="../../js/echart/echarts.js"></script>
+<script type="text/javascript">
+var pros=[];
+var dataStr="";
+var opt="";
+var currentPro=1100;
+var currentProName="北京";
+
+var qYear2=2015;
+var qMonth2=0;
+var qDay2=0;
+var qYear1=2015;
+var qMonth1=0;
+var qDay1=0;
+
+var axisList = [];
+var dateCal=[];
+var dateCalTxt=[];
+var nat_check=[];
+var nat_uncheck=[];
+var reg_check=[];
+var reg_uncheck=[];
+
+require.config({
+            paths: {
+                echarts: '../../js/echart'
+            }
+        });
+
+jQuery(document).ready(function() {
+    pros=parent.getNationalList1600();
+	if ( pros != null ) {
+	  var pht='';
+	  for ( var i=0;i<pros.length;i++ ) {
+	    pht+='<li class="ui-state-default ';
+		if ( i == 0 ) pht+='ui-selected';
+		pht+='" onclick="selectProvince(\''+pros[i].province_code+'\',\''+pros[i].province_name+'\')">'+pros[i].province_name+'</li>';
+	  }
+	  $('#selectable').html( pht );
+	}
+	
+	$( "#selectable" ).selectable();
+	var today=new Date();
+    qYear1 = today.getFullYear();
+	qYear2 = qYear1;
+	doQueryDay();
+ });
+ 
+ function getTwoNumberStr(n){
+	return ( n < 10 ) ? ("0"+n):n; 
+}
+ 
+ function selectProvince(pcode,pname){
+    currentPro=pcode;
+	currentProName=pname;
+	doQueryDay();
+ }
+ 
+
+ function doQueryDay(){
+    try{
+	  axisList = [];
+	  var aoData=[];
+	  aoData.push( { "name": "year2", "value": qYear2 } );
+	  aoData.push( { "name": "month2", "value": qMonth2 } );
+	  aoData.push( { "name": "day2", "value": qDay2 } );
+	  aoData.push( { "name": "year", "value": qYear1 } );
+	  aoData.push( { "name": "month", "value": qMonth1 } );
+	  aoData.push( { "name": "day", "value": qDay1 } );
+	  aoData.push( { "name": "province_code", "value": currentPro } );
+
+	  top.showLoadingInfo(true);
+	  dateCal=[];
+	  dateCalTxt=[];
+	  nat_check=[];
+      nat_uncheck=[];
+      reg_check=[];
+      reg_uncheck=[];
+	  
+	  
+	  var day=new Date();
+	  var y=day.getFullYear();
+	  var d=new Date(y,0,1);
+	  var t1=d.getTime();
+	  var t2=day.getTime();
+
+	  while ( t1 < t2 ) {
+	    d.setTime(t1);
+		t1+=24*60*60000;
+		dateCal[dateCal.length]=(d.getMonth()+1)+"-"+d.getDate();
+		dateCalTxt[dateCalTxt.length]=(d.getMonth()+1)+"月"+d.getDate()+"日";
+		
+		str=y+"-"+getTwoNumberStr(d.getMonth()+1)+"-"+getTwoNumberStr(d.getDate());
+		axisList.push(str);
+		nat_check[nat_check.length]="-";
+		nat_uncheck[nat_uncheck.length]="-";
+        reg_check[reg_check.length]="-";
+        reg_uncheck[reg_uncheck.length]="-";
+	  }
+	  
+	  top.sendAjaxRequest("/actions/CmaTable.action?provinceDailyCount",aoData,callbackGetTableList,false,60000);
+	  //top.sendAjaxRequest("/p.txt",aoData,callbackGetTableList,false,60000);
+	  
+	}catch(e){
+	}
+ }
+
+ function callbackGetTableList(obj){
+    top.showLoadingInfo(false);
+    try{
+	  var dstr="";
+	  var d=new Date(2013,1,1);
+	  for (var i=0;i<obj.nat_check.length;i++) {
+	    d.setTime( Number(obj.nat_check[i].dataTime) );
+	    dstr=(d.getMonth()+1)+"-"+d.getDate();
+	    for (var j=0;j<dateCal.length;j++) {
+		  if ( dateCal[j] == dstr ) {
+		    if ( Number(obj.nat_check[i].receive) > 0 ) {
+		      nat_check[j]= Math.round(Number(obj.nat_check[i].right)*10000/Number(obj.nat_check[i].receive))/100;
+			}
+		    break;
+		  }
+		}
+      }
+	  
+	  for (var i=0;i<obj.nat_uncheck.length;i++) {
+	    d.setTime( Number(obj.nat_uncheck[i].dataTime) );
+	    dstr=(d.getMonth()+1)+"-"+d.getDate();
+	    for (var j=0;j<dateCal.length;j++) {
+		  if ( dateCal[j] == dstr ) {
+		    if ( Number(obj.nat_uncheck[i].receive) > 0 ) {
+		      nat_uncheck[j]= Math.round(Number(obj.nat_uncheck[i].right)*10000/Number(obj.nat_uncheck[i].receive))/100;
+			}
+		    break;
+		  }
+		}
+      }
+	  
+	  for (var i=0;i<obj.reg_check.length;i++) {
+	    d.setTime( Number(obj.reg_check[i].dataTime) );
+	    dstr=(d.getMonth()+1)+"-"+d.getDate();
+	    for (var j=0;j<dateCal.length;j++) {
+		  if ( dateCal[j] == dstr ) {
+		    if ( Number(obj.reg_check[i].receive) > 0 ) {
+		      reg_check[j]= Math.round(Number(obj.reg_check[i].right)*10000/Number(obj.reg_check[i].receive))/100;
+			}
+		    break;
+		  }
+		}
+      }
+	  
+	  for (var i=0;i<obj.reg_uncheck.length;i++) {
+	    d.setTime( Number(obj.reg_uncheck[i].dataTime) );
+	    dstr=(d.getMonth()+1)+"-"+d.getDate();
+	    for (var j=0;j<dateCal.length;j++) {
+		  if ( dateCal[j] == dstr ) {
+		    if ( Number(obj.reg_uncheck[i].receive) > 0 ) {
+		      reg_uncheck[j]= Math.round(Number(obj.reg_uncheck[i].right)*10000/Number(obj.reg_uncheck[i].receive))/100;
+			}
+		    break;
+		  }
+		}
+      }
+	  
+	  if ( dateCal.length > 0 ) {
+		drawChart();
+ 	  } else {
+	    alert("没有数据");
+	  }
+	}catch(e){
+	}
+ }
+ 
+ function drawChart(){
+	
+		require(
+            [
+                'echarts',
+                'echarts/chart/line'
+            ],
+            function (ec) {
+                 var myChart = ec.init(document.getElementById('dataDiv'));
+				 var option = {
+					tooltip : {
+						trigger: 'axis'
+					},
+					legend: {
+						data:['国家考核站','国家非考核站','区域考核站','区域非考核站']
+					},
+					color:['#FF6600','#FFCC00','#0000CC','#00CCFF'],
+					toolbox: {
+						show : true,
+						feature : {
+							mark : {show: false},
+							dataZoom : {show: true},
+							dataView : {show: true},
+							magicType : {show: false, type: ['line']},
+							restore : {show: true},
+							saveAsImage : {show: true}
+						}
+					},
+					calculable : true,
+					animation: false,
+					dataZoom : {
+						show : true,
+						realtime : true,
+						start : 70,
+						end : 100
+					},
+					xAxis : [
+						{
+							type : 'category',
+							boundaryGap : true,
+							data : axisList
+						}
+					],
+					yAxis : [
+						{
+						    show : true,
+							name : '可用率(%)',
+							type : 'value'
+						}
+					],
+					series : [
+						{
+							name:'国家考核站',
+							type:'line',
+							data:nat_check
+						},
+						{
+							name:'国家非考核站',
+							type:'line',
+							data:nat_uncheck
+						},
+						{
+							name:'区域考核站',
+							type:'line',
+							data:reg_check
+						},
+						{
+							name:'区域非考核站',
+							type:'line',
+							data:reg_uncheck
+						}
+					]
+				};
+
+				 myChart.setOption(option, true);
+            }
+        );
+   }
+ 
+</script>
+
+<style>
+	#selectable .ui-selecting { background: #FECA40; }
+	#selectable .ui-selected { background: #F39814; color: white; }
+	#selectable { list-style-type: none; margin: 0; padding: 0; }
+	#selectable li { margin: 3px; padding: 2px; float: left; width: 70px; height: 20px; font-size: 13px; text-align: center; }
+</style>
+	
+</head>
+
+<body style="width:100%;background-color : #F3F3F3;">
+<center>
+<div style="margin: 10px;padding: 10px;width:1100px; height:600px;background-color : #ffffff;	border: 2px solid #89A1B9;-moz-border-radius: 12px;-webkit-border-radius: 12px;border-radius: 12px;overflow: auto;">
+<table cellpadding="0px" width="1050px" cellspacing="0px" border="0">
+ <tr>
+  <td width="100%" align="center">
+    <ol id="selectable">
+    </ol>
+  </td>
+ </tr>
+</table>
+<div id="dataDiv" style="height:450px;width:1050px">
+  
+</div>
+</div>
+</center>
+</body>
+</html>

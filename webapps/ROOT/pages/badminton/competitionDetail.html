@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery.dataTables.min.js"></script>
+
+<script type="text/javascript">
+var oTable = null;
+var teamList=[];
+var team_1_id="";
+var team_2_id="";
+var team_1_memberList=[];
+var team_2_memberList=[];
+var current_team="";
+var result_id=0;
+var schedule_id=0;
+var judgeList=[];
+var isCanEditScore=0;
+
+$(document).ready( function() {
+    result_id=top.getUrlParam(document.URL,"id");
+	schedule_id=top.getUrlParam(document.URL,"schedule_id");
+	isCanEditScore=top.getUrlParam(document.URL,"isCanEditScore");
+	team_1_id=top.getUrlParam(document.URL,"team_1");
+	team_2_id=top.getUrlParam(document.URL,"team_2");
+	var team_1_name=decodeURI( top.getUrlParam(document.URL,"team_1_name") );
+	var team_2_name=decodeURI( top.getUrlParam(document.URL,"team_2_name") );
+	$("#teamPK").html( "&nbsp;" + team_1_name + "&nbsp;&nbsp;——&nbsp;&nbsp;"+team_2_name);
+
+	if(team_1_id!=""){
+	   getTeamMember("1",team_1_id);
+	} else {
+	   getCompetitionMatch();
+	}
+});
+
+function getTeamMember(team,team_id){
+   current_team=team;
+   var aoData=[];
+   aoData.push( {"name":"info.schedule_id","value":schedule_id } );
+   aoData.push( {"name":"info.team_id","value":team_id} );
+   aoData.push( { "name": "iDisplayStart", "value": 0 } );
+   aoData.push( { "name": "iDisplayLength", "value": 1000 } );
+   top.sendAjaxRequest("/actions/TeamMember.action?getTeamMemberList",aoData,getTeamMemberCallback);
+}
+
+function getTeamMemberCallback(obj){
+  try{
+    if(current_team=="1"){
+	  team_1_memberList=obj.aaData;
+	  if(team_2_id!=""){
+	    getTeamMember("2",team_2_id); 
+	  }
+	} else if(current_team=="2"){
+	  team_2_memberList=obj.aaData;
+	  getCompetitionJudgeList();
+	}
+  }catch(e){
+  }
+}
+
+function getCompetitionJudgeList(){
+    var aoData=[];
+	aoData.push( { "name":"competitionJudge.schedule_id","value":schedule_id } );
+	top.sendAjaxRequest("/actions/BaseInfo.action?getCompetitionJudgeListBySchedule",aoData,getCompetitionJudgeListCallback);
+}
+
+function getCompetitionJudgeListCallback(obj){
+  try{
+    judgeList=obj.aaData;
+  }catch(e){
+  }
+  getCompetitionMatch();
+}
+
+function getJudgeName(code){
+      if ( judgeList == null ) return code;
+      for(var i=0;i<judgeList.length;i++){
+		if(judgeList[i].judge_code==code){
+		  return judgeList[i].judge_name;
+		}
+	  }
+	  return code;
+}
+
+function getCompetitionMatch(){
+    var aoData=[];
+	aoData.push( { "name":"competitionMatch.result_id","value":result_id } );
+	aoData.push( { "name":"competitionMatch.schedule_id","value":schedule_id } );
+	aoData.push( { "name": "optType", "value": "addRow" } );
+	top.sendAjaxRequest("/actions/CompetitionResult.action?getCompetitionMatchList",aoData,getCompetitionMatchCallback);
+}
+
+function getCompetitionMatchCallback(obj){
+  try{
+    var o=obj.aaData;
+	var ht="<tr class='tr_data' style='background-color: #b9d8f3;' height='35px'><td>比赛类型</td><td>1队队员信息</td><td>1队队员信息</td><td>2队队员信息</td><td>2队队员信息</td><td>裁判</td><td>比赛进度</td><td>操作</td></tr>";
+	if(o.length>0){
+	  for(var i=0;i<o.length;i++){
+	     if ( isCanEditScore == 0 && o[i].id == 0 ) {
+		   continue;
+		 }
+	     ht+="<tr class='tr_data' height='35px'>";
+		 ht+="<td>"+top.getCodeSelectHtml("COMPETITION_TYPE","competition_type_"+o[i].id,true,o[i].competition_type)+"</td><td>"+getTeamSelectHtml("1","team_1_a_"+o[i].id,o[i].team_1_a)+"</td><td>"+getTeamSelectHtml("1","team_1_b_"+o[i].id,o[i].team_1_b)+"</td><td>"+getTeamSelectHtml("2","team_2_a_"+o[i].id,o[i].team_2_a)+"</td><td>"+getTeamSelectHtml("2","team_2_b_"+o[i].id,o[i].team_2_b)+"</td><td>"+getJudgeListSelectHtml("judge_code_"+o[i].id,o[i].judge_code)+"</td><td>"+top.getCodeSelectHtml("RESULT_STATUS","status_"+o[i].id,true,o[i].status)+"</td><td>&nbsp;";
+		 if ( isCanEditScore == 1 ) {
+		   ht+="<a href='javascript:void(0)' style='cursor:pointer;color:blue;text-decoration:none;' onclick='doSubmit(\""+o[i].id+"\")'>保存</a>";
+		 }
+		 ht+="</td>";
+	     ht+="</tr>";
+		 ht+="<tr class='tr_data' height='35px'>";
+		 ht+="<td>总比分&nbsp;(&nbsp;<b>"+o[i].score_1+"&nbsp;:&nbsp;"+o[i].score_2+"</b>&nbsp;)</td><td colspan='8' align='left' >&nbsp;";
+
+		  if ( o[i].innings ) {
+		   for ( var j=0;j<o[i].innings.length;j++ ) {
+		     ht+="(第"+(j+1)+"局)<input type='text' id='innings_score_1_"+o[i].innings[j].id+"' style='width:25px' value='"+o[i].innings[j].score_1+"' />比";
+			 ht+="<input type='text' id='innings_score_2_"+o[i].innings[j].id+"' style='width:25px' value='"+o[i].innings[j].score_2+"' />&nbsp;";
+		     ht+=top.getCodeSelectHtml("RESULT_STATUS","innings_status_"+o[i].innings[j].id,false,o[i].innings[j].status,null,"","70px");
+			 if ( isCanEditScore == 1 ) {
+			   ht+="<a href='javascript:void(0)' style='cursor:pointer;color:blue;text-decoration:none;' onclick='saveInning("+o[i].id+","+o[i].innings[j].id+")'>保存</a>&nbsp;&nbsp;&nbsp;";
+			 }
+		   }
+		  }
+		  if ( o[i].id != 0 && isCanEditScore == 1 ) {
+		   ht+="<input type='text' id='innings_score_1_0' style='width:25px' value='' />比";
+		   ht+="<input type='text' id='innings_score_2_0' style='width:25px' value='' />&nbsp;";
+		   ht+=top.getCodeSelectHtml("RESULT_STATUS","innings_status_0",false,"0",null,"","70px");
+		   ht+="<a href='javascript:void(0)' style='cursor:pointer;color:blue;text-decoration:none;' onclick='saveInning("+o[i].id+",0)'>保存</a>";
+		  }
+		 ht+="</td>";
+	     ht+="</tr>";
+	   }
+	}
+	$("#dataTable").html(ht);
+  }catch(e){
+  }
+}
+
+function saveInning(matchId,iid){
+  var xurl="/actions/CompetitionResult.action?updateCompetitionMatchRecdScore";
+  if ( iid == 0 ) {
+    xurl="/actions/CompetitionResult.action?insertCompetitionMatchRecd";
+  }
+  var aoData=[];
+  aoData.push( { "name":"competitionMatchRecd.id","value":iid} );
+  aoData.push( { "name":"competitionMatchRecd.result_id","value":result_id} );
+  aoData.push( { "name":"competitionMatchRecd.schedule_id","value":schedule_id} );
+  aoData.push( { "name":"competitionMatchRecd.match_id","value":matchId} );
+  aoData.push( { "name":"competitionMatchRecd.score_1","value": $("#innings_score_1_"+iid).val() } );
+  aoData.push( { "name":"competitionMatchRecd.score_2","value": $("#innings_score_2_"+iid).val() } );
+  aoData.push( { "name":"competitionMatchRecd.status","value": $("#innings_status_"+iid).val() } );
+  top.sendAjaxRequest(xurl,aoData,doSubmitCallback);
+}
+
+function getTeamSelectHtml(team,sid,initValue){
+   var ht="";
+   var tid=0;
+   if(team=="1"){
+      if(!team_1_memberList){ return sid;}
+	   ht+="<select id='"+sid+"' style='width:120px;'>";
+	  ht+="<option value='-1'>&nbsp;</option>";
+	  for(var i=0;i<team_1_memberList.length;i++){
+	    tid=team_1_memberList[i].player_id;
+		if ( tid == 0 ) {
+		  tid=team_1_memberList[i].id;
+		}
+	    ht+="<option value='"+tid+"'";
+		if(tid==initValue){
+		  ht+=" selected";
+		}
+		ht+=">"+team_1_memberList[i].player_name+"</option>";
+	  }
+	  ht+="</select>";
+   }
+   if(team=="2"){
+      if(!team_2_memberList){ return sid;}
+	     ht+="<select id='"+sid+"' style='width:120px;'>";
+	     ht+="<option value='-1'>&nbsp;</option>";
+	  for(var i=0;i<team_2_memberList.length;i++){
+	      tid=team_2_memberList[i].player_id;
+	      if ( tid == 0 ) {
+		    tid=team_2_memberList[i].id;
+		  }
+	      ht+="<option value='"+tid+"'";
+		if(tid==initValue){
+		   ht+=" selected";
+		}
+		ht+=">"+team_2_memberList[i].player_name+"</option>";
+	  }
+	  ht+="</select>";
+   }
+    return ht;
+}
+
+function getJudgeListSelectHtml(sid,initValue){
+      var ht="";
+	  ht+="<select id='"+sid+"' style='width:120px;'>";
+	  ht+="<option value='-1'>&nbsp;</option>";
+	  for(var i=0;i<judgeList.length;i++){
+	    ht+="<option value='"+judgeList[i].judge_code+"'";
+		if(judgeList[i].judge_code==initValue){
+		  ht+=" selected";
+		}
+		ht+=">"+judgeList[i].judge_name+"</option>";
+	  }
+	  ht+="</select>";
+      return ht;
+}
+
+
+function checkDoSubmit(id){
+  var msg="";
+  if($("#area_code_"+id).val()==""){
+    msg+="比赛场地不能为空<br/>";
+  }
+  if($("#competition_type_"+id).val()==""){
+    msg+="比赛类型不能为空<br/>";
+  }
+  return msg;
+}
+
+function doSubmit(id){
+  var checkMsg=checkDoSubmit(id);
+  if(checkMsg!=""){
+    top.showInfoWinWarn(checkMsg);return;
+  }
+  var aoData=[];
+  aoData.push( { "name":"competitionMatch.schedule_id","value":schedule_id} );
+  aoData.push( { "name":"competitionMatch.result_id","value":result_id} );
+  aoData.push( { "name":"competitionMatch.competition_type","value":$("#competition_type_"+id).val()} );
+  aoData.push( { "name":"competitionMatch.team_1","value": team_1_id } );
+  aoData.push( { "name":"competitionMatch.team_2","value": team_2_id } );
+  aoData.push( { "name":"competitionMatch.team_1_a","value":$("#team_1_a_"+id).val()} );
+  aoData.push( { "name":"competitionMatch.team_1_b","value":$("#team_1_b_"+id).val()} );
+  aoData.push( { "name":"competitionMatch.team_2_a","value":$("#team_2_a_"+id).val()} );
+  aoData.push( { "name":"competitionMatch.team_2_b","value":$("#team_2_b_"+id).val()} );
+  aoData.push( { "name":"competitionMatch.status","value":$("#status_"+id).val()} );
+  aoData.push( { "name":"competitionMatch.judge_code","value": $("#judge_code_"+id).val() } );
+  aoData.push( { "name":"competitionMatch.judge_name","value": getJudgeName($("#judge_code_"+id).val()) } );
+  var xurl="/actions/CompetitionResult.action?insertCompetitionMatch";
+  if(id!="" && id != 0){
+    aoData.push( { "name":"competitionMatch.id","value":id} );
+    xurl="/actions/CompetitionResult.action?updateCompetitionMatch";
+  }
+  top.sendAjaxRequest(xurl,aoData,doSubmitCallback);
+}
+
+function doSubmitCallback(obj){
+  if(obj.status==true){
+    top.showInfoWinOK("操作成功！");
+	getCompetitionMatch();
+  }else{
+    top.showInfoWinError("操作失败！");
+  }
+}
+
+
+function doBeforeClose(){
+
+}
+
+ function openDialog(t,xurl,isModal,w,h,callback){
+		if ( isModal == undefined ) isModal=true;
+		if ( !h ) h=200;
+		if ( !w ) w=400;
+		$( "#dialog" ).dialog({
+			title: t,
+			height: h,
+			width: w,
+			modal: isModal,
+			resizable: false,
+		    beforeClose: function(event, ui) {
+		        try{
+		            document.getElementById("self_iframe").contentWindow.doBeforeClose();
+		            if ( callback ) callback.apply();
+		        }catch(e){
+		        }
+		        return true;
+		    }
+		});
+		document.getElementById("self_iframe").src = xurl;
+    }
+
+</script>
+</head>
+<body>
+<h2 id="teamPK"></h2>
+<table cellpadding="3" width="100%" cellspacing="1" border="1" id="dataTable" style="background-color: #b9d8f3;margin:8px auto;">
+</table>
+
+<div id="dialog" title="" style="display:none;padding: 0 0 0 0;margin: 0 0 0 0;z-index:10000">
+    <iframe id="self_iframe" src="about:blank" width="100%" height="96%" frameborder="0"></iframe>
+</div>
+</body>
+</html> 

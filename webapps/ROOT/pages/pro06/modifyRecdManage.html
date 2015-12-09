@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+<script type="text/javascript">
+var oTable = null;
+var currentDeleteCode=0;
+
+$(document).ready( function() {
+   $("#tdstatus").html( top.getCodeSelectHtml("CHECK_STATUS","status",true,"0") );
+   loadList();
+});
+ 
+ function loadList(){
+    var iaoColumns= [
+	           { "sTitle": "申请时间", "mDataProp": "create_time", "sWidth": "15%", "sClass": "center",
+				    "fnRender": function ( oObj ) {
+                       return top.getTimeStr( oObj.aData.create_time );
+                    },
+				    "bUseRendered": false  },
+			   { "sTitle": "申请人名称", "mDataProp": "modify_user_name", "sWidth": "10%","bUseRendered": false , "bSortable":false},
+			   { "sTitle": "修改字段", "mDataProp": "midify_type", "sWidth": "10%",
+                   "fnRender": function ( oObj ) {
+				      return top.getCodeName("MODIFY_COLUMN",oObj.aData.midify_type);
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "修改前", "mDataProp": "before_value", "sWidth": "20%", 
+			       "fnRender": function ( oObj ) {
+				      if ( oObj.aData.midify_type == 'sex' ) {
+				        return top.getCodeName( "SEX", oObj.aData.before_value );
+					  } else if ( oObj.aData.midify_type == 'level' ) {
+				        return top.getCodeName( "JOB_LEVEL", oObj.aData.before_value );
+					  } else {
+				        return oObj.aData.before_value;
+					  }
+                   },
+			       "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "修改后", "mDataProp": "after_value", "sWidth": "20%",
+			      "fnRender": function ( oObj ) {
+				      if ( oObj.aData.midify_type == 'sex' ) {
+				        return top.getCodeName( "SEX", oObj.aData.after_value );
+					  } else if ( oObj.aData.midify_type == 'level' ) {
+				        return top.getCodeName( "JOB_LEVEL", oObj.aData.after_value );
+					  } else {
+				        return oObj.aData.after_value;
+					  }
+                   },
+			      "bUseRendered": false, "bSortable":false },
+			   { "sTitle": "审核状态", "mDataProp": "status", "sWidth": "10%",
+                   "fnRender": function ( oObj ) {
+				      return top.getCodeName( "CHECK_STATUS", oObj.aData.status );
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "操作", "mDataProp": "id", "sWidth": "10%","bSortable":false,
+                    "fnRender": function ( oObj ) {
+					   if ( oObj.aData.status == 0 ) {
+					     return '<a href="javascript:void(0)" onclick="showInfo(\''+oObj.aData.modify_user+'\')">审核</a>';
+					   } else return "";
+                    },
+                    "bUseRendered": false
+               }
+        ];
+ 	
+		oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": top.getUrlBase()+"/actions/Doctor.action?getModifyRecdList",
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     aoData.push( { "name": "time1", "value": $("#q_time1").val() } );
+						 aoData.push( { "name": "time2", "value": $("#q_time2").val() } );
+					     aoData.push( { "name": "modifyRecd.status", "value": (($("#status").val() == '') ? "-1":$("#status").val() ) } );
+						 aoData.push( { "name": "modifyRecd.modify_user", "value": -1 } );
+						 aoData.push( { "name": "modifyRecd.modify_user_name", "value": $("#modify_user_name").val() } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumns
+	   } );
+ }
+ 
+ function doQuery(){
+	oTable.fnDraw();
+ }
+ 
+ function showInfo(uid){
+	var xurl="pages/pro06/modifyRecdInfo.html?infoId="+uid;
+	top.openDialog("医生信息修改审核",xurl,true,700,500,doQuery);
+ }
+
+</script>
+</head>
+<body>
+            <div style='border: 1px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="150px">&nbsp;医生信息修改审核&nbsp;</td>
+				  <td align="left">&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+                  <td align="right" width="10%">医生姓名:</td>
+				  <td align="left" width="10%"><input type="text" id="modify_user_name" size="15" /></td>
+                  <td align="right" width="10%">审核状态:</td>
+				  <td align="left" width="10%" id="tdstatus"></td>
+				  <td align="right" width="10%">申请时间:</td>
+				  <td width="50%" align="left">
+				   <input type="text" id="q_time1" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" />~<input type="text" id="q_time2" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" />
+				  </td>
+			    </tr>
+			 </table>
+			</div>
+<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+</body>
+</html> 

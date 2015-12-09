@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css"/>
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css"/>
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+	<link rel="stylesheet" type="text/css" href="../../css/drag-drop-folder-tree.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/context-menu.css"></link>
+	<link type="text/css" rel="stylesheet" href="../../css/layout-default-latest.css" />
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+    <script type="text/javascript" language="javascript" src="../../js/myDtree.js" ></script>
+    <script type="text/javascript" language="javascript" src="../../js/context-menu.js"></script>
+    <script type="text/javascript" language="javascript" src="../../js/drag-drop-folder-tree.js" ></script>
+
+<style type="text/css">
+body {
+	font-size: 13px;
+	font-weight: bold;
+	text-decoration: none;
+	background-repeat: repeat;
+}
+body, div, ul, li, p, table, tr, td, a, img, ul, li  {
+	padding: 0px;
+	margin: 0px;
+	list-style-type: none;
+	border-top-style: none;
+	border-right-style: none;
+	border-bottom-style: none;
+	border-left-style: none;
+}
+</style>
+<script type="text/javascript">
+var d=null;
+var system="";
+var resultList=[];
+
+$(document).ready( function() {
+	var wh=$(window).height();
+	$('#menuTree').height((wh - 60)+"px");
+	$('#table_data').height((wh - 60)+"px");
+	system=top.getUrlParam(document.URL,"system");
+	resultList = parent.getDataList();
+	initMenuTree();
+});
+
+
+ // 初始化菜单树
+ function initMenuTree(){
+           d=new dTree('d');
+           d.config.useSelection = true;
+           d.config.folderLinks = true;
+           d.config.useStatusText = false;
+           d.config.useLines = false;
+		   
+		   var dt = parent.getTreeList();
+
+		   d.add( "0", -1, top.getCodeName("BUSS_NAME",system) );
+		   for ( var i=0;i<dt.length;i++ ) {
+		     if (  dt[i].system_name == system ) {
+			    d.add( dt[i].type_id, dt[i].parent_id, "<img id='"+dt[i].system_name+"_"+dt[i].type_id+"_img' width='16px' height='16px' src='"+ getImgSrc(dt[i].status,"../../img/icon_success.png")+"'  />"+top.getCodeName("BUSS_NAME",dt[i].type_name) );
+			 }
+		   }
+
+		   
+		   
+           $("#menuTree").html( d.toString() );
+           var treeObj = new JSDragDropTree();
+		   treeObj.imageFolder = '../../img/';
+           treeObj.setTreeId('dhtmlgoodies_tree2');
+           treeObj.setMaximumDepth(10);
+           treeObj.setMessageMaximumDepthReached('已到达最大的层次'); 
+           treeObj.setRenameAllowed(false);
+           treeObj.setDeleteAllowed(false);
+           treeObj.initTree();
+           treeObj.expandAll();
+		   initTimelimit();
+		   initStatistics();
+		   initGrib();
+ }
+
+ function onSelectedNode(nid){
+     var node=getNodeObjById(nid);
+	 if ( node == null ) return ;
+     var xurl="pages/pro02/detailList.html?system="+system+"&rule="+node.rule+"&category="+node.category+"&server_id="+node.server_id;
+	 top.openDialog("检查结果列表",xurl,true,1100,610,null);
+ }
+ 
+ function getNodeObjById(nid){
+     var dt = parent.getTreeList();
+     for (var i=0;i<dt.length;i++) {
+	   if ( dt[i].type_id == nid ) return dt[i];
+	 }
+	 return null;
+ }
+ 
+  function initTimelimit(){
+    var ht='<tr bgcolor="#C8D2DF">';
+    ht+='<td align="center"><strong><font color="blue">报类</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">00</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">01</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">02</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">03</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">04</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">05</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">06</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">07</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">08</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">09</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">10</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">11</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">12</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">13</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">14</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">15</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">16</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">17</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">18</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">19</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">20</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">21</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">22</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">23</font></strong></td>';
+    ht+='</tr>';
+	var j=0;
+	var row=0;
+	var rs=[];
+	var imgStr="";
+	var o=null;
+	
+	for ( var i=0;i<resultList.length;i++ ) {
+	      if ( resultList[i].rule != 'HourInDB' || resultList[i].system_name != system ) continue;
+		  if ( !hasStr(rs, resultList[i].obj) ) {
+		    rs[rs.length]=resultList[i].obj;
+		    if ( row % 2 == 0 ) {
+		      ht+='<tr bgcolor="#ffffff">';
+		    } else ht+='<tr bgcolor="#F0FFF0">';
+		    row++;
+			ht+='<td align="center">'+top.getCodeName("BUSS_NAME",resultList[i].obj)+'</td>';
+		    for (j=0;j<24;j++) {
+			  o=getTimeLimitObj(resultList[i].obj,j);
+			  if ( o == null ) { 
+			    ht+='<td align="center" >&nbsp;</td>';
+			    continue;
+			  }
+			  imgStr=getImgSrc(o.status);
+		      ht+='<td align="center" ><img onclick="showDetail(\''+o.critical+'\',\''+o.warning+'\',\''+o.val+'\',\''+o.status+'\')" id="timeLimit_'+resultList[i].obj+'_'+j+'" width="16px" height="16px" src="'+imgStr+'"  /></td>';
+		    }
+	        ht+='</tr>';
+		  }
+	}
+	$('#timeLimit_table').html( ht );
+ }
+ 
+ function getImgSrc(status,defaultVal){
+   var ht="";//"../../img/empty.gif";
+   if ( defaultVal ) ht=defaultVal;
+   if ( status == 'ok' ) {
+     ht="../../img/icon_success.png";
+   } else if ( status == 'warn' ) {
+     ht="../../img/icon_alert.png";
+   } else if ( status == 'err' ) {
+     ht="../../img/icon-error.gif";
+   }
+   return ht;
+ }
+ 
+ function getTimeLimitObj(o,h){
+    for ( var i=0;i<resultList.length;i++ ) {
+	      if ( resultList[i].rule != 'HourInDB' || resultList[i].system_name != system ) continue;
+		  if ( resultList[i].obj == o && resultList[i].hour == h ) {
+		    return resultList[i];
+	      }
+    }
+	return null;
+ }
+ 
+ function hasStr(rs,str){
+    try{
+	  for ( var i=0;i<rs.length;i++ ) {
+	    if ( rs[i] == str ) return true;
+	  }
+	}catch(e){}
+	return false;
+ }
+ 
+  function initStatistics(){
+   var j=0;
+   var ht='<tr bgcolor="#C8D2DF">';
+    ht+='<td align="center"><strong><font color="blue">报类</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">01</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">02</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">03</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">04</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">05</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">06</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">07</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">08</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">09</font></strong></td>';
+	for (j=10;j<32;j++) {
+	  ht+='<td align="center"><strong><font color="blue">'+j+'</font></strong></td>';
+	}
+    ht+='</tr>';
+	
+	var row=0;
+	var rs=[];
+	var imgStr="";
+	var o=null;
+	
+	for ( var i=0;i<resultList.length;i++ ) {
+	      if ( resultList[i].rule != 'DayInDB' || resultList[i].system_name != system ) continue;
+		  if ( !hasStr(rs, resultList[i].obj) ) {
+		    rs[rs.length]=resultList[i].obj;
+		    if ( row % 2 == 0 ) {
+		      ht+='<tr bgcolor="#ffffff">';
+		    } else ht+='<tr bgcolor="#F0FFF0">';
+		    row++;
+			ht+='<td align="center">'+top.getCodeName("BUSS_NAME",resultList[i].obj)+'</td>';
+		    for (j=1;j<32;j++) {
+			  o=getDayInDBObj(resultList[i].obj,j);
+			  if ( o == null ) { 
+			    ht+='<td align="center" >&nbsp;</td>';
+			    continue;
+			  }
+			  imgStr=getImgSrc(o.status);
+		      ht+='<td align="center" ><img onclick="showDetail(\''+o.critical+'\',\''+o.warning+'\',\''+o.val+'\',\''+o.status+'\')" id="DayInDB_'+resultList[i].obj+"_"+j+'" width="16px" height="16px" src="'+imgStr+'"  /></td>';
+		    }
+	        ht+='</tr>';
+		  }
+	}
+	$('#statistics_table').html( ht );
+ }
+ 
+  function getDayInDBObj(o,d){
+    for ( var i=0;i<resultList.length;i++ ) {
+	      if ( resultList[i].rule != 'DayInDB' || resultList[i].system_name != system ) continue;
+		  if ( resultList[i].obj == o && resultList[i].day == d ) {
+		    return resultList[i];
+	      }
+    }
+	return null;
+ }
+ 
+  function initGrib(){
+   var j=0;
+   var ht='<tr bgcolor="#C8D2DF">';
+    ht+='<td align="center"><strong><font color="blue">报类</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">月</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">日</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">时</font></strong></td>';
+	ht+='<td align="center"><strong><font color="blue">状态</font></strong></td>';
+    ht+='</tr>';
+	
+    var ht2='<tr bgcolor="#C8D2DF">';
+    ht2+='<td align="center"><strong><font color="blue">报类</font></strong></td>';
+    ht2+='<td align="center"><strong><font color="blue">月</font></strong></td>';
+    ht2+='<td align="center"><strong><font color="blue">日</font></strong></td>';
+    ht2+='<td align="center"><strong><font color="blue">时</font></strong></td>';
+	ht2+='<td align="center"><strong><font color="blue">状态</font></strong></td>';
+    ht2+='</tr>';
+	
+	var d1="";
+	var d2="";
+	var d="";
+
+	for ( j=0;j<resultList.length;j++ ) {
+	  if ( resultList[j].rule != 'GribDB' || resultList[j].system_name != system ) continue;
+	  d = resultList[j].month+"-"+resultList[j].day;
+	  if ( d1 == '' ) d1=d;
+	  if ( d1 != '' && d != d1 ) {
+	   d2=d;
+	   j=resultList.length+10;
+	  }
+	}
+	
+	if ( d1 == '' && d2 == '' ) {
+	  return ;
+	}
+
+	var row1=0;
+	var row2=0;
+	var temp="";
+	
+	for ( var i=0;i<resultList.length;i++ ) {
+	        if ( resultList[i].rule != 'GribDB' || resultList[i].system_name != system ) continue;
+			d = resultList[i].month+"-"+resultList[i].day;
+			if ( d1 == d ) {
+			  if ( row1 % 2 == 0 ) {
+		        temp='<tr bgcolor="#ffffff">';
+		      } else temp='<tr bgcolor="#F0FFF0">';
+			  row1++;
+			} else {
+			  if ( row2 % 2 == 0 ) {
+		        temp='<tr bgcolor="#ffffff">';
+		      } else temp='<tr bgcolor="#F0FFF0">';
+			  row2++;
+			}
+			temp+='<td align="center"><strong>'+top.getCodeName("BUSS_NAME",resultList[i].obj)+'</strong></td>';
+			temp+='<td align="center"><strong>'+resultList[i].month+'</strong></td>';
+			temp+='<td align="center"><strong>'+resultList[i].day+'</strong></td>';
+			temp+='<td align="center"><strong>'+resultList[i].hour+'</strong></td>';
+			temp+='<td align="center"><img width="16px" height="16px" onclick="showDetail(\''+resultList[i].critical+'\',\''+resultList[i].warning+'\',\''+resultList[i].val+'\',\''+resultList[i].status+'\')" style="cursor:pointer" width="16px" height="16px" src="'+ getImgSrc( resultList[i].status) +'"/></td>';
+	        temp+='</tr>';
+			if ( d1 == d ) {
+			  ht+=temp;
+			} else {
+			  ht2+=temp;
+			}
+	}
+
+	$('#grib_table').html( ht );
+	$('#grib_table2').html( ht2 );
+ }
+ 
+ function showDetail(critical,warning,value,status,code){
+    if ( !value  || value == 'undefined') return ;
+    try{
+	  if ( status == 'ok' ) {
+	    status="正常";
+	  } else if ( status == 'err' ) {
+	    status="报警";
+	  } else if ( status == 'warn' ) {
+	    status="警告";
+	  } 
+	  var msg="报警值："+critical+"，警告值："+warning+"<br/>状态值："+value+"，状态："+status;
+      top.showInfoWin(msg);
+	}catch(e){
+	}
+}
+</script>
+</head>
+<body>
+	  <table id="table_data" width="100%">
+	  <tr>
+	   <td width="20%" valign="top" style="border:1px;border-style: dotted dotted none dotted;border-color: #A0CFEC;padding: 10px;">
+	     <div width="100%" id="menuTree"></div>
+	   </td>
+	   <td width="100%" valign="top" style="border:1px;border-style: dotted dotted none dotted;border-color: #A0CFEC;padding: 10px;">
+		<font color="#333333"><b>小时资料入库数据统计&nbsp;</b></font>
+		<table  id="timeLimit_table" width="100%" border="1" cellspacing="0" cellpadding="2">
+		</table>
+		<br>
+		<font color="#333333"><b>当月每日入库数据统计&nbsp;</b></font>
+		<table  id="statistics_table" width="100%" border="1" cellspacing="0" cellpadding="2">
+		</table>
+		<br>
+		<font color="#333333"><b>入库格点数据统计&nbsp;</b></font>
+		 <table>
+		  <tr><td width="50%" valign="top">
+		     <table  id="grib_table" width="400px" border="1" cellspacing="0" cellpadding="2"></table>
+		  </td>
+		  <td width="50%" valign="top">
+		     <table  id="grib_table2" width="400px" border="1" cellspacing="0" cellpadding="2"></table>
+		  </td>
+		  </tr>
+		 </table>
+		
+	   </td>
+	  </tr></table>
+</body>
+</html> 

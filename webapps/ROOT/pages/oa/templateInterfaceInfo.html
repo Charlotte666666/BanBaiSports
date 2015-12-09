@@ -1,0 +1,112 @@
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet"
+			type="text/css"/>
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css"
+			media="print, projection, screen"/>
+		<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+	
+<script type="text/javascript">
+	var obj={};
+	var template_id="";
+	var field_id="";
+   $(document).ready(function() {
+	 template_id=top.getUrlParam(document.URL,"template_id");
+	 field_id=top.getUrlParam(document.URL,"field_id");
+	 if(field_id){
+	    var aoData=[];
+        aoData.push( { "name": "woField.field_id", "value":field_id } );
+        top.sendAjaxRequest("/actions/WorkOrder.action?getWOTemplateFieldbyId",aoData,getWOTemplateFieldCallback);
+      }
+   });
+	function getWOTemplateFieldCallback(obj){
+		var woField=obj.body;
+		if(woField){
+			$("#field_title").val(woField.field_title);
+			$("#field_options").val(woField.field_options);
+			template_id=woField.template_id;
+			
+	 }
+	
+	}
+  
+   function saveField(){
+		var aoData=[];
+		aoData.push({"name":"woField.field_title","value":$("#field_title").val()});
+		aoData.push( { "name": "woField.field_options", "value":$("#field_options").val() } );
+		aoData.push( { "name": "woField.template_id", "value":template_id} );
+		aoData.push( { "name": "woField.field_type", "value":11  } ); //字段类型：接口 11
+		aoData.push( { "name": "woField.occupied_frames", "value":1  } ); //字段类型：接口 11
+		if(field_id!=''){
+			aoData.push( { "name": "woField.field_id", "value":field_id  } );
+			top.sendAjaxRequest("/actions/WorkOrder.action?updateWOTemplateField",aoData,optCallback);
+		}else{
+			top.sendAjaxRequest("/actions/WorkOrder.action?insertWOTemplateField",aoData,optCallback);
+		} 
+	}
+	
+  function doCancel(){
+	   top.closeDialog();
+   }
+   
+   function doBeforeClose(){
+   }
+    
+	function optCallback(obj){
+	       top.showLoadingInfo(false);
+           try{
+            if ( obj.status == true ){
+              top.showInfoWinOK("操作成功");
+			   top.closeDialog()();
+             }else{
+              top.showInfoWinOK("操作失败");
+            }
+           }catch(e){
+              top.showInfoWinError("处理异常:"+e.message);
+           }
+       }
+	//初始化复选框
+	function initCheckedValue(boxes,values) {
+	    if ( !values ) return ;
+	    if ( values == null || values == '' ) return ;
+		var str=values.toString();
+		for (var i = 0; i < boxes.length; i++) {
+			if (str.indexOf(boxes[i].value.toString())!= -1 ) {
+				boxes[i].checked = true;
+			}
+        }
+	}
+	</script>
+	</head>
+	<body><br>
+		<table border="1" cellpadding="3" cellspacing="1" width="98%" style="background-color: #b9d8f3;">
+			<tr class="tr_data" height="35px">
+				<td align="right">按钮标题：</td>
+				<td align="left"><input type="text" id="field_title"/></td>
+			</tr>
+			<tr class="tr_data" height="35px">
+				<td align="right">接口URL：</td>
+				<td align="left"><textarea type="text" cols="45" rows="2" id="field_options"></textarea></td>
+			</tr>
+		</table>
+		<p align="center">
+		   <table><tr>
+					<td><span id="okBtn" class="buttonTwo"><a href="javascript:saveField()">提交</a></span></td>
+					<td><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">取消</a></span></td>
+		   </tr></table>
+		</p>
+	</body>
+</html>

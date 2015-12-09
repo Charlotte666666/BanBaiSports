@@ -1,0 +1,255 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+ 
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var gcode = "";
+   var gtable_name="";
+   var gdb_codes = "";
+   var gstatus = "";
+   var gmonth = "";
+   var gday = "";
+   var ghour = "";
+   var gminute = "";
+   var greplace_month="";
+   var greplace_day="";
+   var greplace_hour="";
+   var gopt_type = "in";
+   var gopt_sql = "";
+   var gcol_sizes = "";
+   var gopt_server="";
+   var gtask_title="";
+ 
+   $(document).ready(function() {
+        $( "#gopt_server_td" ).html( top.getRunServerCodeSelectHtml("qopt_server") );
+        try{
+		  optType=top.getUrlParam(document.URL,"opt");
+		  gcode=top.getUrlParam(document.URL,"code");
+		  gtable_name=top.getUrlParam(document.URL,"table_name");
+		  gdb_codes= decodeURI( top.getUrlParam(document.URL,"db_codes") );
+		  gfile_path= decodeURI( top.getUrlParam(document.URL,"file_path") );
+		  gstatus =top.getUrlParam(document.URL,"status");
+		  gmonth = top.getUrlParam(document.URL,"month");
+		  gday = top.getUrlParam(document.URL,"day");
+		  ghour = top.getUrlParam(document.URL,"hour");
+		  gminute = top.getUrlParam(document.URL,"minute");
+		  greplace_month = top.getUrlParam(document.URL,"replace_month");
+		  greplace_day = top.getUrlParam(document.URL,"replace_day");
+		  greplace_hour = top.getUrlParam(document.URL,"replace_hour");
+		  gopt_type=top.getUrlParam(document.URL,"opt_type");
+		  gcol_sizes=top.getUrlParam(document.URL,"col_sizes");
+		  if ( !gcol_sizes ) gcol_sizes = "NONE";
+		  gopt_sql= decodeURI( top.getUrlParam(document.URL,"opt_sql") );
+		  if ( !gopt_sql ) gopt_sql = "NONE";
+		  gopt_sql = top.decodeParamURL(gopt_sql);
+		  if ( gopt_type == 'out' ) {
+		    $( "#col_sizes_tr" ).show();
+		  } else gopt_type = "in";
+		  gopt_server= decodeURI( top.getUrlParam(document.URL,"opt_server") );
+		  gtask_title= decodeURI( top.getUrlParam(document.URL,"task_title") );
+ 		}catch(e){
+		}
+		if ( optType == 'create' ) {
+		  $( "#tdStatus" ).html( top.getCodeSelectHtml("USE_STATUS","qstatus",false) );
+		} else {
+		  $( "#tdStatus" ).html( top.getCodeSelectHtml("USE_STATUS","qstatus",false, gstatus) );
+		  $( "#gfile_path" ).val( (gfile_path == 'NONE')?"":gfile_path );
+		  $( "#gmonth" ).val( gmonth );
+		  $( "#gday" ).val( gday );
+		  $( "#ghour" ).val( ghour );
+		  $( "#gminute" ).val( gminute );
+		  $( "#gtable_name" ).val( (gtable_name == 'NONE')?"":gtable_name );
+		  $( "#replace_month" ).val( greplace_month );
+		  $( "#replace_day" ).val( greplace_day );
+		  $( "#replace_hour" ).val( greplace_hour );
+		  $( "#gopt_sql" ).val( (gopt_sql == 'NONE')?"":gopt_sql );
+		  $( "#gcol_sizes" ).val( gcol_sizes );
+		  $( "#qopt_server" ).val( gopt_server );
+		  $( "#qtask_title" ).val( gtask_title );
+		}
+		top.sendAjaxRequest("/actions/Metadata.action?getMetaDBList",[],optGetDBListCallback);
+   } );
+ 
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   function doSubmit(){
+	 var aoData=[];
+	 var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+	 var sta=$("#qstatus").val();
+	 if ( sta == undefined || sta == '' ) sta = '0';
+	 var osql=$("#gopt_sql").val();
+	 if ( !osql ) osql="NONE";
+	 osql = top.encodeParamURL(osql);
+	 
+	 var osize=$("#gcol_sizes").val();
+	 if ( !osize ) osize="NONE";
+	 
+	 var ofile_path=$("#gfile_path").val();
+	 if ( !ofile_path ) ofile_path="NONE";
+	 
+	 var otable_name=$("#gtable_name").val();
+	 if ( !otable_name ) otable_name="NONE";
+	 
+	 aoData.push( { "name": "metaConfig.code", "value": gcode } );
+	 aoData.push( { "name": "metaConfig.opt_type", "value": gopt_type } );
+     aoData.push( { "name": "metaConfig.table_name", "value": otable_name } );
+     aoData.push( { "name": "metaConfig.db_codes", "value": top.getAllCheckedValue( document.getElementsByName('gdb_codes_cb') ) } );
+     aoData.push( { "name": "metaConfig.status", "value": sta } );
+	 aoData.push( { "name": "metaConfig.file_path", "value": ofile_path  } );
+     aoData.push( { "name": "metaConfig.month", "value": $("#gmonth").val() } );
+	 aoData.push( { "name": "metaConfig.day", "value": $("#gday").val() } );
+	 aoData.push( { "name": "metaConfig.hour", "value": $("#ghour").val() } );
+	 aoData.push( { "name": "metaConfig.minute", "value": $("#gminute").val() } );
+	 aoData.push( { "name": "metaConfig.replace_month", "value": $("#replace_month").val() } );
+	 aoData.push( { "name": "metaConfig.replace_day", "value": $("#replace_day").val() } );
+	 aoData.push( { "name": "metaConfig.replace_hour", "value": $("#replace_hour").val() } );
+	 aoData.push( { "name": "metaConfig.opt_sql", "value": osql } );
+	 aoData.push( { "name": "metaConfig.col_sizes", "value": osize } );
+	 aoData.push( { "name": "metaConfig.opt_server", "value": $("#qopt_server").val() } );
+	 aoData.push( { "name": "metaConfig.task_title", "value": $("#qtask_title").val() } );
+	 var url = "/actions/Metadata.action?updateMetaConfig";
+	 if ( optType == 'create' ) url = "/actions/Metadata.action?insertMetaConfig";
+
+	 top.sendAjaxRequest(url,aoData,optCallback);
+   }
+
+   function checkForm(){
+     var msg = "";
+	 var temp = "";
+	 temp = top.getAllCheckedValue( document.getElementsByName('gdb_codes_cb') );
+	 if ( temp == '' ) {
+	   msg += "请选择数据库<br>"; 
+	 }
+	 msg += checkString($("#qtask_title").val(),true,32,"标题");
+     return msg;
+   }
+   
+   function optGetDBListCallback(obj){
+     try{
+	   var str="";
+	   var temp = "";
+	   for ( var i=0;i<obj.aaData.length;i++ ) {
+	     temp = obj.aaData[i].code;
+	     str += "<input type='checkbox' name='gdb_codes_cb' value='"+temp+"' ";
+		 if ( gdb_codes.indexOf(temp+",") != -1 || gdb_codes.indexOf("," +temp) != -1 || gdb_codes == temp ) str += " checked ";
+		 str += "></input>&nbsp;"+temp+"<br/>";
+	   }
+	   $( "#gdb_codes_td" ).html( str );
+	 }catch(e){}
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      isSaveOK = true;
+	      top.showInfoWinOK("操作成功");
+	    }else{
+	      isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+  </script> 
+</head>
+<body>
+<br>
+<table width="100%" border="0" padding="0" spacing="0">
+ <tr>
+    <td align="right">标题(<font color="red">*</font>):</td>
+    <td align="left"><input type="text" id="qtask_title" ></input></td>
+ </tr>
+ <tr>
+    <td align="right">表名:</td>
+    <td align="left"><input type="txt" id="gtable_name" value="" style="width:200px" size="30" /></td>
+ </tr>
+ <tr>
+    <td align="right">文件:</td>
+    <td align="left"><textarea id="gfile_path" cols="55" rows="5"></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">执行SQL:</td>
+    <td align="left"><textarea id="gopt_sql" cols="55" rows="5"></textarea></td>
+ </tr>
+ <tr id="col_sizes_tr" style="display:none">
+    <td align="right">各字段长度(<font color="red">*</font>):</td>
+    <td align="left"><input type="txt" id="gcol_sizes" value="" style="width:200px" size="30" /></td>
+ </tr>
+ <tr>
+    <td align="right">替换策略:</td>
+    <td align="left"><input id="replace_month" type="txt" value="0" size="3"/>月
+	<input type="txt" id="replace_day" value="0" size="3"/>日<input type="txt" id="replace_hour" value="0" size="3"/>时</td>
+ </tr>
+ <tr>
+    <td align="right">执行时间:</td>
+    <td align="left">
+	  <select id="gmonth">
+	    <option value="-1">每月</option>
+	    <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option><option value="5">5月</option>
+		<option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option>
+		<option value="11">11月</option><option value="12">12月</option>
+	  </select>
+	  <select id="gday">
+	    <option value="-1">每日</option>
+	    <option value="1">1日</option><option value="2">2日</option><option value="3">3日</option><option value="4">4日</option><option value="5">5日</option>
+		<option value="6">6日</option><option value="7">7日</option><option value="8">8日</option><option value="9">9日</option><option value="10">10日</option>
+		<option value="11">11日</option><option value="12">12日</option><option value="13">13日</option><option value="14">14日</option><option value="15">15日</option>
+		<option value="16">16日</option><option value="17">17日</option><option value="18">18日</option><option value="19">19日</option><option value="20">20日</option>
+		<option value="21">21日</option><option value="22">22日</option><option value="23">23日</option><option value="24">24日</option><option value="25">25日</option>
+		<option value="26">26日</option><option value="27">27日</option><option value="28">28日</option><option value="29">29日</option><option value="30">30日</option>
+		<option value="31">31日</option>
+	  </select>
+	  <select id="ghour">
+	    <option value="-1">每时</option><option value="0">0时</option>
+	    <option value="1">1时</option><option value="2">2时</option><option value="3">3时</option><option value="4">4时</option><option value="5">5时</option>
+		<option value="6">6时</option><option value="7">7时</option><option value="8">8时</option><option value="9">9时</option><option value="10">10时</option>
+		<option value="11">11时</option><option value="12">12时</option><option value="13">13时</option><option value="14">14时</option><option value="15">15时</option>
+		<option value="16">16时</option><option value="17">17时</option><option value="18">18时</option><option value="19">19时</option><option value="20">20时</option>
+		<option value="21">21时</option><option value="22">22时</option><option value="23">23时</option>
+	  </select>
+	  <select id="gminute">
+	    <option value="0">0分</option><option value="5">5分</option><option value="10">10分</option><option value="15">15分</option>
+		<option value="20">20分</option><option value="25">25分</option><option value="30">30分</option><option value="35">35分</option>
+		<option value="40">40分</option><option value="45">45分</option><option value="50">50分</option><option value="55">55分</option>
+	  </select>
+	</td>
+ </tr>
+ <tr>
+    <td align="right">状态:</td>
+    <td align="left" id="tdStatus"></td>
+ </tr>
+  <tr>
+    <td align="right">数据库(<font color="red">*</font>):</td>
+    <td align="left" id="gdb_codes_td" border="1"></td>
+ </tr>
+ <tr>
+    <td align="right">启用策略的服务器:</td>
+    <td align="left" id="gopt_server_td" border="1"></td>
+ </tr>
+</table>
+<p align="center">
+   <table><tr>
+		    <td><span id="okBtn" class="buttonTwo"><a href="javascript:doSubmit()">提交</a></span></td>
+		    <td><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+   </tr></table>
+</p>
+</body>
+</html>

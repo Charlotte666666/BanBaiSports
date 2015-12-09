@@ -1,0 +1,512 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/chart.js"></script>
+  <script type="text/javascript" src="../../js/echart/echarts.js"></script>
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var type_id="";
+   var type_name="";
+   var target_id=0;
+   var year=0;
+   var monthTarget=0;
+   var targetId=0;
+   var week_id=0;
+   var month=0;
+	var type=0;
+	var targetType="";
+	var monthNum=1;
+	var dataStr="";
+    var factValue=[];
+	var targetValue=[];
+	require.config({
+        paths: {
+            echarts: '../../js/echart',
+			macarons:'../../js/echart'
+        }
+    });
+	
+   $(document).ready(function() {
+     initData();
+	 var allYear = new Date();
+	 year=allYear.getFullYear();
+	 $("#span_year").html(top.get5YearSelectHtml('year',false,year,'yearAndTypeChange()'));
+	 yearAndTypeChange();
+   } );
+   //当年份和类型发生改变时查询数据
+   function yearAndTypeChange(){
+	targetType=$("#target_type").val();
+	year=$("#year").val();
+	factValue=[];
+	targetValue=[];
+	var aoData=[];
+	aoData.push( { "name": "targetMonth.target_type", "value": targetType} );
+	aoData.push( { "name": "targetMonth.year", "value": top.g_GetNumValue(year)} );
+	top.sendAjaxRequest("/actions/Interview.action?getTargetMonthList",aoData,TargetinfoCallback);
+   }
+   
+    function TargetinfoCallback(obj){
+	 try{
+		targetMonth=obj.aaData;
+		if(targetMonth[0]!=null){
+		    targetValue.push(targetMonth[0].january);
+		    targetValue.push(targetMonth[0].february);
+		    targetValue.push(targetMonth[0].march);
+		    targetValue.push(targetMonth[0].april);
+		    targetValue.push(targetMonth[0].may);
+		    targetValue.push(targetMonth[0].june);
+		    targetValue.push(targetMonth[0].july);
+		    targetValue.push(targetMonth[0].august);
+		    targetValue.push(targetMonth[0].september);
+		    targetValue.push(targetMonth[0].october);
+		    targetValue.push(targetMonth[0].november);
+		    targetValue.push(targetMonth[0].december);
+			$("#target_january").val(targetMonth[0].january);
+			$("#target_february").val(targetMonth[0].february);
+			$("#target_march").val(targetMonth[0].march);
+			$("#target_april").val(targetMonth[0].april);
+			$("#target_may").val(targetMonth[0].may);
+			$("#target_june").val(targetMonth[0].june);
+			$("#target_july").val(targetMonth[0].july);
+			$("#target_august").val(targetMonth[0].august);
+			$("#target_september").val(targetMonth[0].september);
+			$("#target_october").val(targetMonth[0].october);
+			$("#target_november").val(targetMonth[0].november);
+			$("#target_december").val(targetMonth[0].december);
+			$("#target_january_txt").html(targetMonth[0].january);
+			$("#target_february_txt").html(targetMonth[0].february);
+			$("#target_march_txt").html(targetMonth[0].march);
+			$("#target_april_txt").html(targetMonth[0].april);
+			$("#target_may_txt").html(targetMonth[0].may);
+			$("#target_june_txt").html(targetMonth[0].june);
+			$("#target_july_txt").html(targetMonth[0].july);
+			$("#target_august_txt").html(targetMonth[0].august);
+			$("#target_september_txt").html(targetMonth[0].september);
+			$("#target_october_txt").html(targetMonth[0].october);
+			$("#target_november_txt").html(targetMonth[0].november);
+			$("#target_december_txt").html(targetMonth[0].december);
+		}else{
+		    targetValue.push(0,0,0,0,0,0,0,0,0,0,0,0);
+			$("#target_january").val(0);
+			$("#target_february").val(0);
+			$("#target_march").val(0);
+			$("#target_april").val(0);
+			$("#target_may").val(0);
+			$("#target_june").val(0);
+			$("#target_july").val(0);
+			$("#target_august").val(0);
+			$("#target_september").val(0);
+			$("#target_october").val(0);
+			$("#target_november").val(0);
+			$("#target_december").val(0);
+			$("#target_january_txt").html("");
+			$("#target_february_txt").html("");
+			$("#target_march_txt").html("");
+			$("#target_april_txt").html("");
+			$("#target_may_txt").html("");
+			$("#target_june_txt").html("");
+			$("#target_july_txt").html("");
+			$("#target_august_txt").html("");
+			$("#target_september_txt").html("");
+			$("#target_october_txt").html("");
+			$("#target_november_txt").html("");
+			$("#target_december_txt").html("");
+		}
+		countFactVlaue(); 
+   }catch(e){}
+   }
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+
+   //每年的产值(实际的)
+   function countFactVlaue(){
+		var aoData=[];
+		aoData.push( { "name": "type", "value": targetType} );
+		aoData.push( { "name": "year", "value": year} );
+		top.sendAjaxRequest("/actions/CustInfo.action?ComputeFactValueOfMonth",aoData,factinfoCallback);
+        
+   }
+   function factinfoCallback(obj){
+   try{
+		if(obj.status==true){
+			var o=obj.body;
+			if(o){
+			    factValue.push(o.january);
+			    factValue.push(o.february);
+			    factValue.push(o.march);
+			    factValue.push(o.april);
+			    factValue.push(o.may);
+			    factValue.push(o.june);
+			    factValue.push(o.july);
+			    factValue.push(o.august);
+			    factValue.push(o.september);
+			    factValue.push(o.october);
+			    factValue.push(o.november);
+			    factValue.push(o.december);
+				$("#fact_month1").val(o.january);
+				$("#fact_month2").val(o.february);
+				$("#fact_month3").val(o.march);
+				$("#fact_month4").val(o.april);
+				$("#fact_month5").val(o.may);
+				$("#fact_month6").val(o.june);
+				$("#fact_month7").val(o.july);
+				$("#fact_month8").val(o.august);
+				$("#fact_month9").val(o.september);
+				$("#fact_month10").val(o.october);
+				$("#fact_month11").val(o.november);
+				$("#fact_month12").val(o.december);
+				$("#fact_month1_txt").html(o.january);
+				$("#fact_month2_txt").html(o.february);
+				$("#fact_month3_txt").html(o.march);
+				$("#fact_month4_txt").html(o.april);
+				$("#fact_month5_txt").html(o.may);
+				$("#fact_month6_txt").html(o.june);
+				$("#fact_month7_txt").html(o.july);
+				$("#fact_month8_txt").html(o.august);
+				$("#fact_month9_txt").html(o.september);
+				$("#fact_month10_txt").html(o.october);
+				$("#fact_month10_txt").html(o.october);
+				$("#fact_month11_txt").html(o.november);
+				$("#fact_month12_txt").html(o.december);
+			}else{
+			     factValue.push(0,0,0,0,0,0,0,0,0,0,0,0);
+			}
+		}
+		drawEChart();
+        //computChartData();
+   }catch(e){}
+   }
+   
+
+   function computChartData(){
+     try{
+			dataStr='<chart title="'+year+'年目标与实际产值对比分析图" types="bar,bar" yTitle="产值(万元)" yAxisLableWidth="60" ';
+			var max=0;
+			var min=10000000000;
+			var step=1000;
+			var i=0;
+			var vals="";
+			var vals2="";
+			var axis="";
+			var v=0;
+
+			for ( i=1;i<13;i++ ) {
+			   v=Number( $("#fact_month"+i).val() );
+			   if ( min > v ) min=v;
+			   if ( max < v ) max=v;
+			   if ( i > 1 ) {
+				vals+=",";
+				axis+=",";
+			   }
+			   vals+=v;
+			   axis+=i+"月";
+			}
+			v=Number($("#target_january").val());
+			if ( min > v ) min=v;
+			if ( max < v ) max=v;
+			vals2+=v+",";
+
+			v=Number($("#target_february").val());
+			if ( min > v ) min=v;
+			if ( max < v ) max=v;
+			vals2+=v+",";
+
+			v=Number($("#target_march").val());
+			if ( min > v ) min=v;
+			if ( max < v ) max=v;
+			vals2+=v+",";
+
+			v=Number($("#target_april").val());
+			if ( min > v ) min=v;
+			if ( max < v ) max=v;
+			vals2+=v+",";
+
+			v=Number($("#target_may").val());
+			if ( min > v ) min=v;
+			if ( max < v ) max=v;
+			vals2+=v+",";
+
+			v=Number($("#target_june").val());
+			if ( min > v ) min=v;
+			if ( max < v ) max=v;
+			vals2+=v+",";
+
+			v=Number($("#target_july").val());
+			if ( min > v ) min=v;
+			if ( max < v ) max=v;
+			vals2+=v+",";
+
+			v=Number($("#target_august").val());
+			if ( min > v ) min=v;
+			if ( max < v ) max=v;
+			vals2+=v+",";
+
+			v=Number($("#target_september").val());
+			if ( min > v ) min=v;
+			if ( max < v ) max=v;
+			vals2+=v+",";
+
+			v=Number($("#target_october").val());
+			if ( min > v ) min=v;
+			if ( max < v ) max=v;
+			vals2+=v+",";
+
+			v=Number($("#target_november").val());
+			if ( min > v ) min=v;
+			if ( max < v ) max=v;
+			vals2+=v+",";
+
+			v=Number($("#target_december").val());
+			if ( min > v ) min=v;
+			if ( max < v ) max=v;
+			vals2+=v;
+
+			max = getMMax(max);
+			min = getMMin(min);
+			step = getMStep( max - min );
+
+			dataStr+='xAxis="'+axis+'" colors="red,blue" ';
+			dataStr+='yMax="'+max+'" yMin="'+min+'" yStep="'+step+'">';
+			dataStr+='<data label="目标值" values="'+vals2+'" />';
+			dataStr+='<data label="实际值" values="'+vals+'" />';
+			dataStr+='</chart>';
+			drawChart();
+		}catch(e){
+		}
+   }
+
+	 //当全年目标发生改变时，月目标也改变
+	function changeMonthVal(){
+		var yearTarget=$("#year_total_target").val();
+		monthTarget=yearTarget/12;
+		for(var i=1;i<=12;i++){
+			$("#month"+i+"").val(monthTarget);
+			var weekTarget=$("#month"+i+"").val()/4;
+			for(var j=1;j<=4;j++){
+				$("#month"+i+"_target"+j+"").val(weekTarget);
+			}
+		}
+	}
+   function initData(){
+		optType=top.getUrlParam(document.URL,"optType");
+		$( "#span_target_type" ).html( top.getCodeSelectHtml("TARGET_TYPE","target_type",false,'1','yearAndTypeChange()') );
+		if ( optType == 'update' ) {
+			target_id=top.getUrlParam(document.URL,"id");
+			var aoData=[];
+			 aoData.push( { "name": "targetMonth.target_id", "value":target_id } );
+		    top.sendAjaxRequest("/actions/Interview.action?getTargetMonthAndWeek",aoData,targetInfoCallback);
+		}
+	}
+	
+	function drawChart(){
+   	   if ( dataStr == '' ) return ;
+   	   try{
+	     var mid="chartFrame";
+         var chartFrame = document.getElementById( mid );
+         if ( chartFrame.contentWindow.isLoaded() ) {
+           chartFrame.contentWindow.doDrawChart( dataStr );
+		   dataStr="";
+         }
+       }catch(e){
+       }
+   }
+   
+   // 由图标控件调用
+   function getChartStr(){
+      return dataStr;
+   }
+   
+   function drawEChart(){
+	require(
+            [
+			    'echarts',
+			    'echarts/macarons',
+                'echarts/chart/bar',
+                'echarts/chart/line',
+            ],
+    function (ec,theme) {
+		var myChart = ec.init(document.getElementById('chartDiv'),theme);
+		option = {
+		title : {
+			text: "【"+$("#year").val()+"】年目标与实际产值对比分析图",
+			subtext: top.getCodeName("TARGET_TYPE",$("#target_type").val())
+		},
+		tooltip : {
+			trigger: 'axis'
+		},
+		legend: {
+			data:['目标值','实际值']
+		},
+		toolbox: {
+			show : true,
+			feature : {
+				mark : {show: true},
+				dataView : {show: true, readOnly: false},
+				magicType : {show: true, type: ['line', 'bar']},
+				restore : {show: true},
+				saveAsImage : {show: true}
+			}
+		},
+		calculable : true,
+		xAxis : [
+			{
+				type : 'category',
+				data : ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月']
+			}
+		],
+		yAxis : [
+			{
+				type : 'value'
+			}
+		],
+		series : [
+			{
+				name:'目标值',
+				type:'bar',
+				data:targetValue,
+				markPoint : {
+					data : [
+						{type : 'max', name: '最大值',xAxis: 7, yAxis: 183, symbolSize: 18},
+						{type : 'min', name: '最小值',xAxis:11, yAxis:3}
+					]
+				},
+				markLine : {
+					data : [
+						{type : 'average', name: '平均值'}
+					]
+				}
+			},
+			{
+				name:'实际值',
+				type:'bar',
+				data:factValue,
+				markPoint : {
+					data : [
+						{name : '最高', type : 'max', xAxis: 7, yAxis: 183, symbolSize:18},
+						{name : '最低', type : 'min', xAxis: 11, yAxis: 3}
+					]
+				},
+				markLine : {
+					data : [
+						{type : 'average', name : '平均值'}
+					]
+				}
+			}
+		]
+	};
+	myChart.setOption(option, true);
+   });
+  }
+  </script> 
+  <style>
+		input{
+			width:99%;
+			height:99%;
+		}
+		textarea{
+			width:99%;
+			height:99%;
+		}
+</style>
+</head>
+<body>
+<input type="hidden" id="type_id" value="" />
+<center>
+<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+	<tr class="tr_data" height="35px">
+		<td width="100%" align="center" colspan="13"><B><font size="4">业绩信息表</font></B></td>
+	</tr>
+	<tr class="tr_data" height="35px">
+	    <td colspan="13" align="left">
+		   <table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				<tr class="tr_data" height="35px">
+					<td width="20%" align="center" colspan="3">
+						目标类型<span id="span_target_type"></span>&nbsp;
+						年份<span id="span_year"></span>
+					</td>
+				</tr>
+			</table>
+		</td>
+	</tr>
+	<tr class="tr_data" height="25px">
+	   <td>月份</td>
+	   <td>一月</td>
+	   <td>二月</td>
+	   <td>三月</td>
+	   <td>四月</td>
+	   <td>五月</td>
+	   <td>六月</td>
+	   <td>七月</td>
+	   <td>八月</td>
+	   <td>九月</td>
+	   <td>十月</td>
+	   <td>十一月</td>
+	   <td>十二月</td>
+	</tr>
+	<tr class="tr_data" height="25px">
+	   <td>目标值</td>
+	   <td><label id="target_january"></label><span id="target_january_txt"></span></td>
+	   <td><label id="target_february"></label><span id="target_february_txt"></span></td>
+	   <td><label id="target_march"></label><span id="target_march_txt"></span></td>
+	   <td><label id="target_april"></label><span id="target_april_txt"></span></td>
+	   <td><label id="target_may"></label><span id="target_may_txt"></span></td>
+	   <td><label id="target_june"></label><span id="target_june_txt"></span></td>
+	   <td><label id="target_july"></label><span id="target_july_txt"></span></td>
+	   <td><label id="target_august"></label><span id="target_august_txt"></span></td>
+	   <td><label id="target_september"></label><span id="target_september_txt"></span></td>
+	   <td><label id="target_october"></label><span id="target_october_txt"></span></td>
+	   <td><label id="target_november"></label><span id="target_november_txt"></span></td>
+	   <td><label id="target_december"></label><span id="target_december_txt"></span></td>
+	</tr>
+	<tr class="tr_data" height="25px">
+	   <td>实际值</td>
+	   <td><label id="fact_month1"></label><span id="fact_month1_txt"></span></td>
+	   <td><label id="fact_month2"></label><span id="fact_month2_txt"></span></td>
+	   <td><label id="fact_month3"></label><span id="fact_month3_txt"></span></td>
+	   <td><label id="fact_month4"></label><span id="fact_month4_txt"></span></td>
+	   <td><label id="fact_month5"></label><span id="fact_month5_txt"></span></td>
+	   <td><label id="fact_month6"></label><span id="fact_month6_txt"></span></td>
+	   <td><label id="fact_month7"></label><span id="fact_month7_txt"></span></td>
+	   <td><label id="fact_month8"></label><span id="fact_month8_txt"></span></td>
+	   <td><label id="fact_month9"></label><span id="fact_month9_txt"></span></td>
+	   <td><label id="fact_month10"></label><span id="fact_month10_txt"></span></td>
+	   <td><label id="fact_month11"></label><span id="fact_month11_txt"></span></td>
+	   <td><label id="fact_month12"></label><span id="fact_month12_txt"></span></td>
+	</tr>
+	<!--<tr class="tr_data" height="35px">
+	    <td colspan="13">
+		    <table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+			  <iframe id="chartFrame" src="../chart.html" width="100%" height="400px" frameborder="0"></iframe>
+			</table>
+		</td>
+		<!--<td width="25%">
+			<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				<tr class="tr_data" height="35px">
+					<td width="20%" align="center" colspan="3">
+						目标类型<span id="span_target_type"></span>&nbsp;
+						年份<span id="span_year"></span>
+					</td>
+				</tr>
+			</table>
+		</td>
+		<td width="75%">
+			<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+			  <iframe id="chartFrame" src="../chart.html" width="100%" height="400px" frameborder="0"></iframe>
+			</table>
+		</td>
+	</tr>-->
+</table>
+<div id="chartDiv" style="margin-top:20px;height:500px;width:1000px;"></div>
+</center>
+</body>
+</html>

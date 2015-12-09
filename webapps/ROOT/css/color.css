@@ -1,0 +1,36 @@
+
+body {
+	background-color: #fff;
+}
+body {
+
+}
+/*
+body header nav {
+	color:#fff;
+	background-color:#303030;
+}
+*/
+body h1,h4{
+	color: #18b4ed;
+}
+hr{
+	border: 1px solid #18b4ed;
+}
+#headline h2{
+	color: #c8c8c8;
+}
+#downloadforfree .fonts {
+	color: #fff;
+}
+#morecontent .fonts {
+	color: #fff;
+}
+.location {
+	color: #18b4ed;
+}
+/***********************/
+.ranking table thead {
+	color: #fff;
+	background-color: #18b4ed;
+}

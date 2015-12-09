@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery.dataTables.min.js"></script>
+
+<script type="text/javascript">
+var oTable = null;
+var scheduleList=[];
+var currentScheduleId=0;
+var currentTeamId=0;
+
+$(document).ready( function() {
+    // 加载赛程信息
+	top.sendAjaxRequest("/actions/CompetitionSchedule.action?getCompetitionScheduleList",[],getCompetitionScheduleListCallback);
+});
+
+ function getCompetitionScheduleListCallback(obj){
+     try{
+		  scheduleList=obj.aaData;
+		  $("#tdschedule").html( top.getScheduleSelectHtml(scheduleList,'schedule_id') );
+		  if ( scheduleList.length > 0 ) {
+		    currentScheduleId=scheduleList[0].id;
+		  }
+	 }catch(e){
+	 }
+	 loadList();
+ }
+
+ function loadList(){
+    var iaoColumns= [
+               { "sTitle": "图片", "mDataProp": "id", "sWidth": "20%", 
+			       "fnRender": function ( oObj ) {
+				     if ( oObj.aData.img_url != '' ) {
+                       return '<img src="'+oObj.aData.img_url+'" height="100px" />' ;
+					 } else {
+					   return '';
+					 }
+                   },
+                   "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "图片链接", "mDataProp": "img_url", "sWidth": "60%", 
+			       "fnRender": function ( oObj ) {
+                     return '<input type="text" style="width:100%" id="img_url_'+oObj.aData.id+'" value="'+oObj.aData.img_url+'" />' ;
+                   },
+                   "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "操作", "mDataProp": "id", "sWidth": "20%","bSortable":false,
+                    "fnRender": function ( oObj ) {
+                       return '<span align="center" style="cursor:pointer;" onclick="saveInfo(\''+oObj.aData.id+'\')"><img src="../../img/save.bmp" />&nbsp;保存</span>&nbsp;<span align="center" style="cursor:pointer;" onclick="uploadImg(\''+oObj.aData.id+'\')"><img src="../../img/icons/arrow-up.gif" />&nbsp;图片</span>';
+                    },
+                    "bUseRendered": false
+               }
+        ];
+ 	
+		oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": top.getUrlBase()+"/actions/CompetitionSchedule.action?getWonderfulList",
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     aoData.push( { "name": "optType", "value": "addRow" } );
+						 aoData.push( { "name": "wonderful.schedule_id", "value": top.g_GetNumValue( $("#schedule_id").val(), -1 ) } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumns
+	   } );
+ }
+ 
+
+ function saveInfo(code){
+    var aoData=[];
+	aoData.push( { "name": "wonderful.schedule_id", "value": top.g_GetNumValue( $("#schedule_id").val(), -1 ) } );
+	aoData.push( { "name": "wonderful.id", "value": code } );
+	aoData.push( { "name": "wonderful.img_url", "value": $("#img_url_"+code).val() } );
+	var xurl="/actions/CompetitionSchedule.action?updateWonderful";
+	if ( code == 0 ) {
+	  xurl="/actions/CompetitionSchedule.action?insertWonderful";
+	}
+    top.sendAjaxRequest(xurl,aoData,optCallback);
+ }
+ 
+ function uploadImg(tid){
+    currentTeamId=tid;
+    top.openSelectDialog("上传图片","pages/uploadOSSFile.html?key=JC_"+tid,300,200,saveUploadImgURL);
+ }
+ 
+ function saveUploadImgURL(){
+   try{
+    var o=top.getTempValue();
+    if ( o != null && o.isSaveOK ) {
+		var aoData=[];
+		aoData.push( { "name": "wonderful.img_url", "value": "http://banbaisport.oss-cn-beijing.aliyuncs.com/JC_"+currentTeamId } );
+		aoData.push( { "name": "wonderful.id", "value": currentTeamId } );
+		aoData.push( { "name": "wonderful.schedule_id", "value": top.g_GetNumValue( $("#schedule_id").val(), -1 ) } );
+		var xurl="/actions/CompetitionSchedule.action?updateWonderful";
+		top.sendAjaxRequest(xurl,aoData,optCallback);
+	}
+   }catch(e){}
+ }
+ 
+ function doQuery(){
+	oTable.fnDraw();
+ }
+ 
+ function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      top.showInfoWinOK("操作成功");
+		  doQuery();
+	    }else{
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+ }
+</script>
+</head>
+<body>
+            <div style='border: 1px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="180px">&nbsp;竞猜信息查询&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+				  <td align="right" width="30%">赛程:</td><td align="left" width="70%" id="tdschedule"></td>
+			     </tr>
+			 </table>
+			</div>
+<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+</body>
+</html> 

@@ -1,0 +1,64 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>TEST</title>
+<script type="text/javascript">
+    /** 将日期字符串(YYYY-MM-DD hh:mm:ss)转换为时间戳 */
+	function toTimestamp(str){
+	    if ( str == '' ) return 0;
+	    try{
+	      var d=new Date(2013,1,1);
+		  d.setFullYear( Number(str.substring(0,4)) );
+		  alert("month="+Number(str.substring(5,7)) );
+		  d.setMonth( Number(str.substring(5,7)) - 1 ); // 0 - 11
+		  alert("getMonth="+ d.getMonth() );
+		  
+		  d.setDate( Number(str.substring(8,10)) );
+		  if ( str.length > 15 ) {
+		   d.setHours( Number(str.substring(11,13)) );
+		   d.setMinutes( Number(str.substring(14,16)) );
+		  } else {
+		   d.setHours(0);
+		   d.setMinutes(0);
+		  }
+		  d.setSeconds(0,0);
+		  return d.getTime();
+		}catch(e){
+		  return 0;
+		}
+	}
+	
+	/**
+	 * 转换时间字符串格式 (YYYY-MM-DD hh:mm:ss)
+	 */
+	function getTimeStr(t,isDateStr){
+	    if ( !isDateStr ) isDateStr = false;
+		if ( !t ) return "";
+		if ( t > -2 && t < 10 ) return "";
+		try{
+			var d=new Date();
+		    d.setTime( t );
+			var str = d.getFullYear()+"-"+getTwoNumberStr(d.getMonth()+1)+"-"+getTwoNumberStr(d.getDate());
+			if ( !isDateStr ) str +=" "+getTwoNumberStr(d.getHours())+":"+getTwoNumberStr(d.getMinutes())
+			       +":"+getTwoNumberStr(d.getSeconds());
+		    return str;
+		}catch(e){
+			return "";
+		}
+	}
+	
+	function testToTimestamp(){
+	    document.getElementById("timeStamp").innerHTML=toTimestamp("2014-02-12");
+	}
+	
+	function testToString(){
+	    
+	}
+	
+</script>
+</head>
+<body>
+  <input type="button" onclick="testToTimestamp()" value="testToTimestamp"></input><span id="timeStamp"></span><br/>
+  
+</body>

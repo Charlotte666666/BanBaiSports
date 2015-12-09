@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+    <meta charset="utf-8">
+    <head>
+        <title>羽球达人</title>
+        <meta content="yes" name="apple-mobile-web-app-capable">
+        <meta name="format-detection" content="telephone=no"/>
+        <meta name="viewport" content="width=device-width,height=device-height,inital-scale=1.0,maximum-scale=1.0,user-scalable=no;">
+
+        <link rel="stylesheet" media="screen" href="css/base.css" />
+        <link rel="stylesheet" media="screen" href="css/color.css" />
+        <link rel="stylesheet" media="screen" href="css/layout.css" />
+        <link rel="stylesheet" media="screen" href="css/typography.css" />
+
+        <link rel="stylesheet" href="../css/themes/default/jquery.mobile-1.4.5.min.css">
+        <script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/jquery.mobile-1.4.5.min.js"></script>
+
+        <script type="text/javascript">       
+           var member_id=1439286113287;
+           var id_check=1439286113287;
+           var g_UrlBase="";
+           var resultList=[];
+           
+           $(document).ready(function() {
+               //member_id=getUrlParam(document.URL,"member.id");
+               //id_check =getUrlParam(document.URL,"id.check");
+               try{
+                 var ind=document.URL.indexOf("htmlAPI");
+                 if ( ind != -1 ) {
+                   g_UrlBase=document.URL.substring(0,ind);
+                 }
+               }catch(e){}
+               getResult();
+           } );
+           
+           function getResult(){
+               var aoData=[];
+               aoData.push( { "name": "member.id", "value": member_id } );
+               aoData.push( { "name": "id.check", "value":  id_check } );
+               doSendAjaxRequest("/actions/Member.action?getMemberDetail",aoData,getCompetitionRankListCallback);
+           }
+           
+           function getCompetitionRankListCallback(obj){
+               try{
+                resultList=obj.data;
+                var ht='';
+                // set headimg 
+                ht = '<img src="http://banbaisport.oss-cn-beijing.aliyuncs.com/'+resultList.img_url+'" width="80px" height="80px" style="border-radius:50%"/>';
+                $("#headimg").html( ht );
+
+                // set nick_name
+                ht = resultList.name;
+                $("#mynickname").text( ht );
+
+                // set signature
+                ht = resultList.signature;
+                $("#mysignature").text( ht );
+
+                // set other
+               }catch(e){
+               }
+           }
+           
+          function doSendAjaxRequest(xurl,param,fnCallback){
+                if ( xurl.indexOf('http://') == -1 ) xurl = g_UrlBase+xurl;
+                $.ajax( {
+                    "url":  xurl,
+                    "data": param,
+                    "timeout" : 10000,
+                    "contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+                    "success": function (json) {
+                        try{ fnCallback( json );}catch(e){}
+                    },
+                    "dataType": "json",
+                    "cache": false,
+                    "type": "POST",
+                    "error": function (xhr, error, thrown) {
+                    }
+                } );
+         }
+         
+         function getUrlParam(xurl,name){
+                var para="";
+                if(xurl.lastIndexOf("?")>0){
+                    para=xurl.substring(xurl.lastIndexOf("?")+1,xurl.length);
+                    var arr=para.split("&");
+                    para="";
+                    for(var i=0;i<arr.length;i++){
+                       if(arr[i].split("=")[0]==name) return arr[i].split("=")[1];
+                    }
+                    return "";
+               }else{
+                    return "";
+               }
+            }
+        </script>
+
+    </head>
+    <body>
+        <header id="myBaseInfo" class="p15 pr">
+            <h1 class="tc mt10 f1d4">我</h1>
+            <div class="tc mt40" style="display:block">
+                <table width="100%" class="tc">
+                    <tr>
+                        <td width="35%" id="button1"><img src="img/plus.png" width="12px" height="12px" />&nbsp;关注</td>
+                        <td width="30%" id="headimg"><img src="img/headimg.png" width="80px" height="80px" style="border-radius:50%"/></td>
+                        <td width="35%" id="button2"><img src="img/plus.png" width="12px" height="12px" />&nbsp;加好友</td>
+                    </tr>
+                </table>
+            </div>
+            <p id="mynickname" class="tc mt10"><!--哈哈哈--></p>
+            <p id="mysignature" class="tc mt10"><!--You never your luck.--></p>
+            <p id="myinfomation" class="tc mt10 mb20">
+                <img src="img/location.png" width="15px" />&nbsp;北京&nbsp;&nbsp;|&nbsp;&nbsp;球龄：0年&nbsp;&nbsp;|&nbsp;&nbsp;性别：男
+            </p>
+        </header>
+        <div id="underbase" class="mt15 tc">
+            <div id="tagone"><p class="tag">标签1</p><p class="mt10 number f0d7">2345</p></div>
+            <div id="tagtwo"><p class="tag">标签2</p><p class="mt10 number f0d7">110</p></div>
+            <div id="tagthree"><p class="tag">标签3</p><p class="mt10 number f0d7">58</p></div>
+        </div>
+
+        <div id="detailinfo" class="mt20 mb20 pt20">
+            <div class="content pl40 pr40">
+                <table width="100%">
+                    <tbody>
+                        <tr>
+                            <td class="f1d2">等级</td>
+                            <td class="tr">暂无数据</td>
+                        </tr>
+                        <tr>
+                            <td class="f1d2">最近一个月胜率</td>
+                            <td class="tr">暂无数据</td>
+                        </tr>
+                        <tr>
+                            <td class="f1d2">积分</td>
+                            <td class="tr">暂无数据</td>
+                        </tr>
+                        <tr>
+                            <td class="f1d2">人气</td>
+                            <td class="tr">暂无数据</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt15 mb15 ml20 mr20"><h4>参加过的比赛</h4></div>
+            <div class="content pl40 pr40">
+                <table width="100%">
+                    <tbody>
+                        <tr>
+                            <td class="f1d2">深圳羽毛球比赛</td>
+                            <td class="tr">暂无数据</td>
+                        </tr>
+                        <tr>
+                            <td class="f1d2">清华羽毛球比赛</td>
+                            <td class="tr">暂无数据</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </body>
+</html>

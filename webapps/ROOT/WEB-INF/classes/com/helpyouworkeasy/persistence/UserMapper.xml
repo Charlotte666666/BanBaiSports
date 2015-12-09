@@ -1,0 +1,478 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.helpyouworkeasy.persistence.UserMapper">
+
+  <select id="getUserByUsercode" parameterType="map" resultType="User">
+    select
+     belong,
+     user_code as userCode,
+     user_name as userName,
+     pass_word as password,
+     dept_id as deptId,
+     user_status as status,
+     last_login as lastLogin,
+     user_email as email,
+     mobile_phone as mobilePhone,
+     office_phone as officePhone,
+     avatar_path,entry_date,job_title,sex,job_level,card_no,
+     train_recd,contract_start,probation_end,contract_end,
+	 contract_renew_number,baby_state,current_housing_status,
+	 office_qq,current_residence_place,domicile_place,ever_company_name,
+	 education_background,major,graduate_institutions,emergency_contact_name,
+	 emergency_contact_phone,is_friends_in,friends_name,relationship,
+	 department_and_positions,transfer_situation,phase_change_record,
+	 leave_time,reason_to_leave,memo,position_status,integration_score,growth_process
+   from tbl_sys_users
+   where user_code=#{userCode}
+  </select>
+
+  <select id="getUserListCount" parameterType="map" resultType="int">
+    select
+     count(*) as value
+    from tbl_sys_users
+    where belong=#{user.belong} and is_deleted = 0
+   <if test="user.userCode != '' and user.userCode != null " >
+      and user_code = #{user.userCode}
+   </if>
+   <if test="user.userName != '' and user.userName != null" >
+      and user_name like '%${user.userName}%'
+   </if>
+   <if test="user.deptId != '' and user.deptId != null" >
+      and dept_id = #{user.deptId}
+   </if>
+   <if test="user.job_title != '' and user.job_title != null" >
+      and job_title = #{user.job_title}
+   </if>
+   <if test="user.job_level != '' and user.job_level != null" >
+      and job_level = #{user.job_level}
+   </if>
+   <if test="user.status != -1 " >
+      and user_status = #{user.status}
+   </if>
+   <if test="user.email != '' and user.email != null" >
+      and user_email = #{user.email}
+   </if>
+   <if test="user.sex != '' and user.sex != null" >
+      and sex = #{user.sex}
+   </if>
+   <if test="user.mobilePhone != '' and user.mobilePhone != null" >
+      and mobile_phone = #{user.mobilePhone}
+   </if>
+   <if test="time1 != -1">
+      and entry_date>=#{time1}
+   </if>
+   <if test="time2 != -1">
+      and #{time2}>=entry_date
+   </if>
+  </select>
+  
+  <select id="getUserPageList" parameterType="map" resultType="User">
+    select
+     user_code as userCode,
+     user_name as userName,
+     pass_word as password,
+     dept_id as deptId,
+     user_status as status,
+     last_login as lastLogin,
+     user_email as email,
+     mobile_phone as mobilePhone,
+     office_phone as officePhone,
+     avatar_path,entry_date,job_title,sex,job_level,card_no,
+     train_recd,contract_start,probation_end,contract_end,
+	 contract_renew_number,baby_state,current_housing_status,
+	 office_qq,current_residence_place,domicile_place,ever_company_name,
+	 education_background,major,graduate_institutions,emergency_contact_name,
+	 emergency_contact_phone,is_friends_in,friends_name,relationship,
+	 department_and_positions,transfer_situation,phase_change_record,
+	 leave_time,reason_to_leave,memo,position_status,integration_score,growth_process
+   from tbl_sys_users
+   where belong=#{user.belong} and is_deleted = 0
+   <if test="user.userCode != '' and user.userCode != null " >
+      and user_code = #{user.userCode}
+   </if>
+   <if test="user.userName != '' and user.userName != null" >
+      and user_name like '%${user.userName}%'
+   </if>
+   <if test="user.deptId != '' and user.deptId != null" >
+      and dept_id = #{user.deptId}
+   </if>
+   <if test="user.job_title != '' and user.job_title != null" >
+      and job_title = #{user.job_title}
+   </if>
+   <if test="user.job_level != '' and user.job_level != null" >
+      and job_level = #{user.job_level}
+   </if>
+   <if test="user.status != -1" >
+      and user_status = #{user.status}
+   </if>
+   <if test="user.position_status != '' and user.position_status != null" >
+      and position_status = #{user.position_status}
+   </if>
+   <if test="user.email != '' and user.email != null" >
+      and user_email = #{user.email}
+   </if>
+   <if test="user.mobilePhone != '' and user.mobilePhone != null" >
+      and mobile_phone = #{user.mobilePhone}
+   </if>
+   <if test="user.sex != '' and user.sex != null" >
+      and sex = #{user.sex}
+   </if>
+   <if test="time1 != -1">
+      and entry_date>=#{time1}
+   </if>
+   <if test="time2 != -1">
+      and #{time2}>=entry_date
+   </if>
+   <if test="orderName != '' " >
+      order by 
+      <if test="orderName == 'userCode' " >
+	      user_code
+	   </if>
+	   <if test="orderName == 'userName' " >
+	      user_name
+	   </if>
+	   <if test="orderName == 'deptId' " >
+	      dept_id
+	   </if>
+	   <if test="orderName == 'status' " >
+	      user_status
+	   </if>
+	   <if test="orderName == 'email' " >
+	      user_email
+	   </if>
+	   <if test="orderName == 'mobilePhone' " >
+	      mobile_phone
+	   </if>
+	   <if test="orderName == 'lastLogin' " >
+	      last_login
+	   </if>
+	   <if test="orderName == 'job_title' " >
+	      job_title
+	   </if>
+	   <if test="orderName == 'entry_date' " >
+	      entry_date
+	   </if>
+	   <if test="orderName == 'sex' " >
+	      sex
+	   </if>
+      ${orderAZ} 
+   </if>
+   limit #{pageStart},#{pageSize}
+  </select>
+  
+  <select id="getAllUserSimpleList" parameterType="map" resultType="User">
+    select
+     user_code as userCode,
+     user_name as userName,
+     dept_id as deptId,
+     job_title 
+    from tbl_sys_users
+    where belong=#{belong} and is_deleted = 0 and user_status = 1
+  </select>
+  
+  <select id="getUserPageListOracle" parameterType="map" resultType="User">
+    select * from ( select q__.*,rownum rn__ from ( 
+  
+    select
+     user_code as userCode,
+     user_name as userName,
+     pass_word as password,
+     dept_id as deptId,
+     user_status as status,
+     last_login as lastLogin,
+     user_email as email,
+     mobile_phone as mobilePhone,
+     office_phone as officePhone,
+     avatar_path,entry_date,job_title,sex,job_level,card_no,
+     train_recd,contract_start,probation_end,contract_end,
+	 contract_renew_number,baby_state,current_housing_status,
+	 office_qq,current_residence_place,domicile_place,ever_company_name,
+	 education_background,major,graduate_institutions,emergency_contact_name,
+	 emergency_contact_phone,is_friends_in,friends_name,relationship,
+	 department_and_positions,transfer_situation,phase_change_record,
+	 leave_time,reason_to_leave,memo,position_status,integration_score,growth_process
+   from tbl_sys_users
+   where belong=#{user.belong} and is_deleted = 0
+   <if test="user.userCode != '' and user.userCode != null " >
+      and user_code = #{user.userCode}
+   </if>
+   <if test="user.userName != '' and user.userName != null" >
+      and user_name like '%${user.userName}%'
+   </if>
+   <if test="user.deptId != '' and user.deptId != null" >
+      and dept_id = #{user.deptId}
+   </if>
+   <if test="user.job_title != '' and user.job_title != null" >
+      and job_title = #{user.job_title}
+   </if>
+   <if test="user.status != -1" >
+      and user_status = #{user.status}
+   </if>
+   <if test="user.email != '' and user.email != null" >
+      and user_email = #{user.email}
+   </if>
+   <if test="user.mobilePhone != '' and user.mobilePhone != null" >
+      and mobile_phone = #{user.mobilePhone}
+   </if>
+   <if test="user.sex != '' and user.sex != null" >
+      and sex = #{user.sex}
+   </if>
+   <if test="time1 != -1">
+      and entry_date>=#{time1}
+   </if>
+   <if test="time2 != -1">
+      and #{time2}>=entry_date
+   </if>
+   <if test="orderName != '' " >
+      order by 
+      <if test="orderName == 'userCode' " >
+	      user_code
+	   </if>
+	   <if test="orderName == 'userName' " >
+	      user_name
+	   </if>
+	   <if test="orderName == 'deptId' " >
+	      dept_id
+	   </if>
+	   <if test="orderName == 'status' " >
+	      user_status
+	   </if>
+	   <if test="orderName == 'email' " >
+	      user_email
+	   </if>
+	   <if test="orderName == 'mobilePhone' " >
+	      mobile_phone
+	   </if>
+	   <if test="orderName == 'lastLogin' " >
+	      last_login
+	   </if>
+	   <if test="orderName == 'job_title' " >
+	      job_title
+	   </if>
+	   <if test="orderName == 'entry_date' " >
+	      entry_date
+	   </if>
+	   <if test="orderName == 'sex' " >
+	      sex
+	   </if>
+      ${orderAZ} 
+   </if>
+   ) q__ where #{pageEnd} >= rownum ) where rn__>  #{pageStart}
+  </select>
+
+  <update id="updateUser" parameterType="User">
+    UPDATE tbl_sys_users SET
+      user_name = #{userName},
+      dept_id = #{deptId},
+      user_status = #{status},
+      user_email = #{email},
+      mobile_phone = #{mobilePhone},
+      office_phone = #{officePhone},sex=#{sex},
+      avatar_path=#{avatar_path},entry_date=#{entry_date},job_title=#{job_title},job_level=#{job_level},card_no=#{card_no},
+     train_recd=#{train_recd},contract_start=#{contract_start},probation_end=#{probation_end},contract_end=#{contract_end},
+	 contract_renew_number=#{contract_renew_number},baby_state=#{baby_state},current_housing_status=#{current_housing_status},
+	 office_qq=#{office_qq},current_residence_place=#{current_residence_place},domicile_place=#{current_residence_place},
+	 ever_company_name=#{ever_company_name},education_background=#{education_background},major=#{major},
+	 graduate_institutions=#{graduate_institutions},emergency_contact_name=#{emergency_contact_name},
+	 emergency_contact_phone=#{emergency_contact_phone},is_friends_in=#{is_friends_in},friends_name=#{friends_name},
+	 relationship=#{relationship},department_and_positions=#{department_and_positions},transfer_situation=#{transfer_situation},
+	 phase_change_record=#{phase_change_record},leave_time=#{leave_time},reason_to_leave=#{reason_to_leave},memo=#{memo},
+	 position_status=#{position_status},integration_score=#{integration_score},growth_process=#{growth_process}
+    WHERE belong=#{belong} and user_code = #{userCode}
+  </update>
+  
+  <update id="updateLoginTime" parameterType="User">
+    UPDATE tbl_sys_users SET
+      last_login = #{lastLogin}
+    WHERE belong=#{belong} and user_code = #{userCode}
+  </update>
+  
+  <update id="updatePassword" parameterType="User">
+    UPDATE tbl_sys_users SET
+      pass_word = #{password}
+    WHERE belong=#{belong} and user_code = #{userCode}
+  </update>
+
+  <insert id="insertUser" parameterType="User">
+    INSERT INTO tbl_sys_users
+      (belong,user_name,dept_id,pass_word,user_status,last_login,user_email,mobile_phone,user_code,office_phone,avatar_path,
+      entry_date,job_title,is_deleted,sex,job_level,card_no,
+     train_recd,contract_start,probation_end,contract_end,
+	 contract_renew_number,baby_state,current_housing_status,
+	 office_qq,current_residence_place,domicile_place,ever_company_name,
+	 education_background,major,graduate_institutions,emergency_contact_name,
+	 emergency_contact_phone,is_friends_in,friends_name,relationship,
+	 department_and_positions,transfer_situation,phase_change_record,
+	 leave_time,reason_to_leave,memo,position_status,integration_score,growth_process)
+    VALUES
+      (#{belong},#{userName},#{deptId},#{password},#{status},#{lastLogin},#{email},#{mobilePhone},#{userCode},#{officePhone},
+      #{avatar_path},#{entry_date},#{job_title},0,#{sex},#{job_level},#{card_no},
+     #{train_recd},#{contract_start},#{probation_end},#{contract_end},
+	 #{contract_renew_number},#{baby_state},#{current_housing_status},
+	 #{office_qq},#{current_residence_place},#{domicile_place},#{ever_company_name},
+	 #{education_background},#{major},#{graduate_institutions},#{emergency_contact_name},
+	 #{emergency_contact_phone},#{is_friends_in},#{friends_name},#{relationship},
+	 #{department_and_positions},#{transfer_situation},#{phase_change_record},
+	 #{leave_time},#{reason_to_leave},#{memo},#{position_status},#{integration_score},#{growth_process})
+  </insert>
+  
+  <update id="deleteUsers" parameterType="map">
+    update tbl_sys_users 
+    set is_deleted = 1,user_status = 2
+    WHERE belong=#{belong} and user_code in ( ${userCodes} )
+  </update>
+  
+  <select id="checkUserExist" parameterType="map" resultType="int">
+    select
+     count(*) as value
+    from tbl_sys_users
+    where user_code=#{userCode}
+  </select>
+  
+  <select id="getUserProfile" parameterType="map" resultType="UserProfile">
+    select
+     user_code as userCode,
+     position,
+     birthday
+    from tbl_sys_profile
+    where user_code=#{userCode}
+  </select>
+
+  <update id="updateUserProfile" parameterType="UserProfile">
+    UPDATE tbl_sys_profile SET
+      user_code=#{userCode}, position=#{position}, birthday=#{birthday}
+    WHERE user_code = #{userCode}
+  </update>
+
+  <insert id="insertUserProfile" parameterType="UserProfile">
+    INSERT INTO tbl_sys_profile (user_code, position, birthday)
+    VALUES (#{userCode}, #{position}, #{birthday})
+  </insert>
+
+  <update id="updateUserStatus" parameterType="map">
+    update tbl_sys_users 
+    set user_status = #{status}
+    WHERE belong=#{belong} and user_code in ( ${userCodes} )
+  </update>
+  
+  <update id="updateUserStatusAndBelong" parameterType="map">
+    update tbl_sys_users 
+    set belong=#{belong},user_status = #{status}
+    WHERE user_code = #{userCode}
+  </update>
+  
+  <select id="getUserRights" parameterType="map" resultType="String">
+    select
+      right_id 
+    from
+      tbl_sys_role_rights where role_id in 
+      ( select role_id from tbl_sys_role_users where user_code = #{userCode} )
+  </select>
+  
+  <select id="getUserRoles" parameterType="map" resultType="String">
+      select role_id from tbl_sys_role_users where user_code = #{userCode}
+  </select>
+  
+  <select id="getUserConfigByUsercode" parameterType="map" resultType="UserConfig">
+    select
+     user_code as userCode,
+     c1,c2,c3,c4,c5,c6,c7,c8,c9,c10
+   from tbl_sys_user_config
+   where user_code=#{userCode}
+  </select>
+  
+  <update id="updateUserConfig" parameterType="UserConfig">
+    UPDATE tbl_sys_user_config SET
+       <if test="c1 != 'INOCHANGEI' " >
+	      c1=#{c1},
+	   </if>
+	   <if test="c2 != 'INOCHANGEI' " >
+	      c2=#{c2},
+	   </if>
+	   <if test="c3 != 'INOCHANGEI' " >
+	      c3=#{c3},
+	   </if>
+	   <if test="c4 != 'INOCHANGEI' " >
+	      c4=#{c4},
+	   </if>
+	   <if test="c5 != 'INOCHANGEI' " >
+	      c5=#{c5},
+	   </if>
+	   <if test="c6 != 'INOCHANGEI' " >
+	      c6=#{c6},
+	   </if>
+	   <if test="c7 != 'INOCHANGEI' " >
+	      c7=#{c7},
+	   </if>
+	   <if test="c8 != 'INOCHANGEI' " >
+	      c8=#{c8},
+	   </if>
+	   <if test="c9 != 'INOCHANGEI' " >
+	      c9=#{c9},
+	   </if>
+	   c10=#{c10}
+    WHERE user_code = #{userCode}
+  </update>
+
+  <insert id="insertUserConfig" parameterType="UserConfig">
+    INSERT INTO tbl_sys_user_config (user_code,c1,c2,c3,c4,c5,c6,c7,c8,c9,c10)
+    VALUES (#{userCode}, #{c1}, #{c2}, #{c3}, #{c4}, #{c5}, #{c6}, #{c7}, #{c8}, #{c9}, #{c10})
+  </insert>
+  
+  <delete id="deleteRoleUser" parameterType="map">
+    delete from tbl_sys_role_users 
+    WHERE user_code in ( ${userCodes} )
+  </delete>
+  
+  <select id="getAllUser" parameterType="map" resultType="User">
+     select user_code as userCode,
+     user_name as userName,
+     pass_word as password,
+     dept_id as deptId,
+     user_status as status,
+     last_login as lastLogin,
+     user_email as email,
+     mobile_phone as mobilePhone,
+     office_phone as officePhone,
+     avatar_path,entry_date,job_title,sex,job_level,card_no,
+     train_recd,contract_start,probation_end,contract_end,
+	 contract_renew_number,baby_state,current_housing_status,
+	 office_qq,current_residence_place,domicile_place,ever_company_name,
+	 education_background,major,graduate_institutions,emergency_contact_name,
+	 emergency_contact_phone,is_friends_in,friends_name,relationship,
+	 department_and_positions,transfer_situation,phase_change_record,
+	 leave_time,reason_to_leave,memo,position_status,integration_score,growth_process
+     from tbl_sys_users
+     where is_deleted=0 and position_status!='2' and belong=#{belong}
+  </select>
+  
+  <update id="updateUserIntegrationScore" parameterType="User">
+     update tbl_sys_users set integration_score=#{integration_score}
+     where user_code=#{userCode}
+  </update>
+  
+  <select id="getOnDutyStaff" parameterType="map" resultType="DeptEstablisMember">
+     SELECT dept_id,COUNT(user_code) AS on_duty_member
+	 FROM tbl_sys_users
+	 WHERE is_deleted=0 AND user_status='1'
+	 <if test="dept_id != '' and dept_id != null">
+	    and dept_id=#{dept_id}
+	 </if>
+	 <if test="position_status != '' and position_status != null">
+	    and position_status=#{position_status}
+	 </if>
+	 GROUP BY dept_id
+  </select>
+  
+  <select id="getMaxUserCode" parameterType="map" resultType="String">
+    select user_code
+    from tbl_sys_users
+    where is_deleted=0
+    <if test="dept_id != '' and dept_id != null">
+      and dept_id=#{dept_id}
+    </if>
+  </select>
+
+</mapper>

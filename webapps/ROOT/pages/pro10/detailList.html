@@ -1,0 +1,215 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css"
+			href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var eleName="";
+			var NOTEXAM="";
+			
+			$(document).ready(function() {
+			    NOTEXAM=top.getUrlParam(document.URL,"isKao");
+				if ( NOTEXAM == 'N' ) {
+				   NOTEXAM="_NOTEXAM";
+				} else {
+				   NOTEXAM="";
+				}
+			
+			   $("#td_province_code").html( parent.getNationalSelect("q_province_code") );
+			   $("#td_ele_code").html( parent.getEleSelect("q_ele_code") );
+			   $("#td_qc").html( parent.getQcSelect("q_qc") );
+			   
+			   var provinceCode=parent.getUrlParam(document.URL,"proviceCode");
+			   var qc=parent.getUrlParam(document.URL,"qc");
+			   var date=parent.getUrlParam(document.URL,"date");
+			   var area=parent.getUrlParam(document.URL,"area");
+			   var hour=parent.getUrlParam(document.URL,"hour");
+			   
+			   $("#q_province_code").val( provinceCode );
+			   $("#q_qc").val( qc );
+			   
+			   $("#q_area").val( area );
+			   
+			   eleName=parent.getEleName( $("#q_ele_code").val() );
+			   
+			   $("#span_hour").html( parent.get24HourSelectHtml("q_hour",false,h) );
+
+			   if ( date && date != '' ) {
+			        $("#q_date").val( date );
+					$("#q_hour").val( hour );
+			   } else {
+					var today=new Date();
+					today.setTime(today.getTime() - 8*60*60000);
+					var y = today.getFullYear();
+					var m = today.getMonth() + 1;
+					var d = today.getDate();
+					var h = today.getHours();
+					
+					$("#q_date").val( y+"-"+parent.getTwoNumberStr(m)+"-"+parent.getTwoNumberStr(d) );
+					$("#q_hour").val( h );
+			   }
+				$("#span_hour2").html( parent.get24HourSelectHtml("q_hour2",false,h) );
+	
+			   var iaoColumns=[
+			                  { "sTitle": "省名", "mDataProp": "province_code", "sWidth": "10%","sClass": "center","bSortable":false,
+							        "fnRender": function ( oObj ) {
+                                        return parent.getNationalName(oObj.aData.province_code);
+                                   },
+								   "bUseRendered": false
+							  },
+			                  { "sTitle": "站号", "mDataProp": "v01000", "sWidth": "5%","sClass": "center","bUseRendered": false,"bSortable":false },
+			                  { "sTitle": "年", "mDataProp": "v04001", "sWidth": "5%", "bUseRendered": false,"bSortable":false},
+							  { "sTitle": "月", "mDataProp": "v04002", "sWidth": "5%", "sClass": "center","bUseRendered": false,"bSortable":false},
+							  { "sTitle": "日", "mDataProp": "v04003", "sWidth": "5%","sClass": "center","bUseRendered": false,"bSortable":false},
+							  { "sTitle": "时", "mDataProp": "v04004", "sWidth": "5%", "sClass": "center", "bUseRendered": false,"bSortable":false},
+                              { "sTitle": "要素名", "mDataProp": "v01000", "sWidth": "45%", "sClass": "center","bSortable":false,
+							      "fnRender": function ( oObj ) {
+                                        return eleName;
+                                   },
+							      "bUseRendered": false},
+							  { "sTitle": "要素值", "mDataProp": "val", "sWidth": "10%", "sClass": "center","bUseRendered": false,"bSortable":false},
+							  { "sTitle": "质控结果", "mDataProp": "qc", "sWidth": "10%", "sClass": "center","bSortable":false,
+                                   "fnRender": function ( oObj ) {
+                                        return parent.getQcName( oObj.aData.qc );
+                                   },
+                                   "bUseRendered": false  
+                              }
+               ];
+			   
+			   var surl=top.getUrlBase()+"/actions/CmaTable.action?getTableDetailList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData=getParamDate(aoData);
+			    },
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+			    eleName=parent.getEleName( $("#q_ele_code").val() );
+				oTable.fnDraw();
+			}
+
+		    function getParamDate(aoData){
+			      aoData.push( { "name": "detail.province_code", "value":$("#q_province_code").val() } );
+				  var dateStr=$("#q_date").val();
+				  var year=dateStr.substring(0,4);
+				  var month=dateStr.substring(5,7);
+				  var day=dateStr.substring(8,10);
+				  var hour=$("#q_hour").val();
+				  aoData.push( { "name": "detail.v04001", "value": year } );
+				  aoData.push( { "name": "detail.v04002", "value": month } );
+				  aoData.push( { "name": "detail.v04003", "value": day } );
+				  aoData.push( { "name": "detail.v04004", "value": hour } );
+				  aoData.push( { "name": "area", "value": $("#q_area").val() } );
+				  aoData.push( { "name": "ele_code", "value": $("#q_ele_code").val() } );
+				  aoData.push( { "name": "detail.qc", "value": $("#q_qc").val() } );
+				  aoData.push( { "name": "notExam", "value": NOTEXAM } );
+				return aoData;
+			}
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+			<div style='border: 2px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="150px">
+							&nbsp;统计明细查询&nbsp;
+						</td>
+						<td align="right">
+							<div class="buttonDivTwo">
+								<a href="javascript:doQuery()">查询</a>
+							</div>
+						</td>
+						<td width="2px">
+							&nbsp;
+						</td>
+					</tr>
+				</table>
+				<table width="100%" align="center" cellpadding="1px"
+					cellspacing="1px" border="0">
+					<tr class="tr_data">
+						<td align="right">要素</td>
+						<td align="left" id="td_ele_code"></td>
+						<td align="right">分省</td>
+						<td align="left" id="td_province_code"></td>
+						<td align="right">台站类型</td>
+						<td align="left">
+						  <select id="q_area"><option value="n">国家站</option><option value="r">区域站</option></select>
+						</td>
+						<td align="right">质控结果</td>
+						<td align="left" id="td_qc"></td>
+					</tr>
+					<tr class="tr_data">
+						<td align="right">时间</td>
+						<td align="left" colspan="7">
+						  <input type="text" id="q_date" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" /><span id="span_hour"></span>时<!--~<span id="span_hour2"></span>时-->
+						</td>
+					</tr>
+				</table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0"
+				border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									&nbsp;查询结果列表&nbsp;
+								</td>
+								<td>&nbsp;</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<table cellpadding="0" width="100%" cellspacing="0" border="0"
+				class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

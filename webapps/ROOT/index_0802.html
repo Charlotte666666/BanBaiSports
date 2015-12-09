@@ -1,0 +1,292 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>黑河市司法局社区矫正工作数字化管理系统</title>
+<link href="css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<link type="text/css" href="pages/pro08/css/bootstrap.css" rel="stylesheet" />
+<link type="text/css" href="pages/pro08/css/common.css" rel="stylesheet" />
+<script type="text/javascript" src="js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="js/SimpleMap.js"></script>
+<script type="text/javascript" src="js/helpyouworkeasy-core.js"></script>
+<script type="text/javascript" src="js/md5.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.16.custom.min.js"></script>
+<script src="js/html5shiv.js"></script>
+<script type="text/javascript">
+var adjustInter = -1;
+var userConfig = null;
+var interId = 0;
+var isLoadedPathMap=false;
+var centerLon=116.404;// 默认地图默认中心点经纬度
+var centerLat=39.915;
+var defaultMapLevel=15; // 地图默认放大级别
+var allAreaList=[];
+
+jQuery(document).ready(function() {
+	$('#main').show();
+    g_systemVersion="v1.0.0";
+    initGlobalData(true);
+	adjustPosition();
+	window.onresize = function(){ adjustPosition(); };
+	
+   $('.sid-t').click(function(){
+	  $('.arr-active').removeClass('arr-active');
+	  $('.sub-active').removeClass('sub-active');
+	  $(this).find('.sid-arr').addClass('arr-active');
+	  $(this).next().addClass('sub-active');
+   });
+   $('.sidbar').height($(window).height()-200);
+   $('#workbenchFrame').width($(window).width()-200);
+   $('#workbenchFrame').height($(window).height()-64);
+ });
+ 
+ function getAllArea(){
+	  top.sendAjaxRequest("/actions/ProMonitor.action?getProAreaInfoList",[],getAllAreaCallback);
+ }
+	 
+ function getAllAreaCallback(obj){
+	try{
+	  allAreaList=obj.aaData;
+	}catch(e){
+	}
+ }
+ function getAllAreaSelect(sid,init_area_code){
+        if ( !allAreaList ) return "";
+		if ( !init_area_code ) init_area_code="";
+		var ht="<select id='"+sid+"' style='width:120px'>";
+		ht+="<option value=''></option>";
+		for(var i=0;i<allAreaList.length;i++){
+		  ht+="<option value='"+allAreaList[i].id+"'";
+		  if ( allAreaList[i].id == init_area_code ) ht+="selected ";
+		  ht+=">"+allAreaList[i].area_name+"</option>";
+		}
+		ht+="</select>";
+		return ht;
+ }
+ 
+ function getCenterLon(){
+    return centerLon;
+ }
+
+ function getCenterLat(){
+    return centerLat;
+ }
+ 
+ function getDefaultMapLevel(){
+    return defaultMapLevel;
+ }
+ 
+ function adjustPosition(){
+	if ( adjustInter != -1 ) {
+	   clearInterval( adjustInter );
+	   adjustInter = -1;
+	}
+ }
+
+ function loginSuccess(){
+    $('#main').show();
+    $("body").css({"background-image":"url(img/bg2_body1.png)"});
+	adjustInter = setInterval("adjustPosition()",500);
+	getAllArea();
+    toSysTab("首页","pages/pro08/main.html");
+ }
+ 
+ function loginFail(){
+    document.location.href="index_login.html";
+ }
+ 
+ function toSysTab(title,xurl){
+	var a=document.getElementById("workbenchFrame");
+    a.contentWindow.openPage(title,xurl);
+  }
+ 
+ function register(){
+    var xurl="pages/organization/userInfo.html?opt=register";
+	top.openDialog("用户注册",xurl,true,400,400,null);
+ }
+/**
+ * 初始化项目个性化全局缓存数据
+ */
+function proInitGlobalData(){
+    g_dictionary.put("EDIT_DIC_TYPECORRECT_STATUS", new Code("CORRECT_STATUS","EDIT_DIC_TYPE","矫正状态","1"));
+	g_dictionary.put("EDIT_DIC_TYPECRIMINAL_TYPE", new Code("CRIMINAL_TYPE","EDIT_DIC_TYPE","犯罪类型","1"));
+	g_dictionary.put("EDIT_DIC_TYPESTRATEGY_TYPE", new Code("STRATEGY_TYPE","EDIT_DIC_TYPE","方案类型","1"));
+	g_dictionary.put("EDIT_DIC_TYPESTOP_TYPE", new Code("STOP_TYPE","EDIT_DIC_TYPE","解除终止类型","1"));
+	g_dictionary.put("EDIT_DIC_TYPEPRISON_EXECUTION", new Code("PRISON_EXECUTION","EDIT_DIC_TYPE","收监执行","1"));
+	g_dictionary.put("EDIT_DIC_TYPEDEAD_TYPE", new Code("DEAD_TYPE","EDIT_DIC_TYPE","死亡","1"));
+	g_dictionary.put("EDIT_DIC_TYPESTRATEGY_STATUS", new Code("STRATEGY_STATUS","EDIT_DIC_TYPE","方案状态","1"));
+    g_dictionary.put("EDIT_DIC_TYPECORRECT_TYPE", new Code("CORRECT_TYPE","EDIT_DIC_TYPE","矫正管理等级","1"));
+	g_dictionary.put("EDIT_DIC_TYPECORRECT_CATEGORY", new Code("CORRECT_CATEGORY","EDIT_DIC_TYPE","矫正类别","1"));
+	g_dictionary.put("EDIT_DIC_TYPEREGISTRATION_NATURE", new Code("REGISTRATION_NATURE","EDIT_DIC_TYPE","户籍性质","1"));
+	g_dictionary.put("EDIT_DIC_TYPENATIONAL", new Code("NATIONAL","EDIT_DIC_TYPE","民族","1"));
+	g_dictionary.put("EDIT_DIC_TYPEHEALTH", new Code("HEALTH","EDIT_DIC_TYPE","健康状态","1"));
+	g_dictionary.put("EDIT_DIC_TYPEEDUCATION", new Code("EDUCATION","EDIT_DIC_TYPE","文化程度","1"));
+	g_dictionary.put("EDIT_DIC_TYPEPOLITICAL_STATUS", new Code("POLITICAL_STATUS","EDIT_DIC_TYPE","政治面貌","1"));
+	g_dictionary.put("EDIT_DIC_TYPEMARITAL_STATUS", new Code("MARITAL_STATUS","EDIT_DIC_TYPE","婚姻状态","1"));
+	g_dictionary.put("EDIT_DIC_TYPEFORBIDDEN_TYPE", new Code("FORBIDDEN_TYPE","EDIT_DIC_TYPE","禁区类型","1"));
+	g_dictionary.put("EDIT_DIC_TYPECHECK_TYPE", new Code("CHECK_TYPE","EDIT_DIC_TYPE","审批类型","1"));
+	g_dictionary.put("EDIT_DIC_TYPCHECK_STATUS", new Code("CHECK_STATUS","EDIT_DIC_TYPE","审批状态","1"));
+	g_dictionary.put("EDIT_DIC_TYPALARM_TYPE", new Code("ALARM_TYPE","EDIT_DIC_TYPE","报警类型","1"));
+	g_dictionary.put("EDIT_DIC_TYPEHOLIDAY_TYPE", new Code("HOLIDAY_TYPE","EDIT_DIC_TYPE","请假类型","1"));
+	g_dictionary.put("EDIT_DIC_TYPEDELEGATE_STATUS", new Code("DELEGATE_STATUS","EDIT_DIC_TYPE","委托函状态","1"));
+	g_dictionary.put("EDIT_DIC_TYPEDELEGATE_ASSESSMENT", new Code("DELEGATE_ASSESSMENT","EDIT_DIC_TYPE","委托调查评估意见","1"));
+    g_dictionary.put("EDIT_DIC_TYPETOTAL_OPINION", new Code("TOTAL_OPINION","EDIT_DIC_TYPE","调查评估小组的评估意见","1"));
+	g_dictionary.put("EDIT_DIC_TYPECONTROL_METHOD", new Code("CONTROL_METHOD","EDIT_DIC_TYPE","适用管型","1"));
+	g_dictionary.put("EDIT_DIC_TYPEACCUSED_PERSON", new Code("ACCUSED_PERSON","EDIT_DIC_TYPE","被告人","1"));
+	g_dictionary.put("EDIT_DIC_TYPEAPPLY_ADDRCHANGE_RESULT", new Code("APPLY_ADDRCHANGE_RESULT","EDIT_DIC_TYPE","审批结果","1"));
+	g_dictionary.put("EDIT_DIC_TYPECALLBACK_STATUS", new Code("CALLBACK_STATUS","EDIT_DIC_TYPE","回复状态","1"));
+	g_dictionary.put("EDIT_DIC_TYPEJOB_TYPE", new Code("JOB_TYPE","EDIT_DIC_TYPE","就学就业","1"));
+	g_dictionary.put("EDIT_DIC_TYPEWORKER_STATUS", new Code("WORKER_STATUS","EDIT_DIC_TYPE","工作人员状态","1"));
+	g_dictionary.put("EDIT_DIC_TYPEWORKER_TYPE", new Code("WORKER_TYPE","EDIT_DIC_TYPE","工作人员类别","1"));
+	}
+
+function openUserConfig(){
+  var xurl="pages/system/userConfig.html";
+  openDialog("个人设置",xurl,true,350,320,null);
+}
+
+// 显示审核对象的明细
+function viewCheckInfo(checkType, applyId, apply_user){
+  if ( checkType == 1 || checkType == 4 || checkType == 3 ) {
+    var xurl="pages/pro08/CorrectionUserInfo.html?optType=update&infoId="+applyId;
+	top.openDialog("矫正人员信息",xurl,true,1100,620,null);
+  } else if ( checkType == 2 ) {
+    var xurl="pages/pro08/CorrectionUserInfo.html?optType=update&infoId="+apply_user;
+	top.openDialog("矫正人员信息",xurl,true,1100,620,null);
+  }
+}
+
+// 执行审核操作，更新审核对象状态
+function doApproveCheck(optType, applyId, status, ext_info, doApproveSubmit){
+  if ( optType == "1" ) { // 添加矫正人员申请
+    var aoData=[];
+	aoData.push( { "name": "info.user_code", "value": applyId } );
+	if ( status == 1 ) {
+	  status=2;// 状态改为等待矫正执行
+	} else if ( status == 2 ) {
+	  status=0;// 返回新建状态
+	}
+	aoData.push( { "name": "info.status", "value": status} );
+	top.sendAjaxRequest("/actions/ProCorrection.action?updateCorrectionUserStatus",aoData,doApproveSubmit);
+  } else if ( optType == "2" ) { // 请假审批
+    var aoData=[];
+	aoData.push( { "name": "holiday.id", "value": applyId } );
+	aoData.push( { "name": "holiday.status", "value": status} );
+	top.sendAjaxRequest("/actions/ProCorrection.action?updateProHoliday",aoData,doApproveSubmit);
+  } else if ( optType == "3" ) { // 级别调整审批
+    var aoData=[];
+	aoData.push( { "name": "prison.prison_code", "value": applyId } );
+	aoData.push( { "name": "prison.correct_type", "value": ext_info} );
+	top.sendAjaxRequest("/actions/Prison.action?updatePrisonInfoLevel",aoData,doApproveSubmit);
+  } else if ( optType == "4" ) { // 解除终止审批
+    var aoData=[];
+	aoData.push( { "name": "info.user_code", "value": applyId } );
+	if ( status == 1 ) {
+	  status=5;// 状态改为解除终止
+	} else if ( status == 2 ) {
+	  status=3;// 返回矫正执行状态
+	}
+	aoData.push( { "name": "info.status", "value": status} );
+	top.sendAjaxRequest("/actions/ProCorrection.action?updateCorrectionUserStatus",aoData,doApproveSubmit);
+  }
+}
+
+</script>
+</head>
+<body>
+<div id="main" style="background-image: url(img/empty.gif);display:none;">
+<div class="common-top">
+	<div class="container">
+    		<span class="user-info pull-right">
+      			<a href="#" class="user">
+        admin[司法部]
+      </a>
+			<a href="http://localhost/trunk/public/staff/mineUpdate" class="set">设置</a>
+			<a href="http://localhost/trunk/public/login/logout" class="layout">退出</a>
+		</span>
+    		<p class="common-logo pull-left fs-20 fc-white fw-normal" style="color:white;font-size:20px">社区矫正信息管理系统</p>
+        	<form action="http://localhost/trunk/public/member/global_search" method="post" id="global_search">
+			<p class="common-search pull-left">
+				<span class="common-search-icon">search</span>
+				<input type="text" name="global_search" class="common-text"  value="333" />
+			</p>
+		</form>
+    	</div>
+</div>
+	
+	<div class="wrapper">
+	<div class="container container-fluid" style="margin:0px;padding:0px">
+	 <div class="sidbar" style="top:60px;margin-top:0px;padding-top:0px;display:inline;float:left">
+		<ul class="nav nav-list sidbar-cont">
+			<li class="bdline">
+				<span class="sid-t ic-1" onclick="javascript:toSysTab('首页','workbench')">首页<i class="sid-arr"></i></span>
+			</li>
+			<li class="bdline">
+				<span class="sid-t ic-1" onclick="javascript:toSysTab('委托调查','pages/pro08/delegateManage.html')">委托调查<i class="sid-arr"></i></span>
+			</li>
+			<li class="bdline">
+				<span class="sid-t ic-7">人员管理<i class="sid-arr"></i></span>
+				<div class="sid-sub">
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('服刑人员信息','pages/pro08/CorrectionUserManage.html')">服刑人员信息</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('每月评估报告','pages/pro08/reportInfo.html')">每月评估报告</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('数据图形分析','pages/pro08/chartAnalysis.html')">数据图形分析</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('人员信息统计','pages/pro08/InfoCount.html')">人员信息统计</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('活动范围管理','pages/pro08/AreaManage.html')">活动范围管理</a>
+				</div>
+			</li>
+				<li class="bdline">
+				<span class="sid-t ic-4">定位监控<i class="sid-arr"></i></span>
+				<div class="sid-sub">
+				<a href="javascript:void(0)" onclick="javascript:toSysTab('个人定位跟踪','pages/pro08/pathManage.html')">个人定位跟踪</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('部门定位跟踪','pages/pro08/pathGroupManage.html')">部门定位跟踪</a>
+					<!--li><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/pro08/pathManage.html')">历史轨迹查询</a></li-->
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('轨迹列表查询','pages/pro08/pathQuery.html')">轨迹列表查询</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('报警信息查询','pages/pro08/alarmManage.html')">报警信息查询</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('禁区信息管理','pages/pro08/forbiddenAreaManage.html')">禁区信息管理</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('签到信息查询','pages/pro08/checkInManage.html')">签到信息查询</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('签到地点管理','pages/pro08/locationManage.html')">签到地点管理</a>
+				</div>
+				</li>
+				<li class="bdline">
+				<span class="sid-t ic-2">日常管理<i class="sid-arr"></i></span>
+				<div class="sid-sub">
+					<!--li name="menu" rightId="08_check_level"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/pro08/approveManage.html?approve_type=3')">级别调整审批</a></li-->
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('进入特定区域','pages/pro08/specialInfo.html')">进入特定区域</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('居住地变更','pages/pro08/addressInfo.html')">居住地变更</a>
+					<!--li><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/pro08/bodyInfo.html')">身体鉴定委托书</a></li>
+					<li><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/pro08/outsideInfo.html')">暂予监外执行</a></li-->
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('外出申请管理','pages/pro08/holidayInfoManage.html')">外出申请管理</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('工作队伍管理','pages/pro08/workGroupManage.html')">工作队伍管理</a>
+				</div>
+			</li>
+				<li class="bdline">
+				<span class="sid-t ic-3">系统管理<i class="sid-arr"></i></span>
+				<div class="sid-sub">
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('pages/organization/userManage.html')">用户管理</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('pages/organization/deptManage.html')">部门管理</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('pages/organization/roleManage.html')">角色管理</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('pages/system/dicManage.html')">字典管理</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('pages/system/parameterManage.html')">系统配置</a>
+					<!--li name="menu" rightId="sys_bug" id="s7"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/bug/bugManage.html')">Bug管理</a></li>
+					<li name="menu" rightId="sys_sql" id="s8"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/system/sql.html')">SQL</a></li-->
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('操作日志','pages/system/operationManage.html')">操作日志</a>
+				</div>
+			</li>
+				<li class="bdline">
+				<span class="sid-t ic-5">我的账号<i class="sid-arr"></i></span>
+				<div class="sid-sub">
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('备忘录','pages/notes/notesManage.html')">备忘录</a>
+					<a href="javascript:void(0)" onclick="javascript:g_changepass()">修改密码</a>
+					<a href="javascript:void(0)" onclick="javascript:isLogout()">退出系统</a>
+				 </div>
+			</li>
+		</ul>
+  </div>
+ <div id="m_workbench" class="main" style="padding:0px;background-color:#C7EDCC;margin-left:202px;display:inline;"><iframe id="workbenchFrame" src="workbench.html" style="position:absolute;left:200px;top:61px;background-color:#ffffff;"  frameborder="0"></iframe></div>
+</div>
+</div>
+</div>
+
+<script type="text/javascript" >writeCommonDiv();</script>
+</body>
+</html>

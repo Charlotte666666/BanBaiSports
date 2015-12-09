@@ -1,0 +1,355 @@
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet"
+			type="text/css"/>
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css"
+			media="print, projection, screen"/>
+		<link rel="stylesheet" type="text/css" href="../../css/drag-drop-folder-tree.css" />
+		<link rel="stylesheet" type="text/css" href="../../css/context-menu.css"></link>
+		<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/myDtree.js" ></script>
+	<script type="text/javascript" language="javascript" src="../../js/context-menu.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/drag-drop-folder-tree.js" ></script>
+	
+<script type="text/javascript">
+   var id="";
+   var orderDetail=[];
+   var order_discount="";
+   var total="";
+   var should_money=0;
+   var status="";
+   var require_id='';
+   
+   $(document).ready(function() {
+      id=top.getUrlParam(document.URL,"id");
+      require_id=top.getUrlParam(document.URL,"require_id");
+	  initData();
+	
+	  
+   });
+   	
+	function showInput(obj,id){
+	    if(obj.checked){
+	       $("#"+id+"").show();
+	    }else{
+		   $("#"+id+"").hide();
+		}
+	}
+	//初始化
+	function initData(){
+		var aoData=[];
+		aoData.push({ "name":"orderInfo.id","value":id});
+		top.sendAjaxRequest("/actions/ProductOrder.action?getOrderAndDetail",aoData,initDataCallBack);
+			
+	}
+		
+	function  initDataCallBack(obj){
+	   if(obj.status==true){
+	        var order=obj.body.order;
+			orderDetail=obj.body.orderDetail;
+			
+			if(order){//产品订单主表信息
+			   $("#id").html(order.id);
+			   $("#order_date").html(top.getTimeStr(order.order_date,true));
+			   $("#project_order_id").html(order.project_order_id);
+			   $("#cust_name").html(order.cust_name);
+			   $("#designerCode").html(top.getUserNameByCode(order.designerCode));
+			   $("#tdpro_designer").html(top.getUserNameByCode(order.pro_designer));
+			   $("#tdbox_designer").html(top.getUserNameByCode(order.box_designer));
+			   $("#cust_tel").html(top.getUserNameByCode(order.cust_tel));
+			   $("#pro_add").html(top.getUserNameByCode(order.pro_add));
+			   $("#total_money").html(order.total);
+			   order_discount=order.discount;//产品订单的折扣
+			   total=order.total;
+			   should_money=order.should_money;
+			   status=order.status;
+			   if(order.status=="5"){//如果订单正在变更中，则不能再进行订单变更操作
+			      $(".buttonDivTwo").hide();
+			   }
+			}
+			
+			var content="<tr class='tr_data'><td>&nbsp;&nbsp;</td><td>产品类别</td><td>名称</td><td>品牌</td><td>型号</td><td>规格</td><td>单位</td><td>单价</td><td>折扣</td><td>使用位置</td><td>数量</td><td>产品状态</td><td>减少数量</td></tr>";
+			if(orderDetail){//产品订单明细信息
+			   for(var i=0;i<orderDetail.length;i++){
+			      content+="<tr class='tr_data' height='25px;'><td>";
+				  if(orderDetail[i].order_status=="0" || orderDetail[i].order_status=="1"){
+				    content+="<input id='"+orderDetail[i].id+"' name='isSelect"+i+"' type='checkbox' onclick='showInput(this,\"isSelect"+i+"\");'>"
+				  }
+				  content+="</td><td>"+orderDetail[i].type_name+"</td><td>"+orderDetail[i].product_name+"</td><td>"+top.getSupplierNameById(orderDetail[i].product_brand)+"</td><td>"+orderDetail[i].product_model+"</td><td>"+orderDetail[i].product_standard+"</td><td>"+top.getCodeName("UNIT",orderDetail[i].unit)+"</td><td>"+orderDetail[i].sale_price+"</td><td>"+orderDetail[i].discount+"</td><td>"+orderDetail[i].use_position+"</td><td>"+orderDetail[i].amount+"</td><td>"+top.getCodeName("PRODUCT_DETAIL_STATUS",orderDetail[i].order_status)+"</td><td style='width:100px;'><input id='isSelect"+i+"' type='text' style='display:none;width:100px;'/></td></tr>";
+			   }
+			}else{
+			   content+="<tr class='tr_data'><td colspan='13'>无明细信息</td></tr>";
+			}
+			$("#productDetailList").html(content);
+	   }else{
+	    top.showInfoWinError("获取信息失败！");
+	   }
+	}
+
+	//提交订单变更信息
+	function submitChangeInfo(){
+	    //检验更改的数量是否比原来的数量大还是小，若大则提示用户使用新增产品报价、产品订单操作，若小则可以进行变更
+		var obj=$("input[type='checkbox']:checked");
+		var aoData=[];
+		if(obj.length<1){top.showInfoWinWarn("请选择要变更产品，并输入变更数量！");return;}
+		var message="";
+	    var id="";
+		var order_id="";
+		var product_name="";
+		var type_id="";
+		var product_id="";
+		var use_position="";
+		var product_brand="";
+		var product_model="";
+		var product_standard="";
+		var unit="";
+		var discount="";
+		var amount="";
+		var sale_price="";
+		var sale_model="";
+		var newAmount="";
+		var price="";
+		var order_status="";
+		for(var i=0;i<obj.length;i++){
+		    if(i!=0){
+			   newAmount+=",";
+			   id+=",";
+			   order_id+=",";
+			   product_name+=",";
+			   type_id+=",";
+			   product_id+=",";
+			   use_position+=",";
+			   product_brand+=",";
+			   product_model+=",";
+			   product_standard+=",";
+			   unit+=",";
+			   discount+=",";
+			   amount+=",";
+			   sale_price+=",";
+			   sale_model+=",";
+			   price+=",";
+			   order_status+=",";
+			}
+		    var o=getOrderDetailById(obj[i].id);
+			var newNum=$("#"+obj[i].name+"").val();
+		   if(i!=0){
+		     message+";";
+		   }
+		   if(newNum>o.amount){
+		     message+=o.product_name+"变量数量大于原数量，请按新增产品报价、产生产品订单流程进行操作！";  
+		   }
+		   if(o.order_status=="2"){
+		     message+=o.product_name+"已下单，无法变更！";
+		   }
+		   if(newNum=="" || newNum=="0"){
+		     message+=o.product_name+"变更数量不能为空或为0!";
+		   }
+		   if(isNaN(newNum)){
+		     message+=o.product_name+"变量数量类型错误！";
+		   }
+		   
+		   newAmount+=newNum;
+		   id+=o.id;
+		   order_id+=o.order_id;
+		   product_name+=o.product_name;
+		   type_id+=o.type_id;
+		   product_id+=o.product_id;
+		   use_position+=o.use_position;
+		   product_brand+=o.product_brand;
+		   product_model+=o.product_model;
+		   product_standard+=o.product_standard;
+		   unit+=o.unit;
+		   discount+=o.discount;
+		   amount+=o.amount;
+		   sale_price+=o.sale_price;
+		   sale_model+=o.sale_mode;
+		   price+=o.price;
+		   order_status+=o.order_status;
+		}
+		if(message!=""){
+		  top.showInfoWinWarn(message);return;
+		}
+	    aoData.push({ "name":"ids","value":id});
+		aoData.push({ "name":"orderdetail.order_id","value":order_id});
+		aoData.push({ "name":"orderdetail.product_name","value":product_name});
+		aoData.push({ "name":"type_idStr","value":type_id});
+		aoData.push({ "name":"product_idStr","value":product_id});
+		aoData.push({ "name":"orderdetail.use_position","value":use_position});
+		aoData.push({ "name":"orderdetail.product_brand","value":product_brand});
+		aoData.push({ "name":"orderdetail.product_model","value":product_model});
+		aoData.push({ "name":"orderdetail.product_standard","value":product_standard});
+		aoData.push({ "name":"orderdetail.order_status","value":order_status});
+		aoData.push({ "name":"orderdetail.unit","value":unit});
+		aoData.push({ "name":"discountStr","value":discount});
+		aoData.push({ "name":"amountStr","value":amount});
+		aoData.push({ "name":"sale_priceStr","value":sale_price});
+		aoData.push({ "name":"priceStr","value":price});
+		aoData.push({ "name":"sale_modelStr","value":sale_model});
+		aoData.push({ "name":"orderInfo.discount","value":order_discount});
+		aoData.push({ "name":"orderInfo.total","value":total});
+		aoData.push({ "name":"orderInfo.should_money","value":should_money});
+		aoData.push({ "name":"newAmount","value":newAmount});
+		aoData.push({ "name":"orderInfo.status","value":status});
+		aoData.push({ "name":"productOrderChange.require_id","value":require_id});
+	   top.sendAjaxRequest("/actions/ProductOrder.action?productOrderChange",aoData,submitChangeInfoCallBack);
+	}
+    function doBeforeClose(){
+	}
+	
+	function submitChangeInfoCallBack(obj){
+	   if(obj.status==true){
+	      top.showInfoWinOK("产品变更信息提交！");
+		  top.closeDialog();
+	   }
+	}
+	
+	//根据id获取产品订单详细信息
+	function getOrderDetailById(oid){
+	    for (var j=0;j<orderDetail.length;j++) {
+		  if (orderDetail[j].id==oid){
+		    return orderDetail[j];
+		  }
+		}
+	}
+   
+	</script>
+<style>
+body{
+margin:10px;
+margin-left:20px;
+margin-right:20px;
+}
+body,td {
+	font-size: 13px;
+}
+
+.roomTd {
+	border: 1px;
+	border-style: dotted none none none;
+	border-color: blue;
+	color: #000000;
+	padding-left: 5px;
+}
+
+#KinSlideshow {
+	overflow: hidden;
+	width: 500px;
+	height: 450px;
+}
+
+.inputBottomLine {
+	border-top: hide;
+	border-left: hide;
+	border-center: hide;
+}
+#hall_count,#room_count,#bath_count,#amount{
+	width: 50px;
+}
+#product_brand,#product_model,#product_standard,#price,#unit{
+	width: 80px;
+}
+#product_name
+{
+	width: 100px;
+}
+table.attention{
+	border-collapse:collapse;
+	}
+	table.attention td{
+	border:solid 1px black;
+	}
+	.W_btn_round, .W_btn_round_ico, .W_btn_round2 {
+		display: inline-block;
+		border-width: 1px;
+		border-style: solid;
+		overflow: hidden;
+		vertical-align: middle;
+		cursor: pointer;
+		border-radius: 11px;
+		border-color: #d9d9d9;
+		background-color: #f2f2f2;
+		padding:3px 4px 3px 4px;
+		margin-bottom:2px;
+	}
+	a{text-decoration:none}
+</style>
+	</head>
+	<body>	
+		<div>
+				<B>客户基本信息</B><br/>
+				<table id="custInfo" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;font-size:13px">
+					<tr class="tr_data">
+						<td  width="10%" height="32px" class="table_property_title">订单编号</td><td width="15%" align="left"><label id="id"></label></td>
+						<td width="10%"  class="table_property_title">订单日期</td><td width="17%" align="left" id="order_date"></td>
+						<td width="10%"  class="table_property_title">工程订单编号</td>
+						<td colspan="3" align="left" id="project_order_id">
+						</td>
+					</tr>
+					<tr class="tr_data">	
+						<td height="32px"  class="table_property_title">客户姓名</td>
+						<td align="left" id="cust_name"></td>
+						<td  class="table_property_title">设计师姓名</td><td align="left"><label id="designerCode"></label></td>
+						<td  class="table_property_title">产品设计师</td><td width="15%" align="left" id="tdpro_designer"></td>
+						<td  class="table_property_title">柜体设计师</td><td width="15%" align="left" id="tdbox_designer"></td>
+					</tr>
+					<tr class="tr_data">
+						<td height="32px"  class="table_property_title">联系方式</td><td align="left"><label id="cust_tel"></label></td>
+						<td height="32px"  class="table_property_title">工程地址</td>
+						<td colspan="5" align="left">
+						 <label id="pro_add" type="text" size="50"></label>
+						</td>
+					</tr>
+				</table>
+				<br/>
+				<B>订单明细信息</B><br/>
+				<table border="1" cellpadding="3" cellspacing="1" width="100%"  align="center" style="background-color: #b9d8f3;" id="productDetailList">
+				</table>
+				<div><span style="color:red">总计：<span id="total_money">0</span>元</span></div>
+		
+	</div>
+	<div style="margin-left:45%" class="buttonDivTwo"><a href="javascript:void(0)" onclick="submitChangeInfo()">提交</a></div>
+	<div class="dtree" id="ProTypeTree" style="margin:10px;padding:5px;border-width:2px;border-style:solid; border-color:#b9d8f3;background-color:white;display:none">
+		</div>
+		<br>
+		<div id="div_exam" style="display:none;">
+		审核信息
+		<hr  id="exam_line"style="width:55%;display:inline-block">
+		<a id="saveExamBtn" onclick="saveExamineInfo()" class="W_btn_round" href="javascript:void(0)">编辑</a>
+		<a id="cancleExamBtn" onclick="cancleSubmit('exam')"  class="W_btn_round" style="display:none" href="javascript:void(0)">取消</a>
+		</div>
+		<br>
+		<table id="table_examine" width="60%" border="1" cellpadding="3" cellspacing="1" style=" background-color: #b9d8f3;font-size:13px;display:none;">
+		<tr  height = "35px" class="tr_data">
+		<td>审核状态</td>
+		<td id="td_examine_status" align="left"></td>
+		</tr>
+		<tr  class="tr_data">
+		<td>审核意见</td>
+		<td align="left" height="70px" id="td_examine_opinion"></td>
+		</tr>
+		<tr  height = "35px" id = "tr_examine_user" class="tr_data" style="display:none;">
+		<td>审核人</td>
+		<td align="left"><span id="examine_user"></span></td>
+		</tr>
+		<tr id = "tr_examine_time" class="tr_data" style="display:none;">
+		<td height = "35px" >审核时间</td>
+		<td align="left"><span id="examine_time"></span></td>
+		</tr>
+		</table>
+	</body>
+	</html>

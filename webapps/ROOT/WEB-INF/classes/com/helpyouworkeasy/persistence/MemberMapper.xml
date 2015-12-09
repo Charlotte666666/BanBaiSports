@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.helpyouworkeasy.persistence.MemberMapper">
+  
+  <insert id="insertMember" parameterType="Member">
+    INSERT INTO tbl_member (user_code,telephone,password,nick_name,player_level,sex,status,signature,qq,login_time,
+    real_name,email,img_path,player_id,regist_time,id,badminton_age,school_code,edu_level,graduate_year,login_type,uid)
+    VALUES (#{user_code}, #{telephone}, #{password}, #{nick_name}, #{player_level}, #{sex}, #{status}, #{signature}, #{qq}, #{login_time},
+    #{real_name}, #{email}, #{img_path}, #{player_id}, #{regist_time}, #{id}, #{badminton_age}, #{school_code}, #{edu_level}, #{graduate_year}, #{login_type}, #{uid})
+  </insert>
+
+  <update id="updateMember" parameterType="Member">
+    update tbl_member set 
+    user_code=#{user_code},telephone=#{telephone},nick_name=#{nick_name},player_level=#{player_level},sex=#{sex},signature=#{signature},qq=#{qq},
+    real_name=#{real_name},email=#{email},img_path=#{img_path},player_id=#{player_id},badminton_age=#{badminton_age},
+    school_code=#{school_code}, edu_level=#{edu_level}, graduate_year=#{graduate_year}
+    where id=#{id}
+  </update>
+  
+  <update id="updateMemberPassword" parameterType="Member">
+    update tbl_member set 
+     password=#{password}
+    where telephone=#{telephone}
+  </update>
+  
+  <select id="getMemberByIdAndLoginTime" parameterType="map" resultType="Member">
+    select 
+     user_code,telephone,nick_name,player_level,sex,status,signature,qq,real_name,email,img_path,player_id,regist_time,id,badminton_age,login_time 
+    from tbl_member where id=#{id} and login_time=#{login_time}  
+  </select>
+  
+  <update id="updateMemberLoginTime" parameterType="map">
+    update tbl_member set 
+      login_time=#{login_time} 
+    where id=#{id}
+  </update>
+  
+  <update id="updateMemberStatus" parameterType="Member">
+    update tbl_member set 
+     status=#{status}
+    where user_code=#{user_code}
+  </update>
+
+  <select id="getMemberListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_member where 1=1 
+    <if test="o.user_code != '' and o.user_code != null" >
+      and user_code=#{o.user_code}
+    </if>
+    <if test="o.school_code != '' and o.school_code != null" >
+      and school_code=#{o.school_code}
+    </if>
+    <if test="o.edu_level != '' and o.edu_level != null" >
+      and edu_level=#{o.edu_level}
+    </if>
+    <if test="o.graduate_year != -1" >
+      and graduate_year=#{o.graduate_year}
+    </if>
+    <if test="o.telephone != '' and o.telephone != null" >
+      and telephone=#{o.telephone}
+    </if>
+    <if test="o.nick_name != '' and o.nick_name != null" >
+      and nick_name=#{o.nick_name}
+    </if>
+    <if test="o.player_level != '' and o.player_level != null" >
+      and player_level=#{o.player_level}
+    </if>
+    <if test="o.sex != '' and o.sex != null" >
+      and sex=#{o.sex}
+    </if>
+    <if test="o.status != '' and o.status != null" >
+      and status=#{o.status}
+    </if>
+    <if test="o.qq != '' and o.qq != null" >
+      and qq=#{o.qq}
+    </if>
+    <if test="o.real_name != '' and o.real_name != null" >
+      and real_name=#{o.real_name}
+    </if>
+    <if test="o.email != '' and o.email != null" >
+      and email=#{o.email}
+    </if>
+    <if test="o.player_id != '' and o.player_id != null" >
+      and player_id=#{o.player_id}
+    </if>
+    <if test="o.badminton_age != -1" >
+      and badminton_age=#{o.badminton_age}
+    </if>
+    <if test="time1 != -1" >
+      and regist_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=regist_time
+    </if>
+  </select>
+
+  <select id="getMemberPageList" parameterType="map" resultType="Member">
+    select 
+    user_code,telephone,nick_name,password,player_level,sex,status,signature,qq,real_name,email,img_path,player_id,regist_time,id,badminton_age,
+    school_code,edu_level,graduate_year,login_type,uid,login_time 
+    from tbl_member where 1=1 
+    <if test="o.user_code != '' and o.user_code != null" >
+      and user_code=#{o.user_code}
+    </if>
+    <if test="o.school_code != '' and o.school_code != null" >
+      and school_code=#{o.school_code}
+    </if>
+    <if test="o.edu_level != '' and o.edu_level != null" >
+      and edu_level=#{o.edu_level}
+    </if>
+    <if test="o.graduate_year != -1" >
+      and graduate_year=#{o.graduate_year}
+    </if>
+    <if test="o.telephone != '' and o.telephone != null" >
+      and telephone=#{o.telephone}
+    </if>
+    <if test="o.nick_name != '' and o.nick_name != null" >
+      and nick_name=#{o.nick_name}
+    </if>
+    <if test="o.player_level != '' and o.player_level != null" >
+      and player_level=#{o.player_level}
+    </if>
+    <if test="o.sex != '' and o.sex != null" >
+      and sex=#{o.sex}
+    </if>
+    <if test="o.status != '' and o.status != null" >
+      and status=#{o.status}
+    </if>
+    <if test="o.qq != '' and o.qq != null" >
+      and qq=#{o.qq}
+    </if>
+    <if test="o.real_name != '' and o.real_name != null" >
+      and real_name=#{o.real_name}
+    </if>
+    <if test="o.email != '' and o.email != null" >
+      and email=#{o.email}
+    </if>
+    <if test="o.player_id != '' and o.player_id != null" >
+      and player_id=#{o.player_id}
+    </if>
+    <if test="o.badminton_age != -1" >
+      and badminton_age=#{o.badminton_age}
+    </if>
+    <if test="time1 != -1" >
+      and regist_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=regist_time
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+
+  <select id="getMemberByCode" parameterType="map" resultType="Member">
+    select 
+    user_code,telephone,nick_name,password,player_level,sex,status,signature,qq,real_name,email,img_path,player_id,regist_time,id,badminton_age,
+    school_code,edu_level,graduate_year,login_type,uid,login_time 
+    from tbl_member where user_code=#{user_code}
+  </select>
+  
+  <select id="getAllMemberList" resultType="Member" >
+    select 
+    user_code,telephone,nick_name,password,player_level,sex,status,signature,qq,real_name,email,img_path,player_id,regist_time,id,badminton_age,
+    school_code,edu_level,graduate_year,login_type,uid,login_time 
+    from tbl_member 
+  </select>
+  
+  <select id="getMemberByPhoneOrCode" parameterType="map" resultType="Member">
+    select 
+    user_code,telephone,nick_name,password,player_level,sex,status,signature,qq,real_name,email,img_path,player_id,regist_time,id,badminton_age,
+    school_code,edu_level,graduate_year,login_type,uid,login_time 
+    from tbl_member where telephone=#{login_code} and login_type='banbai'
+  </select>
+  
+  <select id="getMemberByUID" parameterType="map" resultType="Member">
+    select 
+    user_code,telephone,nick_name,password,player_level,sex,status,signature,qq,real_name,email,img_path,player_id,regist_time,id,badminton_age,
+    school_code,edu_level,graduate_year,login_type,uid,login_time 
+    from tbl_member where uid=#{login_code} 
+    <if test="login_type != '' " >
+      and login_type=#{login_type}
+    </if>
+  </select>
+  
+  <select id="getMemberByIds" parameterType="map" resultType="Member">
+    select 
+    user_code,telephone,nick_name,player_level,sex,status,signature,qq,real_name,email,img_path,player_id,regist_time,id,badminton_age,
+    school_code,edu_level,graduate_year,login_type,uid,login_time 
+    from tbl_member where id in (${ids})
+  </select>
+  
+  <select id="getMemberById" parameterType="map" resultType="Member">
+    select 
+    user_code,telephone,nick_name,player_level,sex,status,signature,qq,real_name,email,img_path,player_id,regist_time,id,badminton_age,
+    school_code,edu_level,graduate_year,login_type,uid,login_time 
+    from tbl_member where id = #{id}
+  </select>
+  
+  <insert id="insertFriend" parameterType="Friend">
+    INSERT INTO tbl_friend (f1_name,f2_name,f1,f2,add_time)
+    VALUES (#{f1_name}, #{f2_name}, #{f1}, #{f2}, #{add_time})
+  </insert>
+
+  <delete id="deleteFriend" parameterType="Friend">
+    delete from tbl_friend where (f1=#{f1} and f2=#{f2}) or ( f1=#{f2} and f2=#{f1} )
+  </delete>
+  
+  <select id="checkIsFriend" parameterType="map" resultType="int">
+    select count(*) as value from tbl_friend where (f1=#{f1} and f2=#{f2}) or ( f1=#{f2} and f2=#{f1} )
+  </select>
+
+  <select id="getFriendList" parameterType="map" resultType="Friend">
+    select 
+    f1_name,f2_name,f1,f2,add_time
+    from tbl_friend where f1=#{member_id} or f2=#{member_id}
+    <if test="orderName != '' " >
+      order by ${orderName} ${orderAZ}
+    </if>
+  </select>
+  
+  <insert id="insertFriendRequest" parameterType="FriendRequest">
+    INSERT INTO tbl_friend_request (send_name,request_content,id,recv_id,send_id,request_time,status)
+    VALUES (#{send_name}, #{request_content}, #{id}, #{recv_id}, #{send_id}, #{request_time}, #{status})
+  </insert>
+
+  <update id="updateFriendRequest" parameterType="FriendRequest">
+    update tbl_friend_request set 
+    status=#{status}
+    where id=#{id}
+  </update>
+
+  <select id="getFriendRequestListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_friend_request where 1=1 
+    <if test="o.recv_id != -1" >
+      and recv_id=#{o.recv_id}
+    </if>
+    <if test="o.send_id != -1" >
+      and send_id=#{o.send_id}
+    </if>
+    <if test="o.status != -1" >
+      and status=#{o.status}
+    </if>
+    <if test="time1 != -1" >
+      and request_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=request_time
+    </if>
+  </select>
+
+  <select id="getFriendRequestPageList" parameterType="map" resultType="FriendRequest">
+    select 
+    send_name,request_content,id,recv_id,send_id,request_time,status
+    from tbl_friend_request where 1=1 
+    <if test="o.recv_id != -1" >
+      and recv_id=#{o.recv_id}
+    </if>
+    <if test="o.send_id != -1" >
+      and send_id=#{o.send_id}
+    </if>
+    <if test="o.status != -1" >
+      and status=#{o.status}
+    </if>
+    <if test="time1 != -1" >
+      and request_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=request_time
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+  
+  <select id="getFriendRequestById" parameterType="map" resultType="FriendRequest">
+    select 
+    send_name,request_content,id,recv_id,send_id,request_time,status
+    from tbl_friend_request where id=#{id}
+  </select>
+  
+  <select id="getFriendRequestByFriendId" parameterType="map" resultType="FriendRequest">
+    select 
+    send_name,request_content,id,recv_id,send_id,request_time,status
+    from tbl_friend_request where (recv_id=#{recv_id} and send_id=#{send_id}) or (send_id=#{recv_id} and recv_id=#{send_id})
+  </select>
+
+</mapper>

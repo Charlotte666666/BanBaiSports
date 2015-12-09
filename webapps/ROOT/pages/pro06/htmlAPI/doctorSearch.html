@@ -1,0 +1,227 @@
+<html>
+<head>
+    <meta charset="utf-8">
+	<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0;" name="viewport" />
+	<title>医生搜索</title>
+	<link rel="stylesheet" href="../../../css/themes/default/jquery.mobile-1.4.5.min.css">
+	<script src="../../../js/jquery-1.10.2.min.js"></script>
+	<script src="../../../js/jquery.mobile-1.4.5.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="../../../css/modernizrStyle.css" />
+	<script type="text/javascript" src="../../../js/modernizr.js"></script> 
+
+  <script type="text/javascript">
+   var doctorList=[];
+   var g_UrlBase="";
+   var currentPage=1;
+   var device="ios";
+   
+   $(document).ready(function() {
+       var ind=document.URL.indexOf("/pages");
+	   if ( ind != -1 ) {
+		  g_UrlBase = document.URL.substring(0,ind);
+	   }
+	   
+	   var ddLevel = new DropDown( $('#ddLevel') );
+	   $(document).click(function() {
+			$('.wrapper-dropdown-5').removeClass('active');
+		});
+		
+		var ddDept = new DropDown( $('#ddDept') );
+	    $(document).click(function() {
+			$('.wrapper-dropdown-5').removeClass('active');
+			
+		});
+
+   } );
+   
+   function DropDown(el) {
+		this.dd = el;
+		this.initEvents();
+   }
+   
+   DropDown.prototype = {
+	initEvents : function() {
+	var obj = this;
+	obj.dd.on('click', function(event){
+		$(this).toggleClass('active');
+			event.stopPropagation();
+		});	
+	}
+   }
+   
+   function selectlevel(l,title){
+      $("#levelName").html(title);
+   }
+   
+   function selectDept(d,title){
+      $("#deptName").html(title);
+   }
+   
+   function doSearch(){
+      if ( device == 'ios' ) {
+	    
+	  } else {
+	    
+	  }
+   }
+   
+   function getList(){
+       var aoData=[];
+       aoData.push( { "name": "iDisplayStart", "value": 0 } );
+	   aoData.push( { "name": "iDisplayLength", "value": 1000 } );
+	   doSendAjaxRequest("/actions/Doctor.action?getDoctorListForApp",aoData,getDoctorListCallback);
+   }
+   
+   function getDoctorListCallback(obj){
+	   try{
+	     doctorList=obj.aaData;
+		 loadList();
+	   }catch(e){
+	   }
+   }
+ 
+   function loadList(){
+         var ht='';
+		 var sw=$(window).width();
+		 for ( var i=0;i<doctorList.length;i++ ) {
+			ht+='<tr height="30px" >';
+			ht+='<td align="center" width="80px" rowspan="3" ><img width="70px" height="70px" src="man.png" /></td>';
+			ht+='<td align="left" width="'+(sw-110)+'px" cellspacing="10px" onclick="selectDoctor('+doctorList[i].id+')"><b>'+doctorList[i].real_name+'</b></td>';
+			ht+='</tr>';
+			ht+='<tr height="30px" >';
+			ht+='<td align="left" cellspacing="3px"><font size="2">'+doctorList[i].hospital_name+'&nbsp;'+doctorList[i].hospital_dept_name+'</font></td>';
+			ht+='</tr>';
+			ht+='<tr height="40px" >';
+			ht+='<td align="left" cellspacing="3px" valign="top"><font size="2">'+doctorList[i].skilled_disease+'</font></td>';
+			ht+='</tr>';
+			ht+='<tr height="35px" >';
+			ht+='<td align="left" width="80px" valign="top" cellspacing="5px">'+getStarImg( doctorList[i].star )+'</td>';
+			ht+='<td align="left" width="'+(sw-110)+'px" cellspacing="10px" onclick="selectDoctor('+doctorList[i].id+')"><b>'+doctorList[i].distance+'</b></td>';
+			ht+='</tr>';
+			ht+='<tr><td colspan="2" height="1px" bgcolor="#f9f9f9" ></td></tr>';
+		 }
+		 $("#content").html( ht );
+   }
+   
+   function selectDoctor(did){
+      
+   }
+   
+   function getStarImg(v){
+      var ht='';
+	  if ( v <= 0 ) {
+	    ht+='<font color="gray" size="2">暂无评价</font>';
+		return ht;
+	  }
+	  var i=0;
+	  for ( i=1;i<=v;i++ ) {
+	    ht+='<span class="ic-star-s-on" width="35px" height="35px">&nbsp;&nbsp;</span>';
+	  }
+	  if ( i < v ) {
+	    ht+='<span class="ic-star-s-half" width="35px" height="35px">&nbsp;&nbsp;</span>';
+	  }
+      return ht;
+   }
+   
+  function doSendAjaxRequest(xurl,param,fnCallback){
+	    if ( xurl.indexOf('http://') == -1 ) xurl = g_UrlBase+xurl;
+		$.ajax( {
+			"url":  xurl,
+			"data": param,
+			"timeout" : 10000,
+			"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+			"success": function (json) {
+				try{ fnCallback( json );}catch(e){}
+			},
+			"dataType": "json",
+			"cache": false,
+			"type": "POST",
+			"error": function (xhr, error, thrown) {
+			}
+		} );
+ }
+ 
+ function getUrlParam(xurl,name){
+	    var para="";
+	    if(xurl.lastIndexOf("?")>0){
+	        para=xurl.substring(xurl.lastIndexOf("?")+1,xurl.length);
+			var arr=para.split("&");
+			para="";
+			for(var i=0;i<arr.length;i++){
+			   if(arr[i].split("=")[0]==name) return arr[i].split("=")[1];
+			}
+			return "";
+	   }else{
+	        return "";
+	   }
+	}
+  </script> 
+<style type="text/css"> 
+    input{
+		BACKGROUND-COLOR: transparent;
+		BORDER-BOTTOM: #ffffff 1px solid;
+		BORDER-LEFT: #ffffff 1px solid;
+		BORDER-RIGHT: #ffffff 1px solid;
+		BORDER-TOP: #ffffff 1px solid;
+		COLOR: #ffffff;
+		HEIGHT: 20px;
+		border-color: #ffffff #ffffff #ffffff #ffffff; font-size: 10pt
+    }
+</style>
+</head>
+<body bgcolor="white" style="background-color:white">
+ <center>
+  <table id="content" width="250" cellspacing="10px" cellpadding="0" border="0" style="margin:20px;">
+    <tr height="30px">
+	  <!--td width="50px">
+	    <div id="ddCity" class="wrapper-dropdown-5" tabindex="1">城市
+						<ul class="dropdown">
+							<li><a href="#"><i class="icon-user"></i>北京</a></li>
+							<li><a href="#"><i class="icon-cog"></i>上海</a></li>
+							<li><a href="#"><i class="icon-remove"></i>广州</a></li>
+							<li><a href="#"><i class="icon-remove"></i>深圳</a></li>
+						</ul>
+        </div>
+	  </td-->
+	  <td width="50px">
+	    <div id="ddDept" class="wrapper-dropdown-5" tabindex="1"><span id="deptName">科室</span>
+						<ul class="dropdown">
+						    <li><a href="javascript:void(0)" onclick="selectDept(-1,'科室')">全部</a></li>
+							<li><a href="javascript:void(0)" onclick="selectDept(0,'内科')">内科</a></li>
+							<li><a href="javascript:void(0)" onclick="selectDept(1,'外科')">外科</a></li>
+						</ul>
+         </div>
+	  </td>
+      <td width="50px">
+	     <div id="ddLevel" class="wrapper-dropdown-5" tabindex="2"><span id="levelName">医生职称</span>
+						<ul class="dropdown">
+						    <li><a href="javascript:void(0)" onclick="selectlevel(-1,'医生职称')">全部</a></li>
+							<li><a href="javascript:void(0)" onclick="selectlevel(0,'住院医师')">住院医师</a></li>
+							<li><a href="javascript:void(0)" onclick="selectlevel(1,'主治医师')">主治医师</a></li>
+							<li><a href="javascript:void(0)" onclick="selectlevel(2,'副主任医师')">副主任医师</a></li>
+							<li><a href="javascript:void(0)" onclick="selectlevel(3,'主任医师')">主任医师</a></li>
+						</ul>
+         </div>
+	  </td>
+	</tr>
+	<tr height="30px">
+	  <td colspan="2" width="100%"><input type="text" id="hospitalOrDoctorName" placeholder="关键字: 医院标题或医生姓名" value=""/></td>
+	</tr>
+	<tr height="30px">
+	  <td colspan="2" width="100%"><input type="text" id="disease" placeholder="病种名称" value=""/></td>
+	</tr>
+	<tr height="30px">
+	  <td colspan="2" width="100%"><input type="text" id="disease_symp1" placeholder="症状1" value=""/></td>
+	</tr>
+	<tr height="30px">
+	  <td colspan="2" width="100%"><input type="text" id="disease_symp2" placeholder="症状2" value=""/></td>
+	</tr>
+	<tr height="80px" valign="middle">
+	 <td colspan="2" width="100%" align="center" valign="middle">
+		<div style="background:url(../../../img/button_blue.png) no-repeat;height:40px;width:330px;text-align:center;padding:10px 0 10px 0;" onclick="doSearch()"><font color="#ffffff">搜索</font></div>
+	 </td>
+	</tr>
+  </table>
+ </center>
+</body>
+</html>

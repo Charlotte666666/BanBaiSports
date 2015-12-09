@@ -1,0 +1,288 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"	src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var queryCtlMark=0;//查询条件显示收缩标志变量
+			var optType="";
+			$(document).ready(function() {
+			optType=top.getUrlParam(document.URL,"optType");
+			if (!top.g_isPermit('cust_add') ) {
+				// 将相关字段隐藏或变成不可用 ， 保存按钮、提交按钮隐藏
+				$('#createBtn').hide();
+				$('#exportBtn').hide();
+			}
+			   $( "#tdCust_status" ).html( top.getCodeSelectHtml("CUST_STATUS","cust_status",true) );
+			   if(optType=='important'){
+			    $("#c_class").attr("checked",false);
+				 $("#d_class").attr("checked",false);
+			   }
+			   var iaoColumns= [
+			                   { "sTitle": "客户编号", "mDataProp": "code", "sWidth": "10%","sClass": "center",
+							        "fnRender": function ( oObj ) {
+                                        return '<a href=\'javascript:void(0)\' onclick="updateInfo(\''+oObj.aData.code+'\')" >'+oObj.aData.code+'</a>';
+										
+                                   },
+								   "bUseRendered": false
+							   },
+			                  { "sTitle": "客户姓名", "mDataProp": "cust_name", "sWidth": "10%","sClass": "center","bUseRendered": false },
+			                  { "sTitle": "客户经理", "mDataProp": "cust_manager", "sWidth": "10%","sClass": "center",
+							   "fnRender": function ( oObj ) {
+                                          return top.getUserNameByCode(oObj.aData.cust_manager);
+                                     },
+							  "bUseRendered": false},
+							  { "sTitle": "登记日期", "mDataProp": "register_date", "sWidth": "10%", "sClass": "center",
+								    "fnRender": function ( oObj ) {
+                                           return top.getTimeStr(oObj.aData.register_date ,true);
+                                     },
+							  "bUseRendered": false},
+                               { "sTitle": "工程地址", "mDataProp": "addr_all", "sWidth": "32%", "sClass": "left","bUseRendered": false},
+							   { "sTitle": "客户级别", "mDataProp": "cust_type", "sWidth": "10%", "sClass": "center",
+                                   "fnRender": function ( oObj ) {
+                                        return top.getCodeName( "CUST_TYPE", oObj.aData.cust_type );
+                                   },
+                                   "bUseRendered": false  
+                               },
+							    { "sTitle": "操作", "mDataProp": "cust_type", "sWidth": "18%", "sClass": "center",
+                                   "fnRender": function ( oObj ) {
+                       
+										var ht='<a href=\'javascript:void(0)\' onclick="checkCustInfo(\''+oObj.aData.code+'\',\'2-3\')" >提交方案</a>';
+										ht+='&nbsp;&nbsp;<a href=\'javascript:void(0)\' onclick="checkCustInfo(\''+oObj.aData.code+'\',\'0-1\')" >客情分析</a>';
+										return  ht;
+                                   },
+                                   "bUseRendered": false  
+                               }
+							 
+               ];
+			   
+			   var surl=top.getUrlBase()+"/actions/CustInfo.action?getMyCustInfoList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData=getParamDate(aoData);
+			    },
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+			   var str ='';
+               str +=top.getAllCheckedValue( document.getElementsByName("cust_type"));
+			   if(str==''){
+			    top.showInfoWinWarn("请选择客户类型！");
+			     return;
+			   }
+				oTable.fnDraw();
+			}
+			
+			function checkCustInfo(id,init_page){
+				top.openCustDetailPage(id,init_page,"update","客户详细信息");
+				//var xurl="pages/pro09/custUpdate.html?optType=update&id="+id;
+				//top.openDialog("我的客户详细信息",xurl,true,900,600,saveCallBack);
+			}
+			function addInfo(){
+				var xurl="pages/pro09/custUpdate.html?optType=insert";
+				top.openDialog("我的客户登记表",xurl,true,900,600,saveCallBack);
+			}
+			
+			function updateInfo(id){
+				//var xurl="pages/pro09/custUpdate.html?optType=update&id="+id;
+				//top.openDialog("我的客户详细信息",xurl,true,900,600,saveCallBack);
+				top.openCustDetailPage(id,"0-0","query","客户详细信息");
+			}
+
+			function saveCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				}
+			}
+
+		    function getParamDate(aoData){
+			     	aoData.push( { "name": "custInfo.code", "value":$("#cust_code").val() } );
+					aoData.push( { "name": "custInfo.cust_name", "value":$("#cust_name").val() } );
+					aoData.push( { "name": "custInfo.cust_type", "value": top.getAllCheckedValue( document.getElementsByName("cust_type")) } );
+					aoData.push( { "name": "custInfo.cust_status", "value": $("#cust_status").val() } );
+					aoData.push( { "name": "time1", "value": $("#q_time1").val() } );
+					aoData.push( { "name": "time2", "value": $("#q_time2").val() } );
+				return aoData;
+			}
+	function exportData(){
+		 var str ='';
+               str +=top.getAllCheckedValue( document.getElementsByName("cust_type"));
+			   if(str==''){
+			    top.showInfoWinWarn("请选择客户类型！");
+			     return;
+			   }
+		var aoData=[];
+			aoData.push( { "name": "custInfo.code", "value":$("#cust_code").val() } );
+			aoData.push( { "name": "custInfo.cust_name", "value":$("#cust_name").val() } );
+			aoData.push( { "name": "custInfo.cust_type", "value":top.getAllCheckedValue( document.getElementsByName("cust_type")) } );
+			aoData.push( { "name": "custRequire.cust_status", "value": $("#cust_status").val() } );
+			top.showLoadingInfo(true);
+			top.sendAjaxRequest("/actions/CustInfo.action?exportCustInfo",aoData,callBackExportData);
+	}
+	
+	 function callBackExportData(obj){
+     top.showLoadingInfo(false);
+	 try{
+	    if ( obj.status == true ){
+		   var downUrl=top.getUrlBase()+"/download?filePath="+obj.msg+"&fileName=客户信息列表.xls";
+		   document.location.href=downUrl;
+	    }else{
+		   top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	 }catch(e){
+	    top.showInfoWinError("处理异常:"+e.message);
+	 }
+ }
+ //查询条件的展开与收缩
+		function dwOup(){
+				if(queryCtlMark==0){//展开
+					$("#queryCtlIcon").attr("src","../../img/icons/arrow-up.gif"); 
+					$("#queryTab").slideToggle();
+					queryCtlMark=1;
+				}else{//收缩
+					$("#queryCtlIcon").attr("src","../../img/icons/arrow-down.gif"); 
+					$("#queryTab").slideToggle();
+					queryCtlMark=0;
+				}
+		}	
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+			<div style='border: 1px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="150px">
+							&nbsp;我的客户查询&nbsp;
+						</td>
+						<td align="right">
+							&nbsp;
+						</td>
+						<td width="2px">
+							&nbsp;
+						</td>
+						<td width="2px">
+							<span><image id="queryCtlIcon" src="../../img/icons/arrow-down.gif" alt="展开" onclick="javascript:dwOup();"/></span>
+						</td>
+					</tr>
+				</table>
+				<table id="queryTab" width="100%" align="center" cellpadding="1px"
+					cellspacing="1px" border="0" style="display:none">
+					<tr class="tr_data">
+						<td align="right">
+							客户编号
+						</td>
+						<td align="left" id="custId">
+							<input type="text" id="cust_code" value="" size="13"
+								onkeydown="if(event.keyCode==13) doQuery();" />
+						</td>
+						<td align="right">
+							客户姓名
+						</td>
+						<td align="left">
+							<input type="text" id="cust_name" value="" size="15" onkeydown="if(event.keyCode==13) doQuery();" />
+						</td>
+						<td align="right">
+							客户级别
+						</td>
+						<td align="left" >
+							&nbsp;<input type="checkbox"  id="a_class" name="cust_type" value="A" checked="checked"/>A类
+							&nbsp;<input type="checkbox"  id="b_class" name="cust_type"  value="B" checked="checked"/>B类
+							&nbsp;<input type="checkbox"  id="c_class" name="cust_type"  value="C"  checked="checked"/>C类
+							&nbsp;<input type="checkbox"  id="d_class" name="cust_type"  value="D"  checked="checked"/>D类 
+						</td>
+						</tr>
+					<tr class="tr_data">
+						<td align="right">
+							客户状态
+						</td>
+						<td align="left" id="tdCust_status">
+							<input type="text" id="cust_status" value="" size="15"
+								onkeydown="if(event.keyCode==13) doQuery();" />
+						</td>
+						<td align="right">
+							登记时间
+						</td>
+						<td align="left"  id="tdCust_status">
+							<input type="text" id="q_time1" value="" size="10" onclick="new Calendar().show(this);" readonly="true"/>&nbsp;--
+								<input type="text" id="q_time2" value="" size="10" onclick="new Calendar().show(this);" readonly="true"/>
+						</td>
+						<td colspan="2" align="center">
+						    <div class="buttonDivTwo">
+								<a href="javascript:doQuery()">查询</a>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0"
+				border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									&nbsp;查询结果列表&nbsp;
+								</td>
+								<!-- <td>
+									<div id="createBtn" class="buttonDivTwo">
+										<a href="javascript:addInfo()">添加</a>
+									</div>
+								</td> -->
+								<td>
+									<div id="exportBtn" class="buttonDivTwo">
+										<a href="javascript:exportData()">导出</a>
+									</div>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<table cellpadding="0" width="100%" cellspacing="0" border="0"	class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

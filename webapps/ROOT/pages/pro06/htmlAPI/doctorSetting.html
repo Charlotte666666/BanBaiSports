@@ -1,0 +1,828 @@
+<html>
+<head>
+    <meta charset="utf-8">
+	<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0;" name="viewport" />
+	<title>医生出诊设置</title>
+	<link rel="stylesheet" href="../../../css/themes/default/jquery.mobile-1.4.5.min.css">
+	<script src="../../../js/jquery-1.10.2.min.js"></script>
+	<script src="../../../js/jquery.mobile-1.4.5.min.js"></script>
+	<script type="text/javascript" src="../../../js/md5.js"></script>
+	<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=0B145027660d20f305a8197a11ab3703"></script>
+
+  <script type="text/javascript">
+   var doctor_id=0;
+   var addrList=[];
+   var timeList=[];
+   var g_UrlBase="";
+   var map = null;
+   var selectMapLat=0;
+   var selectMapLon=0;
+   var addTimeAddrTitle="";
+   var addTimeAddrDesc="";
+   var addTimeMapLon=0;
+   var addTimeMapLat=0;
+   var add_weekday=1;
+   var currentTimeId=0;
+   var currentPage=1;
+   var tempSetting=null;
+   
+   $(document).ready(function() {
+       var ind=document.URL.indexOf("/pages");
+	   if ( ind != -1 ) {
+		  g_UrlBase = document.URL.substring(0,ind);
+	   }
+
+	   doctor_id=getUrlParam(document.URL,"doctor_id");
+	   var sw=$(window).width();
+	   $("#container").width(sw);
+	   $("#container").height($(window).height()-180);
+	   $("#pageTemp").hide();
+	   $("#tempSetting1").hide();
+	   $("#tempSetting0").hide();
+	   getList();
+   } );
+   
+   function getList(){
+       var aoData=[];
+	   var time=(new Date()).getTime();
+       aoData.push( { "name": "doctor.id", "value": doctor_id } );
+	   aoData.push( { "name": "time1", "value": time } );
+	   aoData.push( { "name": "authcode", "value": hex_md5(time+"_"+doctor_id) } );
+	   doSendAjaxRequest("/actions/Doctor.action?getDoctorTimeListForApp",aoData,getDoctorTimeListCallback);
+   }
+   
+   function getDoctorTimeListCallback(obj){
+	   try{
+	     timeList=obj.data.timeList;
+		 addrList=obj.data.addrList;
+		 tempSetting=obj.data.tempSetting;
+		 loadTime();
+		 loadAddr();
+	   }catch(e){
+	   }
+   }
+   
+   function loadTime(){
+      var sw=$(window).width();
+      var ht='';
+	   ht+='<table width="'+(sw-10)+'px" cellspacing="5px" cellpadding="0" border="0" style="background-color: #ffffff;margin:5px auto;">';
+	   ht+='<tr height="30px" >';
+	    ht+='<td width="60px">周一</td>';
+	    ht+='<td width="'+(sw-130)+'px" id="weekday1" align="center" valign="middle" ></td><td width="60px" onclick="addTime(\'1\')" align="center"><font color="green" size="18">+</font></td>';
+	    ht+='</tr>';
+		ht+='<tr><td colspan="3" height="1px" bgcolor="#f9f9f9" ></td></tr>';
+		ht+='<tr height="30px">';
+	    ht+='<td width="60px">周二</td>';
+	    ht+='<td width="'+(sw-130)+'px" id="weekday2" align="center" valign="middle"></td><td width="60px" onclick="addTime(\'2\')" align="center"><font color="green" size="18">+</font></td>';
+	    ht+='</tr>';
+		ht+='<tr><td colspan="3" height="1px" bgcolor="#f9f9f9" ></td></tr>';
+		ht+='<tr height="30px">';
+	    ht+='<td width="60px">周三</td>';
+	    ht+='<td width="'+(sw-130)+'px" id="weekday3" align="center" valign="middle"></td><td width="60px" onclick="addTime(\'3\')" align="center"><font color="green" size="18">+</font></td>';
+	    ht+='</tr>';
+		ht+='<tr><td colspan="3" height="1px" bgcolor="#f9f9f9" ></td></tr>';
+		ht+='<tr height="30px">';
+	    ht+='<td width="60px">周四</td>';
+	    ht+='<td width="'+(sw-130)+'px" id="weekday4" align="center" valign="middle"></td><td width="60px" onclick="addTime(\'4\')" align="center"><font color="green" size="18">+</font></td>';
+	    ht+='</tr>';
+		ht+='<tr><td colspan="3" height="1px" bgcolor="#f9f9f9" ></td></tr>';
+		ht+='<tr height="30px">';
+	    ht+='<td width="60px">周五</td>';
+	    ht+='<td width="'+(sw-130)+'px" id="weekday5" align="center" valign="middle"></td><td width="60px" onclick="addTime(\'5\')" align="center"><font color="green" size="18">+</font></td>';
+	    ht+='</tr>';
+		ht+='<tr><td colspan="3" height="1px" bgcolor="#f9f9f9" ></td></tr>';
+		ht+='<tr height="30px">';
+	    ht+='<td width="60px">周六</td>';
+	    ht+='<td width="'+(sw-130)+'px" id="weekday6" align="center" valign="middle"></td><td width="60px" onclick="addTime(\'6\')" align="center"><font color="green" size="18">+</font></td>';
+	    ht+='</tr>';
+		ht+='<tr><td colspan="3" height="1px" bgcolor="#f9f9f9" ></td></tr>';
+		ht+='<tr height="30px">';
+	    ht+='<td width="60px">周日</td>';
+	    ht+='<td width="'+(sw-130)+'px" id="weekday0" align="center" valign="middle"></td><td width="60px" onclick="addTime(\'0\')" align="center"><font color="green" size="18">+</font></td>';
+	    ht+='</tr>';
+	    ht+='</table>';
+	   
+	   $("#content").html( ht );
+
+         var sw=$(window).width();
+		 var ws=[];
+         var temp='';
+		 for ( var i=0;i<timeList.length;i++ ) {
+		    temp='<table width="100%" cellspacing="5px" cellpadding="0" border="0">';
+			if ( !ws[timeList[i].week_day] ) ws[timeList[i].week_day] = "";
+			if ( ws[timeList[i].week_day] != '' ) {
+			  temp+='<tr><td height="1px" bgcolor="#f9f9f9" ></td></tr>';
+			}
+			temp+='<tr><td width="100%" onclick="editTime('+i+')">';
+		    temp+=getTimeTxt(timeList[i].time_from)+" - "+ getTimeTxt(timeList[i].time_to);
+			temp+="&nbsp;&nbsp;"+timeList[i].addr_title+'</td></tr></table>';
+			
+		    ws[timeList[i].week_day]+=temp;
+		 }
+		 for ( var j=0;j<7;j++ ) {
+		    if ( ws[j] && ws[j] != '' ) $("#weekday"+j).html( ws[j] );
+		 }
+   }
+   
+   function getTimeTxt(tem){
+       tem=tem+"";
+	   var h=tem.substring(0,tem.length-2);
+	   if ( Number(h) < 10 ) h="0"+h;
+       if ( tem != '' ) {
+		  return ( h+ ":" +tem.substring(tem.length-2,tem.length));
+	   }
+	   return tem;
+   }
+   
+   function loadAddr(){
+         var ht='<table width="100%" cellspacing="10px" cellpadding="0" border="0" style="background-color: #ffffff;margin:5px auto;">';
+		 for ( var i=0;i<addrList.length;i++ ) {
+			ht+='<tr height="30px" >';
+			ht+='<td align="left" width="80%" onclick="doChooseAddr('+i+')"><font size="4" color="#000000" >'+addrList[i].addr_title;
+			if ( addrList[i].addr != '' ) ht+='<p>'+addrList[i].addr+'</p>';
+			ht+='</font></td>';
+			if ( addrList[i].type == 1 ) {
+			  ht+='<td align="right" width="20%" >&nbsp;</td>';
+			} else {
+			  ht+='<td align="right" width="20%" onclick="deleteAddr('+addrList[i].id+')"><img src="no.png" /></td>';
+			}
+			ht+='</tr>';
+			ht+='<tr><td colspan="2" height="1px" bgcolor="#f9f9f9" ></td></tr>';
+		 }
+		 ht+='</table>';
+		 $("#addrs").html( ht );
+   }
+
+   function addTime(weekInd){
+       $("#content").hide();
+	   $("#addrDiv").hide();
+	   $("#addrMap").hide();
+	   $("#container").hide();
+	   $("#deleteTimeBtn").hide();
+	   $("#timeDetailInfo").show();
+
+	   add_weekday = weekInd;
+	   if ( add_weekday == 1 ) {
+	     $("#weekday_txt").html("周一");
+	   } else if ( add_weekday == 2 ) {
+	     $("#weekday_txt").html("周二");
+	   } else if ( add_weekday == 3 ) {
+	     $("#weekday_txt").html("周三");
+	   } else if ( add_weekday == 4 ) {
+	     $("#weekday_txt").html("周四");
+	   } else if ( add_weekday == 5 ) {
+	     $("#weekday_txt").html("周五");
+	   } else if ( add_weekday == 6 ) {
+	     $("#weekday_txt").html("周六");
+	   } else if ( add_weekday == 0 ) {
+	     $("#weekday_txt").html("周日");
+	   }
+	   currentTimeId=0;
+	   $("#addrTxt").html( "" );
+   }
+   
+   function deleteAddr(did){
+     var aoData=[];
+     var time=(new Date()).getTime();
+     aoData.push( { "name": "doctor.id", "value": doctor_id } );
+	 aoData.push( { "name": "time1", "value": time } );
+	 aoData.push( { "name": "authcode", "value": hex_md5(time+"_"+doctor_id) } );
+	 aoData.push( { "name": "doctorAddr.id", "value": did } );
+	 aoData.push( { "name": "doctorAddr.doctor_id", "value": doctor_id } );
+	 doSendAjaxRequest("/actions/Doctor.action?deleteDoctorAddr",aoData,deleteAddrCallback);
+   }
+   
+   function editTime(ind){
+       $("#content").hide();
+	   $("#addrDiv").hide();
+	   $("#addrMap").hide();
+	   $("#container").hide();
+	   $("#timeDetailInfo").show();
+	   $("#deleteTimeBtn").show();
+
+	   add_weekday = timeList[ind].week_day;
+	   if ( add_weekday == 1 ) {
+	     $("#weekday_txt").html("周一");
+	   } else if ( add_weekday == 2 ) {
+	     $("#weekday_txt").html("周二");
+	   } else if ( add_weekday == 3 ) {
+	     $("#weekday_txt").html("周三");
+	   } else if ( add_weekday == 4 ) {
+	     $("#weekday_txt").html("周四");
+	   } else if ( add_weekday == 5 ) {
+	     $("#weekday_txt").html("周五");
+	   } else if ( add_weekday == 6 ) {
+	     $("#weekday_txt").html("周六");
+	   } else if ( add_weekday == 0 ) {
+	     $("#weekday_txt").html("周日");
+	   }
+	   var tem=timeList[ind].time_from+"";
+	   if ( tem != '' ) {
+		  $("#add_time_1").val(  getTimeTxt(tem) );
+	   }
+	   tem=timeList[ind].time_to+"";
+	   if ( tem != '' ) {
+		  $("#add_time_2").val(  getTimeTxt(tem) );
+	   }
+	   
+	   $("#add_fee").val( timeList[ind].fee );
+	   addTimeMapLat=timeList[ind].map_lat;
+	   addTimeMapLon=timeList[ind].map_lon;
+	   addTimeAddrTitle=timeList[ind].addr_title;
+	   addTimeAddrDesc=timeList[ind].addr;
+	   currentTimeId=timeList[ind].id;
+	   if ( addTimeAddrDesc != '' ) {
+	     $("#addrTxt").html( addTimeAddrTitle + "<p>" + addTimeAddrDesc +"</p>" );
+	   } else {
+	     $("#addrTxt").html( addTimeAddrTitle );
+	   }
+   }
+   
+   function doAddInfo(){
+    try{
+	 if ( $("#add_time_1").val() == '' ) return ;
+	 if ( $("#add_time_2").val() == '' ) return ;
+     if ( addTimeMapLat == 0 ) return ;
+	 if ( addTimeAddrTitle == '' ) return ;
+     var aoData=[];
+     var time=(new Date()).getTime();
+     aoData.push( { "name": "doctor.id", "value": doctor_id } );
+	 aoData.push( { "name": "time1", "value": time } );
+	 aoData.push( { "name": "authcode", "value": hex_md5(time+"_"+doctor_id) } );
+	 aoData.push( { "name": "doctorTime.addr_title", "value": addTimeAddrTitle } );
+	 aoData.push( { "name": "doctorTime.addr", "value": addTimeAddrDesc } );
+	 aoData.push( { "name": "doctorTime.time_from", "value": Number( $("#add_time_1").val().replace(new RegExp(":","gm"), "") ) } );
+	 aoData.push( { "name": "doctorTime.time_to", "value": Number( $("#add_time_2").val().replace(new RegExp(":","gm"), "") ) } );
+	 aoData.push( { "name": "doctorTime.week_day", "value": add_weekday } );
+	 aoData.push( { "name": "doctorTime.fee", "value": $("#add_fee").val() } );
+	 aoData.push( { "name": "doctorTime.map_lat", "value": addTimeMapLat } );
+	 aoData.push( { "name": "doctorTime.map_lon", "value": addTimeMapLon } );
+	 if ( currentTimeId > 0 ) {
+	   aoData.push( { "name": "doctorTime.id", "value": currentTimeId } );
+	   doSendAjaxRequest("/actions/Doctor.action?updateDoctorTime",aoData,doAddInfoCallback);
+	 } else {
+	   doSendAjaxRequest("/actions/Doctor.action?insertDoctorTime",aoData,doAddInfoCallback);
+	 }
+	}catch(e){
+	}
+   }
+   
+   function doAddInfoCallback(obj){
+    try{
+	    if ( obj.code == 1 ){
+		 $("#timeDetailInfo").hide();
+		 $("#addrDiv").hide();
+		 $("#addrMap").hide();
+		 $("#container").hide();
+		 $("#content").show();
+		 timeList=obj.data.timeList;
+		 loadTime();
+		}
+	 }catch(e){
+	 }
+   }
+   
+   function cancelInfo(){
+       $("#timeDetailInfo").hide();
+	   $("#addrDiv").hide();
+	   $("#addrMap").hide();
+	   $("#container").hide();
+	   $("#content").show();
+   }
+   
+   function chooseAddr(){
+     $("#timeDetailInfo").hide();
+	 $("#content").hide();
+	 $("#addrMap").hide();
+	 $("#container").hide();
+	 $("#pageTemp").hide();
+	 $("#tempSetting0").hide();
+     $("#addrDiv").show();
+   }
+   
+   function doChooseAddr(ind){
+	 addTimeMapLat=addrList[ind].map_lat;
+	 addTimeMapLon=addrList[ind].map_lon;
+	 addTimeAddrTitle=addrList[ind].addr_title;
+	 addTimeAddrDesc=addrList[ind].addr;
+     $("#addrDiv").hide();
+	 $("#content").hide();
+	 $("#addrMap").hide();
+	 $("#container").hide();
+	 
+	 if ( currentPage == 1 ) {
+		 $("#timeDetailInfo").show();
+		 if ( addTimeAddrDesc != '' ) {
+		  $("#addrTxt").html( addTimeAddrTitle + "<p>" + addTimeAddrDesc +"</p>" );
+		 } else {
+		  $("#addrTxt").html( addTimeAddrTitle );
+		 }
+	 } else {
+	     $("#pageTemp").show();
+		 $("#tempSetting0").show();
+		 if ( addTimeAddrDesc != '' ) {
+		  $("#addrTxtTemp").html( addTimeAddrTitle + "<p>" + addTimeAddrDesc +"</p>" );
+		 } else {
+		  $("#addrTxtTemp").html( addTimeAddrTitle );
+		 }
+	 }
+   }
+   
+   function doChooseMapDot(){
+     if ( selectMapLon == 0 ) return ;
+	 if ( $("#addrTitle").val() == '' ) return ;
+	 if ( $("#addrDesc").val() == '' ) return ;
+     var aoData=[];
+     var time=(new Date()).getTime();
+     aoData.push( { "name": "doctor.id", "value": doctor_id } );
+	 aoData.push( { "name": "time1", "value": time } );
+	 aoData.push( { "name": "authcode", "value": hex_md5(time+"_"+doctor_id) } );
+	 aoData.push( { "name": "doctorAddr.addr_title", "value": $("#addrTitle").val() } );
+	 aoData.push( { "name": "doctorAddr.addr", "value": $("#addrDesc").val() } );
+	 aoData.push( { "name": "doctorAddr.map_lat", "value": selectMapLat } );
+	 aoData.push( { "name": "doctorAddr.map_lon", "value": selectMapLon } );
+	 doSendAjaxRequest("/actions/Doctor.action?insertDoctorAddr",aoData,saveAddrCallback);
+   }
+   
+   function cancelChooseMapDot(){
+	 $("#content").hide();
+	 $("#addrMap").hide();
+	 $("#container").hide();
+	 $("#addrDiv").show();
+   }
+   
+   function deleteTimeInfo(){
+    try{
+	 var aoData=[];
+     var time=(new Date()).getTime();
+     aoData.push( { "name": "doctor.id", "value": doctor_id } );
+	 aoData.push( { "name": "time1", "value": time } );
+	 aoData.push( { "name": "authcode", "value": hex_md5(time+"_"+doctor_id) } );
+	 aoData.push( { "name": "doctorTime.doctor_id", "value": doctor_id } );
+	 aoData.push( { "name": "doctorTime.id", "value": currentTimeId } );
+	 doSendAjaxRequest("/actions/Doctor.action?deleteDoctorTime",aoData,doAddInfoCallback);
+	}catch(e){
+	}
+   }
+   
+   function deleteAddrCallback(obj){
+       try{
+	    if ( obj.code == 1 ){
+			 addrList=obj.data.addrList;
+			 loadAddr();
+	    }
+	   }catch(e){
+	   }
+   }
+   
+   function saveAddrCallback(obj){
+       try{
+	    if ( obj.code == 1 ){
+		     $("#addrDiv").hide();
+			 $("#content").hide();
+			 $("#addrMap").hide();
+			 $("#container").hide();
+			 
+			 if ( currentPage == 1 ) {
+				 $("#timeDetailInfo").show();
+			 } else {
+				 $("#pageTemp").show();
+				 $("#tempSetting0").show();
+			 }
+			 
+			 addTimeMapLat=selectMapLat;
+			 addTimeMapLon=selectMapLon;
+			 addTimeAddrTitle=$("#addrTitle").val();
+			 addTimeAddrDesc=$("#addrDesc").val();
+			 if ( addTimeAddrDesc != '' ) {
+			   $("#addrTxt").html( addTimeAddrTitle + "<p>" + addTimeAddrDesc + "</p>" );
+			 } else {
+			   $("#addrTxt").html( addTimeAddrTitle );
+			 }
+			 addrList=obj.data.addrList;
+			 loadAddr();
+	    }
+	   }catch(e){
+	   }
+   }
+
+   function addChooseAddr(){
+     $("#addrDiv").hide();
+	 $("#content").hide();
+     $("#timeDetailInfo").hide();
+	 selectMapLat=0;
+	 selectMapLon=0;
+	 $("#addrTitle").val("");
+	 $("#addrDesc").val("");
+	 $("#container").show();
+	 $("#addrMap").show();
+	 
+	  if(navigator.geolocation) {
+            	// 百度地图API功能
+				map = new BMap.Map("container");
+				var point = new BMap.Point(116.331398,39.897445);
+				map.centerAndZoom(point,12);
+				map.addEventListener("click", showInfo);
+				var geolocation = new BMap.Geolocation();
+				geolocation.getCurrentPosition(function(r){
+					if(this.getStatus() == BMAP_STATUS_SUCCESS){
+						var mk = new BMap.Marker(r.point);
+						map.addOverlay(mk);
+						map.panTo(r.point);
+						//alert('您的位置：'+r.point.lng+','+r.point.lat);
+						selectMapLat=r.point.lat;
+						selectMapLon=r.point.lng;
+						var geoc = new BMap.Geocoder();
+						geoc.getLocation(r.point, function(rs){
+							var addComp = rs.addressComponents;
+							$("#addrDesc").val(addComp.city + "" + addComp.district + "" + addComp.street + "" + addComp.streetNumber);
+						});
+					}
+					else {
+						//alert('failed'+this.getStatus());
+					}        
+				},{enableHighAccuracy: true})
+        }
+   }
+   
+   function cancelChooseAddr(){
+     $("#addrDiv").hide();
+	 $("#content").hide();
+	 $("#addrMap").hide();
+	 $("#container").hide();
+	 
+	 if ( currentPage == 1 ) {
+		 $("#timeDetailInfo").show();
+	 } else {
+	     $("#pageTemp").show();
+		 $("#tempSetting0").show();
+	 }
+   }
+   
+   function showInfo(e){
+		var pt = e.point;
+		map.clearOverlays();
+		map.addOverlay( new BMap.Marker(pt) );
+		map.panTo(pt);
+		selectMapLat=pt.lat;
+		selectMapLon=pt.lng;
+		var geoc = new BMap.Geocoder();
+		geoc.getLocation(pt, function(rs){
+			var addComp = rs.addressComponents;
+			$("#addrDesc").val(addComp.city + "" + addComp.district + "" + addComp.street + "" + addComp.streetNumber);
+		});
+	}
+
+   function getRadioValue(ds){
+	  if ( !ds ) return "";
+	  for ( var i=0;i<ds.length;i++ ) {
+			if ( ds[i].checked ) {
+				return ds[i].value;
+			}
+	  }
+	  return "";
+	}
+	
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+		  getList();
+	    } else {
+		  $("#optResultSpan").html("提交失败");
+		}
+	   }catch(e){
+		  $("#optResultSpan").html("提交失败");
+	   }
+   }
+   
+   function selectPage(n){
+      if ( currentPage == n ) return ;
+	  if ( n == 1 ) {
+	     $("#pageTemp").hide();
+		 $("#tempSetting1").hide();
+	     $("#tempSetting0").hide();
+	     $("#addrDiv").hide();
+		 $("#addrMap").hide();
+		 $("#container").hide();
+		 $("#timeDetailInfo").hide();
+		 $("#content").show();
+		 $("#pageBtn1").attr("bgcolor","blue");
+		 $("#pageBtn2").attr("bgcolor","#ffffff");
+		 $("#pageBtn1").css("color","#ffffff");
+		 $("#pageBtn2").css("color","blue");
+	  } else {
+	     $("#addrDiv").hide();
+		 $("#addrMap").hide();
+		 $("#container").hide();
+		 $("#timeDetailInfo").hide();
+		 $("#content").hide();
+		 initTempSetting();
+		 $("#pageTemp").show();
+		 $("#pageBtn1").attr("bgcolor","#ffffff");
+		 $("#pageBtn2").attr("bgcolor","blue");
+		 $("#pageBtn1").css("color","blue");
+		 $("#pageBtn2").css("color","#ffffff");
+	  }
+	  currentPage=n;
+   }
+   
+   function startTempTime(){
+    try{
+	 var aoData=[];
+     var time=(new Date()).getTime();
+     aoData.push( { "name": "doctor.id", "value": doctor_id } );
+	 aoData.push( { "name": "time1", "value": time } );
+	 aoData.push( { "name": "authcode", "value": hex_md5(time+"_"+doctor_id) } );
+	 aoData.push( { "name": "doctor.fee", "value": $("#tempFee").val() } );
+	 aoData.push( { "name": "doctor.temp_addr", "value": addTimeAddrDesc } );
+	 aoData.push( { "name": "doctor.temp_addr_title", "value": addTimeAddrTitle } );
+	 aoData.push( { "name": "doctor.map_lat", "value": selectMapLat } );
+	 //aoData.push( { "name": "doctor.visit_type", "value": visit_type } );
+	 aoData.push( { "name": "doctor.map_lon", "value": selectMapLon } );
+	 aoData.push( { "name": "doctor.temp_time_dis", "value": $("#temp_time_dis").val()  } );
+	 doSendAjaxRequest("/actions/Doctor.action?updateDoctorVisitSettingForApp",aoData,updateTempTimeCallback);
+	}catch(e){
+	}
+   }
+   
+   function stopTempTime(){
+    try{
+	 var aoData=[];
+     var time=(new Date()).getTime();
+     aoData.push( { "name": "doctor.id", "value": doctor_id } );
+	 aoData.push( { "name": "time1", "value": time } );
+	 aoData.push( { "name": "authcode", "value": hex_md5(time+"_"+doctor_id) } );
+	 aoData.push( { "name": "doctor.temp_time_dis", "value": 0 } );
+	 doSendAjaxRequest("/actions/Doctor.action?updateDoctorVisitSettingForApp",aoData,updateTempTimeCallback);
+	}catch(e){
+	}
+   }
+   
+   function updateTempTimeCallback(obj){
+       try{
+	    if ( obj.code == 1 ){
+			tempSetting=obj.data.tempSetting;
+			initTempSetting();
+	    }
+	   }catch(e){
+	   }
+   }
+   
+   function initTempSetting(){
+       try{
+	     if ( !tempSetting ) return ;
+	     var now=(new Date()).getTime();
+		 if ( now < Number(tempSetting.temp_time) ) {
+		   var left=Math.round(( Number(tempSetting.temp_time)-now)/60000);
+		   if ( left == 0 ) {
+		     left = Math.round(( Number(tempSetting.temp_time)-now)/1000);
+		     left = left + "秒";
+		   } else {
+		     left = left + "分钟";
+		   }
+		   $("#tempSetting0").hide();
+		   $("#tempFee1").html( tempSetting.fee + "元" );
+
+		   if ( tempSetting.temp_addr != '' ) {
+		    $("#addrTxtTemp1").html( tempSetting.temp_addr_title + "<p>" + tempSetting.temp_addr +"</p>" );
+		   } else {
+		    $("#addrTxtTemp1").html( tempSetting.temp_addr_title );
+		   }
+		   
+		   $("#leftMin").html( left );
+		   $("#tempSetting1").show();
+		 } else {
+		   $("#tempFee").val( tempSetting.fee );
+		   if ( tempSetting.temp_addr != '' ) {
+		    $("#addrTxtTemp1").html( tempSetting.temp_addr_title + "<p>" + tempSetting.temp_addr +"</p>" );
+		   } else {
+		    $("#addrTxtTemp1").html( tempSetting.temp_addr_title );
+		   }
+		   addTimeMapLat=tempSetting.map_lat;
+		   addTimeMapLon=tempSetting.map_lon;
+		   addTimeAddrTitle=tempSetting.temp_addr_title;
+		   addTimeAddrDesc=tempSetting.temp_addr;
+		   $("#tempSetting1").hide();
+		   $("#tempSetting0").show();
+		 }
+	   }catch(e){
+	   }
+   }
+   
+  function doSendAjaxRequest(xurl,param,fnCallback){
+	    if ( xurl.indexOf('http://') == -1 ) xurl = g_UrlBase+xurl;
+		$.ajax( {
+			"url":  xurl,
+			"data": param,
+			"timeout" : 10000,
+			"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+			"success": function (json) {
+				try{ fnCallback( json );}catch(e){}
+			},
+			"dataType": "json",
+			"cache": false,
+			"type": "POST",
+			"error": function (xhr, error, thrown) {
+			}
+		} );
+ }
+ 
+ function getUrlParam(xurl,name){
+	    var para="";
+	    if(xurl.lastIndexOf("?")>0){
+	        para=xurl.substring(xurl.lastIndexOf("?")+1,xurl.length);
+			var arr=para.split("&");
+			para="";
+			for(var i=0;i<arr.length;i++){
+			   if(arr[i].split("=")[0]==name) return arr[i].split("=")[1];
+			}
+			return "";
+	   }else{
+	        return "";
+	   }
+	}
+  </script> 
+  
+  <style type="text/css">
+	 input{
+		BACKGROUND-COLOR: transparent;
+		BORDER-BOTTOM: #ffffff 1px solid;
+		BORDER-LEFT: #ffffff 1px solid;
+		BORDER-RIGHT: #ffffff 1px solid;
+		BORDER-TOP: #ffffff 1px solid;
+		COLOR: #ffffff;
+		HEIGHT: 20px;
+		border-color: #ffffff #ffffff #ffffff #ffffff; font-size: 10pt
+    }
+  </style>
+</head>
+<body>
+ <center>
+  <table width="150px" cellspacing="0" cellpadding="2px" border="1" style="margin:10px 0 0 0;border-color:blue">
+    <tr>
+	 <td width="50%" id="pageBtn1" bgcolor="blue" style="color:#ffffff" align="center" onclick="selectPage(1)" >固定出诊</td>
+	 <td width="50%" id="pageBtn2" bgcolor="#ffffff" style="color:blue" align="center" onclick="selectPage(2)" >临时出诊</td>
+	</tr>
+  </table>
+  <p id="content">
+  </p>
+  <p id="timeDetailInfo" style="display:none">
+    <table width="100%" bgcolor="#ffffff" cellspacing="0" cellpadding="0" border="0">
+	  <tr>
+	    <td width="20%" align="center">时间</td>
+		<td width="80%" >
+		  <table><tr>
+		  <td id="weekday_txt"></td>
+		  <td>&nbsp;&nbsp;</td>
+		  <td><input type="time" id="add_time_1" value="09:00" height="20px"/></td>
+		  <td>&nbsp;-&nbsp;</td>
+		  <td><input type="time" id="add_time_2" value="18:00" height="20px"/></td>
+		  </tr></table>
+		</td>
+	  </tr>
+	  <tr><td colspan="2" height="1px" bgcolor="#f9f9f9" ></td></tr>
+	  <tr>
+	    <td width="20%" align="center">单价</td>
+		<td width="80%">
+		 <table><tr><td><input type="number" value="" id="add_fee" size="5" min="10" max="1000"/></td>
+		 <td>元</td>
+		 </tr></table>
+		</td>
+	  </tr>
+	  <tr><td colspan="2" height="1px" bgcolor="#f9f9f9" ></td></tr>
+	  <tr>
+	    <td width="20%" align="center" >地址</td>
+		<td width="80%">
+		 <table width="100%"><tr><td width="80%" id="addrTxt">&nbsp;</td>
+		 <td width="20%" onclick="chooseAddr()" height="40px">
+		  <font color="blue"><b>选择</b></font>
+		 </td>
+		 </tr></table>
+		</td>
+	  </tr>
+	</table>
+	<table width="95%" cellspacing="0" cellpadding="10px" border="0">
+	<tr><td width="100%" align="center">
+	<div style="background:url(../../../img/button_blue.png) no-repeat;height:40px;width:330px;text-align:center;padding:10px 0 10px 0;" onclick="doAddInfo()"><font color="#ffffff">保存</font></div>
+	</td></tr>
+	<tr><td width="100%" align="center">
+	<div style="background:url(../../../img/button_blue.png) no-repeat;height:40px;width:330px;text-align:center;padding:10px 0 10px 0;" onclick="cancelInfo()"><font color="#ffffff">取消</font></div>
+	</td></tr>
+	<tr id="deleteTimeBtn"><td width="100%" align="center">
+	  <div style="background:url(../../../img/button_red.png) no-repeat;height:40px;width:330px;text-align:center;padding:10px 0 10px 0;" onclick="deleteTimeInfo()"><font color="#ffffff">删除</font></div>
+	</td></tr>
+	</table>
+  </p>
+  <p id="addrDiv" style="display:none">
+    <table width="100%" bgcolor="#ffffff" cellspacing="0" cellpadding="0" border="0">
+	  <tr><td id="addrs" width="100%">
+	  </td></tr>
+	</table>
+	<table width="95%" cellspacing="0" cellpadding="10px" border="0">
+	  <tr><td width="100%" align="center">
+		<div style="background:url(../../../img/button_blue.png) no-repeat;height:40px;width:330px;text-align:center;padding:10px 0 10px 0;" onclick="addChooseAddr()"><font color="#ffffff">添加地址</font></div>
+	  </td></tr>
+	  <tr><td width="100%" align="center">
+		<div style="background:url(../../../img/button_red.png) no-repeat;height:40px;width:330px;text-align:center;padding:10px 0 10px 0;" onclick="cancelChooseAddr()"><font color="#ffffff">取消选择</font></div>
+	  </td></tr>
+    </table>
+  </p>
+  <p id="addrMap" style="display:none">
+   <table width="100%" bgcolor="#ffffff" cellspacing="0" cellpadding="0" border="0">
+    <tr>
+		<td width="80%">
+		 <table width="100%">
+		 <tr>
+		 <td width="85%">
+		 <input type="text" id="addrTitle" placeholder="标题" value=""/>
+		 </td>
+		 <td width="15%" onclick="doChooseMapDot()" align="center" valign="middle"><font color="blue"><b>保存</b></font></td>
+		 </tr>
+		 <tr><td colspan="3" height="1px" bgcolor="#f9f9f9" ></td></tr>
+		 <tr>
+		 <td width="85%">
+		 <input type="text" id="addrDesc" placeholder="详细地址" value=""/>
+		 </td>
+		 <td width="15%" onclick="cancelChooseMapDot()" align="center" valign="middle"><font color="red"><b>取消</b></font></td>
+		 </tr>
+		 </table>
+		</td>
+	</tr>
+    <tr><td colspan="2">
+    <div style="width:600px;height:480px;border:0px;margin:5px auto;display:none" id="container"></div>
+	</td>
+	</tr></table>
+  </p>
+  <p id="pageTemp" style="display:none">
+    <div width="100%" id="tempSetting0">
+    <table width="100%" bgcolor="#ffffff" cellspacing="0" cellpadding="0" border="0">
+	  <tr>
+	    <td width="20%" align="center" >地址</td>
+		<td width="80%">
+		 <table width="100%"><tr><td width="80%" id="addrTxtTemp">&nbsp;</td>
+		 <td width="20%" onclick="chooseAddr()" height="40px">
+		  <font color="blue"><b>选择</b></font>
+		 </td>
+		 </tr></table>
+		</td>
+	  </tr>
+	  <tr><td colspan="2" height="1px" bgcolor="#f9f9f9" ></td></tr>
+	  <tr>
+	    <td width="20%" align="center">单价</td>
+		<td width="80%">
+		 <table><tr><td><input type="number" value="" id="tempFee" size="5" min="10" max="1000"/></td>
+		 <td>元</td>
+		 </tr></table>
+		</td>
+	  </tr>
+	  <tr><td colspan="2" height="1px" bgcolor="#f9f9f9" ></td></tr>
+	  <tr>
+	    <td width="20%" align="center">时间</td>
+		<td width="80%">
+		 <table><tr><td><input type="number" value="30" id="temp_time_dis" size="5" min="30" max="120"/></td>
+		 <td>分钟后自动结束</td>
+		 </tr></table>
+		</td>
+	  </tr>
+	  <tr><td colspan="2" height="1px" bgcolor="#f9f9f9" ></td></tr>
+	</table>
+	
+	<table width="95%" cellspacing="0" cellpadding="10px" border="0">
+	  <tr><td width="100%" align="center">
+	    <div style="background:url(../../../img/button_blue.png) no-repeat;height:40px;width:330px;text-align:center;padding:10px 0 10px 0;" onclick="startTempTime()"><font color="#ffffff">开始临时接诊</font></div>
+      </td></tr>
+	</table>
+    </div>
+	
+	<div width="100%" id="tempSetting1" style="display:none">
+    <table width="100%" bgcolor="#ffffff" cellspacing="10px" cellpadding="0" border="0">
+	  <tr>
+	    <td width="20%" align="center" >地址</td>
+		<td width="80%">
+		 <table width="100%"><tr><td width="80%" id="addrTxtTemp1">&nbsp;</td>
+		 </tr></table>
+		</td>
+	  </tr>
+	  <tr><td colspan="2" height="1px" bgcolor="#f9f9f9" ></td></tr>
+	  <tr>
+	    <td width="20%" align="center">单价</td>
+		<td width="80%" id="tempFee1">&nbsp;</td>
+	  </tr>
+	  <tr><td colspan="2" height="1px" bgcolor="#f9f9f9" ></td></tr>
+	  <tr>
+	    <td width="100%" colspan="2" align="center">将在<span id="leftMin">&nbsp;</span>后自动停止接单</td>
+	  </tr>
+	  <tr><td colspan="2" height="1px" bgcolor="#f9f9f9" ></td></tr>
+	</table>
+	<table width="95%" cellspacing="0" cellpadding="10px" border="0">
+	  <tr><td width="100%" align="center">
+	    <div style="background:url(../../../img/button_red.png) no-repeat;height:40px;width:330px;text-align:center;padding:10px 0 10px 0;" onclick="stopTempTime()"><font color="#ffffff">结束临时接诊</font></div>
+      </td></tr>
+	</table>
+    </div>
+  </p>
+  <p id="spaceHeight" height="50px">
+  </p>
+ </center>
+</body>
+</html>

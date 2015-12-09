@@ -1,0 +1,1724 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>气象观测资料质量综合管理平台</title>
+<link href="css/login_css.css" rel="stylesheet" type="text/css">
+<link href="css/comm.css" rel="stylesheet" type="text/css" />
+<link href="css/map_css.css" rel="stylesheet" type="text/css" />
+<link href="css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<script type="text/javascript" src="js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="js/SimpleMap.js"></script>
+<script type="text/javascript" src="js/helpyouworkeasy-core.js"></script>
+<script type="text/javascript" src="pages/pro01/mainMap.js" charset="gbk"></script>
+<script type="text/javascript" src="js/md5.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript" language="javascript" src="js/checkForm.js"></script>
+<script type="text/javascript" language="javascript" src="js/jquery.ui.datepicker-zh-CN.js"></script>
+<script type="text/javascript" language="javascript" src="js/jquery.ui.autocomplete.min.js"></script>
+<script type="text/javascript">
+var sysMenuIndex = 4;
+var adjustInter = -1;
+var userConfig = null;
+var isLoadedMap = false;
+var isDisplayMapToolbar = true;
+
+var g_legendLists={"sEcho":1,"iTotalRecords":2,"iTotalDisplayRecords":2,"aaData":[
+    {"ele":"V12001","month":1,"day":1,"configStr":"2##摄氏度##-999999,-28,0x0000FE,-28##-28,-24,0x404BC9,-24##-24,-20,0x4F98DC,-20##-20,-16,0x8FABE2,-16##-16,-12,0x5C898C,-12##-12,-8,0x71E3EE,-8##-8,-4,0xBCF9C0,-4##-4,0,0xC3E1DD,0##0,4,0xF8F7DB,4##4,8,0xFBFEB7,8##8,12,0xF8E481,12##12,16,0xFDFF01,16##16,20,0xF6A943,20##20,24,0xF87200,24##24,28,0xFDB3B6,28##28,32,0xC28788,32##32,36,0xFE8CFF,36##36,999999,0x99008B,"},
+	{"ele":"V13019","month":1,"day":1,"configStr":"2##毫米##0,10,0xA5F3A2,10##10,25,0x36A604,25##25,50,0x60B8FF,50##50,100,0x0001FA,100##100,250,0xF303F8,250##250,999999,0x740000,"}]};
+var g_stationArr=[];
+var isLoadedStation=false;
+var g_h_data=[];
+
+jQuery(document).ready(function() {
+    g_systemVersion = "v1.2.0";
+	g_FileResUrl="/fileRes/";
+    initGlobalData(true);
+	adjustPosition();
+	$("#userCode").focus();
+	// box init
+	toDrag("box_dbsource");
+	toDrag("box_tuxing");
+	toDrag("box_stationType");
+	toDrag("box_qc");
+	toDrag("box_value");
+	toDrag("box_stationQuery");
+	toDrag("box_time");
+	toDrag("box_sort");
+	toDrag("box_count");
+	toDrag("box_leida");
+    $.datepicker.setDefaults( $.datepicker.regional[ "zh-CN" ] );
+	$( "#datepicker" ).datepicker();
+    $( "#datepicker" ).datepicker( "option", "dateFormat", "yy-mm-dd" );
+	$( "#datepicker_leida1" ).datepicker();
+    $( "#datepicker_leida1" ).datepicker( "option", "dateFormat", "yy-mm-dd" );
+	$( "#datepicker_leida2" ).datepicker();
+    $( "#datepicker_leida2" ).datepicker( "option", "dateFormat", "yy-mm-dd" );
+
+	var today=new Date();
+    q_v04001 = today.getFullYear();
+    q_v04002 = today.getMonth() + 1;
+    q_v04003 = today.getDate();
+    q_v04004 = today.getHours() - 1;
+    if ( q_v04002 < 10 ) q_v04002 = "0" + q_v04002;
+    if ( q_v04003 < 10 ) q_v04003 = "0" + q_v04003;
+	$("#datepicker_leida1_hour").val( top.getTwoNumberStr(Number(q_v04004)) );
+    $("#datepicker_leida2_hour").val( top.getTwoNumberStr(Number(q_v04004)) );
+    document.getElementById("datepicker").value = q_v04001+"-"+q_v04002+"-"+q_v04003;
+	document.getElementById("datepicker_leida1").value = q_v04001+"-"+q_v04002+"-"+q_v04003;
+	document.getElementById("datepicker_leida2").value = q_v04001+"-"+q_v04002+"-"+q_v04003;
+    document.getElementById("q_time1").value = q_v04004 - 8;
+	var pv=21;
+	if ( q_v04004 < 8 ) {
+	  pv=21;
+	} else if ( q_v04004 < 14 ) {
+	  pv=0;
+	} else if ( q_v04004 < 20 ) {
+	  pv=6;
+	} else pv=12;
+
+	$("#q_time24").val( pv );
+
+	showBox('box_dbsource',false);
+	showBox('box_time',false);
+	showBox("box_stationType",false);
+	showBox("box_qc",false);
+	showBox("box_value",false);
+	showBox("box_stationQuery",false);
+	showBox("box_sort",false);
+	showBox("box_count",false);
+	showBox("box_leida",false);
+	
+	showBox('box_dbsource',true);
+	showBox('box_time',true);
+
+	$.widget( "ui.combobox", {
+			_create: function() {
+				var input,
+					self = this,
+					select = this.element.hide(),
+					selected = select.children( ":selected" ),
+					value = selected.val() ? selected.text() : "",
+					wrapper = this.wrapper = $( "<span>" )
+						.addClass( "ui-combobox" )
+						.insertAfter( select );
+
+				input = $( "<input>" )
+					.appendTo( wrapper )
+					.val( value )
+					.addClass( "ui-state-default ui-combobox-input" )
+					.autocomplete({
+						delay: 0,
+						minLength: 0,
+						source: function( request, response ) {
+							var matcher = new RegExp( $.ui.autocomplete.escapeRegex(request.term), "i" );
+							response( select.children( "option" ).map(function() {
+								var text = $( this ).text();
+								if ( this.value && ( !request.term || matcher.test(text) ) )
+									return {
+										label: text.replace(
+											new RegExp(
+												"(?![^&;]+;)(?!<[^<>]*)(" +
+												$.ui.autocomplete.escapeRegex(request.term) +
+												")(?![^<>]*>)(?![^&;]+;)", "gi"
+											), "<strong>$1</strong>" ),
+										value: text,
+										option: this
+									};
+							}) );
+						},
+						select: function( event, ui ) {
+							ui.item.option.selected = true;
+							self._trigger( "selected", event, {
+								item: ui.item.option
+							});
+						},
+						change: function( event, ui ) {
+							if ( !ui.item ) {
+								var matcher = new RegExp( "^" + $.ui.autocomplete.escapeRegex( $(this).val() ) + "$", "i" ),
+									valid = false;
+								select.children( "option" ).each(function() {
+									if ( $( this ).text().match( matcher ) ) {
+										this.selected = valid = true;
+										return false;
+									}
+								});
+								if ( !valid ) {
+									// remove invalid value, as it didn't match anything
+									$( this ).val( "" );
+									select.val( "" );
+									input.data( "autocomplete" ).term = "";
+									return false;
+								}
+							}
+						}
+					})
+					.addClass( "ui-widget ui-widget-content ui-corner-left" );
+
+				input.data( "autocomplete" )._renderItem = function( ul, item ) {
+					return $( "<li></li>" )
+						.data( "item.autocomplete", item )
+						.append( "<a>" + item.label + "</a>" )
+						.appendTo( ul );
+				};
+
+				$( "<a>" )
+					.attr( "tabIndex", -1 )
+					.attr( "title", "Show All Items" )
+					.appendTo( wrapper )
+					.button({
+						icons: {
+							primary: "ui-icon-triangle-1-s"
+						},
+						text: false
+					})
+					.removeClass( "ui-corner-all" )
+					.addClass( "ui-corner-right ui-combobox-toggle" )
+					.click(function() {
+						// close if already visible
+						if ( input.autocomplete( "widget" ).is( ":visible" ) ) {
+							input.autocomplete( "close" );
+							return;
+						}
+
+						// work around a bug (likely same cause as #5265)
+						$( this ).blur();
+
+						// pass empty string as value to search for, displaying all results
+						input.autocomplete( "search", "" );
+						input.focus();
+					});
+			},
+
+			destroy: function() {
+				this.wrapper.remove();
+				this.element.show();
+				$.Widget.prototype.destroy.call( this );
+			}
+		});
+ 
+	$( "#q_time1" ).combobox();
+	
+	window.onresize = function(){ adjustPosition(); };
+ });
+ 
+ function callBackLoadStation(obj){
+    if ( obj ) {
+	    g_stationArr = obj.aaData;
+		isLoadedStation=true;
+		if ( isNeedDrawData ) {
+		   drawDots( g_h_data );
+		}
+		top.showLoadingInfo(false);
+	}
+ }
+ 
+ function setHDataTempValue(arr){
+    g_h_data = arr;
+ }
+ 
+ function getHDataTempValue(){
+    return g_h_data;
+ }
+ 
+ function getStationByCode(code){
+    // g_stationArr
+	if ( !g_stationArr ) return null;
+	if ( !code ) return null;
+	return getStation(code,0,g_stationArr.length);
+ }
+ 
+ function getStation(code,start,end){
+		if ( start > end ) return null;
+		if ( start == end ) {
+			if ( g_stationArr.length > start ) {
+				return g_stationArr[start];
+			} else return null;
+		}
+		if ( end - start < 5 ) {
+			for(var i=start;i<end;i++){
+				if ( g_stationArr[i].V0 == code ) {
+					return g_stationArr[i];
+				}
+			}
+			return null;
+		}
+		var mid = start + Math.floor( ( end - start ) / 2 );
+		if ( g_stationArr[mid].V0 == code ) {
+			return g_stationArr[mid];
+		} else if ( g_stationArr[mid].V0 < code ) {
+			return getStation(code,mid,end);
+		} else {
+			return getStation(code,0,mid);
+		}
+  }
+ 
+ function getStationNameByCode(code){
+    // g_stationArr
+	if ( !g_stationArr ) return "";
+	if ( !code ) return "";
+	for (var i=0;i<g_stationArr.length;i++) {
+	    if ( g_stationArr[i].V0 == code ) return g_stationArr[i].NA;
+	}
+	return code;
+ }
+ 
+ function showSubMenu(n,index){
+    hideSubMenu();
+	if ( !index ) index = n;
+    $('#menu'+n).show();
+	$('#menu'+n).css({"left":(76*index+10)+"px","top":"67px"});
+	interId = setInterval("checkMouse()",4000);
+ }
+
+ function hideSubMenu(){
+   for ( var i=0;i<5;i++ ) {
+     if ( $('#menu'+i) ) $('#menu'+i).hide();
+   }
+   clearInterval( interId );
+ }
+
+ function checkMouse(){
+   hideSubMenu();
+ }
+
+ function adjustPosition(){
+	if ( adjustInter != -1 ) {
+	   clearInterval( adjustInter );
+	   adjustInter = -1;
+	}
+    var wh=$(window).height();
+	var ww=$(window).width();
+	
+	$('#versionInfo').css("top",wh - 18);
+	$('#versionInfoTxt').html( "<font color='white'>版本:&nbsp;"+g_systemVersion+"</font>&nbsp;&nbsp;<span style='cursor:pointer' onclick='javascript:showHelpWin(400,220,\"pages/pro01/help.html\")'>系统帮助</span>" );
+
+    $('#loginMain').height(wh - 51);
+	$('#mapToolbar').css("left",ww - 52);
+	$('#queryBtn').css("left",ww - 65);
+	
+	$('#box_tuxing').css("top",wh - 155);
+	var l = 120;
+    $('#zc_map').css({"left":"5px","top":"80px"});
+
+	$('#main_footer').css("top",wh - 18);
+	$('#main').height(wh);
+	$('#m_map').height(wh - 100);
+	$('#mapContent').height(wh - 100);
+	$('#mainContent').height(wh - 100);
+	$('#mapFrame').height(wh - 100);
+	$('#mapToolbarImgDiv').css({"left":ww - 42});
+    $('#box_dbsource').css({"left":l+"px","top":"82px"});
+	$('#box_stationType').css({"left":(l+246)+"px","top":"82px"});
+	$('#box_qc').css({"left":(l+246)+"px","top":"158px"});
+	$('#box_value').css({"left":l+"px","top":"549px"});
+	$('#box_time').css({"left":l+"px","top":"377px"});
+	$('#box_stationQuery').css({"left":(ww - 280)+"px","top":"100px"});
+	$('#box_leida').css({"left":(l+246)+"px","top":"279px"});
+	$('#box_count').css({"left":(ww - 280)+"px","top":(wh - 360)+"px"});
+	$('#box_sort').css({"left":(ww - 510)+"px","top":(wh - 290)+"px"});
+	$('#loginResult').css({"left":(ww - 100)/2+"px"});
+	if ( !$.browser.msie ) {
+	  $('#mapToolbar').height(360);
+	}
+	$('#queryBtn').css("top", $('#mapToolbar').height() + 90);
+ }
+
+ function loginSuccess(){
+    ininMenu();
+    $("body").css({"background-image":"url(img/bg2_body1.png)"});
+	$('#loginTop').hide();
+	$('#loginClear').hide();
+	$('#loginMain').hide();
+	$('#ind_footer').hide();
+	$('#loginResult').hide();
+	$('#main').show();
+	$("#userPass").val("");
+	$('#loginResult').html("");
+	
+	adjustInter = setInterval("adjustPosition()",500);
+	userConfig = top.getUserConfig();
+	selectMenuType("hour");
+	if ( !g_isPermit('cmaMap') ) {
+	  toSysTab('pages/pro01/countInfo.html');
+	  return ;
+	}
+	if ( userConfig ) {
+	  try{
+	   if ( userConfig.c1 != 'default' && userConfig.c1 != '' ) {
+	     isLoadedMap = false;
+	     toSysTab( userConfig.c1 );
+	   } else {
+	     toSysTab('map');
+	     if ( userConfig.c2 == '1' ) {
+	       if ( userConfig.c3 ) {
+		     selectType(userConfig.c3);
+		   }
+	       refreshData();
+	     }
+		 else selectType("rain");
+	   }
+	  }catch(e){}
+	} else {
+	  selectType("rain");
+	}
+ }
+ 
+ function ininMenu(){
+	var last = "sysParameter";
+	sysMenuIndex = 5;
+	$("#menu_td_userManage").addClass( "bottomLine" );
+	$("#menu_td_rightManage").addClass( "bottomLine" );
+	$("#menu_td_deptManage").addClass( "bottomLine" );
+	$("#menu_td_fileManage").addClass( "bottomLine" );
+	$("#menu_td_bugManage").addClass( "bottomLine" );
+
+	if ( !g_isPermit('cmaMap') ) {
+	   $('#menu_cmaMap').hide();
+	   $("#menu_cmaCount").removeClass("bt btmiddle");
+	   $("#menu_cmaCount").addClass("bt btleft");
+	   sysMenuIndex --;
+	} else {
+	   $('#menu_cmaMap').show();
+	   $("#menu_cmaMap").removeClass("bt btmiddle");
+	   $("#menu_cmaMap").addClass("bt btleft");
+	   $("#menu_cmaCount").removeClass("bt btleft");
+	   $("#menu_cmaCount").addClass("bt btmiddle");
+	}
+	
+    if ( !g_isPermit('coreSys') ) {
+	   $('#menu_coreSys').hide();
+	   $("#menu_cmaBBS").removeClass("bt btmiddle");
+	   $("#menu_cmaBBS").addClass("bt btright");
+	} else {
+	   $('#menu_coreSys').show();
+	   $("#menu_coreSys").removeClass("bt btmiddle");
+	   $("#menu_coreSys").addClass("bt btright");
+	}
+	if ( !g_isPermit('cmaCount') ) {
+	   $('#menu_cmaCount').hide();
+	   sysMenuIndex --;
+	} else $('#menu_cmaCount').show();
+	
+	if ( !g_isPermit('cmaFile') ) {
+	   $('#menu_cmaFile').hide();
+	   sysMenuIndex --;
+	} else $('#menu_cmaFile').show();
+	
+	if ( !g_isPermit('cmaBBS') ) {
+	   $('#menu_cmaBBS').hide();
+	   sysMenuIndex --;
+	} else $('#menu_cmaBBS').show();
+	
+	// 系统管理 
+	
+	if ( !g_isPermit('userManage') ) {
+	   $('#menu_userManage').hide();
+	} else {
+	   $('#menu_userManage').show();
+	   last = "userManage";
+	}
+	
+	if ( !g_isPermit('rightManage') ) {
+	   $('#menu_rightManage').hide();
+	} else {
+	   $('#menu_rightManage').show();
+	   last = "rightManage";
+	}
+	
+	if ( !g_isPermit('deptManage') ) {
+	   $('#menu_deptManage').hide();
+	} else {
+	   last = "deptManage";
+	   $('#menu_deptManage').show();
+	}
+	
+	if ( !g_isPermit('sys_sysOperation') ) {
+	   $('#menu_sysOperation').hide();
+	} else {
+	   last = "sysOperation";
+	   $('#menu_sysOperation').show();
+	}
+	
+	if ( !g_isPermit('fileManage') ) {
+	   $('#menu_fileManage').hide();
+	} else {
+	   last = "fileManage";
+	   $('#menu_fileManage').show();
+	}
+	
+	if ( !g_isPermit('bugManage') ) {
+	   $('#menu_bugManage').hide();
+	} else {
+	   last = "bugManage";
+	   $('#menu_bugManage').show();
+	}
+	
+	if ( !g_isPermit('sysParameter') ) {
+	   $('#menu_sysParameter').hide();
+	} else {
+	   last = "sysParameter";
+	   $('#menu_sysParameter').show();
+	}
+	
+	$("#menu_td_"+last).removeClass( "bottomLine" );
+
+	$("#menu_coreSys").mouseover(function(){
+        showSubMenu( 4, sysMenuIndex );
+    });
+ }
+ 
+ function loginFail(){
+    $("body").css({"background-image":"url(img/bg1_home2.jpg)"});
+	$('#loginTop').show();
+	$('#loginClear').show();
+	$('#loginMain').show();
+	$('#ind_footer').show();
+	$('#loginResult').show();
+	$("#mainContent").hide();
+    $("#m_map").show();
+	$('#main').hide();
+ }
+ 
+ function toSysTab(xurl){
+   hideSubMenu();
+   if ( xurl == 'map' ) {
+      $("#mainContent").hide();
+      $("#m_map").show();
+	  if ( !isLoadedMap ) {
+	    isLoadedMap = true;
+	    $("#mapContent").html( '<iframe id="mapFrame" src="pages/pro01/map.html" width="100%" style="background-color:#cccccc" height="100%" frameborder="0"></iframe>' );
+	  }
+      return ;
+   }
+   $("#m_map").hide();
+   $("#mainContent").show();
+   var bg = "#cccccc";
+   if ( xurl != 'pages/pro01/countInfo.html' ) bg="#ffffff";
+   $("#mainContent").html( '<iframe id="mainFrame" src="'+xurl+'" width="100%" height="'+($(window).height()-100)+'px" style="background-color:'+bg+'" frameborder="0"></iframe>' );
+ }
+ 
+ function doLogin(){
+   	   var userCode = $("#userCode").val();
+   	   var pass = $("#userPass").val();
+   	   if ( userCode == '' || pass == '' ) {
+   	 	 showInfoWin("请输入登录账号和密码");
+   	 	 return ;
+   	   }
+	   $('#loginResult').html("");
+	   var aoData=[];
+       aoData.push( { "name": "user.userCode", "value": userCode } );
+       aoData.push( { "name": "user.password", "value": hex_md5(pass) } );
+	   sendAjaxRequest("/actions/User.action?signon",aoData,loginCallback);
+ }
+ function loginCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	    	setCurrentUser(obj.body,obj.msg);
+			loginSuccess();
+	    }else{
+		  $('#loginResult').html("登录失败:"+obj.msg);
+	    }
+	   }catch(e){
+		  $('#loginResult').html("登录异常:"+e.message);
+	   }
+ }
+ 
+ function register(){
+    var xurl="pages/organization/userInfo.html?opt=register";
+	top.openDialog("用户注册",xurl,true,400,400,null);
+ }
+ //////////////////////////////////////////////////////////
+ var letters=[];
+ var interId = 0;
+/**
+ * 初始化项目个性化全局缓存数据
+ */
+function proInitGlobalData(){
+	letters[65]="A";letters[66]="B";letters[67]="C";letters[68]="D";letters[69]="E";letters[70]="F";
+    letters[71]="G";letters[72]="H";letters[73]="I";letters[74]="J";letters[75]="K";letters[76]="L";
+    letters[77]="M";letters[78]="N";letters[79]="O";letters[80]="P";letters[81]="Q";letters[82]="R";
+    letters[83]="S";letters[84]="T";letters[85]="U";letters[86]="V";letters[87]="W";letters[88]="X";
+    letters[89]="Y";letters[90]="Z";
+	sendAjaxRequest("/actions/ProCma.action?getLegendList",[],getLegendListCallback);
+	sendAjaxRequest("/actions/ProCma.action?getNationalList",[],getProvinceCallback);
+}
+// 从带字母的ASII到数字
+function getASII2Code(code){
+    if ( !code ) return "";
+    if ( code == '' ) return "";
+	code=code.toUpperCase();
+    for(var i=65;i<letters.length;i++){
+    	 if ( code.indexOf(letters[i]) != -1 ) {
+    	 	 return code.replace(letters[i],i);
+    	 }
+    }
+    return code;
+}
+// 从数字到带字母的ASCII
+function getCode2ASII(code){
+    if ( !code ) return "";
+    if ( code == '' ) return "";
+    try{
+     if ( code.length == 6 ) {
+       code = letters[ Number(code.substring(0,2)) ]+code.substring(2,6);	
+     }
+    }catch(e){
+    }
+    return code;
+}
+
+function getProvinceCallback(obj){
+	if ( obj ) {
+		for ( var i=0;i<obj.aaData.length;i++ ) {
+	        g_dictionary.put("PROVINCE"+obj.aaData[i].V_NCODE, 
+	        		new Code(obj.aaData[i].V_NCODE,"PROVINCE",obj.aaData[i].C_NAME,"1"));
+		}
+		g_dictionary.put("PROVINCE1600", new Code("1600","PROVINCE","辽宁","1"));
+	}
+}
+
+function getLegendListCallback(o){
+   if ( o.aaData ) {
+     g_legendLists = o;
+   }
+   sendAjaxRequest("/actions/ProCma.action?getStationList",[],callBackLoadStation);
+}
+
+/////////////////////  UI 
+function MM_swapImgRestore() { //v3.0
+  var i,x,a=document.MM_sr; for(i=0;a&&i<a.length&&(x=a[i])&&x.oSrc;i++) x.src=x.oSrc;
+}
+function MM_preloadImages() { //v3.0
+  var d=document; if(d.images){ if(!d.MM_p) d.MM_p=new Array();
+    var i,j=d.MM_p.length,a=MM_preloadImages.arguments; for(i=0; i<a.length; i++)
+    if (a[i].indexOf("#")!=0){ d.MM_p[j]=new Image; d.MM_p[j++].src=a[i];}}
+}
+
+function MM_findObj(n, d) { //v4.01
+  var p,i,x;  if(!d) d=document; if((p=n.indexOf("?"))>0&&parent.frames.length) {
+    d=parent.frames[n.substring(p+1)].document; n=n.substring(0,p);}
+  if(!(x=d[n])&&d.all) x=d.all[n]; for (i=0;!x&&i<d.forms.length;i++) x=d.forms[i][n];
+  for(i=0;!x&&d.layers&&i<d.layers.length;i++) x=MM_findObj(n,d.layers[i].document);
+  if(!x && d.getElementById) x=d.getElementById(n); return x;
+}
+
+function MM_swapImage() { //v3.0
+  var i,j=0,x,a=MM_swapImage.arguments; document.MM_sr=new Array; for(i=0;i<(a.length-2);i+=3)
+   if ((x=MM_findObj(a[i]))!=null){document.MM_sr[j++]=x; if(!x.oSrc) x.oSrc=x.src; x.src=a[i+2];}
+}
+function selectY(n){
+	 for(var i=1;i<4;i++){
+	    if ( i != n ) {
+	     $('#y'+i).hide();
+		 $('#a'+i).removeClass();
+		 $('#a'+i).addClass('a-tab');
+		} else {
+		 $('#y'+i).show();
+		 $('#a'+i).removeClass();
+		 $('#a'+i).addClass('a-tab selected');
+		}
+	 }
+  }
+
+function loginAsGuest(){
+   $("#userCode").val("Guest");
+   $("#userPass").val("12345678");
+   doLogin();
+}
+  
+function openUserConfig(){
+  var xurl="pages/system/userConfig.html";
+  openDialog("个人设置",xurl,true,350,320,null);
+}
+
+function showMapToolbar(){
+  if ( isDisplayMapToolbar ) {
+    $('#mapToolbar').hide();
+	$('#queryBtn').hide();
+	isDisplayMapToolbar = false;
+	$('#mapToolbarImg').attr("src","img/go-dn-on.gif");
+	$('#mapToolbarImg').attr("title","显示工具栏");
+  } else {
+    $('#mapToolbar').show();
+	$('#queryBtn').show();
+	isDisplayMapToolbar = true;
+	$('#mapToolbarImg').attr("src","img/go-up-on.gif");
+	$('#mapToolbarImg').attr("title","隐藏工具栏");
+  }
+}
+</script>
+
+<style type="text/css">
+.ui-combobox {
+		position: relative;
+		display: inline-block;
+	}
+	.ui-combobox-toggle {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		margin-left: -1px;
+		padding: 0;
+	}
+	.ui-combobox-input {
+		margin: 0;
+		padding: 0.3em;
+		width: 40px;
+        height: 20px;
+	}
+	.ui-autocomplete {
+		max-height: 100px;
+		width: 40px;
+		overflow-y: auto;
+		overflow-x: hidden;
+		padding: 2px;
+		*height: 1.7em;
+		*top: 0.1em;
+	}
+	* html .ui-autocomplete {
+		height: 100px;
+		width: 40px;
+	}
+
+* {
+    font-family: Arial, "Free Sans";
+}
+#box {
+    margin-top: 45px;
+	margin-left: 12px;
+}
+.bt, .clicked {
+    height: 20px;
+    color: #666;
+    font-size: 13px;
+    padding: 4px 10px;
+    text-decoration: none;
+    background: #f9f9f9;
+}
+#box .bt {
+    background: -moz-linear-gradient(top,  #fff,  #f3f3f3);
+    background: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#f3f3f3));
+
+    /* For Internet Explorer 5.5 - 7 */
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#ffffff, endColorstr=#f3f3f3);
+    /* For Internet Explorer 8 */
+    -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#ffffff, endColorstr=#f3f3f3)";
+}
+#box .bt:hover {
+    background: #f3f3f3;
+    background: -moz-linear-gradient(top,  #fff,  #e9e9e9);
+    background: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#e9e9e9));
+
+    /* For Internet Explorer 5.5 - 7 */
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#ffffff, endColorstr=#e9e9e9);
+    /* For Internet Explorer 8 */
+    -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#ffffff, endColorstr=#e9e9e9)";
+}
+#box .bt:active, .clicked {
+    background: #e9e9e9;
+    background: -moz-linear-gradient(top,  #e9e9e9,  #fff);
+    background: -webkit-gradient(linear, left top, left bottom, from(#e9e9e9), to(#fff));
+
+    /* For Internet Explorer 5.5 - 7 */
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#e9e9e9, endColorstr=#ffffff);
+    /* For Internet Explorer 8 */
+    -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#e9e9e9, endColorstr=#ffffff)";
+}
+.btleft {
+    border: 1px solid #e3e3e3;
+    -webkit-border-radius: .5em 0 0 .5em;
+    -moz-border-radius: .5em 0 0 .5em;
+    border-radius: .5em 0 0 .5em;
+}
+.btleft span {
+    font-size: 15px;
+}
+.btmiddle {
+    border: 1px solid #e3e3e3;
+    border-width: 1px 0;
+    margin: 0 -4px;
+}            
+.btright {
+    border: 1px solid #e3e3e3;
+    -webkit-border-radius: 0 .5em .5em 0;
+    -moz-border-radius: 0 .5em .5em 0;
+    border-radius: 0 .5em .5em 0;
+}
+.btmiddle span, .btright span {
+    font-size: 9px;
+    position: relative;
+    top: -2px;
+}
+.subMenu {
+    display: none;
+	z-index: 99;
+	position: absolute; 
+	left:7px;
+	top:77px;
+}
+.tooltip_menu {
+    background: #fff;
+    -webkit-border-radius: .5em;
+    -moz-border-radius: .5em;
+    border-radius: .5em;
+    width: 100px;
+    -webkit-box-shadow: 0px 0px 3px rgba(0,0,0,.5);
+    -moz-box-shadow: 0px 0px 3px rgba(0,0,0,.5);
+    box-shadow: 0px 0px 3px rgba(0,0,0,.5);
+    padding: 2px;
+	z-index: 99;
+}
+.tooltip_menu a {
+    z-index: 2;
+    padding: 5px 5px 5px 18px;
+    display: block;
+    text-decoration: none;
+    color: #0066cc;
+    font-size: 13px;
+}
+.tooltip_menu a:hover {
+    background: #0066cc;
+    color: #fff;
+}
+.tooltip_menu a img {
+    position: relative;
+    top: 5px;
+    border: 0;
+}
+.menu_top {
+    -webkit-border-radius: .5em .5em 0 0;
+    -moz-border-radius: .5em .5em 0 0;
+    border-radius: .5em .5em 0 0;
+}
+.menu_bottom {
+    -webkit-border-radius: 0 0 .5em .5em;
+    -moz-border-radius: 0 0 .5em .5em;
+    border-radius: 0 0 .5em .5em;
+}
+
+.bottomLine {
+  border:1px solid blue;
+  border-style:none none dotted none;
+}
+
+#loginMain .ind_info {
+	background-image: url(img/pro01/bg1_info.png);
+	background-repeat: no-repeat;
+	margin-left: 360px;
+	height: 500px;
+}
+</style>
+
+</head>
+
+<body>
+	<div id="loginTop"></div>
+	<div id="loginClear" class="clear"></div>
+	<div id="loginMain">
+	  <div class="ind_logo"><img src="img/pro01/pic1_logo.png" width="467" height="107"></div>
+	  <div class="ind_info">
+		<ul class="user_1">
+		  <li class="u1_1"><img src="img/pic1_user.png" width="29" height="35"></li>
+		  <li class="u1_2">账&nbsp;&nbsp;号：</li>
+		  <li class="u1_3">
+			<input type="text" name="textfield" id="userCode" style="width:160px;" onkeydown="if(event.keyCode==13) doLogin();" />
+		  </li>
+		</ul><div class="clear"></div>
+		<ul class="user_2">
+		  <li class="u2_1"><img src="img/pic_1user2.png" width="24" height="30"></li>
+		  <li class="u2_2">密&nbsp;&nbsp;码：</li>
+		  <li class="u2_3">
+			<input type="password" name="textfield" id="userPass" style="width:160px;" onkeydown="if(event.keyCode==13) doLogin();" >
+		  </li>
+		</ul>
+		<ul class="user_3"><li class="u3_1" onclick="doLogin()"><a href="javascript:void(0)">登&nbsp;录</a></li><li class="u3_2" onclick="register()"><a href="javascript:void(0)" >注&nbsp;册</a></li></ul>
+	  </div>
+	</div>
+	<div id="loginResult"></div>
+	<div id="ind_footer"><img src="img/pro01/pic1_footer.png" width="334" height="17" /></div>
+
+<div id="main" style="display:none">
+  <div id="top">
+     <div class="t_left">
+	    <div id="box">
+			<a id="menu_cmaMap" href="javascript:toSysTab('map')" class="bt btleft">观测资料</a>
+			<a id="menu_cmaCount" href="javascript:toSysTab('pages/pro01/countInfo.html')" onmouseover="hideSubMenu()" class="bt btmiddle">实时统计</a>
+			<a href="javascript:toSysTab('pages/pro01/rawsrManage.html')" onmouseover="hideSubMenu()" class="bt btmiddle">查询反馈</a>
+			<a id="menu_cmaFile" href="javascript:toSysTab('pages/pro01/report.html')" onmouseover="hideSubMenu()" class="bt btmiddle">评估报告</a>
+			<a id="menu_cmaBBS" href="javascript:toSysTab('/bbs/')" onmouseover="hideSubMenu()" class="bt btmiddle">互动平台</a>
+			<a id="menu_coreSys" href="javascript:void(0)" class="bt btright">系统管理</a>
+		</div>
+	</div>
+
+    <div class="t_right">
+      <p id="currentUserInfo"></p>
+      <ul>
+	    <li class="u_0" onclick="openUserConfig()"><a href="javascript:void(0)">个人设置</a></li>
+        <li class="u_1" onclick="g_changepass()"><a href="javascript:void(0)">修改密码</a></li>
+        <li class="u_2" onclick="isLogout()"><a href="javascript:void(0)">注销</a></li>
+      </ul><div class="clear"></div>
+    </div>
+    <div class="clear"></div>
+  </div>
+  
+  <div id="menu4" class="subMenu">
+			<div class="tooltip_menu">
+			  <table width="100%">
+			   <tr id="menu_userManage"><td id="menu_td_userManage" class="bottomLine"><a id="menu_a_userManage" href="javascript:toSysTab('pages/organization/userManage.html')" class="menu_top">用户管理</a></td></tr>
+			   <tr id="menu_rightManage"><td id="menu_td_rightManage" class="bottomLine"><a id="menu_a_rightManage" href="javascript:toSysTab('pages/organization/roleManage.html')">角色权限</a></td></tr>
+			   <tr id="menu_deptManage"><td id="menu_td_deptManage" class="bottomLine"><a id="menu_a_deptManage" href="javascript:toSysTab('pages/organization/deptManage.html')">部门管理</a></td></tr>
+			   <tr id="menu_sysOperation"><td id="menu_td_sysOperationManage" class="bottomLine"><a id="menu_a_sysOperationManage" href="javascript:toSysTab('pages/system/operationManage.html')">操作日志</a></td></tr>
+			   <tr id="menu_fileManage"><td id="menu_td_fileManage" class="bottomLine"><a id="menu_a_fileManage" href="javascript:toSysTab('pages/pro01/fileManage.html')">评估报告</a></td></tr>
+			   <tr id="menu_bugManage"><td id="menu_td_bugManage" class="bottomLine"><a id="menu_a_bugManage" href="javascript:toSysTab('pages/bug/bugManage.html')">Bug管理</a></td></tr>
+			   <tr id="menu_sysParameter"><td id="menu_td_sysParameter"><a id="menu_a_sysParameter" href="javascript:toSysTab('pages/system/sysConfig.html')" class="menu_bottom">系统配置</a></td></tr>
+			  </table>
+			</div>
+  </div>
+  
+  <div id="mainContent"></div>
+  <!-- map buttons -->
+  <div id="m_map">
+	<div id="mapContent"></div>
+	<div id="zc_map" class="zc_map" >
+	  <div class="zc_1">
+		<ul class="zc_1t">
+		  <a href="javascript:setDoOpt('down')" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('Image39','','img/zcool_th.png',1)"><img src="img/zcool_t.png" name="Image39" title="地图上移" width="16" height="11" border="0" id="Image39" /></a>
+		</ul>
+		<ul class="zc_2m">
+		  <li class="m_left"><a href="javascript:setDoOpt('right')" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('Image41','','img/zcool_lefth.png',1)"><img src="img/zcool_left.png" title="地图左移" name="Image41" width="11" height="16" border="0" id="Image41" /></a></li>
+		  <li class="m_m"><a href="javascript:setDoOpt('to1')" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('Image43','','img/zc_iconh.png',1)"><img src="img/zc_icon.png" title="返回地图初始状态" name="Image43" width="32" height="30" border="0" id="Image43" /></a></li>
+		  <li class="m_right"><a href="javascript:setDoOpt('left')" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('Image42','','img/zcool_righth.png',1)"><img src="img/zcool_right.png" title="地图右移" name="Image42" width="11" height="16" border="0" id="Image42" /></a></li>
+		</ul>
+		<div class="clear"></div>
+		<ul class="zc_3b">
+		  <a href="javascript:setDoOpt('up')" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('Image40','','img/zcool_bh.png',1)"><img src="img/zcool_b.png" title="地图下移" name="Image40" width="16" height="11" border="0" id="Image40" /></a>
+		</ul>
+	  </div>
+	  <div class="zc_zs">
+		<ul>
+		  <li class="zs_1"><img onclick="setDoOpt('+1')" style="cursor:pointer" title="放大地图" src="img/zc_z1_thover.png" /></li>
+		  <li class="zs_2"><div id="ruleLine"><img src="img/zc_z1button.png" /></div></li>
+		  <li class="zs_3"><img onclick="setDoOpt('-1')" style="cursor:pointer" title="缩小地图" src="img/zc_z1_b.png" /></li>
+		</ul>
+	  </div>
+	  <div class="zc_tool">
+		<ul>
+		  <li class="t1"><img onclick="setDoOpt('+1')" style="cursor:pointer;width:30px;height:30px;padding-left:2px" src="img/zc_tool1.png" title="放大地图" /></li>
+		  <li class="t2"><img onclick="setDoOpt('-1')" style="cursor:pointer;width:30px;height:30px;padding-left:2px" src="img/zc_tool2.png" title="缩小地图" /></li>
+		  <li class="t2"><img onclick="setDoOpt('selectArea')" style="cursor:pointer;width:30px;height:31px;padding-left:2px" src="img/zc_tool3.png" title="选择地图区域" /></li>
+		  <li class="t3"><img onclick="setDoOpt('hand')" style="cursor:pointer;width:25px;height:30px;padding-left:2px" src="img/zc_tool4.png" title="拖动地图" /></li>
+		</ul>
+	  </div>
+	</div>
+	<!-- toolbar -->
+	
+	<div id="mapToolbarImgDiv" style="position: absolute;top:73px;left:900px;cursor:pointer"><img id="mapToolbarImg" onclick="showMapToolbar()" src="img/go-up-on.gif" title="隐藏工具栏"/></div>
+	<div id="mapToolbar" class="tool_mapright">
+		  <ul>
+			<li><a href="javascript:showBox('box_dbsource',true)" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('Image37','','img/tool_1h.png',1)" title="数据源选择" ><img src="img/tool_1.png" name="Image37" width="30" height="30" border="0" id="Image37" /></a></li>
+			<li><a href="javascript:showBox('box_stationType',true)" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('Image38','','img/tool_2h.png',1)" title="台站类型选择"><img src="img/tool_2.png" name="Image38" width="30" height="30" border="0" id="Image38" /></a></li>
+			<li><a href="javascript:showBox('box_qc',true)" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('Image44','','img/tool_3h.png',1)" title="值域选择"><img src="img/tool_3.png" name="Image44" width="30" height="30" border="0" id="Image44" /></a></li>
+			<li><a href="javascript:showBox('box_value',true)" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('Image45','','img/tool_4h.png',1)" title="阈值选择"><img src="img/tool_4.png" name="Image45" width="30" height="30" border="0" id="Image45" /></a></li>
+			<li><a href="javascript:showBox('box_time',true)" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('Image46','','img/tool_5h.png',1)" title="时间选择"><img src="img/tool_5.png" name="Image46" width="30" height="30" border="0" id="Image46" /></a></li>
+			<li><a href="javascript:showBox('box_stationQuery',true)" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('Image47','','img/tool_6h.png',1)" title="台站过滤"><img src="img/tool_6.png" name="Image47" width="30" height="30" border="0" id="Image47" /></a></li>
+			<li><a href="javascript:openDataListWin()" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('Image48','','img/tool_7h.png',1)" title="查询结果列表"><img src="img/tool_7.png" name="Image48" width="30" height="30" border="0" id="Image48" /></a></li>
+			<li><a href="javascript:showBox('box_count',true)" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('Image49','','img/tool_8h.png',1)" title="统计信息"><img src="img/tool_8.png" name="Image49" width="30" height="30" border="0" id="Image49" /></a></li>
+			<li><a href="javascript:showBox('box_sort',true)" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('Image50','','img/tool_9h.png',1)" title="排名信息"><img src="img/tool_9.png" name="Image50" width="30" height="30" border="0" id="Image50" /></a></li>
+			<li><a  href="javascript:showBox('box_leida',true)" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('Image51','','img/leida_h.png',1)" title="雷达图与卫星图叠加"><img src="img/leida.png" name="Image51" width="30" height="30" border="0" id="Image51" /></a></li>
+		  </ul>
+	</div>
+	<div id="queryBtn" style="position: absolute;"><br><span class="buttonTwo"><a href="javascript:doQueryData('left')">查询</a></span></div>
+	
+
+	<div id="box_tuxing" class="tuxing" style="width: 100px;">
+	  <div class="tab_ty">
+		<table width="100%" border="0" cellspacing="0" cellpadding="0">
+		  <tr id="box_tuxing_top">
+			<td width="20" align="left" valign="top"><img src="img/table_t1.png" width="20" height="36" /></td>
+			<td align="left" valign="top" class="tab_t2"><table border="0" cellspacing="0" cellpadding="0">
+				<tr>
+				  <td width="34" height="24" align="left" valign="bottom"><img src="img/tab_icon8.png" width="20" height="20" /></td>
+				  <td align="left" valign="bottom"><font color="#0778C5">图形</font></td>
+				</tr>
+			  </table></td>
+			<td width="15" align="left" valign="top"><img src="img/table_t3.png" width="15" height="36" /></td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top" class="tab_m1">&nbsp;</td>
+			<td align="left" valign="top" class="tab_m2"><img src="img/pro01/tab_pic_tuxing2.png" width="53" height="84" /></td>
+			<td align="left" valign="top" class="tab_m3">&nbsp;</td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top"><img src="img/table_b1.png" width="20" height="15" /></td>
+			<td align="left" valign="top" class="tab_b2">&nbsp;</td>
+			<td align="left" valign="top"><img src="img/table_b3.png" width="15" height="15" /></td>
+		  </tr>
+		</table>
+	  </div>
+    </div>
+	
+	<!-- 数据源栏目 -->
+	<div id="box_dbsource" class="tab_size">
+	  <div class="tab_ty">
+		<table width="100%" border="0" cellspacing="0" cellpadding="0">
+		  <tr>
+			<td width="20" align="left" valign="top"><img src="img/table_t1.png" width="20" height="36" /></td>
+			<td align="left" valign="top" class="tab_t2"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+				<tr>
+				  <td width="30" height="24" align="left" valign="bottom"><img src="img/tool_1.png" width="20" height="20" /></td>
+				  <td align="left"  id="box_dbsource_top"><font color="#0778C5">数据源</font></td>
+				  <td width="30" align="left" valign="bottom"></td>
+				  <td width="24" align="left" valign="bottom"><img src="img/tab_iconrig3.png" onclick="showBox('box_dbsource',false)" title="关闭" width="24" height="24" /></td>
+				</tr>
+			  </table></td>
+			<td width="15" align="left" valign="top"><img src="img/table_t3.png" width="15" height="36" /></td>
+		  </tr>
+		  <tr height="50px">
+			<td align="left" valign="top" class="tab_m1"></td>
+			<td align="left" valign="top" class="tab_m2" id="sourceMenu"></td>
+			<td align="left" valign="top" class="tab_m3"></td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top"><img src="img/table_b1.png" width="20" height="15" /></td>
+			<td align="left" valign="top" class="tab_b2">&nbsp;</td>
+			<td align="left" valign="top"><img src="img/table_b3.png" width="15" height="15" /></td>
+		  </tr>
+		</table>
+	  </div>
+	</div>
+	
+	<div id="box_stationType" class="tab_size">
+	  <div class="tab_ty">
+		<table width="100%" border="0" cellspacing="0" cellpadding="0">
+		  <tr>
+			<td width="20" align="left" valign="top"><img src="img/table_t1.png" width="20" height="36" /></td>
+			<td align="left" valign="top" class="tab_t2"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+				<tr>
+				  <td width="30" height="24" align="left" valign="bottom"><img src="img/tool_2.png" width="20" height="20" /></td>
+				  <td align="left" id="box_stationType_top"><font color="#0778C5">台站类型</font></td>
+				  <td width="30" align="left" valign="bottom"></td>
+				  <td width="24" align="left" valign="bottom"><img src="img/tab_iconrig3.png" onclick="showBox('box_stationType',false)" title="关闭" width="24" height="24" /></td>
+				</tr>
+			  </table></td>
+			<td width="15" align="left" valign="top"><img src="img/table_t3.png" width="15" height="36" /></td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top" class="tab_m1"></td>
+			<td align="left" valign="top" class="tab_m2">
+			  <input type="checkbox" id="showCountryCheck" name="showOption" value="2" checked /><span style="cursor:pointer" onclick="doSelectCheck('showCountryCheck')">国家站</span>
+			  <input type="checkbox" id="showAreaCheck" name="showOption" value="4" checked /><span style="cursor:pointer" onclick="doSelectCheck('showAreaCheck')">区域站</span>
+			</td>
+			<td align="left" valign="top" class="tab_m3"></td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top"><img src="img/table_b1.png" width="20" height="15" /></td>
+			<td align="left" valign="top" class="tab_b2">&nbsp;</td>
+			<td align="left" valign="top"><img src="img/table_b3.png" width="15" height="15" /></td>
+		  </tr>
+		</table>
+	  </div>
+	</div>
+	
+	<div id="box_qc" class="tab_size">
+	  <div class="tab_ty">
+		<table width="100%" border="0" cellspacing="0" cellpadding="0">
+		  <tr>
+			<td width="20" align="left" valign="top"><img src="img/table_t1.png" width="20" height="36" /></td>
+			<td align="left" valign="top" class="tab_t2"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+				<tr>
+				  <td width="30" height="24" align="left" valign="bottom"><img src="img/tool_3.png" width="20" height="20" /></td>
+				  <td align="left" id="box_qc_top"><font color="#0778C5">值域选择</font></td>
+				  <td width="30" align="left" valign="bottom"></td>
+				  <td width="24" align="left" valign="bottom"><img src="img/tab_iconrig3.png" onclick="showBox('box_qc',false)" title="关闭" width="24" height="24" /></td>
+				</tr>
+			  </table></td>
+			<td width="15" align="left" valign="top"><img src="img/table_t3.png" width="15" height="36" /></td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top" class="tab_m1"></td>
+			<td align="left" valign="top" class="tab_m2">
+			   <input type="checkbox" id="check0" name="q_dataSource" value="0" checked /><span style="cursor:pointer" onclick="doSelectCheck('check0')">正确(0)</span>
+			   &nbsp;<input type="checkbox" id="check7" name="q_dataSource" value="7" /><span style="cursor:pointer" onclick="doSelectCheck('check7')">非考核站(7)</span>
+               <br>
+		       <input type="checkbox" id="check1" name="q_dataSource" value="1" checked /><span style="cursor:pointer" onclick="doSelectCheck('check1')">可疑(1)</span>
+               &nbsp;<input type="checkbox" id="check8" name="q_dataSource" value="8" /><span style="cursor:pointer" onclick="doSelectCheck('check8')">缺测(8)</span>
+			   <br>
+		       <input type="checkbox" id="check2" name="q_dataSource" value="2" checked /><span style="cursor:pointer" onclick="doSelectCheck('check2')">错误(2)</span>
+               &nbsp;<input type="checkbox" id="check9" name="q_dataSource" value="9" /><span style="cursor:pointer" onclick="doSelectCheck('check9')">未质控(9)</span>
+			</td>
+			<td align="left" valign="top" class="tab_m3"></td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top"><img src="img/table_b1.png" width="20" height="15" /></td>
+			<td align="left" valign="top" class="tab_b2">&nbsp;</td>
+			<td align="left" valign="top"><img src="img/table_b3.png" width="15" height="15" /></td>
+		  </tr>
+		</table>
+	  </div>
+	</div>
+	
+	<div id="box_value" class="tab_size">
+	  <div class="tab_ty">
+		<table width="100%" border="0" cellspacing="0" cellpadding="0">
+		  <tr>
+			<td width="20" align="left" valign="top"><img src="img/table_t1.png" width="20" height="36" /></td>
+			<td align="left" valign="top" class="tab_t2"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+				<tr>
+				  <td width="30" height="24" align="left" valign="bottom"><img src="img/tool_4.png" width="20" height="20" /></td>
+				  <td align="left" id="box_value_top"><font color="#0778C5">阈值</font></td>
+				  <td width="30" align="left" valign="bottom"></td>
+				  <td width="24" align="left" valign="bottom"><img src="img/tab_iconrig3.png" onclick="showBox('box_value',false)" title="关闭" width="24" height="24" /></td>
+				</tr>
+			  </table></td>
+			<td width="15" align="left" valign="top"><img src="img/table_t3.png" width="15" height="36" /></td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top" class="tab_m1"></td>
+			<td align="left" valign="top" class="tab_m2">
+			    <input type="checkbox" id="checkOptValue" value="0" checked />&nbsp;
+			    <input type="text" id="q_value1" style="width:50px" value="0" size="2" />&nbsp;~&nbsp;<input type="text" id="q_value2" style="width:50px" value="" size="2" />&nbsp;
+				<span id="unitTxt">mm</span>
+			</td>
+			<td align="left" valign="top" class="tab_m3"></td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top"><img src="img/table_b1.png" width="20" height="15" /></td>
+			<td align="left" valign="top" class="tab_b2">&nbsp;</td>
+			<td align="left" valign="top"><img src="img/table_b3.png" width="15" height="15" /></td>
+		  </tr>
+		</table>
+	  </div>
+	</div>
+	
+	<div id="box_time" class="tab_size">
+	  <div class="tab_ty">
+		<table width="100%" border="0" cellspacing="0" cellpadding="0">
+		  <tr>
+			<td width="20" align="left" valign="top"><img src="img/table_t1.png" width="20" height="36" /></td>
+			<td align="left" valign="top" class="tab_t2"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+				<tr>
+				  <td width="30" height="24" align="left" valign="bottom"><img src="img/tool_5.png" width="20" height="20" /></td>
+				  <td align="left" id="box_time_top"><font color="#0778C5">时间选择</font></td>
+				  <td width="30" align="left" valign="bottom"></td>
+				  <td width="24" align="left" valign="bottom"><img src="img/tab_iconrig3.png" onclick="showBox('box_time',false)" title="关闭" width="24" height="24" alt="关闭" /></td>
+				</tr>
+			  </table></td>
+			<td width="15" align="left" valign="top"><img src="img/table_t3.png" width="15" height="36"/></td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top" class="tab_m1"></td>
+			<td align="left" valign="top" class="tab_m2">
+			   <p id="timeSelect" style="padding:3px">日期: <input type="text" id="datepicker" style="width:80px" size="15"/></p>
+			   <p id="hour1" style="padding:3px">小时:
+				   <select id="q_time1">
+				   <option value='-8'>00</option>
+					<option value='-7'>01</option><option value='-6'>02</option><option value='-5'>03</option>
+					<option value='-4'>04</option><option value='-3'>05</option><option value='-2'>06</option>
+					<option value='-1'>07</option><option value='0'>08</option><option value='1'>09</option>
+					<option value='2'>10</option><option value='3'>11</option><option value='4'>12</option>
+					<option value='5'>13</option><option value='6'>14</option><option value='7'>15</option>
+					<option value='8'>16</option><option value='9'>17</option><option value='10'>18</option>
+					<option value='11'>19</option><option value='12'>20</option><option value='13'>21</option>
+					<option value='14'>22</option><option value='15'>23</option>
+				   </select>时&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(北京时)
+			   </p>
+			   <p id="p24" style="display:none;padding:3px">
+			   统计时段:<select id="q_time24" >
+						<option value="21">05~05</option>
+						<option value="0">08~08</option>
+						<option value="6">14~14</option>
+						<option value="12">20~20</option>
+					  </select>时
+			   </p>
+			   <p id="s08" style="display:none;padding:3px">    
+			   统计时段:<span id="currentBlockHour"></span>
+			   </p>
+			</td>
+			<td align="left" valign="top" class="tab_m3"></td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top"><img src="img/table_b1.png" width="20" height="15" /></td>
+			<td align="left" valign="top" class="tab_b2">&nbsp;</td>
+			<td align="left" valign="top"><img src="img/table_b3.png" width="15" height="15" /></td>
+		  </tr>
+		</table>
+	  </div>
+	</div>
+	
+	<div id="box_stationQuery" class="tab_size">
+	  <div class="tab_ty">
+		<table width="100%" border="0" cellspacing="0" cellpadding="0">
+		  <tr>
+			<td width="20" align="left" valign="top"><img src="img/table_t1.png" width="20" height="36" /></td>
+			<td align="left" valign="top" class="tab_t2"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+				<tr>
+				  <td width="30" height="24" align="left" valign="bottom"><img src="img/tool_6.png" width="20" height="20" /></td>
+				  <td align="left"  id="box_stationQuery_top"><font color="#0778C5">台站过滤</font></td>
+				  <td width="30" align="left" valign="bottom"></td>
+				  <td width="24" align="left" valign="bottom"><img src="img/tab_iconrig3.png" onclick="showBox('box_stationQuery',false)" title="关闭" width="24" height="24" /></td>
+				</tr>
+			  </table></td>
+			<td width="15" align="left" valign="top"><img src="img/table_t3.png" width="15" height="36" /></td>
+		  </tr>
+		  <tr height="150px">
+			<td align="left" valign="top" class="tab_m1"></td>
+			<td align="left" valign="top" class="tab_m2">
+			   <div class="tabview" style="padding:1px;">
+				  <div class="tabview-tabs">
+				  <a id="a1" href="javascript:void(0)" onclick="selectY(1)" class="a-tab selected">站号</a>
+				  <a id="a2" href="javascript:void(0)" onclick="selectY(2)" class="a-tab">站名</a>
+				  <a id="a3" href="javascript:void(0)" onclick="selectY(3)" class="a-tab">经纬度</a>
+				  </div>
+				  <div id="y1" class="tabcontent" style="height:120px" >
+				   <br>
+				   <input type="text" id="q_stationIds" onfocus="stationFocus()" onblur="stationIdsBlur()" value="请输入站号" size="15" /><br><br>
+				   <span class="buttonTwo"><a href="javascript:doQueryData('stationIds')">过滤</a></span>
+				  </div>
+				  <div id="y2" class="tabcontent" style="display:none;height:120px">
+				   <br>
+				   <table>
+				   <tr><td align="right">省份:</td>
+				   <td align="left"><select id="q_province" style="width:80px;" >
+                                <option value='1100' >北京市</option><option value='1200' >天津市</option>
+								<option value='1300' >河北省</option><option value='1400' >山西省</option>
+								<option value='1500' >内蒙古自治区</option><option value='1600' >辽宁省</option>
+								<option value='2200' >吉林省</option><option value='2300' >黑龙江省</option>
+								<option value='3100' >上海市</option><option value='3200' >江苏省</option>
+								<option value='3300' >浙江省</option><option value='3400' >安徽省</option>
+								<option value='3500' >福建省</option><option value='3600' >江西省</option>
+								<option value='3700' >山东省</option><option value='4100' >河南省</option>
+								<option value='4200' >湖北省</option><option value='4300' >湖南省</option>
+								<option value='4400' >广东省</option><option value='4500' >广西壮族自治区</option>
+								<option value='4600' >海南省</option><option value='5000' >重庆市</option>
+								<option value='5100' >四川省</option><option value='5200' >贵州省</option>
+								<option value='5300' >云南省</option><option value='5400' >西藏自治区</option>
+								<option value='6100' >陕西省</option><option value='6200' >甘肃省</option>
+								<option value='6300' >青海省</option><option value='6400' >宁夏回族自治区</option>
+								<option value='6500' >新疆维吾尔自治区</option><option value='7100' >台湾省</option>
+								<option value='8100' >香港特别行政区</option><option value='8200' >澳门特别行政区</option>
+					 </select></td>
+					 </tr>
+					 <tr><td align="right">台站名:</td>
+					 <td align="left"><input type="text" id="q_stationName" size="15" style="width:100px" /></td>
+					 </tr>
+					 </table>
+					<span class="buttonTwo"><a href="javascript:doQueryData('stationName')">过滤</a></span>
+				  </div>
+				  <div id="y3" class="tabcontent" style="display:none;height:180px">
+				    <table cellpadding="0" cellspacing="1px" border="0" height="140px" width="100%">
+						<tr><td align="center" colspan="3">北</td></tr>
+						<tr><td align="center" colspan="3"><input type="text" id="q_lat2" style="width:40px" size="4" value="" />N</td></tr>
+						<tr>
+						   <td align="right" >西<input type="text" size="4" id="q_lon1" style="width:40px" value="" />E</td>
+						   <td width="10px">&nbsp;</td>
+						   <td align="left" ><input type="text" size="4" id="q_lon2" style="width:40px" value="" />E东</td>
+						</tr>
+						<tr><td align="center" colspan="3"><input type="text" id="q_lat1" style="width:40px" size="4" value="" />N</td></tr>
+						<tr><td>&nbsp;</td><td align="center">南</td><td align="center">&nbsp;</td></tr>
+					</table>
+					<div align="center"><span align="left" class="buttonTwo"><a href="javascript:doQueryData('LatLon')">过滤</a></span></div>
+				  </div>
+			   </div>
+			</td>
+			<td align="left" valign="top" class="tab_m3"></td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top"><img src="img/table_b1.png" width="20" height="15" /></td>
+			<td align="left" valign="top" class="tab_b2">&nbsp;</td>
+			<td align="left" valign="top"><img src="img/table_b3.png" width="15" height="15" /></td>
+		  </tr>
+		</table>
+	  </div>
+	 </div> 
+	  
+	  <div id="box_count" class="tab_size">
+	  <div class="tab_ty">
+		<table width="100%" border="0" cellspacing="0" cellpadding="0">
+		  <tr>
+			<td width="20" align="left" valign="top"><img src="img/table_t1.png" width="20" height="36" /></td>
+			<td align="left" valign="top" class="tab_t2"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+				<tr>
+				  <td width="30" height="24" align="left" valign="bottom"><img src="img/tool_8.png" width="20" height="20" /></td>
+				  <td align="left" id="box_count_top"><font color="#0778C5">统计信息</font></td>
+				  <td width="24" align="left" valign="bottom"><img src="img/tab_iconrig3.png" onclick="showBox('box_count',false)" title="关闭" width="24" height="24" /></td>
+				</tr>
+			  </table></td>
+			<td width="15" align="left" valign="top"><img src="img/table_t3.png" width="15" height="36" /></td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top" class="tab_m1"></td>
+			<td align="center" valign="middle" class="tab_m2">错误(<span id="faultNum">0</span>)&nbsp;可疑(<span id="doubtNum">0</span>)&nbsp;反馈(<span id="feedbackNum">0</span>)</td>
+			<td align="left" valign="top" class="tab_m3"></td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top"><img src="img/table_b1.png" width="20" height="15" /></td>
+			<td align="left" valign="top" class="tab_b2">&nbsp;</td>
+			<td align="left" valign="top"><img src="img/table_b3.png" width="15" height="15" /></td>
+		  </tr>
+		</table>
+	  </div>
+	  </div>
+	  
+	  <div id="box_sort" style="width: 450px;position: absolute;display:none">
+	  <div class="tab_ty">
+		<table width="100%" border="0" cellspacing="0" cellpadding="0">
+		  <tr>
+			<td width="20" align="left" valign="top"><img src="img/table_t1.png" width="20" height="36" /></td>
+			<td align="left" valign="top" class="tab_t2"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+				<tr>
+				  <td width="30" height="24" align="left" valign="bottom"><img src="img/tool_9.png" width="20" height="20" /></td>
+				  <td align="left" id="box_sort_top"><font color="#0778C5">排名</font></td>
+				  <td width="24" align="left" valign="bottom"><img src="img/tab_iconrig3.png" onclick="showBox('box_sort',false)" title="关闭" width="24" height="24" /></td>
+				</tr>
+			  </table></td>
+			<td width="15" align="left" valign="top"><img src="img/table_t3.png" width="15" height="36" /></td>
+		  </tr>
+		  <tr height="148px">
+			<td align="left" valign="top" class="tab_m1">&nbsp;</td>
+			<td align="center" valign="top" class="tab_m2">
+			   <table width="100%">
+			     <tr>
+				  <td align="center" width="12%">站号</td>
+				  <td align="center" width="10%">省份</td>
+				  <td align="center" width="27%">站名</td>
+				  <td id="data_sort_unit" align="center" width="17%">降水(mm)</td>
+				  <td align="center" width="17%">最新质控</td>
+				  <td align="center" width="17%">反馈情况</td>
+				 </tr>
+				 <tr id="data_sort_0" bgcolor="#98AFC7">
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				 </tr>
+				 <tr id="data_sort_1" bgcolor="#ADD8E6">
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				 </tr>
+				 <tr id="data_sort_2" bgcolor="#98AFC7">
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				 </tr>
+				 <tr id="data_sort_3" bgcolor="#ADD8E6">
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				 </tr>
+				 <tr id="data_sort_4" bgcolor="#98AFC7">
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				 </tr>
+				 <tr id="data_sort_5" bgcolor="#ADD8E6">
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				 </tr>
+				 <tr id="data_sort_6" bgcolor="#98AFC7">
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				 </tr>
+				 <tr id="data_sort_7" bgcolor="#ADD8E6">
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				 </tr>
+				 <tr id="data_sort_8" bgcolor="#98AFC7">
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				 </tr><tr id="data_sort_9" bgcolor="#ADD8E6">
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				  <td>&nbsp;</td>
+				 </tr>
+			   </table>
+			</td>
+			<td align="left" valign="top" class="tab_m3">&nbsp;</td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top"><img src="img/table_b1.png" width="20" height="15" /></td>
+			<td align="left" valign="top" class="tab_b2">&nbsp;</td>
+			<td align="left" valign="top"><img src="img/table_b3.png" width="15" height="15" /></td>
+		  </tr>
+		</table>
+	  </div>
+	 </div>
+	
+	  <div id="box_leida" style="width: 320px;position: absolute;display:none">
+	  <div class="tab_ty">
+		<table width="100%" border="0" cellspacing="0" cellpadding="0">
+		  <tr>
+			<td width="20" align="left" valign="top"><img src="img/table_t1.png" width="20" height="36" /></td>
+			<td align="left" valign="top" class="tab_t2"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+				<tr>
+				  <td width="30" height="24" align="left" valign="bottom"><img src="img/leida.png" width="20" height="20" /></td>
+				  <td align="left"  id="box_leida_top"><font color="#0778C5">雷达图与卫星图叠加</font></td>
+				  <td width="30" align="left" valign="bottom"></td>
+				  <td width="24" align="left" valign="bottom"><img src="img/tab_iconrig3.png" onclick="showBox('box_leida',false)" title="关闭" width="24" height="24" /></td>
+				</tr>
+			  </table></td>
+			<td width="15" align="left" valign="top"><img src="img/table_t3.png" width="15" height="36" /></td>
+		  </tr>
+		  <tr height="150px">
+			<td align="left" valign="top" class="tab_m1"></td>
+			<td align="left" valign="top" class="tab_m2">
+			   <table>
+			    <tr><td colspan="2">
+				    <input type="radio" name="playImgType" value="leida" checked />雷达图&nbsp;
+                    <input type="radio" name="playImgType" value="weixing" />卫星云图
+				  </td></tr>
+			    <tr><td colspan="2">开始时间: <input type="text" id="datepicker_leida1" style="width:80px" size="15"/>
+				    <select id="datepicker_leida1_hour">
+					  <option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option>
+					  <option value="04">04</option><option value="05">05</option><option value="06">06</option>
+					  <option value="07">07</option><option value="08">08</option><option value="09">09</option>
+					  <option value="10">10</option><option value="11">11</option><option value="12">12</option>
+					  <option value="13">13</option><option value="14">14</option><option value="15">15</option>
+					  <option value="16">16</option><option value="17">17</option><option value="18">18</option>
+					  <option value="19">19</option><option value="20">20</option><option value="21">21</option>
+					  <option value="22">22</option><option value="23">23</option>
+					</select>&nbsp;时
+					<select id="datepicker_leida1_min">
+					  <option value="00">00</option>
+					  <option value="30">30</option>
+					</select>分
+				  </td></tr>
+				<tr><td colspan="2">结束时间: <input type="text" id="datepicker_leida2" style="width:80px" size="15"/>
+				    <select id="datepicker_leida2_hour">
+					  <option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option>
+					  <option value="04">04</option><option value="05">05</option><option value="06">06</option>
+					  <option value="07">07</option><option value="08">08</option><option value="09">09</option>
+					  <option value="10">10</option><option value="11">11</option><option value="12">12</option>
+					  <option value="13">13</option><option value="14">14</option><option value="15">15</option>
+					  <option value="16">16</option><option value="17">17</option><option value="18">18</option>
+					  <option value="19">19</option><option value="20">20</option><option value="21">21</option>
+					  <option value="22">22</option><option value="23">23</option>
+					</select>&nbsp;时
+					<select id="datepicker_leida2_min">
+					  <option value="00">00</option>
+					  <option value="30">30</option>
+					</select>分
+				</td></tr>
+				<tr>
+				 <td colspan="2">是否覆盖: <input type="checkbox" id="isLeidaOver" onclick="enableLeida()" value="1" checked />
+				   <span id="currentLeidaPlayInfo"></span>
+				 </td></tr>
+				<tr><td>
+				    播放速度: <select id="leida_speed">
+					  <option value="3000" selected>3</option><option value="4000">4</option>
+					  <option value="5000">5</option><option value="6000">6</option><option value="7000">7</option>
+					  <option value="8000">8</option><option value="9000">9</option><option value="10000">10</option>
+					</select>&nbsp;秒
+				</td><td align="right"><span class="buttonTwo"><a id="playRadarBtnTxt" href="javascript:doPlayRadar()">播放</a></span></td></tr>
+				<tr><td colspan="2" align="center"><font size="-1">
+				  <table width="100%" bgcolor="#ffffff"><tr bgcolor="#ffffff">
+				   <td bgcolor="#4eee94">&nbsp;</td><td bgcolor="#3cb371">&nbsp;</td><td bgcolor="#008100">&nbsp;</td>
+				   <td bgcolor="#00ff00">&nbsp;</td><td bgcolor="#B1FF00">&nbsp;</td><td bgcolor="#ADFF2F">&nbsp;</td>
+				   <td bgcolor="#ffff00">&nbsp;</td><td bgcolor="#ffd700">&nbsp;</td><td bgcolor="#EEB422">&nbsp;</td>
+				   <td bgcolor="#EE7600">&nbsp;</td><td bgcolor="#FF4500">&nbsp;</td><td bgcolor="#ff0000">&nbsp;</td>
+				   <td bgcolor="#FF1493">&nbsp;</td><td bgcolor="#CD1076">&nbsp;</td><td bgcolor="#A2007C">&nbsp;</td>
+				   <td bgcolor="#64004B">&nbsp;</td>
+				  </tr>
+				  <tr>
+				   <td>&nbsp;&nbsp;&nbsp;5</td><td>&nbsp;10</td><td>&nbsp;15</td><td>&nbsp;20</td><td>&nbsp;25</td><td>&nbsp;30</td><td>&nbsp;35</td><td>&nbsp;40</td>
+				   <td>&nbsp;45</td><td>&nbsp;50</td><td>&nbsp;55</td><td>&nbsp;60</td><td>&nbsp;65</td><td>&nbsp;70</td><td>&nbsp;75</td><td>&nbsp;80</td>
+				  </tr></table></font>
+				</td></tr>
+			   </table>
+			</td>
+			<td align="left" valign="top" class="tab_m3"></td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top"><img src="img/table_b1.png" width="20" height="15" /></td>
+			<td align="left" valign="top" class="tab_b2">&nbsp;</td>
+			<td align="left" valign="top"><img src="img/table_b3.png" width="15" height="15" /></td>
+		  </tr>
+		</table>
+	   </div>
+	  </div> 
+    <!-- 地图站点信息提示框 -->
+	<div id="mapTooltip_LB" class="map_inf1" style="display:none;position: absolute;">
+	  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+		<tr>
+		  <td width="29" height="29" class="t1"><img src="img/map_inf_bgtop1.png" width="29" height="29" /></td>
+		  <td class="t2">&nbsp;</td>
+		  <td width="29" class="t3"><img src="img/map_inf_bgtop3.png" width="29" height="29" /></td>
+		</tr>
+		<tr>
+		  <td valign="top" class="m1"><img src="img/map_inf_bgm1.png" width="29" height="150" /></td>
+		  <td align="left" valign="top" class="m2"><table width="242" border="0" cellspacing="0" cellpadding="0" class="t_txt">
+			  <tr>
+				<td width="60" height="24" align="right" valign="top">站&nbsp;&nbsp;号： </td>
+				<td align="left" valign="top" id="mapTooltip_LB_dotId"></td>
+			  </tr>
+			  <tr>
+				<td height="24" align="right" valign="top">台站名：</td>
+				<td align="left" valign="top" id="mapTooltip_LB_stationName"></td>
+			  </tr>
+			  <tr>
+				<td height="24" align="right" valign="top">省&nbsp;&nbsp;名：</td>
+				<td align="left" valign="top" id="mapTooltip_LB_proName"></td>
+			  </tr>
+			  <tr>
+				<td height="24" align="right" valign="top">观测值：</td>
+				<td align="left" valign="top" id="mapTooltip_LB_value"></td>
+			  </tr>
+			  <tr>
+				<td height="24" align="right" valign="top">质&nbsp;&nbsp;控：</td>
+				<td align="left" valign="top" id="mapTooltip_LB_qc"></td>
+			  </tr>
+			  <tr>
+				<td height="24" align="right" valign="top">反&nbsp;&nbsp;馈：</td>
+				<td align="left" valign="top" id="mapTooltip_LB_fankui"></td>
+			  </tr>
+			  <tr id="mapTooltip_LB_btn">
+				<td height="24" align="left" valign="top">&nbsp;</td>
+				<td align="left" valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+					<tr>
+					  <td>&nbsp;</td>
+					  <td width="70"><span class="buttonTwo"><a href="javascript:showStationDetail()">详细</a></span></td>
+					  <td width="70"><span class="buttonTwo"><a href="javascript:closeTip()">关闭</a></span></td>
+					</tr>
+				  </table></td>
+			  </tr>
+			</table></td>
+		  <td valign="top" class="m3"><img src="img/map_inf_bgm3.png" width="29" height="150" /></td>
+		</tr>
+		<tr>
+		  <td height="51" valign="top"><img src="img/map_inf_bgb1.png" width="29" height="29" /></td>
+		  <td align="left" valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+			  <tr>
+				<td width="66"><img src="img/map_inf_bgb2.png" width="66" height="29" /></td>
+				<td class="b2_bbg">&nbsp;</td>
+			  </tr>
+			</table></td>
+		  <td valign="top"><img src="img/map_inf_bgb3.png" width="29" height="29" /></td>
+		</tr>
+	  </table>
+	</div>
+	
+	<div id="mapTooltip_RB" class="map_inf1" style="display:none;position: absolute;">
+	  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+		<tr>
+		  <td width="29" height="29" class="t1"><img src="img/map_inf_bgtop1.png" width="29" height="29" /></td>
+		  <td class="t2">&nbsp;</td>
+		  <td width="29" class="t3"><img src="img/map_inf_bgtop3.png" width="29" height="29" /></td>
+		</tr>
+		<tr>
+		  <td valign="top" class="m1"><img src="img/map_inf_bgm1.png" width="29" height="150" /></td>
+		  <td align="left" valign="top" class="m2"><table width="242" border="0" cellspacing="0" cellpadding="0" class="t_txt">
+			  <tr>
+				<td width="60" height="24" align="right" valign="top">站&nbsp;&nbsp;号： </td>
+				<td align="left" valign="top" id="mapTooltip_RB_dotId">&nbsp;</td>
+			  </tr>
+			  <tr>
+				<td height="24" align="right" valign="top">台站名：</td>
+				<td align="left" valign="top" id="mapTooltip_RB_stationName">&nbsp;</td>
+			  </tr>
+			  <tr>
+				<td height="24" align="right" valign="top">省&nbsp;&nbsp;名：</td>
+				<td align="left" valign="top" id="mapTooltip_RB_proName">&nbsp;</td>
+			  </tr>
+			  <tr>
+				<td height="24" align="right" valign="top">观测值：</td>
+				<td align="left" valign="top" id="mapTooltip_RB_value">&nbsp;</td>
+			  </tr>
+			  <tr>
+				<td height="24" align="right" valign="top">质&nbsp;&nbsp;控：</td>
+				<td align="left" valign="top" id="mapTooltip_RB_qc">&nbsp;</td>
+			  </tr>
+			  <tr>
+				<td height="24" align="right" valign="top">反&nbsp;&nbsp;馈：</td>
+				<td align="left" valign="top" id="mapTooltip_RB_fankui"></td>
+			  </tr>
+			  <tr id="mapTooltip_RB_btn">
+				<td height="24" align="left" valign="top">&nbsp;</td>
+				<td align="left" valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+					<tr>
+					  <td>&nbsp;</td>
+					  <td width="70"><span class="buttonTwo"><a href="javascript:showStationDetail()">详细</a></span></td>
+					  <td width="70"><span class="buttonTwo"><a href="javascript:closeTip()">关闭</a></span></td>
+					</tr>
+				  </table></td>
+			  </tr>
+			</table></td>
+		  <td valign="top" class="m3"><img src="img/map_inf_bgm3.png" width="29" height="150" /></td>
+		</tr>
+		<tr>
+		  <td height="51" valign="top"><img src="img/map_inf_bgb1.png" width="29" height="29" /></td>
+		  <td align="left" valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+			  <tr>
+				<td class="b2_bbg">&nbsp;</td>
+				<td width="66"><img src="img/map_inf_bgb2.png" width="66" height="29" /></td>
+			  </tr>
+			</table></td>
+		  <td valign="top"><img src="img/map_inf_bgb3.png" width="29" height="29" /></td>
+		</tr>
+	  </table>
+	</div>
+	
+	<div id="mapTooltip_LT" class="map_inf1" style="display:none;position: absolute;">
+	  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+		<tr>
+		  <td width="29" height="29" valign="bottom"><img src="img/map_inf_bgtop1.png" width="29" height="29" /></td>
+		  <td><table width="100%" border="0" cellspacing="0" cellpadding="0">
+			  <tr>
+				<td width="66"><img src="img/map_inf_bgtop2.png" width="66" height="29" /></td>
+				<td class="t2_tbg">&nbsp;</td>
+			  </tr>
+			</table></td>
+		  <td width="29" valign="bottom"><img src="img/map_inf_bgtop3.png" width="29" height="29" /></td>
+		</tr>
+		<tr>
+		  <td valign="top" class="m1"><img src="img/map_inf_bgm1.png" width="29" height="150" /></td>
+		  <td align="left" valign="top" class="m2"><table width="242" border="0" cellspacing="0" cellpadding="0" class="t_txt">
+			  <tr>
+				<td width="60" height="24" align="right" valign="top">站&nbsp;&nbsp;号： </td>
+				<td align="left" valign="top" id="mapTooltip_LT_dotId"></td>
+			  </tr>
+			  <tr>
+				<td height="24" align="right" valign="top">台站名：</td>
+				<td align="left" valign="top" id="mapTooltip_LT_stationName"></td>
+			  </tr>
+			  <tr>
+				<td height="24" align="right" valign="top">省&nbsp;&nbsp;名：</td>
+				<td align="left" valign="top" id="mapTooltip_LT_proName"></td>
+			  </tr>
+			  <tr>
+				<td height="24" align="right" valign="top">观测值：</td>
+				<td align="left" valign="top" id="mapTooltip_LT_value"></td>
+			  </tr>
+			  <tr>
+				<td height="24" align="right" valign="top">质&nbsp;&nbsp;控：</td>
+				<td align="left" valign="top" id="mapTooltip_LT_qc"></td>
+			  </tr>
+			  <tr>
+				<td height="24" align="right" valign="top">反&nbsp;&nbsp;馈：</td>
+				<td align="left" valign="top" id="mapTooltip_LT_fankui"></td>
+			  </tr>
+			  <tr id="mapTooltip_LT_btn">
+				<td height="24" align="left" valign="top">&nbsp;</td>
+				<td align="left" valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+					<tr>
+					  <td>&nbsp;</td>
+					  <td width="70"><span class="buttonTwo"><a href="javascript:showStationDetail()">详细</a></span></td>
+					  <td width="70"><span class="buttonTwo"><a href="javascript:closeTip()">关闭</a></span></td>
+					</tr>
+				  </table></td>
+			  </tr>
+			</table></td>
+		  <td valign="top" class="m3"><img src="img/map_inf_bgm3.png" width="29" height="150" /></td>
+		</tr>
+		<tr>
+		  <td height="29" valign="top" class="b1"><img src="img/map_inf_bgb1.png" width="29" height="29" /></td>
+		  <td align="left" valign="top" class="b2">&nbsp;</td>
+		  <td valign="top" class="b3"><img src="img/map_inf_bgb3.png" width="29" height="29" /></td>
+		</tr>
+	  </table>
+	</div>
+	
+	<div id="mapTooltip_RT" class="map_inf1" style="display:none;position: absolute;">
+	  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+		<tr>
+		  <td width="29" height="29" valign="bottom"><img src="img/map_inf_bgtop1.png" width="29" height="29" /></td>
+		  <td><table width="100%" border="0" cellspacing="0" cellpadding="0">
+			  <tr>
+				<td class="t2_tbg">&nbsp;</td>
+				<td width="66"><img src="img/map_inf_bgtop2.png" width="66" height="29" /></td>
+			  </tr>
+			</table></td>
+		  <td width="29" valign="bottom"><img src="img/map_inf_bgtop3.png" width="29" height="29" /></td>
+		</tr>
+		<tr>
+		  <td valign="top" class="m1"><img src="img/map_inf_bgm1.png" width="29" height="150" /></td>
+		  <td align="left" valign="top" class="m2"><table width="242" border="0" cellspacing="0" cellpadding="0" class="t_txt">
+			  <tr>
+				<td width="60" height="24" align="right" valign="top">站&nbsp;&nbsp;号： </td>
+				<td align="left" valign="top" id="mapTooltip_RT_dotId"></td>
+			  </tr>
+			  <tr>
+				<td height="24" align="right" valign="top">台站名：</td>
+				<td align="left" valign="top" id="mapTooltip_RT_stationName"></td>
+			  </tr>
+			  <tr>
+				<td height="24" align="right" valign="top">省&nbsp;&nbsp;名：</td>
+				<td align="left" valign="top" id="mapTooltip_RT_proName"></td>
+			  </tr>
+			  <tr>
+				<td height="24" align="right" valign="top">观测值：</td>
+				<td align="left" valign="top" id="mapTooltip_RT_value"></td>
+			  </tr>
+			  <tr>
+				<td height="24" align="right" valign="top">质&nbsp;&nbsp;控：</td>
+				<td align="left" valign="top" id="mapTooltip_RT_qc"></td>
+			  </tr>
+			  <tr>
+				<td height="24" align="right" valign="top">反&nbsp;&nbsp;馈：</td>
+				<td align="left" valign="top" id="mapTooltip_RT_fankui"></td>
+			  </tr>
+			  <tr id="mapTooltip_RT_btn">
+				<td height="24" align="left" valign="top">&nbsp;</td>
+				<td align="left" valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+					<tr>
+					  <td>&nbsp;</td>
+					  <td width="70"><span class="buttonTwo"><a href="javascript:showStationDetail()">详细</a></span></td>
+					  <td width="70"><span class="buttonTwo"><a href="javascript:closeTip()">关闭</a></span></td>
+					</tr>
+				  </table></td>
+			  </tr>
+			</table></td>
+		  <td valign="top" class="m3"><img src="img/map_inf_bgm3.png" width="29" height="150" /></td>
+		</tr>
+		<tr>
+		  <td height="29" valign="top" class="b1"><img src="img/map_inf_bgb1.png" width="29" height="29" /></td>
+		  <td align="left" valign="top" class="b2">&nbsp;</td>
+		  <td valign="top" class="b3"><img src="img/map_inf_bgb3.png" width="29" height="29" /></td>
+		</tr>
+	  </table>
+	</div>
+	
+	
+  </div> <!-- end of map -->
+  <div id="main_footer"><img src="img/pro01/pic1_footer.png" width="334" height="17" /></div>
+</div> <!-- end of main -->
+
+<div id="versionInfo" style="position: absolute;top:1000px;left:10px"><font color="white"><span id="versionInfoTxt" >v1.0.0</span></font></div>
+
+<script type="text/javascript" >writeCommonDiv();</script>
+
+</body>
+</html>

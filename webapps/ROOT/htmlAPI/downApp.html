@@ -1,0 +1,20 @@
+<html>
+<head>
+</head>
+<body >
+
+<script type="text/javascript">
+var userAgent=window.navigator.userAgent.toLowerCase();
+
+if ( userAgent.indexOf("micromessenger") != -1 ) {
+  document.write("<table width='100%'><tr><td align='right'><img src='img/apkDown.png'/></td></tr></table>");
+} else if ( userAgent.indexOf("iphone") != -1 ) {
+  //window.location.href='https://itunes.apple.com/us/app/yu-qiu-da-ren/id1037756361?l=zh&ls=1&mt=8';
+  window.location.href='https://itunes.apple.com/';
+} else {
+  window.location.href='http://run.zebradoctor.com/download?filePath=badminton.apk&fileName=badminton.apk';
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<link rel="stylesheet" type="text/css" href="common.css">
+<script src="../../js/jquery-1.7.2.min.js"></script>
+<script src="../../js/ui/jquery.ui.core.js"></script>
+<script src="../../js/ui/jquery.ui.widget.js"></script>
+<script src="../../js/ui/jquery.ui.dialog.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+<script type="text/javascript">
+   var infoId=0;
+   var optType="";
+   
+   $(document).ready(function() {
+	   $( "#tdarea_type" ).html( top.getCodeSelectHtml("FORBIDDEN_TYPE","area_type",false) );
+       infoId=top.getUrlParam(document.URL,"infoId");
+	   optType=top.getUrlParam(document.URL,"opt");
+	   if ( optType == 'update' ) {
+	      initData();
+	   }
+   } );
+   
+   function initData(){
+      var o=top.getTempValue();
+	  $("#area_type").val( o.area_type );
+	  $("#title").val( o.title );
+	  $("#addr").val( o.addr );
+	  $("#lon").val( o.lon );
+	  $("#lat").val( o.lat );
+   }
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    	 };
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   
+   function doSubmit(){
+	 var aoData=[];
+	 var checkMsg = checkForm();
+	 var temp="";
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+
+		aoData.push( { "name": "forbiddenArea.area_type", "value": $("#area_type").val() } );
+		aoData.push( { "name": "forbiddenArea.title", "value": $("#title").val() } );
+		aoData.push( { "name": "forbiddenArea.addr", "value": $("#addr").val() } );
+		
+		temp = $("#lon").val();
+	    if ( temp == '' ) temp = 0;
+		aoData.push( { "name": "forbiddenArea.lon", "value": temp } );
+		temp = $("#lat").val();
+	    if ( temp == '' ) temp = 0;
+		aoData.push( { "name": "forbiddenArea.lat", "value": temp } );
+		temp = $("#id").val();
+		
+		var xurl="/actions/ProMonitor.action?insertProForbiddenArea";
+		if ( optType == 'update' ) {
+		  aoData.push( { "name": "forbiddenArea.id", "value": infoId } );
+		  xurl="/actions/ProMonitor.action?updateProForbiddenArea";
+		}
+	    top.sendAjaxRequest(xurl,aoData,optCallback);
+   }
+   
+   function checkForm(){
+     var msg = "";
+	  msg += checkString($("#title").val(),true,100,"禁区名称");
+	  msg += checkString($("#addr").val(),true,100,"禁区地址");
+	  msg += checkString($("#lon").val(),true,32,"经度");
+	  msg += checkString($("#lat").val(),true,32,"维度");
+	 return msg;
+  }
+  
+  function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      isSaveOK = true;
+	      top.showInfoWinOK("操作成功");
+		  top.closeDialog();
+	    }else{
+	      isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+    function headButtonFun1(){
+	   doSubmit();
+	}
+	
+	function onClickMap(lon,lat){
+	   $("#lon").val(lon);
+	   $("#lat").val(lat);
+	}
+   
+  </script> 
+</head>
+<body>
+<br/>
+		<table width="100%" border="0" padding="0" spacing="0">
+				<tr class="tr_data">
+					<td align="right" width="30%">禁区类型:</td><td align="left" width="70%" id="tdarea_type"></td>
+				</tr>
+				<tr class="tr_data">
+					<td align="right">禁区名称<font color="red">(*)</font></td><td align="left"><input type="text" size="20" id="title"></td>
+				</tr>
+				<tr class="tr_data">
+				    <td align="right">禁区地址<font color="red">(*)</font></td><td align="left"><textarea id="addr" rows="2" cols="50"></textarea></td>
+				</tr>
+				<tr class="tr_data">
+					<td align="right">经度<font color="red">(*)</font></td><td align="left"><input type="text" size="7" id="lon">&nbsp;&nbsp;&nbsp;&nbsp;纬度<font color="red">(*)</font><input type="text" size="7" id="lat"></td>
+				</tr>
+		</table>
+<br/>
+<div id="map" style="width:100%;height:350px;float:center">
+  <iframe id="mapFrame" src="baiduMapGetLonLat.html" width="100%" height="100%" style="background-color:#ffffff" frameborder="0"></iframe>
+</div>
+</body>
+</html>

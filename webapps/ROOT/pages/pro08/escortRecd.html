@@ -1,0 +1,120 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		
+		    var oTable=null;
+		    var optType="";
+			var prison_code="";
+			var objs=[];
+			var isSaveOK=false;
+			
+	$(document).ready(function() {
+        optType=top.getUrlParam(document.URL,"optType");
+		infoId=top.getUrlParam(document.URL,"infoId");
+		prison_code=top.getUrlParam(document.URL,"prison_code");
+		var send_date=top.getUrlParam(document.URL,"send_date");
+		if(!send_date)  send_date = "";
+		var police=decodeURI( top.getUrlParam(document.URL,"police") );
+		if(!police)  police = "";
+		var dept_id=decodeURI(top.getUrlParam(document.URL,"dept_id"));
+		if ( !dept_id ) dept_id="";
+		$("#send_date").val(top.getTimeStr(send_date,true));
+		$("#police").val( police );
+		$("#dept_id").val( dept_id );
+   } );
+   function checkSaveInterviewInfo(){
+		var msg="";
+		if( $("#send_date").val() == '' )msg += "押送日期不能为空<br/>";
+		if( $("#police").val() == '' )msg += "执行押送的警察姓名不能为空<br/>";
+		if( $("#dept_id").val() == '' )msg += "单位及职务";
+		return msg;
+	}
+	
+	function saveEscortRecd(){
+	var checkMsg = checkSaveInterviewInfo();
+	    if ( checkMsg != '' ) {
+	       top.showInfoWinWarn(checkMsg);
+           return ;
+	    }
+		var aoData=[];
+		aoData.push( { "name": "escortInfo.prison_code", "value": prison_code } );
+		aoData.push( { "name": "escortInfo.send_date", "value": top.toTimestamp($("#send_date").val()) } );
+		aoData.push( { "name": "escortInfo.police", "value": $("#police").val() } );
+		aoData.push( { "name": "escortInfo.dept_id", "value": $("#dept_id").val() } );
+		 if(optType == "insert"){
+	  var xurl="/actions/Prison.action?insertEscortRecd";
+	  }
+	  else if(optType == "update"){
+	   aoData.push( { "name": "escortInfo.id", "value": infoId} );
+	  var xurl="/actions/Prison.action?updateEscortRecd";
+	  }
+
+	 top.sendAjaxRequest(xurl,aoData,optCallback);
+	}
+	
+   
+   
+    function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功");
+		 parent.closeDialog();
+	    }else{
+	    	isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   
+	function doCancel(){
+	   parent.closeDialog();
+   }
+     function closeDialog(){
+		$( "#dialog" ).dialog( "close" );
+  }
+		</script>
+		
+	</head>
+	<body>
+		<div width="100%">
+		    <div style='border: 2px solid #89A1B9;margin:5px;margin-top:25px'>
+			<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				<tr class="tr_data">
+					<td width="30%">押送日期</td><td width="70%" align="left"><input type="text" id="send_date" value="" onclick="new Calendar().show(this);"  size="20"></input></td>
+				</tr>
+				<tr class="tr_data">
+					<td>执行押送的警察姓名</td><td align="left"><input type="text" id="police" value=""/></td>
+				</tr>
+				<tr class="tr_data">
+				  <td>单位及职务</td><td align="left"><textarea id="dept_id" rows="4" cols="60"></textarea></td>
+				</tr>
+		</table>
+		<p>
+		   <table  width="100%" align="center"><tr>
+					<td align="right"><span id="okBtn" class="buttonTwo"><a href="javascript:saveEscortRecd()">提交</a></span></td>
+					<td align="left"><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">取消</a></span></td>
+		   </tr></table>
+		   </p>
+		</div>
+	</body>
+</html>

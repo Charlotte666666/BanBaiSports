@@ -1,0 +1,363 @@
+@charset "UTF-8";
+.tab th,
+.tab td{
+	color: #333;
+	font-size: 12px;
+	line-height: 34px;
+	text-align: center;
+}
+/*.no-radius th,
+.no-radius td{
+	color: #333;
+	font-size: 12px;
+	line-height: 34px;
+}*/
+.table td,
+.table th{
+	font-size: 12px;
+	line-height: 34px;
+}
+.tab th,
+.view-tabs th,
+.base-tab th{
+	font-weight: normal;
+	color: #000;
+	background: #FFF2EE;
+}
+.color-bg{
+	background: #F9F9F9;
+}
+.tab a{
+	color: #DE3100;
+	padding: 0 5px;
+}
+.tab a:hover{
+	color: #505050;
+	padding: 0 5px;
+	text-decoration: none;
+}
+.table .change-link,
+.table .del-link,
+.table .change-link:hover,
+.table .del-link:hover{
+	background: url(../images/icon.png) left center no-repeat;
+	padding-left: 18px;
+	padding-right: 10px;
+}
+.table .change-link{
+	background-position: -2px -1px;
+}
+.table .del-link{
+	background-position: -2px -52px;
+}
+.table .change-link:hover{
+	background-position: -2px -18px;
+}
+.table .del-link:hover{
+	background-position: -2px -70px;
+}
+.pagination{
+	text-align: center;
+}
+.pagination li{
+	display: inline;
+}
+.pagination a{
+	color: #DE3100;
+}
+.pagination a:hover{
+	color: #505050;
+}
+.pagination .active{
+	color: #505050;
+}
+/* alert */
+.alert-cont{
+	background: #FFF;
+	width: 300px;
+	height:300px;
+	padding: 50px;
+	margin: 20px auto 0;
+}
+.note{
+	padding-left: 10px;
+}
+.print-note{
+	padding-left: 0;
+}
+.unpdl{
+	padding-left: 0;
+}
+/*add_info*/
+.table label{
+	display: inline;
+	*display: inline;
+	float: left;
+	_float: left;
+	line-height: 20px;
+	padding-right: 6px;
+}
+.info-tab .unlabel{
+	*float: none;
+}
+.report-tab label{
+	margin-top: 8px;
+}
+.position-tab{
+	position: relative;
+}
+.table label.id-name,
+.table label.report-label{
+	float: none;
+	display: block;
+}
+.info-tab label input{
+	display: inline-block;
+	*display: inline;
+	_display: inline;
+	float: left;
+	*float: none;
+	_float: left;
+	margin-right: 5px;
+	margin-bottom: 3px;
+}
+.info-tab label .uninfo{
+	float: none!important;
+}
+.info-tab td{
+	white-space: nowrap;
+}
+
+.info-tab .other-id,
+.education-tab .other-id,
+.legal-tab .other-id{
+	line-height: 150%;
+}
+.info-tab .text,
+.info-tab .select{
+	width: 90px;
+}
+.info-tab .text-id,
+.info-tab .colspan-text{
+	width: 130px;
+}
+.info-tab .uninfo{
+	width: 70px;
+}
+.info-tab .file{
+	width: 140px;
+}
+.education-tab .text{
+	float: left;
+	width: 60px;
+}
+.info-tab .py,
+.education-tab .feature{
+	width: 400px;
+}
+.info-tab .file{
+	word-break: break-all;
+	word-wrap: break-word;
+}
+.info-tab .file-wh{
+	width: 131px;
+}
+.re-tab label{
+	margin-bottom: 0;
+}
+.position-tab .position-td{
+	position: relative;
+}
+.mask{
+	display: block;
+	position: absolute!important;
+	top: 50px;
+	right: 10px;
+	z-index: 999;
+}
+.post{
+	cursor: pointer;
+}
+.update{
+	margin-bottom: 3px;
+}
+.btn-mask{
+	display: block;
+	float: left;
+	width: 54px;
+	height: 30px;
+	margin-left: -54px;
+	z-index: 999;
+}
+/*.close-icon{
+	z-index: 999;
+	margin-bottom: -25px;
+	margin-right: -5px;
+}
+.thumbnails > li.span-li{
+	margin-left: 0;
+	margin-right: 15px;
+	margin-bottom: 5px;
+}*/
+.add-tab:hover{
+	color: #BF3100;
+}
+.close-icon{
+	z-index: 999;
+	position: absolute;
+	top: 0;
+	right: 3px;
+}
+.thumbnails > li.span-li{
+	margin-left: 28;
+	margin-right: 15px;
+	margin-bottom: 5px;
+	position: relative;
+}
+.hong-ids,
+.hong-ids-name{
+	display:block;
+	float: left;
+}
+.education-tab .ed-wh{
+	width: 80px;
+	word-break: break-all;
+	word-wrap: break-word;
+}
+.hong-ids{
+	margin-top: 25px;
+	margin-right: 35px;
+}
+.education-tab label{
+	line-height: 30px;
+}
+.education-tab .ckbox input{
+	display: block;
+	float: left;
+	margin-right: 5px;
+	margin-top: 8px;
+	*margin-top: 5px;
+}
+.legal-tab .text,
+.legal-tab .select{
+	width: 140px;
+}
+.legal-tab .textarea,
+.report-tab .textarea{
+	width: 400px;
+}
+.legal-tab .cf-w{
+	width: 450px;
+}
+.legal-t{
+	line-height: 100%;
+}
+.legal-nav{
+	margin-bottom: 0;
+}
+.legal-nav a{
+	color: #333;
+}
+.view-tab .text{
+	width: 110px;
+}
+.view-tab .wh,
+.view-tab .select{
+	width: 160px;
+}
+.link{
+	color: #DE3100;
+	text-decoration: underline;
+}
+.link:hover{
+	color: #505050;
+}
+.view-tabs td,
+.view-tabs th{
+	text-align: center;
+}
+.view-tabs .place-wh{
+	width: 190px;
+	word-break: break-all;
+	word-wrap: break-word;
+	white-space: normal; 
+}
+.table .td-t,
+.table .tt{
+	padding-left: 16px;
+}
+.table .td-icon{
+	background: url(../images/red-icon.png) left center no-repeat;
+	background-position: 5px;
+	padding-left: 16px;
+}
+
+/* assessment */
+.tab .ass-results{
+	width: 600px;
+	line-height: 150%;
+	text-align: left;
+}
+
+/* punishment */
+.send-case{
+	position: absolute;
+	top: 0;
+	*top: -5px;
+	right: 10px;
+	_right: 20px;
+	color: #DC3500;
+}
+.send-case:hover,
+.send-case:focus{
+	color: #DC3500;
+	text-decoration: underline;
+}
+.checkbox,
+.radio{
+	margin-left: 15px;
+	*margin-left: 12px;
+	*white-space: nowrap;
+}
+
+/* 定点报道设置 */
+.map{
+	height: 500px;
+	border: 1px solid #333;
+}
+.make-radio,
+.make-select{
+	width: 15%;
+	float: left;
+}
+.make-select .select{
+	width: 130px;
+	margin-bottom: 5px;
+}
+.make-select{
+	margin-top: 35px;
+}
+.time-select span,
+.time-select select{
+	float: left;
+	
+}
+.time-select span{
+	color: #000;
+	margin-right: 5px;
+}
+.count-tab td{
+	line-height: 150%;
+}
+.count-tab .th{
+	color: #000;
+}
+.btn-p{
+	width: 152px;
+	margin-left: auto;
+	margin-right: auto;
+}
+.btn-p input{
+	float: left;
+	margin: 0 5px;
+}

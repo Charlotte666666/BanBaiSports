@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.helpyouworkeasy.persistence.OAProjectMapper">
+
+  <insert id="insertOAProjectInfo" parameterType="OAProjectInfo">
+    INSERT INTO tbl_oa_project (project_code,project_name,status,memo,start_date,end_date)
+    VALUES (#{project_code}, #{project_name}, #{status}, #{memo}, #{start_date}, #{end_date})
+  </insert>
+
+  <update id="updateOAProjectInfo" parameterType="OAProjectInfo">
+    update tbl_oa_project set 
+    project_name=#{project_name},status=#{status},memo=#{memo},start_date=#{start_date},end_date=#{end_date}
+    where project_code=#{project_code}
+  </update>
+  
+  <select id="getOAProjectInfoListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_oa_project where 1=1 
+    <if test="o.project_code != '' and o.project_code != null" >
+      and project_code=#{o.project_code}
+    </if>
+    <if test="o.project_name != '' and o.project_name != null" >
+      and project_name=#{o.project_name}
+    </if>
+    <if test="o.status != '' and o.status != null" >
+      and status=#{o.status}
+    </if>
+    <if test="time1 != -1" >
+      and start_date>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=start_date
+    </if>
+    <if test="time3 != -1" >
+      and end_date>=#{time3}
+    </if>
+    <if test="time4 != -1" >
+      and #{time4}>=end_date
+    </if>
+  </select>
+
+  <select id="getOAProjectInfoPageList" parameterType="map" resultType="OAProjectInfo">
+    select 
+       project_code,project_name,status,memo,start_date,end_date
+    from tbl_oa_project where 1=1 
+    <if test="o.project_code != '' and o.project_code != null" >
+      and project_code=#{o.project_code}
+    </if>
+    <if test="o.project_name != '' and o.project_name != null" >
+      and project_name=#{o.project_name}
+    </if>
+    <if test="o.status != '' and o.status != null" >
+      and status=#{o.status}
+    </if>
+    <if test="time1 != -1" >
+      and start_date>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=start_date
+    </if>
+    <if test="time3 != -1" >
+      and end_date>=#{time3}
+    </if>
+    <if test="time4 != -1" >
+      and #{time4}>=end_date
+    </if>
+    <if test="orderName != '' " >
+      order by ${orderName} ${orderAZ}
+    </if>
+    limit #{pageStart},#{pageSize}
+  </select>
+  
+  <select id="getAllProjectSimpleList" parameterType="map" resultType="OAProjectInfo">
+    select 
+       project_code,project_name,status
+    from tbl_oa_project 
+    order by start_date desc
+    limit 0,50
+  </select>
+  
+  <insert id="insertOAProjectTask" parameterType="OAProjectTask">
+    INSERT INTO tbl_oa_project_task (task_code,project_code,task_name,status,memo,deal_user,done_type,importance,emergence,start_date,expect_end_date,real_end_date,diff_degree,workload)
+    VALUES (#{task_code}, #{project_code}, #{task_name}, #{status}, #{memo}, #{deal_user}, #{done_type}, #{importance}, #{emergence}, #{start_date}, #{expect_end_date}, #{real_end_date}, #{diff_degree}, #{workload})
+  </insert>
+
+  <update id="updateOAProjectTask" parameterType="OAProjectTask">
+    update tbl_oa_project_task set 
+    project_code=#{project_code},task_name=#{task_name},status=#{status},memo=#{memo},deal_user=#{deal_user},done_type=#{done_type},importance=#{importance},emergence=#{emergence},start_date=#{start_date},expect_end_date=#{expect_end_date},real_end_date=#{real_end_date},diff_degree=#{diff_degree},workload=#{workload}
+    where task_code=#{task_code}
+  </update>
+
+  <select id="getOAProjectTaskListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_oa_project_task where 1=1 
+    <if test="o.task_code != '' and o.task_code != null" >
+      and task_code=#{o.task_code}
+    </if>
+    <if test="o.project_code != '' and o.project_code != null" >
+      and project_code=#{o.project_code}
+    </if>
+    <if test="o.task_name != '' and o.task_name != null" >
+      and task_name=#{o.task_name}
+    </if>
+    <if test="o.status != '' and o.status != null" >
+      and status=#{o.status}
+    </if>
+    <if test="o.deal_user != '' and o.deal_user != null" >
+      and deal_user=#{o.deal_user}
+    </if>
+    <if test="o.done_type != '' and o.done_type != null" >
+      and done_type=#{o.done_type}
+    </if>
+    <if test="o.importance != '' and o.importance != null" >
+      and importance=#{o.importance}
+    </if>
+    <if test="o.emergence != '' and o.emergence != null" >
+      and emergence=#{o.emergence}
+    </if>
+    <if test="time1 != -1" >
+      and start_date>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=start_date
+    </if>
+    <if test="time3 != -1" >
+      and real_end_date>=#{time3}
+    </if>
+    <if test="time4 != -1" >
+      and #{time4}>=real_end_date
+    </if>
+  </select>
+
+  <select id="getOAProjectTaskPageList" parameterType="map" resultType="OAProjectTask">
+    select 
+    task_code,project_code,task_name,status,memo,deal_user,done_type,importance,emergence,start_date,expect_end_date,real_end_date,diff_degree,workload
+    from tbl_oa_project_task where 1=1 
+    <if test="o.task_code != '' and o.task_code != null" >
+      and task_code=#{o.task_code}
+    </if>
+    <if test="o.project_code != '' and o.project_code != null" >
+      and project_code=#{o.project_code}
+    </if>
+    <if test="o.task_name != '' and o.task_name != null" >
+      and task_name=#{o.task_name}
+    </if>
+    <if test="o.status != '' and o.status != null" >
+      and status=#{o.status}
+    </if>
+    <if test="o.deal_user != '' and o.deal_user != null" >
+      and deal_user=#{o.deal_user}
+    </if>
+    <if test="o.done_type != '' and o.done_type != null" >
+      and done_type=#{o.done_type}
+    </if>
+    <if test="o.importance != '' and o.importance != null" >
+      and importance=#{o.importance}
+    </if>
+    <if test="o.emergence != '' and o.emergence != null" >
+      and emergence=#{o.emergence}
+    </if>
+    <if test="time1 != -1" >
+      and start_date>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=start_date
+    </if>
+    <if test="time3 != -1" >
+      and real_end_date>=#{time3}
+    </if>
+    <if test="time4 != -1" >
+      and #{time4}>=real_end_date
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+  
+  <!-- 项目所有的数据表信息 -->
+  <insert id="insertOAProjectTable" parameterType="OAProjectTable">
+    INSERT INTO tbl_oa_project_table (project_code,table_title,tbl_name,memo,id,obj_name,update_time)
+    VALUES (#{project_code}, #{table_title}, #{tbl_name}, #{memo}, #{id},#{obj_name},#{update_time})
+  </insert>
+
+  <update id="updateOAProjectTable" parameterType="OAProjectTable">
+    update tbl_oa_project_table set 
+    project_code=#{project_code},table_title=#{table_title},tbl_name=#{tbl_name},memo=#{memo},obj_name=#{obj_name},update_time=#{update_time}
+    where id=#{id}
+  </update>
+  
+  <update id="updateOAProjectTableUpdateTime" parameterType="OAProjectTable">
+    update tbl_oa_project_table set 
+     update_time=#{update_time}
+    where id=#{id}
+  </update>
+
+  <select id="getOAProjectTableListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_oa_project_table where 1=1 
+    <if test="o.project_code != '' and o.project_code != null" >
+      and project_code=#{o.project_code}
+    </if>
+    <if test="o.table_title != '' and o.table_title != null" >
+      and table_title like '%${o.table_title}%'
+    </if>
+    <if test="o.tbl_name != '' and o.tbl_name != null" >
+      and tbl_name=#{o.tbl_name}
+    </if>
+  </select>
+
+  <select id="getOAProjectTablePageList" parameterType="map" resultType="OAProjectTable">
+    select 
+    project_code,table_title,tbl_name,memo,id,obj_name,update_time
+    from tbl_oa_project_table where 1=1 
+    <if test="o.project_code != '' and o.project_code != null" >
+      and project_code=#{o.project_code}
+    </if>
+    <if test="o.table_title != '' and o.table_title != null" >
+      and table_title like '%${o.table_title}%'
+    </if>
+    <if test="o.tbl_name != '' and o.tbl_name != null" >
+      and tbl_name=#{o.tbl_name}
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+  
+   <delete id="deleteOAProjectTable" parameterType="OAProjectTable">
+    delete from tbl_oa_project_table
+    where id=#{id}
+   </delete>
+  
+    <select id="getOAProjectTableById" parameterType="map" resultType="OAProjectTable">
+    select 
+    project_code,table_title,tbl_name,memo,id,obj_name
+    from tbl_oa_project_table where id=#{id}
+  </select>
+  
+    <insert id="insertOAProjectTableField" parameterType="OAProjectTableField">
+    INSERT INTO tbl_oa_project_field (field_name,field_code,field_type,memo,is_null,is_key,default_value,field_id,table_id,field_size)
+    VALUES (#{field_name}, #{field_code}, #{field_type}, #{memo}, #{is_null}, #{is_key}, #{default_value}, #{field_id}, #{table_id}, #{field_size})
+  </insert>
+
+  <update id="updateOAProjectTableField" parameterType="OAProjectTableField">
+    update tbl_oa_project_field set 
+    field_name=#{field_name},field_code=#{field_code},field_type=#{field_type},memo=#{memo},is_null=#{is_null},is_key=#{is_key},default_value=#{default_value},table_id=#{table_id},field_size=#{field_size}
+    where field_id=#{field_id}
+  </update>
+  
+  <delete id="deleteOAProjectTableField" parameterType="OAProjectTableField">
+    delete from tbl_oa_project_field
+    where field_id=#{field_id}
+   </delete>
+   
+   <delete id="deleteOAProjectTableFieldByTableId" parameterType="OAProjectTable">
+    delete from tbl_oa_project_field
+    where table_id=#{id}
+   </delete>
+
+  <select id="getOAProjectTableFieldList" parameterType="map" resultType="OAProjectTableField">
+    select 
+    field_name,field_code,field_type,memo,is_null,is_key,default_value,field_id,table_id,field_size
+    from tbl_oa_project_field where 1=1 
+    <if test="o.field_name != '' and o.field_name != null" >
+      and field_name=#{o.field_name}
+    </if>
+    <if test="o.field_code != '' and o.field_code != null" >
+      and field_code=#{o.field_code}
+    </if>
+    <if test="o.field_type != '' and o.field_type != null" >
+      and field_type=#{o.field_type}
+    </if>
+    <if test="o.table_id != -1" >
+      and table_id=#{o.table_id}
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  </select>
+  
+  <select id="getOAProjectTableField" parameterType="map" resultType="OAProjectTableField">
+    select 
+    field_name,field_code,field_type,memo,is_null,is_key,default_value,field_id,table_id,field_size
+    from tbl_oa_project_field where field_id=#{fileId}
+  </select>
+
+</mapper>

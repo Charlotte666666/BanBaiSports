@@ -1,0 +1,143 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+		    var optType="";
+		
+			$(document).ready(function() {
+			   optType=top.getUrlParam(document.URL,"optType");
+			   $( "#tdcorrect_type" ).html( top.getCodeSelectHtml("CORRECT_TYPE","q_correct_type", true,null,null,"全部") );
+			   var htTemp="";
+			   var iaoColumns= [
+                               { "sTitle": "人员编号", "mDataProp": "user_code", "sWidth": "10%","sClass": "left", 
+							      "fnRender": function ( oObj ) {
+                                       return '<a href=\'javascript:void(0)\' onclick="updateInfo(\''+oObj.aData.user_code+'\')" >'+oObj.aData.user_code+"</a>";
+                                  },
+							      "bUseRendered": false},
+							   { "sTitle": "姓名", "mDataProp": "user_name", "sWidth": "9%", "bUseRendered": false  }, 
+							   { "sTitle": "矫正级别", "mDataProp": "correct_type", "sWidth": "9%", "bUseRendered": false  }, 
+							   { "sTitle": "统计年月", "mDataProp": "count_time", "sWidth": "9%", "bUseRendered": false  }, 
+							   { "sTitle": "教育学习得分", "mDataProp": "edu_score", "sWidth": "9%", "bUseRendered": false  },
+							   { "sTitle": "社会活动得分", "mDataProp": "community_score", "sWidth": "9%", "bUseRendered": false  },
+							   { "sTitle": "思想汇报得分", "mDataProp": "report_score", "sWidth": "9%", "bUseRendered": false  },
+							   { "sTitle": "报到记录得分", "mDataProp": "register_score", "sWidth": "9%", "bUseRendered": false  },
+							   { "sTitle": "报警记录得分", "mDataProp": "alarm_score", "sWidth": "9%", "bUseRendered": false  },
+							   { "sTitle": "其他得分", "mDataProp": "else_score", "sWidth": "9%", "bUseRendered": false  },
+							   { "sTitle": "分数合计", "mDataProp": "total_score", "sWidth": "9%", "bUseRendered": false  }
+               ];
+
+			   var surl=top.getUrlBase()+"/actions/Pro08Report.action?getProStatScoreList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"aaSorting": [[ 6, "desc" ]],
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     var temp="";
+						 aoData.push( { "name": "info.user_name", "value": $("#q_user_name").val() } );
+						 aoData.push( { "name": "info.user_code", "value": $("#q_user_code").val() } );
+						 aoData.push( { "name": "o.count_time", "value": $("#count_time").val() } );
+						 aoData.push( { "name": "o.edu_score", "value": top.g_GetNumValue($("#edu_score").val()) } );
+						 aoData.push( { "name": "o.community_score", "value": top.g_GetNumValue($("#community_score").val()) } );
+						 aoData.push( { "name": "o.report_score", "value": top.g_GetNumValue($("#report_score").val()) } );
+						 aoData.push( { "name": "o.register_score", "value": top.g_GetNumValue($("#register_score").val()) } );
+						 aoData.push( { "name": "o.alarm_score", "value": top.g_GetNumValue($("#alarm_score").val()) } );
+						 aoData.push( { "name": "o.else_score", "value": top.g_GetNumValue($("#else_score").val()) } );
+						 aoData.push( { "name": "o.total_score", "value": top.g_GetNumValue($("#total_score").val()) } );
+						 temp = $("#q_tdcorrect_type").val();
+						 if ( temp == '' ) temp = -1;
+						 aoData.push( { "name": "info.tdcorrect_type", "value": temp } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+			} );
+		
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+			function updateInfo(infoId){
+				var xurl="pages/pro08/CorrectionUserInfo.html?optType=update&infoId="+infoId;
+				top.openDialog("服刑人员信息"+top.getDialogButtonHtml("保存",1,'img/save.bmp'),xurl,true,1100,620,saveCallBack);
+			}
+
+			function saveCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				  
+				}
+			}
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+		    <div style='border: 2px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="110px">&nbsp;月量化评估表&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+				  <td align="right">人员编号:</td><td align="left"><input type="text" id="q_user_code" value="" onkeydown="if(event.keyCode==13) doQuery();" /></td>		      
+			      <td align="right">姓名:</td><td align="left"><input type="text" id="q_user_name" value="" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+				  <td align="right">矫正级别:</td><td align="left" id="tdcorrect_type"></td>	
+				  <td align="right">季度:</td><td align="left"><input type="text" id="count_time" value="" onkeydown="if(event.keyCode==13) doQuery();" size="10" /></td>			  
+			     </tr>
+			 </table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				    <td>&nbsp;查询结果列表&nbsp;</td>
+			       </tr></table></td>
+			  </tr>
+			</table>
+	        <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

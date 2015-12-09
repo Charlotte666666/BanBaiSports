@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css"/>
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css"/>
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+	<link rel="stylesheet" type="text/css" href="../../css/map_css.css"/>
+	<link rel="stylesheet" type="text/css" href="../../css/simpleTab.css"/>
+    <link rel="stylesheet" type="text/css" href="../../css/context-menu.css"></link>
+	<link type="text/css" rel="stylesheet" href="../../css/layout-default-latest.css" />
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/SimpleMap.js"></script>
+    <script type="text/javascript" src="../../js/yetii-min.js"></script>
+    <script type="text/javascript" language="javascript" src="../../js/context-menu.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/jquery.layout-latest.min.js" ></script>
+	<script type="text/javascript" language="javascript" src="../../js/jquery.jWebAudio.min.js" ></script>
+
+<style type="text/css">
+body {
+	font-size: 13px;
+	font-weight: bold;
+	text-decoration: none;
+	background-repeat: repeat;
+}
+body, div, ul, li, p, table, tr, td, a, img, ul, li  {
+	padding: 0px;
+	margin: 0px;
+	list-style-type: none;
+	border-top-style: none;
+	border-right-style: none;
+	border-bottom-style: none;
+	border-left-style: none;
+}
+ul.demolayout li {
+	margin: 2px 5px 0 0;
+	float: center;
+}
+.tabs-container {
+	clear: left;
+	border: 1px solid #ccc;
+	border-top: 0;
+	padding: 10px 10px 10px 10px;
+}
+.tab{
+   height:100%;
+   overflow: auto;
+}
+
+</style>
+<script type="text/javascript">
+var tabber1 = null;
+var currentNodeName="";
+var serverResponse={};
+var imgStatus="";
+var ibmServerType="";
+var rowNum = 0;
+var ruleList={};
+var interGetResult=0;
+var interPlayAlert=0;
+var source={};
+
+$(document).ready( function() {
+	var wh=$(window).height();
+	var ww=$(window).width();
+	$("#sys2").hide();
+	$("#sys3").hide();
+	$("#sys4").hide();
+	$("#sys5").hide();
+	$("#sys6").hide();
+	$('#time_freDiv').css({"left":(ww-520)+"px","top":"1px"});
+    getRdbMonitorResultList();
+	setTimer();
+	try{
+		var engine = new jWebAudio.SoundEngine();
+		source = engine.addSoundSource({
+			'url': '../../resources/ringin.wav',
+			'preLoad': true,
+			'callback': function() {
+				//source.sound.play();
+			}
+		});
+	}catch(e){}
+});
+
+ function setTimer(){
+    try{
+     clearInterval( interGetResult );
+	 interGetResult = setInterval("getRdbMonitorResultList()", $("#time_fre").val() );
+	}catch(e){}
+ }
+ 
+ function getRdbMonitorResultList(){
+    top.sendAjaxRequest("/actions/RdbData.action?getRdbMonitorResultList",[],optCallback,true);
+ }
+ 
+ function optCallback(obj){
+	   try{
+   	    serverResponse = obj;
+		var systemList=serverResponse.systemList;
+		var dataList=serverResponse.dataList;
+		top.setDataList( dataList );
+		
+		var errList=[];
+		for (var i=0;i<dataList.length;i++ ) {
+		  if ( dataList[i].status == 'err' ) {
+		    errList[errList.length]=dataList[i];
+		  }
+		}
+		top.setErrList( errList );
+
+		for ( var n=0;n<systemList.length;n++ ) {
+		  $("#system_txt_"+(n+1)).html( top.getCodeName("BUSS_NAME",systemList[n].name) );
+		  $("#tab"+(n+1)).html('<iframe id="mainFrame" src="main.html?system='+systemList[n].name+'" width="100%" height="'+($(window).height()-60)+'px" style="background-color:#ffffff" frameborder="0"></iframe>');
+		  $("#sys"+(n+1)).show();
+		}
+		tabber1 = new Yetii({
+		  id: 'demo'
+		});
+
+		 $("#refreshTime").html( "今天"+top.getCurrentClientTime().substring(10) );
+		 top.refreshAlertMap();
+		if ( top.checkNeedAlert() ) {
+		    openErrPage();
+		    clearInterval( interPlayAlert );
+		    interPlayAlert = setInterval("playAlert()", 4000 );
+		}
+		setTimer();
+	   }catch(e){
+	   }
+ }
+ 
+ function getTreeList(){
+    return serverResponse.treeList;
+ }
+ 
+ function getDataList(){
+    return serverResponse.dataList;
+ }
+ 
+ function playAlert(){
+	  try{
+	    if ( !top.checkNeedAlert() ) return ;
+	    if ( document.getElementById("isPlayAlert").checked ) {
+		  // play
+		  source.sound.play();
+		}
+	  }catch(e){}
+ }
+ 
+ function openErrPage(){
+     var xurl="pages/pro02/errList.html";
+	 top.openDialog2("告警信息列表",xurl,false,1100,610,null);
+ }
+
+</script>
+</head>
+<body>
+<div style="display:none" id="audio"></div>
+
+  <div id="demo" class="demolayout">
+		<ul id="demo-nav" class="demolayout" style="height:28px;">
+		<li id="sys1"  class="activeli" ><a href="#tab1" class="active" ><img width="16px" height="16px" src="../../img/empty.gif"  /><span id="system_txt_1">RDB3.0</span></a></li>
+		<li id="sys2" ><a href="#tab2"><img width="16px" height="16px" src="../../img/empty.gif"  /><span id="system_txt_2">RDB2.0</span></a></li>
+		<li id="sys3" ><a href="#tab3"><img width="16px" height="16px" src="../../img/empty.gif"  /><span id="system_txt_3">3</span></a></li>
+		<li id="sys4" ><a href="#tab4"><img width="16px" height="16px" src="../../img/empty.gif"  /><span id="system_txt_4">4</span></a></li>
+		<li id="sys5" ><a href="#tab5"><img width="16px" height="16px" src="../../img/empty.gif"  /><span id="system_txt_5">5</span></a></li>
+		<li id="sys6" ><a href="#tab6"><img width="8px" height="16px" src="../../img/empty.gif"  /><span id="system_txt_6">6</span><img id="img_rdb_HP" width="8px" height="16px" src="../../img/empty.gif"  /></a></li>
+		</ul>
+		<div id="tabs" class="tabs-container" width="100%" >
+			<div class="tab" id="tab1" height="100%"></div>
+			<div class="tab" id="tab2" style="display: none; "></div>
+			<div class="tab" id="tab3" style="display: none; "></div>
+			<div class="tab" id="tab4" style="display: none; "></div>
+			<div class="tab" id="tab5" style="display: none; "></div>
+			<div class="tab" id="tab6" style="display: none; "></div>
+		</div>
+	   </div>
+</div>
+	
+<div id="time_freDiv" style="top:2px;left:500px;position: absolute;">
+ <table width="500px">
+  <tr>
+   <td align="right">
+     <input type="button" id="openErrBtn" onclick="openErrPage()" value="打开告警列表"/>	
+     <input type="checkbox" id="isPlayAlert" value="1" checked />鸣音报警&nbsp;
+     更新时间:<span id="refreshTime"></span>&nbsp;
+	 刷新间隔:<select id="time_fre" onchange="setTimer()">
+	   <option value="60000">1</option>
+	   <option value="120000">2</option>
+	   <option value="180000" selected>3</option>
+	   <option value="240000">4</option>
+	   <option value="300000">5</option>
+	   <option value="600000">10</option>
+	 </select>分钟
+   </td>
+  </tr>
+ </table>
+</div>
+</body>
+</html> 

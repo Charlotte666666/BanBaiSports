@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+    <meta charset="utf-8">
+    <head>
+        <title>羽球达人</title>
+        <meta content="yes" name="apple-mobile-web-app-capable">
+        <meta name="format-detection" content="telephone=no"/>
+        <meta name="viewport" content="width=device-width,height=device-height,inital-scale=1.0,maximum-scale=1.0,user-scalable=no;">
+
+        <link rel="stylesheet" media="screen" href="css/base.css" />
+        <link rel="stylesheet" media="screen" href="css/color.css" />
+        <link rel="stylesheet" media="screen" href="css/layout.css" />
+        <link rel="stylesheet" media="screen" href="css/typography.css" />
+
+        <link rel="stylesheet" href="../css/themes/default/jquery.mobile-1.4.5.min.css">
+        <script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/jquery.mobile-1.4.5.min.js"></script>
+
+        <script type="text/javascript">
+           var result_id=1446084452513;
+           var g_UrlBase="";
+           var resultList=[];
+           
+           $(document).ready(function() {
+               //result_id=getUrlParam(document.URL,"id");
+               try{
+                 var ind=document.URL.indexOf("htmlAPI");
+                 if ( ind != -1 ) {
+                   g_UrlBase=document.URL.substring(0,ind);
+                 }
+               }catch(e){}
+               getResult();
+           } );
+            
+            function getResult(){
+               var aoData=[];
+               aoData.push( { "name": "info.id", "value": result_id } );
+               doSendAjaxRequest("/actions/CompetitionResult.action?getCompetitionResultDetailForApp",aoData,getCompetitionRankListCallback);
+            }
+
+            function getCompetitionRankListCallback(obj){
+               try{
+                resultList=obj.data;
+                var ht='';
+
+                //set competition name
+                ht = resultList.schedule_name;
+                $("#currentCompetitionName").html( ht );
+
+                // set team name & img
+                ht = '<img src="http://banbaisport.oss-cn-beijing.aliyuncs.com/'+resultList.team_1_img_url+'" width="80px" height="80px" style="border-radius:50%" /><br />'+resultList.team_1_name;
+                $("#firstTeam").html( ht );
+                ht = '<img src="http://banbaisport.oss-cn-beijing.aliyuncs.com/'+resultList.team_2_img_url+'" width="80px" height="80px" style="border-radius:50%" /><br />'+resultList.team_2_name;
+                $("#secondTeam").html( ht );
+
+                // set court
+                ht = resultList.area_code;
+                $("#centerInfo").text( ht );
+
+                // set scores
+                ht = resultList.score_1;
+                $("#score1").text( ht );
+                ht = resultList.score_2;
+                $("#score2").text( ht );
+
+                // set different type
+                ht = '';
+                for( var i=0; i<resultList.scenes.length; i++){
+                    ht += '<div class="againstDetailInfo mt20 pr">';
+                    ht +=   '<table class="pr" width="100%">';
+                    ht +=     '<thead>';
+                    ht +=       '<tr height="30px">';
+                    ht +=         '<td width="40%"></td>';
+                    ht +=         '<td  width="20%" class="competitionType centerCol f1d2" style="background-color: #fff" rowspan=2>'+resultList.scenes[i].competition_type+'</td>';
+                    ht +=         '<td width="40%"></td>';
+                    ht +=       '</tr>';
+                    ht +=       '<tr height="30px">';
+                    if(resultList.scenes[i].score_1 > resultList.scenes[i].score_2){
+                        ht +=      '<td class="tr f1d4" style="color:#bb3b3b">'+resultList.scenes[i].score_1+'</td>';
+                        ht +=      '<td class="tl f1d4">'+resultList.scenes[i].score_2+'</td>';
+                    } else {
+                        ht +=      '<td class="tr f1d4">'+resultList.scenes[i].score_1+'</td>';
+                        ht +=      '<td class="tl f1d4" style="color:#bb3b3b">'+resultList.scenes[i].score_2+'</td>';
+                    }
+                    
+                    ht +=       '</tr>';
+                    ht +=       '<tr height="30px">';
+                    var player = resultList.scenes[i].team_1_a_name;
+                    if(resultList.scenes[i].team_1_b_name != ''){
+                      player += '/';
+                    }
+                    player += resultList.scenes[i].team_1_b_name;
+                    ht +=         '<td class="tr f1d2">'+player+'</td>';
+                    ht +=         '<td class="centerCol">VS</td>';
+                    player = resultList.scenes[i].team_2_a_name;
+                    if(resultList.scenes[i].team_2_b_name != ''){
+                      player += '/';
+                    }
+                    player += resultList.scenes[i].team_2_b_name;
+                    ht +=         '<td class="tl f1d2">'+player+'</td>';
+                    ht +=       '</tr>';
+                    ht +=     '</thead>';
+                    ht +=   '<tbody>';
+
+                    for(var j=0; j < resultList.scenes[i].innings.length; j++){
+                        ht += '<tr>';
+                        var tmpscore1 = resultList.scenes[i].innings[j].score_1;
+                        var tmpscore2 = resultList.scenes[i].innings[j].score_2
+                        if(tmpscore1 > tmpscore2){
+                            ht += '<td class="tr" style="color:#bb3b3b">'+tmpscore1+'</td>';
+                            ht += '<td class="centerCol">:</td>';
+                            ht += '<td class="tl">'+tmpscore2+'</td>';
+                        }else{
+                            ht += '<td class="tr">'+tmpscore1+'</td>';
+                            ht += '<td class="centerCol">:</td>';
+                            ht += '<td class="tl" style="color:#bb3b3b">'+tmpscore2+'</td>';
+                        }
+                        ht += '</tr>';
+                    }
+                    ht += '</tbody></table></div>';
+                }
+                $("#againstScore").after( ht );
+               }catch(e){}
+            }
+
+            function doSendAjaxRequest(xurl,param,fnCallback){
+                if ( xurl.indexOf('http://') == -1 ) xurl = g_UrlBase+xurl;
+                $.ajax( {
+                    "url":  xurl,
+                    "data": param,
+                    "timeout" : 10000,
+                    "contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+                    "success": function (json) {
+                        try{
+                            fnCallback( json );
+                        }catch(e){}
+                    },
+                    "dataType": "json",
+                    "cache": false,
+                    "type": "POST",
+                    "error": function (xhr, error, thrown) {
+                    }
+                } );
+            }
+
+            function getUrlParam(xurl,name){
+                var para="";
+                if(xurl.lastIndexOf("?")>0){
+                    para=xurl.substring(xurl.lastIndexOf("?")+1,xurl.length);
+                    var arr=para.split("&");
+                    para="";
+                    for(var i=0;i<arr.length;i++){
+                       if(arr[i].split("=")[0]==name) return arr[i].split("=")[1];
+                    }
+                    return "";
+               }else{
+                    return "";
+               }
+            }
+        </script>
+        <style type="text/css">
+            .ui-loader-default{ display:none}
+            .ui-mobile-viewport{ border:none;}
+            .ui-page {padding: 0; margin: 0; outline: 0}
+        </style>
+    </head>
+    <body>
+        <header class="staticbanner p15" height="70px">
+            <table width="100%" class="pr15">
+                <tr>
+                    <td width="50px" rowspan=2><img src="img/logo.png" width="40px" height="40px" /></td>
+                    <td id="headline" class="f1d2">羽球达人</td>
+                    <td id="buttonimg" width="100px" class="tc" rowspan=2><a href="http://www.banbaisport.com/down.html" style="color:#fff">免费下载</a></td>
+                </tr>
+                <tr>
+                    <td class="f0d9 slogan">为祖国健康工作五十年！</td>
+                </tr>
+            </table>
+        </header>
+        <div class="mt90">
+            <h3 id="currentCompetitionName" class="tc f1d5"><!--第一届清华校友羽毛球比赛--></h3>
+            <h3 id="currentRound" class="tc f1d5 mt15">第1轮</h3>
+            <div class="mt15 tc" style="background-color:#fff">
+                <div id="againstBaseInfo">  
+                    <table width="100%" cellspacing="0">
+                        <tbody>
+                            <tr height="150px">
+                                <td id="firstTeam" class="f1d1" rowspan=2><!--<img src="img/VS_background_03.png" width="80px" height="80px" style="border-radius:50%" /><br />北京队--></td>
+                                <td id="againstBaseCenter">
+                                </td>
+                                <td id="secondTeam" class="f1d1" rowspan=2><!--<img src="img/VS_background_01.png" width="80px" height="80px" style="border-radius:50%" /><br />湖南队--></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="againstScore" class="pr">
+                    <table class="pa" width="100%" cellspacing="0">
+                        <thead>
+                            <tr height="75px">
+                                <td width="40%x"></td>
+                                <td width="20%" id="centerInfo" class="f1d2"><!--3号场--></td>
+                                <td width="40%x"></td>
+                            </tr>
+                            <tr height="75px">
+                                <td width="40%" class="f1d4 tr" id="score1">0</td>
+                                <td width="20%" class="VSlogo">VS</td>
+                                <td width="40%" class="f1d4 tl" id="score2">0</td>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+                <!--innings-->
+            </div>
+        </div>
+    </body>
+</html>

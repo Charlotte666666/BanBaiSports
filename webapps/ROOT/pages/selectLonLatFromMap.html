@@ -1,0 +1,67 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="../css/comm.css">
+<link href="../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<script src="../js/jquery-1.7.2.min.js"></script>
+<script src="../js/ui/jquery.ui.core.js"></script>
+<script src="../js/ui/jquery.ui.widget.js"></script>
+<script src="../js/ui/jquery.ui.dialog.js"></script>
+
+<script type="text/javascript">
+   var mlat=0;
+   var mlon="";
+   
+   $(document).ready(function() {
+       mlat=top.getUrlParam(document.URL,"lat");
+	   mlon=top.getUrlParam(document.URL,"lon");
+	   if ( mlat != '' ) {
+	     $("#lat").val(mlat);
+	   }
+	   if ( mlon != '' ) {
+	     $("#lon").val(mlon);
+	   }
+   } );
+
+   function doBeforeClose(){
+   }
+   
+   function selected(){
+       var obj={
+			  "lon":$("#lon").val(),
+			  "lat":$("#lat").val()
+    	 };
+       top.setTempValue(obj);
+	   top.closeDialog();
+   }
+	
+	function onClickMap(lon,lat){
+	   $("#lon").val(lon);
+	   $("#lat").val(lat);
+	}
+   
+    function getLon(){
+	   return mlon;
+	}
+	function getLat(){
+	   return mlat;
+	}
+  </script> 
+</head>
+<body>
+<br/>
+		<table width="100%" border="0" padding="0" spacing="0">
+				<tr class="tr_data">
+					<td align="right">经度</td>
+					<td align="left">
+					  <input type="text" size="7" id="lon"/>
+					  &nbsp;&nbsp;纬度<input type="text" size="7" id="lat"/>
+					  &nbsp;&nbsp;<input type="button" value="确定" onclick="selected()" />
+					</td>
+				</tr>
+		</table>
+<div id="map" style="width:100%;height:350px;float:center">
+  <iframe id="mapFrame" src="baiduMapGetLonLat.html" width="100%" height="100%" style="background-color:#ffffff" frameborder="0"></iframe>
+</div>
+</body>
+</html>

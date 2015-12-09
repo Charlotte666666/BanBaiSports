@@ -1,0 +1,206 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script src="../../js/ui/jquery.ui.core.js"></script>
+		<script src="../../js/ui/jquery.ui.widget.js"></script>
+		<script src="../../js/ui/jquery.ui.tabs.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			
+			$(document).ready(function() {
+                $( "#tabs" ).tabs();
+			} );
+			
+			function doQuery(){
+                var aoData=[];
+				aoData.push( { "name": "time1", "value": $("#q_time1").val() } );
+				aoData.push( { "name": "time2", "value": $("#q_time2").val() } );
+				top.showLoadingInfo(true);
+                top.sendAjaxRequest("/actions/ProMVTProject.action?getMilestoneUpdateReport",aoData,callBackGetCount);
+			}
+			
+			function callBackGetCount(obj){
+			     top.showLoadingInfo(false);
+				 try{
+					if ( obj.status == true ){
+					   var ht1='<tr bgcolor="#C9E4D6"><td width="8%">项目号</td><td width="8%">合同号</td><td width="8%">FID</td><td width="8%">部门</td>';
+					   ht1+='<td width="10%">项目名称</td><td width="8%">项目经理</td><td width="8%">更新事件</td><td width="8%">更新时间</td>';
+					   ht1+='<td width="10%">开始日期</td><td width="8%">结束日期</td><td width="8%">项目状态</td><td width="8%">完成状态</td></tr>';
+					   var i=0;
+					   var temp=null;
+					   for ( i=0;i<obj.body.updateMilestoneList.length;i++ ){
+					      temp=obj.body.updateMilestoneList[i];
+					      ht1+='<tr>';
+						  ht1+='<td class="tlistTd"><a href=\'javascript:void(0)\' onclick="updateProject(\''+temp.project_id+'\',\''+temp.project_name+'\')" >'+ temp.project_code +'</a></td>';
+						  ht1+='<td class="tlistTd">'+temp.contract_code+'</td>';
+						  ht1+='<td class="tlistTd">'+temp.funnel_id+'</td>';
+						  ht1+='<td class="tlistTd">'+top.myGetCodeName( "PAYMENT_AREA", temp.payment_area )+'</td>';
+						  ht1+='<td class="tlistTd">'+temp.project_name+'</td>';
+						  ht1+='<td class="tlistTd">'+top.getUserNameByCode(temp.project_manager_id)+'</td>';
+						  if ( temp.milestone_id == -100 ) {
+						    ht1+='<td class="tlistTd">项目即将到期</td>';
+						  } else {
+							ht1+='<td class="tlistTd">'+top.getCodeName( "MILESTONE_NAME", temp.milestone_id)+'</td>';
+						  }
+						  ht1+='<td class="tlistTd">'+top.getTimeStr(temp.tijiao_date, true )+'</td>';
+						  ht1+='<td class="tlistTd">'+top.getTimeStr(temp.service_begin, true )+'</td>';
+						  ht1+='<td class="tlistTd">'+top.getTimeStr(temp.service_end, true )+'</td>';
+						  ht1+='<td class="tlistTd">'+top.getCodeName( "PROJECT_STATUS",temp.project_status )+'</td>';
+						  ht1+='<td class="tlistTd">'+((temp.tijiao_date<=temp.milestone_estime)?"准时":"延时")+'</td>';
+						  ht1+='</tr>';
+					   }
+					   $("#dataTable1").html( ht1 );
+					   
+					   ht1='<tr bgcolor="#C9E4D6"><td width="9%">项目号</td><td width="9%">合同号</td><td width="9%">FID</td><td width="9%">部门</td>';
+					   ht1+='<td width="10%">项目名称</td><td width="9%">项目经理</td><td width="9%">延迟事件</td><td width="9%">预计时间</td>';
+					   ht1+='<td width="9%">开始日期</td><td width="9%">结束日期</td><td width="9%">项目状态</td></tr>';
+					   for ( i=0;i<obj.body.delayMilestoneList.length;i++ ){
+					      temp=obj.body.delayMilestoneList[i];
+					      ht1+='<tr>';
+						  ht1+='<td class="tlistTd"><a href=\'javascript:void(0)\' onclick="updateProject(\''+temp.project_id+'\',\''+temp.project_name+'\')" >'+ temp.project_code +'</a></td>';
+						  ht1+='<td class="tlistTd">'+temp.contract_code+'</td>';
+						  ht1+='<td class="tlistTd">'+temp.funnel_id+'</td>';
+						  ht1+='<td class="tlistTd">'+top.myGetCodeName( "PAYMENT_AREA", temp.payment_area )+'</td>';
+						  ht1+='<td class="tlistTd">'+temp.project_name+'</td>';
+						  ht1+='<td class="tlistTd">'+top.getUserNameByCode(temp.project_manager_id)+'</td>';
+						  if ( temp.milestone_id == -100 ) {
+						    ht1+='<td class="tlistTd">项目即将到期</td>';
+						  } else {
+							ht1+='<td class="tlistTd">'+top.getCodeName( "MILESTONE_NAME", temp.milestone_id)+'</td>';
+						  }
+						  ht1+='<td class="tlistTd">'+top.getTimeStr(temp.milestone_estime, true )+'</td>';
+						  ht1+='<td class="tlistTd">'+top.getTimeStr(temp.service_begin, true )+'</td>';
+						  ht1+='<td class="tlistTd">'+top.getTimeStr(temp.service_end, true )+'</td>';
+						  ht1+='<td class="tlistTd">'+top.getCodeName( "PROJECT_STATUS",temp.project_status )+'</td>';
+						  ht1+='</tr>';
+					   }
+					   $("#dataTable2").html( ht1 );
+					   
+					   
+					   ht1='<tr bgcolor="#C9E4D6"><td width="9%">项目号</td><td width="9%">合同号</td><td width="9%">FID</td><td width="9%">部门</td>';
+					   ht1+='<td width="10%">项目名称</td><td width="9%">项目经理</td><td width="9%">即将到期事件</td><td width="9%">预计时间</td>';
+					   ht1+='<td width="9%">开始日期</td><td width="9%">结束日期</td><td width="9%">项目状态</td></tr>';
+					   for ( i=0;i<obj.body.commingMilestoneList.length;i++ ){
+					      temp=obj.body.commingMilestoneList[i];
+					      ht1+='<tr>';
+						  ht1+='<td class="tlistTd"><a href=\'javascript:void(0)\' onclick="updateProject(\''+temp.project_id+'\',\''+temp.project_name+'\')" >'+ temp.project_code +'</a></td>';
+						  ht1+='<td class="tlistTd">'+temp.contract_code+'</td>';
+						  ht1+='<td class="tlistTd">'+temp.funnel_id+'</td>';
+						  ht1+='<td class="tlistTd">'+top.myGetCodeName( "PAYMENT_AREA", temp.payment_area )+'</td>';
+						  ht1+='<td class="tlistTd">'+temp.project_name+'</td>';
+						  ht1+='<td class="tlistTd">'+top.getUserNameByCode(temp.project_manager_id)+'</td>';
+						  if ( temp.milestone_id == -100 ) {
+						    ht1+='<td class="tlistTd">项目即将到期</td>';
+						  } else {
+							ht1+='<td class="tlistTd">'+top.getCodeName( "MILESTONE_NAME", temp.milestone_id)+'</td>';
+						  }
+						  ht1+='<td class="tlistTd">'+top.getTimeStr(temp.milestone_estime, true )+'</td>';
+						  ht1+='<td class="tlistTd">'+top.getTimeStr(temp.service_begin, true )+'</td>';
+						  ht1+='<td class="tlistTd">'+top.getTimeStr(temp.service_end, true )+'</td>';
+						  ht1+='<td class="tlistTd">'+top.getCodeName( "PROJECT_STATUS",temp.project_status )+'</td>';
+						  ht1+='</tr>';
+					   }
+					   $("#dataTable3").html( ht1 );
+					   
+					}else{
+					   top.showInfoWinError("操作失败 "+obj.msg);
+					}
+				 }catch(e){
+					top.showInfoWinError("处理异常:"+e.message);
+				 }
+			}
+			
+ function exportData(){
+     var aoData=[];
+     aoData.push( { "name": "time1", "value": $("#q_time1").val() } );
+	 aoData.push( { "name": "time2", "value": $("#q_time2").val() } );
+	 top.showLoadingInfo(true);
+     top.sendAjaxRequest("/actions/ProMVTProject.action?exportMilestoneUpdateReport",aoData,callBackExportData);
+ }
+ 
+ function callBackExportData(obj){
+     top.showLoadingInfo(false);
+	 try{
+	    if ( obj.status == true ){
+		   var downUrl=top.getUrlBase()+"/download?filePath="+obj.msg+"&fileName=里程碑提醒报表.xls";
+		   document.location.href=downUrl;
+	    }else{
+		   top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	 }catch(e){
+	    top.showInfoWinError("处理异常:"+e.message);
+	 }
+ }
+ 
+ function updateProject(projectId,project_name){
+	 var xurl="pages/pro04/projectInfo.html?opt=update&projectId="+projectId;
+	 top.openDialog("项目【"+project_name+"】详细信息",xurl,true,1100,620,null);
+ }
+ </script>
+ <style>
+   .tlistTd{
+      border-width:1px;
+	  border-style:dotted;
+	  border-color:#89A1B9;
+	  font-size: 12px;
+   }
+ </style>
+ </head>
+	<body style="overflow-x: hidden;overflow-y: aoto;">
+		<div width="100%">
+		    <div style='border: 2px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="150px">&nbsp;里程碑事件&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+				  <td align="right">统计时间从:</td><td align="left" ><input type="text" id="q_time1" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" />
+				     到:<input type="text" id="q_time2" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" /></td>
+			     </tr>
+			 </table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				    <td>&nbsp;统计结果列表&nbsp;</td>
+					<td><div id="exportBtn" class="buttonDivTwo"><a href="javascript:exportData()">导出</a></div></td>
+			       </tr></table></td>
+			  </tr>
+			</table>
+			
+			
+			<div id="tabs">
+				<ul>
+					<li><a href="#tabs-0">里程碑更新事件</a></li>
+					<li><a href="#tabs-1">里程碑延迟事件</a></li>
+					<li><a href="#tabs-2">即将到期里程碑提醒</a></li>
+				</ul>
+				<div id="tabs-0">
+				  <table align="center" cellpadding="0" width="99%" cellspacing="0" border="0" class="display" id="dataTable1"></table>
+			    </div>
+				<div id="tabs-1">
+				  <table align="center" cellpadding="0" width="99%" cellspacing="0" border="0" class="display" id="dataTable2"></table>
+			    </div>
+				<div id="tabs-2">
+				  <table align="center" cellpadding="0" width="99%" cellspacing="0" border="0" class="display" id="dataTable3"></table>
+			    </div>
+			</div>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,6 @@
+<Context path="/engine" 
+   docBase="D:/dev/activiti-explorer">
+    <Manager className="org.apache.catalina.session.PersistentManager" saveOnRestart="false">
+        <Store className="org.apache.catalina.session.FileStore"/>
+    </Manager>
+</Context>

@@ -1,0 +1,20 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <script type="text/javascript" language="javascript" src="../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript">
+     $(document).ready(function() {
+	   try{
+		  var toUrl = top.getUrlParam(document.URL,"toUrl");
+		  toUrl = toUrl.replace(new RegExp("IWHATI","gm"), "?");
+		  toUrl = toUrl.replace(new RegExp("IANDI","gm"), "&");
+		  toUrl = toUrl.replace(new RegExp("IEQUALI","gm"), "=");
+		  document.location.href = toUrl;
+		}catch(e){
+		}
+	 });
+  </script>
+</head>
+<body>
+</body>
+</html>

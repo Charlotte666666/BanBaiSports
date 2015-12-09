@@ -1,0 +1,365 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css"
+			href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+			var curPage=0;
+			var pageTotal=0;
+			var flag=true;
+			var curId="";
+		$(document).ready(function() {
+			doPage(0);
+		} );
+			
+			function updateInfo(id,status){
+				curId=id;
+				if(status=='0'){
+					var aoData=[];
+					aoData.push( { "name": "noticeUser.notice_id", "value":id} );
+					var xurl=top.getUrlBase()+"/actions/OANotice.action?updateOANoticeUserStatus";
+					top.sendAjaxRequest(xurl,aoData,openViewPage);
+				}else{
+					var xurl="pages/oa/noticeView.html?optType=update&id="+curId;
+					top.openDialog("通知公告信息",xurl,true,600,450,openViewPage);
+				}
+			}
+			function openViewPage(obj){
+				if ( obj.status){
+					var xurl="pages/oa/noticeView.html?optType=update&id="+curId;
+					top.openDialog("通知公告信息",xurl,true,600,400,doCallBack);
+				}
+			}
+			function doCallBack(){
+				doPage(0);
+			}
+			function saveCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doPage(0);
+				}catch(e){
+				}
+			}
+			function optCallback(obj){
+			       try{
+			        if ( obj.status == true ){
+			          top.showInfoWin("操作成功");
+			          doPage(0);
+			        }else{
+			          top.showInfoWin("操作失败 "+obj.msg);
+			        }
+			       }catch(e){
+			          top.showInfoWin("处理异常:"+e.message);
+			       }
+		  }
+
+		 function getParamDate(aoData){
+		  aoData.push( { "name": "info.notice_title", "value":$("#notice_title").val() } );
+		  aoData.push( { "name": "info.notice_type", "value":$("#notice_type").val() } );
+	      aoData.push( { "name": "info.publisher", "value":$("#publisher").val() } );
+	      aoData.push( { "name": "time1", "value": $("#q_time1").val()} );
+		  aoData.push( { "name": "time2", "value": $("#q_time2").val() } );
+			return aoData;
+		}
+		
+		function getMesList(){
+			var aoData=[];
+			aoData.push( { "name": "iDisplayStart", "value": curPage*10 } );
+			aoData.push( { "name": "iDisplayLength", "value": 10 } );
+			//aoData.push( { "name": "noticeUser.notice_id", "value":-1} );
+			aoData.push( { "name": "noticeUser.status", "value": -1 } );
+			var xurl=top.getUrlBase()+"/actions/OANotice.action?getOANoticeUserList";
+			top.sendAjaxRequest(xurl,aoData,getMesCallback);
+		}
+		function clear(){
+		for(var i=0;i<7;i++){
+				$("#week"+i).hide();
+				$("#table_"+i).hide();
+				$("#table_"+i).html("");
+			}
+			$("#today").hide();
+			$("#table_today").hide();
+			$("#early").hide();
+			$("#table_early").hide();
+			$("#week_pre").hide();
+			$("#table_week_pre").hide();
+			$("#table_today").html("");
+			$("#table_early").html("");
+			$("#table_week_pre").html("");
+		
+		}
+		function getMesCallback(obj){
+			 clear();
+			 try{
+				var mesList=obj.aaData;
+				var today=new Date();
+				var todayMil=today.getTime();
+				var dayIndex=today.getDay()	;//0~6 周日
+				var oneDay=24*60*60*1000;
+				var oneWeek=24*60*60*1000*7;
+				todayMil=todayMil-todayMil%oneDay;
+				var preWeek=todayMil-dayIndex*oneDay;//上周最大数
+				var isCurWeek=true;
+				var isPreWeek=false;
+				var tempDayIndex=0;
+				var ht="";
+			    if ( mesList ){
+					if(flag){
+						pageTotal=Math.floor(mesList.length/10)+1;
+					}
+					for(var i=0;i<mesList.length;i++){
+						if(isCurWeek){
+							if(mesList[i].publish_time<preWeek){
+							    isCurWeek=false;
+								isPreWeek=true;
+								i--;
+								continue;
+							}else{
+								tempDayIndex=Math.floor((mesList[i].publish_time-preWeek)/oneDay);
+								if(tempDayIndex==dayIndex){
+									$("#today").show();
+									$("#table_today").show();
+									$("#table_today").append(getMesTrHtml(mesList[i]));
+									tempDayIndex=0;
+								}else{
+									$("#week"+tempDayIndex).show();
+									$("#table_"+tempDayIndex).show();
+									$("#table_"+tempDayIndex).append(getMesTrHtml(mesList[i]));
+									tempDayIndex=0;
+								}
+							}
+						}else if(isPreWeek){
+							if(mesList[i].publish_time<(preWeek-oneWeek)){
+								isPreWeek=false;
+								i--;
+								continue;
+							 }else{
+								$("#week_pre").show();
+								$("#table_week_pre").show();
+								$("#table_week_pre").append(getMesTrHtml(mesList[i]));	
+								}
+							}else{
+							$("#table_early").append(getMesTrHtml(mesList[i]));
+							$("#early").show();
+							$("#table_early").show();
+							}
+					}
+					
+			    }
+			}catch(e){
+			     top.showInfoWin("处理异常:"+e.message);
+			}
+			if(flag){
+				flag=false;
+				if(curPage<2){
+					$("#prePage").hide();
+				}else{
+					$("#prePage").show();
+				}
+				if(curPage>pageTotal-1||curPage==pageTotal-1){
+					$("#nextPage").hide();
+				}else{
+					$("#nextPage").show();
+				}
+			}
+		}
+		function getMesTrHtml(Mes){
+			var ht="";
+			if(Mes.read_status=='0'){
+				ht+='<tr style="font-weight:bold;">';
+			}else{
+				ht+='<tr>';
+			}
+			if(Mes.emergency==2){
+				ht+='<td class="cx" style="color:red" width="80%">['+top.getCodeName("NOTICE_TYPE",Mes.notice_type)+']';
+			}else if(Mes.emergency==1){
+				ht+='<td class="cx" style="color:blue" width="80%">['+top.getCodeName("NOTICE_TYPE",Mes.notice_type)+']';
+			}else{
+				ht+='<td class="cx" style="color:#66cc00" width="80%">['+top.getCodeName("NOTICE_TYPE",Mes.notice_type)+']';
+			}
+			
+			ht+='<a onclick="updateInfo(\''+Mes.id+'\',\''+Mes.read_status+'\')" href="javascript:void(0)">'+Mes.notice_title.substring(0,30)+'</a></td>';
+			ht+='<td class="ci" width="50px">'+top.getUserNameByCode(Mes.publisher)+'</td>';
+			ht+='<td class="dt" width="50px">'+top.getTimeStr(Mes.publish_time,true)+'</td>';
+			ht+="</tr>";
+			return ht;
+		}
+		function toggleTable(i){
+			$("#table_"+i).toggle();
+		}
+		function doPage(num){
+			curPage+=num;
+			if(curPage<1){
+				$("#prePage").hide();
+			}else{
+				$("#prePage").show();
+			}
+			if(curPage>pageTotal-1||curPage==pageTotal-1){
+				$("#nextPage").hide();
+			}else{
+				$("#nextPage").show();
+			}
+			getMesList();
+		}
+		</script>
+	<style>
+	.talk {
+		display: block;
+		font-size: 15px;
+		font-weight: nomal;
+		text-decoration: none;
+		clear: both;
+		border-left: none;
+		border-right: none;
+		border-top: none;
+		padding: 8px 0px 3px 9px;
+		border-bottom-width: 2px;
+		border-bottom:#a7c5e2 2px solid;
+		cursor:hand;
+		}
+	.toarea{
+		margin-bottom:10px
+		}
+	.bd{
+		color:#a7c5e2;
+		font-weight:500;
+	}
+	
+	table.i td.ci {
+	width: 90px;
+	}
+	table.i td.tl {
+	width: 150px;
+	}
+	table.i td.gt {
+	width: 150px;
+	}
+	table.i td.dt {
+	width: 150px;
+	}
+	table.i {
+	table-layout: fixed;
+	width: 100%;
+	}
+	
+	table.i td.fg_n {
+	width: 16px;
+	}
+	table.i td.gt {
+	color: #a0a0a0;
+	}
+	table.i td.dt {
+	width: 100px;
+	white-space: nowrap;
+	}
+	table.i td
+	{
+		BORDER-BOTTOM: #a7c5e2 1px solid;
+		font-size:12px;
+		align:center;
+	}
+	table.i td a{
+		text-decoration:none;
+		color:black;
+	}
+	table.i tr
+	{
+		line-height:30px;
+	}
+	
+
+	</style>
+	</head>
+	<body>
+		<div width="100%" style="margin:5px">
+			<div width="99%">
+				<div class="bd talk" style="display:none" id="today">
+				<span id="span_weektoday" onclick="toggleTable('today')"><b>今天</b></span>
+				</div>
+					<div class="toarea">
+						<table style="display:none" id="table_today" cellspacing="0" class="i"></table>
+					</div>
+				
+				<div class="bd talk" style="display:none" id="week0">
+					<span id="span_week0" onclick="toggleTable(0)"><b>周日</b></span>
+				</div>
+				<div class="toarea">
+					<table id="table_0" style="display:none" cellspacing="0" class="i">
+					</table>
+				</div>
+				
+				<div class="bd talk" style="display:none" id="week6">
+				<span id="span_week6" onclick="toggleTable(6)"><b>周六</b></span>
+				</div>
+				<div class="toarea">
+						<table style="display:none" id="table_6" cellspacing="0" class="i"></table>
+				</div>
+				
+				<div class="bd talk" style="display:none" id="week5">
+				<span id="span_week5" onclick="toggleTable(5)"><b>周五</b></span>
+				</div>
+				<div class="toarea">
+						<table style="display:none" id="table_5" cellspacing="0" class="i"></table>
+					</div>
+				
+				<div class="bd talk" style="display:none" id="week4">
+				<span id="span_week4" onclick="toggleTable(4)"><b>周四</b></span>
+				</div>
+				<div class="toarea">
+						<table style="display:none" id="table_4" cellspacing="0" class="i"></table>
+					</div>
+				
+				<div class="bd talk" style="display:none" id="week3">
+				<span id="span_week3" onclick="toggleTable(3)" ><b>周三</b></span>
+				</div>
+				<div class="toarea">
+						<table style="display:none"id="table_3" cellspacing="0" class="i"></table>
+					</div>
+				
+				<div class="bd talk" style="display:none" id="week2">
+				<span id="span_week2" onclick="toggleTable(2)"><b>周二</b></span>
+				</div>
+				<div class="toarea">
+						<table style="display:none" id="table_2" cellspacing="0" class="i"></table>
+					</div>
+				<div class="bd talk" style="display:none" id="week1">
+					<span id="span_week1" onclick="toggleTable(1)">周一</span>
+				</div>
+				<div class="toarea">
+						<table style="display:none" id="table_1" cellspacing="0" class="i"></table>
+					</div>
+				<div class="bd talk" style="display:none" id="week_pre">
+					<span id="span_week_pre" onclick="toggleTable('week_pre')">一周前</span>
+				</div>
+				<div class="toarea">
+						<table style="display:none" id="table_week_pre" cellspacing="0" class="i"></table>
+					</div>
+				<div class="bd talk" style="display:none" id="early">
+					<span id="span_early" onclick="toggleTable('early')">更早</span>
+				</div>
+				<div class="toarea" >
+						<table style="display:none" id="table_early" cellspacing="0" class="i"></table>
+				</div>
+				
+		</div>
+		<div id="prePage" style="display:none">
+			<a onclick="doPage(-1)" href="javascript:void(0)">上一页</a>
+		</div>
+		<div id="nextPage" style="display:none">
+			<a onclick="doPage(1)" href="javascript:void(0)">下一页</a>
+		</div>
+	</body>
+</html>

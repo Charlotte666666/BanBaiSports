@@ -1,0 +1,941 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>快打羽毛球</title>
+	<link rel="stylesheet" href="../../css/themes/default/jquery.mobile-1.4.5.min.css">
+	<script src="../../js/jquery-1.10.2.min.js"></script>
+	<script src="../../js/jquery.mobile-1.4.5.min.js"></script>
+	<style>
+	  #groups_div table tr td{
+		text-align:center;
+		line-height:30px; 
+		vertical-align:middle;
+	  }
+	  
+	  #groups_div table tr:nth-child(even) td {
+		background-color: #D4D4D4;
+	  }
+	  
+      #groups_div table tr:nth-child(odd) td {
+		background-color: #EBEBEB;
+	  }
+	  
+	  #groups_div table tr:nth-child(1) td{
+	    background-color:#7171C6;
+		color:white;
+	  }
+	  
+	  #mingciDiv table tr td{
+		text-align:center;
+		line-height:30px; 
+		vertical-align:middle;
+	  }
+	  
+	  #mingciDiv table tr:nth-child(even) td {
+		background-color: #D4D4D4;
+	  }
+	  
+      #mingciDiv table tr:nth-child(odd) td {
+		background-color: #EBEBEB;
+	  }
+	  
+	  #mingciDiv table tr:nth-child(1) td{
+	    background-color:#7171C6;
+		color:white;
+	  }
+	  
+	  #integrations_div table tr td{
+	    text-align:center;
+		background-color:white;
+	  }
+	  .IntegrationTablesTD{
+	    text-align:center;
+		background-color:white;
+	  }
+	  .tablist-content {
+			width: 100%;
+			display: inline-block;
+			vertical-align: top;
+			margin: 0;
+	  }
+	  .resultTD{
+	    text-align:center;
+		background-color:white;
+		border:1px;
+		border-style:none none solid none;
+		border-color:#58D3F7;
+	  }
+	  .visitTab{
+	    background-color:#38c;
+		border-color:#38c;
+		color:#ffffff;
+		cursor:pointer;
+		font-size:13px;
+		font-weight:bold;
+	  }
+	  .notVisitTab{
+	    background-color:#f6f6f6;
+		border-color:#ddd;
+		color:#333;
+		cursor:pointer;
+		font-size:13px;
+		font-weight:bold;
+	  }
+	  .notVisitTab:hover{
+	    background-color:#ddd;
+	  }
+	</style>
+	
+<script type="text/javascript">
+ var g_UrlBase="http://localhost";
+ var teamList=[];
+ var resultList=[];
+ var currentShowResultId=0;
+ var groupGameList=[];
+ var resultDetailList=[];
+ var teamMemberList=[];
+ var teamShowPlayerId=0;
+ var interGetResult=0;
+	   
+ jQuery(document).ready(function() {
+   if ( document.URL.indexOf("helpyouworkeasy") != -1 ) {
+      g_UrlBase="http://demo.helpyouworkeasy.com/badminton";
+   } else if ( document.URL.indexOf("8080") != -1 ) {
+      g_UrlBase="http://localhost:8080";
+   }
+   var aoData=[];
+   aoData.push( { "name": "iDisplayStart", "value": 0 } );
+   aoData.push( { "name": "iDisplayLength", "value": 1000 } );
+   doSendAjaxRequest("/actions/Team.action?getTeamList",aoData,getTeamListCallback);
+ });
+	   
+ function getTeamListCallback(obj){
+     try{
+		  teamList=obj.aaData;
+	 }catch(e){
+	 }
+	 loadResultDetail();
+ }
+ 
+ // 加载所有单项比分
+ function loadResultDetail(){
+     var aoData=[];
+	 aoData.push( { "name": "info.result_id", "value": -1 } );
+	 aoData.push( { "name": "info.schedule_id", "value": 0 } );
+	 aoData.push( { "name": "iDisplayStart", "value": 0 } );
+     aoData.push( { "name": "iDisplayLength", "value": 1000 } );
+	 doSendAjaxRequest("/actions/CompetitionInfo.action?getCompetitionInfoList",aoData,loadResultDetailListCallback);
+ }
+ 
+ function loadResultDetailListCallback(obj){
+    try{
+      resultDetailList=obj.aaData;
+	}catch(e){}
+	//队员信息
+    getPlayersList();
+ }
+ 
+ function loadResultList(){
+     var aoData=[];
+     aoData.push( { "name": "info.team_1", "value": -1 } );
+     aoData.push( { "name": "info.status", "value": "" } );
+	 aoData.push( { "name": "info.phases", "value": "" } );
+	 aoData.push( { "name": "info.schedule_id", "value": 0 } );
+	 aoData.push( { "name": "info.win_team", "value": -1 } );
+	 aoData.push( { "name": "info.group_id", "value": -1 } );
+	 aoData.push( { "name": "info.round", "value": -1 } );
+	 aoData.push( { "name": "iDisplayStart", "value": 0 } );
+     aoData.push( { "name": "iDisplayLength", "value": 1000 } );
+	 doSendAjaxRequest("/actions/CompetitionResult.action?getCompetitionResultList",aoData,loadResultListCallback);
+ }
+ 
+ function loadResultListCallback(obj){
+     try{
+	   resultList=obj.aaData;
+	   // 小组赛
+	   var htA='';
+	   var htB='';
+	   var htC='';
+	   var htD='';
+	   for (var r=1;r<6;r++ ) {
+	     htA+=getResultListHtml(r,1429625473664);
+		 htB+=getResultListHtml(r,1429626719836);
+		 htC+=getResultListHtml(r,1429626830328);
+		 htD+=getResultListHtml(r,1429627612149);
+	   }
+
+	   $("#score_one_content").html( htA );
+	   $("#score_two_content").html( htB );
+	   $("#score_three_content").html( htC );
+	   $("#score_four_content").html( htD );
+	   
+	   // 小组赛积分
+	   getCompetitionResultList("0");
+	   
+	   // 排名赛
+	   var paiminHt='';
+	   paiminHt+=getPaiminHtml(1);
+	   paiminHt+=getPaiminHtml(2);
+	   paiminHt+=getPaiminHtml(3);
+	   paiminHt+=getPaiminHtml(4);
+	   paiminHt+=getPaiminHtml(5);
+	   
+	   paiminHt+='<br/>&nbsp;表演赛';
+	   paiminHt+='<table width="100%" align="center" cellpadding="0" cellspacing="0" border="1">';
+	   paiminHt+="<tr height='40px'>";
+	   paiminHt+="<td width='40%' class='resultTD'>叶钊颖、高崚</td>";
+	   paiminHt+="<td width='5%' class='resultTD'><b><font color='black'>20</font></b></td><td width='10%' class='resultTD'>:</td><td width='5%' class='resultTD'><b><font color='black'>22</font></b></td>";
+	   paiminHt+="<td width='40%' class='resultTD'>姜来、林立文</td></tr>";
+	   paiminHt+="<tr height='40px'>";
+	   paiminHt+="<td width='40%' class='resultTD'>叶钊颖、林立文</td>";
+	   paiminHt+="<td width='5%' class='resultTD'><b><font color='black'>18</font></b></td><td width='10%' class='resultTD'>:</td><td width='5%' class='resultTD'><b><font color='black'>21</font></b></td>";
+	   paiminHt+="<td width='40%' class='resultTD'>高崚、姜来</td></tr>";
+	   paiminHt+='</table>';
+	   
+	   $("#paiminListDiv").html( paiminHt + "<br/>" );
+ 
+	 }catch(e){
+	 }
+	 // 定时作业
+	 //setResultTimer();
+ }
+ 
+ function setResultTimer(){
+	clearInterval( interGetResult );
+	interGetResult=self.setInterval("getResult()",10000);
+ }
+ 
+ function getResult(){
+    var aoData=[];
+	 aoData.push( { "name": "info.phases", "value": "1" } );
+	 aoData.push( { "name": "info.schedule_id", "value": 0 } );
+	doSendAjaxRequest("/actions/CompetitionResult.action?getCompetitionAllResultList",aoData,getCompetitionAllResultListCallback);
+ }
+ 
+ function getCompetitionAllResultListCallback(obj){
+    try{
+	  var rs=obj.resultList;
+	  if ( rs ) {
+	    for (var i=0;i<rs.length;i++) {
+		  if ( rs[i].phases == 1 ) {
+		    if ( rs[i].team_1 != -1 ) $("#d_"+rs[i].id+"_team_1").html( getTeamName(rs[i].team_1) );
+		    if ( rs[i].team_2 != -1 ) $("#d_"+rs[i].id+"_team_2").html( getTeamName(rs[i].team_2) );
+		  }
+		  if ( rs[i].status != 0 ) {
+		   $("#d_"+rs[i].id+"_1").html( "<b><font color='black'>"+rs[i].score_1+"</font></b>" );
+		   $("#d_"+rs[i].id+"_2").html( "<b><font color='black'>"+rs[i].score_2+"</font></b>" );
+		  } else {
+		   $("#d_"+rs[i].id+"_1").html( "-" );
+		   $("#d_"+rs[i].id+"_2").html( "-" );
+		  }
+		}
+	  }
+	  var ds=obj.detailList;
+	  if ( ds ) {
+	    for (var i=0;i<ds.length;i++) {
+		   $('#x_'+ds[i].id+'_team_1').html( getTeamMemberName( ds[i].team_1_a ) + "&nbsp;" + getTeamMemberName( ds[i].team_1_b ) );
+		   $('#x_'+ds[i].id+'_team_2').html( getTeamMemberName( ds[i].team_2_a ) + "&nbsp;" + getTeamMemberName( ds[i].team_2_b ) );
+		   $('#x_'+ds[i].id+'_competition_type').html( getCOMPETITION_TYPE( ds[i].competition_type ) );
+		   $('#x_'+ds[i].id+'_1').html( ds[i].score_1 );
+		   $('#x_'+ds[i].id+'_2').html( ds[i].score_2 );
+		}
+	  }
+	}catch(e){
+	}
+	setResultTimer();
+ }
+ 
+ function getPlayersList(){
+	doSendAjaxRequest("/actions/TeamMember.action?getAllTeamMembers",[],getPlayersListCallback);
+ }
+ 
+ function getPlayersListCallback(obj){
+    try{
+	      var ht="<table width='100%' align='center' cellspacing='0' cellpadding='0' border='1'>";
+	      if(obj.status==true){
+			  teamMemberList=obj.body;
+			
+			  for(var j=0;j<teamList.length;j++){
+			     ht+="<tr height='30px' onclick='showTeamPlayers("+teamList[j].id+")'>";
+				 ht+="<td class='resultTD'>"+teamList[j].team_name+"</td>";
+				 ht+="</tr>";
+				 ht+="<tr id='team_player_"+teamList[j].id+"' style='display:none;'>";
+				 ht+="<td colspan='3' style='border-style:none;'><body><table width='100%' align='center' cellpadding='0' cellspacing='0' border='1' style='border-style:none none solid none;border-color:#58D3F7;' >";
+				 for(var i=0;i<teamMemberList.length;i++){
+				    if(teamMemberList[i].team_id==teamList[j].id){
+						ht+="<tr>";
+						ht+="<td width='40%' align='center'>"+teamMemberList[i].player_name+"</td>";
+						ht+="<td width='30%' align='center'>"+getSexName(teamMemberList[i].player_sex)+"</td>";
+						ht+="</tr>";
+					}
+				 }
+				 ht+="</table></body></td>";
+				 ht+="</tr>";
+			  }
+		  }else{
+		    ht+="<tr><td align='center' class='resultTD'>暂无数据</td></tr>";
+		  }
+		  ht+="</table>";
+		  $("#players_content").html(ht);
+	  }catch(e){
+	  }
+	  loadResultList();
+ }
+ 
+ function showTeamPlayers(team_id){
+    $("#team_player_"+teamShowPlayerId).hide();
+    if ( teamShowPlayerId != team_id ) {
+	    $("#team_player_"+team_id).show();
+		teamShowPlayerId=team_id;
+	} else {
+	    teamShowPlayerId=0;
+	}
+ }
+ 
+ function getTeamMemberName(mid){
+    if ( mid == -1 ) return "";
+    for(var i=0;i<teamMemberList.length;i++){
+	  if( teamMemberList[i].id==mid ){
+ 	    return teamMemberList[i].player_name;
+	  }
+	}
+	return mid;
+ }
+ 
+ function getResultListHtml(round,groupId){
+       var ht='<br/>&nbsp;第'+round+'轮';
+	   if ( round == 1 ) {
+	     ht+='(25日上午9:00)';
+	   } else if ( round == 2 ) {
+	     ht+='(25日上午10:20)';
+	   } else if ( round == 3 ) {
+	     ht+='(25日下午14:00)';
+	   } else if ( round == 4 ) {
+	     ht+='(25日下午15:30)';
+	   } else if ( round == 5 ) {
+	     ht+='(25日下午17:00)';
+	   }
+	   ht+='<br/>';
+	   ht+='<table width="100%" align="center" cellpadding="0" cellspacing="0" border="1">';
+       for ( var i=0;i<resultList.length;i++ ) {
+	     if ( resultList[i].round == round && resultList[i].group_id == groupId ) {
+		   ht+="<tr height='40px' onclick='showResultDetail("+resultList[i].id+")'>";
+	       ht+="<td width='40%' class='resultTD'>"+getTeamName(resultList[i].team_1)+"</td>";
+		   ht+="<td width='5%' class='resultTD' id='d_"+resultList[i].id+"_1' ><b><font color='black'>"+resultList[i].score_1+"</font></b></td><td width='10%' class='resultTD'>:</td><td width='5%' class='resultTD' id='d_"+resultList[i].id+"_2'><b><font color='black'>"+resultList[i].score_2+"</font></b></td>";
+		   ht+="<td width='40%' class='resultTD'>"+getTeamName(resultList[i].team_2)+"</td></tr>";
+		   
+		   ht+='<tr id="result_detail_'+resultList[i].id+'" style="display:none" ><td colspan="5" style="border-style:none;">';
+		   ht+='<body><table width="100%" align="center" cellpadding="0" cellspacing="0" border="1" style="border-style:none none solid none;border-color:#58D3F7;" >';
+		   ht+=getResultDetailListHtml(resultList[i].id);
+		   ht+='</table></body></td></tr>';
+		 }
+	   }
+	   ht+='</table>';
+	   return ht;
+ }
+ 
+ function getPaiminHtml(round){
+       var ht='';
+	   if ( round == 1 ) {
+	     ht+='<br/>&nbsp;第'+round+'轮(25日下午18:00)';
+	   } else if ( round == 2 ) {
+	     ht+='<br/>&nbsp;第'+round+'轮(26日上午8:00)';
+	   } else if ( round == 3 ) {
+	     ht+='<br/>&nbsp;第'+round+'轮(26日上午9:00)';
+	   } else if ( round == 4 ) {
+	     ht+='<br/>&nbsp;半决赛';
+	   } else if ( round == 5 ) {
+	     ht+='<br/>&nbsp;决赛';
+	   }
+	   ht+='<br/>';
+	   ht+='<table width="100%" align="center" cellpadding="0" cellspacing="0" border="1">';
+       for ( var i=0;i<resultList.length;i++ ) {
+	     if ( resultList[i].round == round && resultList[i].phases == 1 ) {
+		   ht+="<tr height='40px' onclick='showResultDetail("+resultList[i].id+")'>";
+	       ht+="<td width='40%' class='resultTD' id='d_"+resultList[i].id+"_team_1' >";
+		   if ( resultList[i].team_1 == -1 ) {
+		     ht+=resultList[i].pre_name_1;
+		   } else {
+		     ht+=getTeamName(resultList[i].team_1);
+		   }
+		   ht+="</td>";
+		   ht+="<td width='5%' class='resultTD' id='d_"+resultList[i].id+"_1' ><b><font color='black'>"+resultList[i].score_1+"</font></b></td><td width='10%' class='resultTD'>:</td><td width='5%' class='resultTD' id='d_"+resultList[i].id+"_2'><b><font color='black'>"+resultList[i].score_2+"</font></b></td>";
+		   
+		   ht+="<td width='40%' class='resultTD' id='d_"+resultList[i].id+"_team_2' >";
+		   if ( resultList[i].team_2== -1 ) {
+		     ht+=resultList[i].pre_name_2;
+		   } else {
+		     ht+=getTeamName(resultList[i].team_2);
+		   }
+		   ht+="</td>";
+		   ht+="</tr>";
+		   ht+='<tr id="result_detail_'+resultList[i].id+'" style="display:none" ><td colspan="5" style="border-style:none;">';
+		   ht+='<body><table width="100%" align="center" cellpadding="0" cellspacing="0" border="1" style="border-style:none none solid none;border-color:#58D3F7;" >';
+		   ht+=getResultDetailListHtml(resultList[i].id);
+		   ht+='</table></body></td></tr>';
+		 }
+	   }
+	   ht+='</table>';
+	   return ht;
+ }
+ 
+ function getResultDetailListHtml(rid){
+     if ( !resultDetailList ) return "";
+	 var ht='';
+     for (var i=0;i<resultDetailList.length;i++) {
+	    if ( resultDetailList[i].result_id == rid ) {
+           ht+='<tr>';
+		   ht+='<td width="37%" align="center" id="x_'+resultDetailList[i].id+'_team_1">'+getTeamMemberName( resultDetailList[i].team_1_a );
+		   if ( resultDetailList[i].team_1_b != -1 ) {
+		     ht+='&nbsp;'+getTeamMemberName(resultDetailList[i].team_1_b);
+		   }
+		   ht+='</td>';
+		   ht+='<td width="5%" align="center" id="x_'+resultDetailList[i].id+'_1">'+resultDetailList[i].score_1+'</td>';
+		   ht+='<td width="16%" align="center" id="x_'+resultDetailList[i].id+'_competition_type">'+getCOMPETITION_TYPE( resultDetailList[i].competition_type )+'</td>';
+		   ht+='<td width="5%" align="center" id="x_'+resultDetailList[i].id+'_2">'+resultDetailList[i].score_2+'</td>';
+		   ht+='<td width="37%" align="center" id="x_'+resultDetailList[i].id+'_team_2">'+getTeamMemberName(resultDetailList[i].team_2_a);
+		   if ( resultDetailList[i].team_2_b != -1 ) {
+		     ht+='&nbsp;'+getTeamMemberName(resultDetailList[i].team_2_b);
+		   }
+		   ht+='</td>';
+		   ht+='</tr>';
+	    }
+	 }
+	 return ht;
+ }
+ 
+ function getCOMPETITION_TYPE(code){
+    if ( code == 0 ) return "男双";
+	if ( code == 1 ) return "女双";
+	if ( code == 2 ) return "男单";
+	if ( code == 3 ) return "混双";
+	return code;
+ }
+ 
+ function showResultDetail(sid){
+      $("#result_detail_"+currentShowResultId).hide();
+      if ( currentShowResultId != sid ) {
+	    $("#result_detail_"+sid).show();
+		currentShowResultId=sid;
+	  } else {
+	    currentShowResultId=0;
+	  }
+ }
+ 
+ function getSexName(sex){
+    if(sex==0){ return "女";}
+    if(sex==1){ return "男";}
+ }
+ 
+ function getTeamName(tid){
+    for(var i=0;i<teamList.length;i++){
+	  if ( teamList[i].id == tid ) return teamList[i].team_name;
+	}
+	return tid;
+ }
+ 
+
+ function doSendAjaxRequest(xurl,param,fnCallback,notShowError,to){
+	    if ( xurl.indexOf('http://') == -1 ) xurl = g_UrlBase+xurl;
+		$.ajax( {
+			"url":  xurl,
+			"data": param,
+			"timeout" : to,
+			"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+			"success": function (json) {
+				try{ fnCallback( json );}catch(e){}
+			},
+			"dataType": "json",
+			"cache": false,
+			"type": "POST",
+			"error": function (xhr, error, thrown) {
+			}
+		} );
+ }
+ 
+  function getCompetitionResultList(){
+    var aoData=[];
+	aoData.push( { "name":"info.schedule_id","value": "0"} );
+	aoData.push( { "name":"info.phases","value":"0"} );
+	doSendAjaxRequest("/actions/CompetitionResult.action?getCompetitionResultListForScore",aoData,getCompetitionResultListCallback);
+ }
+ 
+ function getCompetitionResultListCallback(obj){
+    if(obj.status==true){
+	  if(obj.body){
+	    var o=obj.body;
+	    var ht="";
+        for(var i=0;i<o.length;i++){
+		  ht+="<h3>"+o[i].group_name+"</h3>";
+		  var groupTeamList=o[i].groupUsers;
+		  ht+="<table style='width:100%;background-color:#F3F3F3'>";
+		  for(var j=0;j<=groupTeamList.length;j++){
+		    ht+="<tr height='30px'>";
+		    for(var k=0;k<=groupTeamList.length;k++){
+			    if(j==0 && k==0){
+				  ht+="<td style='background-color:white' align='center'></td>";
+				}else if(j==0 && k!=0){
+				  ht+="<td class='IntegrationTablesTD'>"+getTeamName(groupTeamList[k-1].team_id)+"</td>";
+				}else if(j!=0 && k==0){
+				  ht+="<td class='IntegrationTablesTD'>"+getTeamName(groupTeamList[j-1].team_id)+"</td>";
+				}else{
+				  ht+="<td class='IntegrationTablesTD' id='t_"+groupTeamList[j-1].team_id+"_"+groupTeamList[k-1].team_id+"'>"
+				  if(j!=0 && k!=0 && j==k){
+				    ht+="--";
+				  }else{
+				    ht+="0:0";
+				  }
+				  ht+="</td>";
+				}
+			}
+			if(j!=0){
+			  ht+="<td class='IntegrationTablesTD' id='s_"+groupTeamList[j-1].group_id+"_"+groupTeamList[j-1].team_id+"'>0</td>";
+			}else{
+			  ht+="<td class='IntegrationTablesTD'>积分</td>";
+			}
+			ht+="</tr>";
+		  }
+		  ht+="</table>";
+		}
+		$("#integration_one").html(ht);
+		for(var m=0;m<o.length;m++){
+		  var resultList=o[m].competition_score;
+		  var groupUsers=o[m].groupUsers;
+		  var score=new Array();
+		  for(var z=0;z<groupUsers.length;z++){
+		    score[z]=new Array();
+			score[z][0]=groupUsers[z].team_id;
+			score[z][1]=0;
+		  }
+		  for(var p=0;p<score.length;p++){
+             for(var q=0;q<resultList.length;q++){
+				   if(score[p][0]==resultList[q].team_1){
+					  if(resultList[q].score_1>resultList[q].score_2){
+						score[p][1]++;
+					  }
+				   }
+				   if(score[p][0]==resultList[q].team_2){
+					  if(resultList[q].score_1<resultList[q].score_2){
+						score[p][1]++;
+					  }
+				   }
+			  }
+		  }
+		  
+		  for(var x=0;x<score.length;x++){
+		    $("#s_"+groupUsers[0].group_id+"_"+score[x][0]).html(score[x][1]);
+		  }
+		    
+		  for(var n=0;n<resultList.length;n++){
+		      $("#t_"+resultList[n].team_1+"_"+resultList[n].team_2).html(resultList[n].score_1+":"+resultList[n].score_2); 
+			  $("#t_"+resultList[n].team_2+"_"+resultList[n].team_1).html(resultList[n].score_2+":"+resultList[n].score_1);  
+		  }
+		}
+	  }else{
+	      $("#integration_one").html("<table><tr><td align='center'>暂无数据</td></tr></talbe>");
+	  }
+
+	}else{
+	  top.showInfoWinError("操作失败！");
+	}
+ }
+ 
+ function trigger(tab_id){
+    switch(tab_id){
+	   case '0':
+	     $("#two .visitTab").addClass("notVisitTab");
+	     $("#two .visitTab").removeClass("visitTab");
+		 $("#group_a_tab").addClass("visitTab");
+		 $("#group_a_tab").removeClass("notVisitTab");
+	     $("#score_two").hide();
+	     $("#score_three").hide();
+	     $("#score_four").hide();
+	     $("#score_one").show();
+	   break;
+	   case '1':
+	     $("#two .visitTab").addClass("notVisitTab");
+	     $("#two .visitTab").removeClass("visitTab");
+	     $("#group_b_tab").addClass("visitTab");
+		 $("#group_b_tab").removeClass("notVisitTab");
+	     $("#score_one").hide();
+	     $("#score_three").hide();
+	     $("#score_four").hide();
+		 $("#score_two").show();
+	   break;
+	   case '2':
+	     $("#two .visitTab").addClass("notVisitTab");
+	     $("#two .visitTab").removeClass("visitTab");
+		 $("#group_c_tab").addClass("visitTab");
+		 $("#group_c_tab").removeClass("notVisitTab");
+	     $("#score_one").hide();
+	     $("#score_two").hide();
+	     $("#score_four").hide();
+	     $("#score_three").show();
+	   break;
+	   case '3':
+	     $("#two .visitTab").addClass("notVisitTab");
+	     $("#two .visitTab").removeClass("visitTab");
+	     $("#group_d_tab").addClass("visitTab");
+		 $("#group_d_tab").removeClass("notVisitTab");
+	     $("#score_one").hide();
+	     $("#score_two").hide();
+	     $("#score_three").hide();
+	     $("#score_four").show();
+	   break;
+	   case '4':
+	     $("#one .visitTab").addClass("notVisitTab");
+	     $("#one .visitTab").removeClass("visitTab");
+	     $("#base_tab").addClass("visitTab");
+		 $("#base_tab").removeClass("notVisitTab");
+		 $("#integrations_div").hide();
+		 $("#players_div").hide();
+		 $("#groups_div").hide();
+		 $("#integrations_rule_div").hide();
+		 $("#base_div").show();
+	   break;
+	   case '5':
+	     $("#one .visitTab").addClass("notVisitTab");
+	     $("#one .visitTab").removeClass("visitTab");
+	     $("#integrations_tab").addClass("visitTab");
+		 $("#integrations_tab").removeClass("notVisitTab");
+		 $("#players_div").hide();
+		 $("#groups_div").hide();
+		 $("#base_div").hide();
+		 $("#integrations_rule_div").hide();
+		 $("#integrations_div").show();
+	   break;
+	   case '6':
+	     $("#one .visitTab").addClass("notVisitTab");
+	     $("#one .visitTab").removeClass("visitTab");
+	     $("#players_tab").addClass("visitTab");
+		 $("#players_tab").removeClass("notVisitTab");
+		 $("#base_div").hide();
+		 $("#integrations_div").hide();
+		 $("#players_div").show();
+		 $("#groups_div").hide();
+		 $("#integrations_rule_div").hide();
+	   break;
+	   case '7':
+	     $("#one .visitTab").addClass("notVisitTab");
+	     $("#one .visitTab").removeClass("visitTab");
+	     $("#groups_tab").addClass("visitTab");
+		 $("#groups_tab").removeClass("notVisitTab");
+		 $("#integrations_div").hide();
+		 $("#players_div").hide();
+		 $("#base_div").hide();
+		 $("#integrations_rule_div").hide();
+		 $("#groups_div").show();
+	   break;
+	   case '8':
+	     $("#one .visitTab").addClass("notVisitTab");
+	     $("#one .visitTab").removeClass("visitTab");
+		 $("#integrations_rule_tab").addClass("visitTab");
+		 $("#integrations_rule_tab").removeClass("notVisitTab");
+		 $("#integrations_div").hide();
+		 $("#players_div").hide();
+		 $("#base_div").hide();
+		 $("#integrations_rule_div").show();
+		 $("#groups_div").hide();
+	   break;
+	}
+ }
+</script>
+	
+</head>
+<body>
+<div data-role="page" class="jqm-demos" data-quicklinks="true">
+	<div data-demo-html="true">
+		<div data-role="tabs">
+			<div data-role="navbar">
+				<ul>
+				  <li><a href="#one" data-theme="a" data-ajax="false"  style="padding-right:2px;padding-left:2px">信息</a></li>
+			      <li><a href="#two" data-theme="a" data-ajax="false"  style="padding-right:2px;padding-left:2px">小组赛</a></li>
+				  <li><a href="#three" data-theme="a" data-ajax="false"  style="padding-right:2px;padding-left:2px">排名赛</a></li>
+			      <li><a href="#four" data-theme="a" data-ajax="false"  style="padding-right:2px;padding-left:2px">积分</a></li>
+				  <li><a href="#five" data-theme="a" data-ajax="false"  style="padding-right:2px;padding-left:2px">名次</a></li>
+			    </ul>
+			</div>
+			
+			<div id="one" class="ui-content">
+			   <table style="margin:10px;border:1px solid #ddd;background-color:#f6f6f6" border="0" cellspacing="0" cellpadding="0"  width="100%">
+					   <tr height="35px">
+						  <td id="base_tab" class="visitTab" onclick="trigger('4')" width="20%" align="center">赛事</td>
+						  <td id="integrations_tab" class="notVisitTab" onclick="trigger('5')" width="20%" align="center">赛程</td>
+						  <td id="integrations_rule_tab" class="notVisitTab" onclick="trigger('8')" width="20%" align="center">赛制</td>
+						  <td id="players_tab" class="notVisitTab" onclick="trigger('6')" width="20%" align="center">队员</td>
+						  <td id="groups_tab" class="notVisitTab" onclick="trigger('7')" width="20%" align="center">分组</td>
+					   </tr>
+				</table>
+				<div id="base_div" class="ui-content">
+				   <center>
+				   <div class="tablist-content">
+					 <h3>2015年清华大学校友羽毛球联谊赛</h3>
+					 <table>
+						<tr height="30px">
+						  <td width="40%">主办单位：</td><td width="60%">清华校友总会  清华大学体育部</td>
+						</tr>
+						<tr height="30px">
+						  <td width="40%">支持单位：</td><td width="60%">北京健康促进会</td>
+						</tr>
+						<tr height="30px">
+						  <td width="40%">承办单位：</td><td width="60%">清华大学校友羽毛球俱乐部</td>
+						</tr>
+						<tr height="30px">
+						  <td width="40%">协办单位：</td><td width="60%">清华大学羽毛球协会 清华大学综合训练馆</td>
+						</tr>
+						<tr height="30px">
+						  <td width="40%">运营机构：</td><td width="60%">纳禾（北京）文化发展有限责任公司</td>
+						</tr>
+						<tr><td colspan="2" valign="top">组委会：</td></tr>
+						<tr><td colspan="2" valign="top"><tbody><table>
+						<tr>
+						   <td>名誉主任： 史宗恺</td>
+						</tr>
+						<tr>
+						   <td>主任：唐杰</td>
+						</tr>
+						<tr>
+						   <td>副主任：刘波 陈伟强 叶钊颖</td>
+						</tr>
+						<tr>
+						   <td>委员：戴勇  刘德广 陆淳 郝志杰 李胜强 李少鹏 罗宇华 邹贵生 李京峰 向春 姜煜 各队领队</td>
+						</tr>
+						<tr>
+						   <td>秘书长：戴勇</td>
+						</tr>
+						<tr>
+						   <td>副秘书长：刘德广 陆淳 郝志杰</td>
+						</tr>
+						<tr>
+						   <td>裁判长：李京峰</td>
+						</tr>
+						<tr>
+						   <td>参赛队统筹：李胜强</td>
+						</tr>
+						<tr>
+						   <td>赞助协调：刘德广</td>
+						</tr>
+						<tr>
+						   <td>接待：李少鹏</td>
+						</tr>
+						<tr>
+						   <td>宣传：罗宇华</td>
+						</tr>
+						<tr>
+						   <td>奖品：邹贵生</td>
+						</tr>
+						<tr>
+						   <td>场地器材：陆淳</td>
+					    </tr></table></td>
+						</tr>			 
+					 </table>
+				   </div>
+				   </center>
+				</div>
+				<div id="integrations_div" class="ui-content" style="display:none;">
+				   <center>
+				   <div class="tablist-content">
+					   <table style="width:100%;background-color:#F3F3F3">
+						  <tr height="30px">
+							<td width="30%">&nbsp;</td><td width="35%">周六-校友联谊日(25日)</td><td width="35%">周日-媒体推广日(26日)</td>
+						  </tr>
+						  <tr height="30px">
+							<td width="30%">7:50-8:00</td><td width="35%">&nbsp;</td><td width="35%">运动员入场签到、热身、场地准备</td>
+						  </tr>
+						  <tr height="30px">
+							<td width="30%">8:00</td><td width="35%">&nbsp;</td><td rowspan="3" width="35%">半决赛、决赛、表演赛</td>
+						  </tr>
+						  <tr height="30px">
+							<td width="30%" >8:30-9:00</td><td width="35%">运动员入场签到、开幕式、照相</td>
+						  </tr>
+						  <tr height="30px">
+							<td width="30%">9:00-11:00</td><td width="35%">小组赛</td>
+						  </tr>
+						  <tr height="30px">
+							<td width="30%">11:30-13:30</td><td width="35%">午餐</td><td width="35%">颁奖仪式、媒体专访、联盟成立发布会</td>
+						  </tr>
+						  <tr height="30px">
+							<td width="30%">13:30-14:30</td><td rowspan="3" width="35%">小组赛</td><td rowspan="3" width="35%">&nbsp;</td>
+						  </tr>
+						  <tr height="30px">
+							<td width="30%">14:30-15:30</td>
+						  </tr>
+						  <tr height="30px">
+							<td width="30%">15:30-18:00</td>
+						  </tr>
+						  <tr height="30px">
+							<td width="30%">18:30-19:00</td><td>比赛结果宣布</td><td>&nbsp;</td>
+						  </tr>
+					   </table>
+				   </div>
+				   </center>
+				</div>
+				<div id="players_div" class="ui-content" style="display:none;">
+				   <center>
+				   <div class="tablist-content" id="players_content">
+				   
+				   </div>
+				   </center>
+				</div>
+				<div id="groups_div" class="ui-content" style="display:none;">
+				    <center>
+			        <div class="tablist-content">
+						 <table width="100%" border="1" cellpadding="0" cellspacing="0" style="border-style:none none solid none;border-color:#58D3F7;">
+						   <tr>
+							 <td>位置</td><td>A组</td><td>B组</td><td>C组</td><td>D组</td>
+						   </tr>
+						   <tr>
+							 <td>1</td><td>电子一队</td><td>环境队</td><td>经管队</td><td>机械队</td>
+						   </tr>
+						   <tr>
+							 <td>2</td><td>无锡队</td><td>土木队</td><td>深研院队</td><td>深圳队</td>
+						   </tr>
+						   <tr>
+							 <td>3</td><td>航院队</td><td>天津队</td><td>南京队</td><td>74人队</td>
+						   </tr>
+						   <tr>
+							 <td>4</td><td>人文队</td><td>清羽联队</td><td>游击队</td><td>电子二队</td>
+						   </tr>
+						   <tr>
+							 <td>5</td><td>汽车队</td><td>香港队</td><td>MBA队</td><td>软件苹果队</td>
+						   </tr>
+						   <tr>
+							 <td>6</td><td>软件芒果队</td><td>化学队</td><td>柳州队</td><td>材料队</td>
+						   </tr>
+						 </table>
+					</div>
+					</center>
+			    </div>
+				<div id="integrations_rule_div" style="display:none;" class="ui-content">
+				    <center>
+					  <div id="integrations_rule_content">
+                      <table style="width:100%;background-color:#F3F3F3;">
+					    <tr height="30px">
+					       <td>（一）具体竞赛项目和出场顺序 :男双，混双， 男单， 女双， 男双；</td>
+					    </tr>
+						<tr height="30px">
+					       <td>
+						   （二）比赛采用 5盘3胜制 , 每盘1局 , 每局 21分 , 每球得分制，
+						    当领先一方获得11分时，比赛双方交换场地， 先得到 21分
+							的一方获胜；第一阶段比赛，每队必须打满 5盘；第二阶段
+							比赛，先获得三盘比赛胜利的一方为本场比赛的获胜方，本
+							场比赛即结束；
+						   </td>
+					    </tr>
+						<tr height="30px">
+					       <td>
+						   （三）比赛采用国家体育总局审定的最新羽毛球竞赛规则；
+						   </td>
+					    </tr>
+						<tr height="30px">
+					       <td>
+						   （四）第一阶段分组循环赛成绩排名，胜场多者排名在前，当两队
+						    胜场数相同时，他们之间比赛的胜方排名在前，如三个队或
+							以上队胜场数相同并循环获胜，则计算各自的净胜分，净胜
+							分数多者排名在前，当两队净胜分相同时，他们之间比赛的
+							胜方排名在前，如三个队或以上队净胜分数相同并循环获胜，
+							则抽签决定他们之间的排名；
+						   </td>
+					    </tr>
+						<tr height="30px">
+					       <td>
+						   （五）第一阶段比赛时，在本场比赛的第 5盘比赛开始前，向裁判
+						    员提交下一个团体赛的出场名单；第二阶段比赛时，在本场
+							比赛的第 3盘比赛开始前，向裁判员提交下一个团体赛的出
+							场名单；名单提交后不得更改；
+						   </td>
+					    </tr>
+						<tr height="30px">
+					       <td>
+						   （六）比赛场地空出后，比赛双方即应开始比赛， 10分钟未到者
+						    按弃权处理，秩序表中的时间仅为参考；
+						   </td>
+					    </tr>
+						<tr height="30px">
+					       <td>
+						   （七）每场比赛开始前请主动向裁判员提交参赛队员本人身份证
+						   原件或电子版图片，以核验有效身份；
+						   </td>
+					    </tr>
+						<tr height="30px">
+					       <td>
+						   	（八）裁判长有权根据临场情况对比赛项目顺序和比赛场地进行
+							调整，运动员必须服从；
+						   </td>
+					    </tr>
+						<tr height="30px">
+					       <td>
+						   	（九）各参赛队伍在指定区域就座，服从指挥。
+						   </td>
+					    </tr>
+					  </table>
+					  </div>
+					</center>
+				</div>
+			</div>
+
+			<div id="two" class="ui-content">
+				    <table style="margin:10px;border:1px solid #ddd;background-color:#f6f6f6" border="0" cellspacing="0" cellpadding="0"  width="100%">
+					   <tr height="35px">
+						  <td id="group_a_tab" class="visitTab" onclick="trigger('0')" width="25%" align="center">A组</td>
+						  <td id="group_b_tab" class="notVisitTab" onclick="trigger('1')" width="25%" align="center">B组</td>
+						  <td id="group_c_tab" class="notVisitTab" onclick="trigger('2')" width="25%" align="center">C组</td>
+						  <td id="group_d_tab" class="notVisitTab" onclick="trigger('3')" width="25%" align="center">D组</td>
+					   </tr>
+					</table>
+					<div id="score_one" class="tablist-content">
+					  <div id="score_one_content">
+					  </div>
+					</div>
+					<div id="score_two" class="tablist-content" style="display:none;">
+					  <div id="score_two_content">
+					  </div>
+					</div>
+					<div id="score_three" class="tablist-content" style="display:none;">
+					  <div id="score_three_content">
+					  </div>
+					</div>
+					<div id="score_four" class="tablist-content" style="display:none;">
+					  <div id="score_four_content">
+					  </div>
+					</div>
+			</div>
+
+			<div id="three" class="ui-content">
+			  <div id="paiminListDiv"></div>
+			</div>
+			
+			<div id="four" class="ui-content">
+			   <div id="integration_one" class="tablist-content">
+					
+			   </div>
+			</div>
+			
+			<div id="five" class="ui-content">
+			   <div id="mingciDiv" class="tablist-content">
+					<table width="100%" border="1" cellpadding="0" cellspacing="0" style="border-style:none none solid none;border-color:#58D3F7;">
+						   <tr><td width="40%">名次</td><td width="60%" colspan="2">球队</td></tr>
+						   <tr><td>第1名</td><td colspan="2">电子一队</td></tr>
+						   <tr><td>第2名</td><td colspan="2">机械队</td></tr>
+						   <tr><td>第3名</td><td colspan="2">经管队</td></tr>
+						   <tr><td>第4名</td><td colspan="2">74人队</td></tr>
+						   <tr><td>并列第5名</td><td width="30%">人文队</td><td width="30%">深研院队</td></tr>
+						   <tr><td>并列第7名</td><td>环境队</td><td>化学队</td></tr>
+						   <tr><td>并列第9名</td><td>电子二队</td><td>清羽联队</td></tr>
+						   <tr><td>并列第11名</td><td>南京队</td><td>柳州队</td></tr>
+						   <tr><td>并列第13名</td><td>香港队</td><td>航院队</td></tr>
+						   <tr><td>并列第15名</td><td>汽车队</td><td>深圳队</td></tr>
+						   <tr><td>并列第17名</td><td>游击队</td><td>MBA队</td></tr>
+						   <tr><td>并列第19名</td><td>软件苹果队</td><td>材料队</td></tr>
+						   <tr><td>并列第21名</td><td>土木队</td><td>天津队</td></tr>
+						   <tr><td>并列第23名</td><td>无锡队</td><td>软件芒果队</td></tr>
+				    </table>
+			   </div>
+			</div>
+		</div>
+	</div>
+</div><!-- /page -->
+</body>
+</html>

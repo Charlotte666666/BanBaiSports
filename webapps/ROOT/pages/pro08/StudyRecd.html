@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+		<script type="text/javascript" charset="utf-8">
+		
+		    var oTable=null;
+		    var optType="";
+			var prison_code="";
+			var objs=[];
+			var isSaveOK=false;
+			
+$(document).ready(function() {
+       
+        var d=new Date();
+		timeStamp=d.getTime();
+		optType=top.getUrlParam(document.URL,"optType");
+		infoId=top.getUrlParam(document.URL,"infoId");
+		prison_code=top.getUrlParam(document.URL,"prison_code");
+		var study_time=top.getUrlParam(document.URL,"study_time");
+		if(!study_time)  report_time = "";
+		var addr=decodeURI( top.getUrlParam(document.URL,"addr") );
+		if(!addr)  addr = "";
+		var study_content=decodeURI(top.getUrlParam(document.URL,"study_content"));
+		if ( !study_content ) study_content="";
+		var duration=decodeURI(top.getUrlParam(document.URL,"duration"));
+	    if ( !duration ) duration="";
+		$("#study_time").val(top.getTimeStr(study_time,true));
+		$("#addr").val( addr );
+		$("#study_content").val( study_content );
+		$("#duration").val( duration );
+   } );
+      function checkSaveStudyInfo(){
+		var msg="";
+	    if ( $("#duration").val() != '' && !IsFloat( $("#duration").val() )) msg += "[学习时长]应为数字类型<br>";
+		// msg += checkString($("#wall_size").val(),true,64,"墙的尺寸");
+		if( $("#study_time").val() == '' )msg += "学习时间不能为空！<br>";
+		if( $("#addr").val() == '' )msg += "学习地点不能为空！<br>";
+		if( $("#duration").val() == '' )msg += "学习时长不能为空！<br>";
+		if( $("#study_content").val() == '' )msg += "学习内容不能为空！";
+		return msg;
+	}
+	
+    function saveStudyRecdInfo(){
+	var checkMsg = checkSaveStudyInfo();
+	    if ( checkMsg != '' ) {
+	       top.showInfoWinWarn(checkMsg);
+           return ;
+	    }
+	 var aoData=[];
+	     aoData.push( { "name": "studyRecd.prison_code", "value": prison_code });
+         aoData.push( { "name": "studyRecd.study_time", "value": top.toTimestamp($("#study_time").val())} );
+		 aoData.push( { "name": "studyRecd.addr", "value": $("#addr").val() } );
+		 aoData.push( { "name": "studyRecd.study_content", "value": $("#study_content").val() } );
+		 aoData.push( { "name": "studyRecd.duration", "value": $("#duration").val() } );
+	  if(optType == "insert"){
+	  var xurl="/actions/StudyRecd.action?insertStudyRecd";
+	  }
+	  else if(optType == "update"){
+	   aoData.push( { "name": "studyRecd.id", "value": infoId} );
+	  var xurl="/actions/StudyRecd.action?updateStudyRecd";
+	  }
+
+	 top.sendAjaxRequest(xurl,aoData,optCallback);
+   }
+   
+    function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功");
+		 parent.closeDialog();
+	    }else{
+	    	isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   
+function doCancel(){
+	   parent.closeDialog();
+   }
+		</script>
+		
+	</head>
+	<body>
+		<div width="100%">
+		    <div style='border: 2px solid #89A1B9;margin:5px;margin-top:25px'>
+			<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				<tr class="tr_data">
+					<td width="20%">学习时间</td><td width="80%" align="left"><input type="text" id="study_time" value="" onclick="new Calendar().show(this);"  size="20"></input></td>
+				</tr>
+				<tr class="tr_data">
+				    <td >学习地点</td><td align="left"><input type="text" id="addr" value=""/></td>
+				</tr>
+				<tr class="tr_data">
+				  <td >学习时长</td><td align="left" ><input type="text" id="duration" value=""  size="10"/>&nbsp;小时</td>
+				</tr>
+				<tr class="tr_data">
+				  <td >学习内容</td><td align="left" ><textarea id="study_content" rows="4" cols="60"></textarea></td>
+				</tr>
+		</table>
+		<p>
+		   <table  width="100%" align="center"><tr>
+					<td align="right"><span id="okBtn" class="buttonTwo"><a href="javascript:saveStudyRecdInfo()">提交</a></span></td>
+					<td align="left"><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">取消</a></span></td>
+		   </tr></table>
+		   </p>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"	src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var objs=[];
+			var obj={};
+			var from_type="";
+			$(document).ready(function() {
+			 from_type = top.getUrlParam(document.URL,"from_type");
+			if (!top.g_isPermit('cust_add') ) {
+				// 将相关字段隐藏或变成不可用 ， 保存按钮、提交按钮隐藏
+				$('#createBtn').hide();
+				$('#exportBtn').hide();
+			}
+			   $( "#tdCustType" ).html( top.getCodeSelectHtml("CUST_TYPE","cust_type",true,'0') );
+			   $( "#tdCust_status" ).html( top.getCodeSelectHtml("CUST_STATUS","cust_status",true,'0') );
+			   var iaoColumns= [
+			                   { "sTitle": "客户编号", "mDataProp": "code", "sWidth": "15%","sClass": "center",
+							        "fnRender": function ( oObj ) {
+                                        return '<a href=\'javascript:void(0)\' onclick="updateInfo(\''+oObj.aData.code+'\')" >'+oObj.aData.code+'</a>';
+										
+                                   },
+								   "bUseRendered": false
+							   },
+			                  { "sTitle": "客户名称", "mDataProp": "cust_name", "sWidth": "15%","sClass": "center","bUseRendered": false },
+			                  { "sTitle": "客户经理", "mDataProp": "cust_manager", "sWidth": "15%",
+							   "fnRender": function ( oObj ) {
+                                          return top.getUserNameByCode(oObj.aData.cust_manager);
+                                     },
+							  "bUseRendered": false},
+							  { "sTitle": "登记日期", "mDataProp": "register_date", "sWidth": "15%", "sClass": "center",
+								    "fnRender": function ( oObj ) {
+                                           return top.getTimeStr(oObj.aData.register_date ,true);
+                                     },
+							  "bUseRendered": false},
+							   { "sTitle": "工程地址", "mDataProp": "project_addr", "sWidth": "40%", "sClass": "left",
+							   "fnRender": function ( oObj ) {
+                                        return top.getCodeName( "DISTRICT", oObj.aData.district )+oObj.aData.project_addr;
+                                   },"bUseRendered": false}
+               ];
+			   
+			   var surl=top.getUrlBase()+"/actions/CustInfo.action?getCustInfoLikeList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData=getParamDate(aoData);
+			    },
+			    "sDom": "frt",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+			function updateInfo(id){
+			if(from_type=='promotion'){
+			    var xurl="pages/pro09/promotionApplyInfo.html?optType=insert&cust_code="+id;
+			    top.openSelectDialog("添加促销申请",xurl,900,600,null);
+				top.closeDialog();
+			}
+		    else{
+				var xurl="pages/pro09/custUpdate.html?optType=query&id="+id;
+				top.openSelectDialog("客户详细信息",xurl,900,600,null);
+				}
+				
+			}
+			 function getParamDate(aoData){
+					if($("#key_word").val()=="客户姓名/客户电话/工程地址"){
+						aoData.push( { "name": "key_word", "value":"" } );
+						return aoData;
+					}
+			     	aoData.push( { "name": "key_word", "value":$("#key_word").val() } );
+					return aoData;
+			}
+			function onSearchfocus(){
+				 if ( $("#key_word").val() == '客户姓名/客户电话/工程地址' ) {
+				   $("#key_word").val("");
+				 }
+			  }
+			  
+			  function onSearchOutfocus(){
+				 if ( $("#key_word").val() == '' ) {
+				   $("#key_word").val("客户姓名/客户电话/工程地址");
+				 }
+			}
+		</script>
+		<style>
+			#search_box { width: 423px; height: 36px;margin-left:auto;margin-right:auto;margin-bottom:30px;border: 2px solid #C6DEFF; margin-top:6px;} 
+			#search_box #go {font-size:22px;width:70px;height:36px;background-color:#C6DEFF;float: right; margin-left:410px; margin-top:-35px; } 
+			#search_box #key_word {padding: 0; border: 0; margin-left:5px; margin-top:5px; width: 325px; height:27px; line-height:27px; background: none; font-size:14px; color:#CCCCCC; } 
+		</style>
+	</head>
+	<body>
+		<div width="100%">
+			<div id="search_box"> 
+				<input type="text" title="客户姓名/客户电话/工程地址" value="客户姓名/客户电话/工程地址" onkeydown="if(event.keyCode==13) doQuery();" onfocus="onSearchfocus()" onblur="onSearchOutfocus()" style="height:30px" size="20" id="key_word"/>
+				<input type="button" value="搜索" id="go" onclick="doQuery()" alt="年份/城市区号/公司总机/股票代码" title="年份/城市区号/公司总机/股票代码"/>
+				
+			</div>
+			<table width="90%" style="margin:0 auto" align="center" cellpadding="0" cellspacing="0"
+				border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td height="25px">
+									&nbsp;客户列表&nbsp;
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<table cellpadding="0" width="90%" cellspacing="0" border="0"	class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

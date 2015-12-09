@@ -1,0 +1,117 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		
+		    var oTable=null;
+		    var optType="";
+			var prison_code="";
+			var objs=[];
+			var isSaveOK=false;
+			
+	$(document).ready(function() {
+        optType=top.getUrlParam(document.URL,"optType");
+		infoId=top.getUrlParam(document.URL,"infoId");
+		prison_code=top.getUrlParam(document.URL,"prison_code");
+		var chang_date=top.getUrlParam(document.URL,"chang_date");
+		if(!chang_date)  chang_date = "";
+		var chang_marg=decodeURI( top.getUrlParam(document.URL,"chang_marg") );
+		if(!chang_marg)  chang_marg = "";
+		var chang_reason=decodeURI(top.getUrlParam(document.URL,"chang_reason"));
+		if ( !chang_reason ) chang_reason="";
+		$("#chang_date").val(top.getTimeStr(chang_date,true));
+		$("#chang_marg").val( chang_marg );
+		$("#chang_reason").val( chang_reason );
+   } );
+   function checkSaveInterviewInfo(){
+		var msg="";
+		if( $("#chang_date").val() == '' )msg += "变动日期不能为空！";
+		if( $("#chang_marg").val() == '' )msg += "变动幅度不能为空！";
+		if( $("#chang_reason").val() == '' )msg += "变动原因不能为空";
+		return msg;
+	}
+	
+	function saveTermChangeInfo(){
+	var checkMsg = checkSaveInterviewInfo();
+	    if ( checkMsg != '' ) {
+	       top.showInfoWinWarn(checkMsg);
+           return ;
+	    }
+		var aoData=[];
+		aoData.push( { "name": "termChangInfo.prison_code", "value": prison_code } );
+		aoData.push( { "name": "termChangInfo.chang_date", "value": top.toTimestamp($("#chang_date").val()) } );
+		aoData.push( { "name": "termChangInfo.chang_marg", "value": $("#chang_marg").val() } );
+		aoData.push( { "name": "termChangInfo.chang_reason", "value": $("#chang_reason").val() } );
+		 if(optType == "insert"){
+	  var xurl="/actions/Prison.action?insertPrisonTermChange";
+	  }
+	  else if(optType == "update"){
+	   aoData.push( { "name": "termChangInfo.id", "value": infoId} );
+	  var xurl="/actions/Prison.action?updatePrisonTermChange";
+	  }
+
+	 top.sendAjaxRequest(xurl,aoData,optCallback);
+	}
+	
+   
+   
+    function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功");
+		 parent.closeDialog();
+	    }else{
+	    	isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   
+	function doCancel(){
+	   parent.closeDialog();
+   }
+		</script>
+		
+	</head>
+	<body>
+		<div width="100%">
+		    <div style='border: 2px solid #89A1B9;margin:5px;margin-top:25px'>
+			<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				<tr class="tr_data">
+					<td width="30%">变动日期</td><td width="70%" align="left"><input type="text" id="chang_date" value="" onclick="new Calendar().show(this);"  size="20"></input></td>
+				</tr>
+				<tr class="tr_data">
+					<td>变动幅度</td><td align="left"><input type="text" id="chang_marg" value=""/></td>
+				</tr>
+				<tr class="tr_data">
+				  <td>变动原因</td><td align="left"><textarea id="chang_reason" rows="4" cols="60"></textarea></td>
+				</tr>
+		</table>
+		<p>
+		   <table  width="100%" align="center"><tr>
+					<td align="right"><span id="okBtn" class="buttonTwo"><a href="javascript:saveTermChangeInfo()">提交</a></span></td>
+					<td align="left"><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">取消</a></span></td>
+		   </tr></table>
+		   </p>
+		</div>
+	</body>
+</html>

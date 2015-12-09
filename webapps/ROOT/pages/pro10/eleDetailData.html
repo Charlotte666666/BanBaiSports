@@ -1,0 +1,261 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title></title>
+<link href="../../css/comm.css" rel="stylesheet" type="text/css" />
+<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="../../js/SimpleMap.js"></script>
+<script type="text/javascript" src="../../js/helpyouworkeasy-core.js"></script>
+<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+<script type="text/javascript">
+var detailResult=[];
+var eles=[];
+var eleCodes=[];
+var letters=[];
+var currentErr=0;
+var currentSusp=0;
+var currentLack=0;
+
+jQuery(document).ready(function() {
+    letters[65]="A";letters[66]="B";letters[67]="C";letters[68]="D";letters[69]="E";letters[70]="F";
+    letters[71]="G";letters[72]="H";letters[73]="I";letters[74]="J";letters[75]="K";letters[76]="L";
+    letters[77]="M";letters[78]="N";letters[79]="O";letters[80]="P";letters[81]="Q";letters[82]="R";
+    letters[83]="S";letters[84]="T";letters[85]="U";letters[86]="V";letters[87]="W";letters[88]="X";
+    letters[89]="Y";letters[90]="Z";
+	
+	detailResult=top.getTempValue();
+	eles[0]="降水";eles[1]="气温";eles[2]="气压";eles[3]="相对湿度";eles[4]="风向风速";eles[5]="地温";eles[6]="能见度";eles[7]="蒸发";
+	eleCodes[0]="PRCP";eleCodes[1]="TEMP";eleCodes[2]="PRSR";eleCodes[3]="HMDT";eleCodes[4]="WIND";eleCodes[5]="GRTM";eleCodes[6]="VISA";eleCodes[7]="EVAP";
+	
+	currentErr=top.getUrlParam(document.URL,"err");
+	currentSusp=top.getUrlParam(document.URL,"susp");
+	currentLack=top.getUrlParam(document.URL,"lack");
+	
+	showDataList();
+ });
+ 
+ function getEleName(code){
+    for ( var i=0;i<eleCodes.length;i++ ) {
+	   if ( eleCodes[i] == code ) return eles[i];
+	}
+    return code;
+ }
+
+ function showDataList(){
+    try{
+	  var ht="";
+	  var row=1;
+	  var tempStr="";
+	  var str="";
+	  var hbNum=0;
+	  var currentSameCode="";
+	  
+	  var resultList=detailResult.err_detail;
+	  if ( resultList.length > 0 ) {
+	    ht+='<tr><td colspan="5"><b>错误('+currentErr+')</b></td></tr>';
+		ht+='<tr bgcolor="#E1F2EC" >';
+		ht+='<td width="60px" height="32px" align="center" style="word-break:break-all;">序号</td>';
+	    ht+='<td width="100px" height="32px" align="center" style="word-break:break-all;">站号</td>';
+	    ht+='<td width="180px" height="32px" align="center" style="word-break:break-all;">要素大类</td>';
+	    ht+='<td width="60px" height="32px" align="center" style="word-break:break-all;">个数</td>';
+	    ht+='<td width="400px" height="32px" align="center" style="word-break:break-all;">要素明细</td>';
+	    ht+='</tr>';
+	  }
+	  
+	  for (var i=0;i<resultList.length;i++) {
+	          str=resultList[i].detail;
+			  if ( str.indexOf("err:ZL'all'ZR") != -1 ) {
+			    str="全部";
+			  } else {
+			    tempStr=str.substring( str.indexOf("err")+7,str.length );
+				tempStr=tempStr.substring( 0,tempStr.indexOf("ZR") );
+				str = tempStr.replace(new RegExp('"',"gm"), "");
+			  }
+			  str=parent.descEleStr( str );
+			  if ( currentSameCode != resultList[i].v01000 && i+1<resultList.length && resultList[i].v01000 == resultList[i+1].v01000 ) {
+			      currentSameCode=resultList[i].v01000;
+				  hbNum++;
+				  for (var j=i+2;j<resultList.length;j++) {
+				     if ( resultList[i].v01000 == resultList[j].v01000 ) {
+					   hbNum++;
+					 } else break;
+				  }
+				  ht+='<tr ';
+				  ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+				  ht+='>';
+				  ht+='<td width="60px" height="32px" align="center" style="word-break:break-all;">'+(i+1)+'</td>';
+				  ht+='<td rowspan="'+(hbNum+1)+'" width="100px" height="32px" align="center" style="word-break:break-all;">'+getCode2ASII(resultList[i].v01000)+'</td>';
+				  ht+='<td width="180px" height="32px" align="center" style="word-break:break-all;">'+getEleName(resultList[i].elementCode)+'</td>';
+				  ht+='<td width="60px" height="32px" align="center" style="word-break:break-all;">'+resultList[i].err+'</td>';
+				  ht+='<td width="400px" height="32px" align="center" style="word-break:break-all;">'+str+'</td>';
+				  ht+='</tr>';
+			  } else {
+				  ht+='<tr ';
+				  ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+				  ht+='>';
+				  ht+='<td width="60px" height="32px" align="center" style="word-break:break-all;">'+(i+1)+'</td>';
+				  if ( hbNum > 0 ) {
+				    hbNum=hbNum-1;
+				  } else {
+				    ht+='<td width="100px" height="32px" align="center" style="word-break:break-all;">'+getCode2ASII(resultList[i].v01000)+'</td>';
+				  }
+				  ht+='<td width="180px" height="32px" align="center" style="word-break:break-all;">'+getEleName(resultList[i].elementCode)+'</td>';
+				  ht+='<td width="60px" height="32px" align="center" style="word-break:break-all;">'+resultList[i].err+'</td>';
+				  ht+='<td width="400px" height="32px" align="center" style="word-break:break-all;">'+str+'</td>';
+				  ht+='</tr>';
+			  }
+			  if ( row == 1 ) {
+				 row=0;
+			  } else {
+				 row=1;
+			  }
+	  }
+	  resultList=detailResult.suspi_detail;
+	  if ( resultList.length > 0 ) {
+	     ht+='<tr><td colspan="5"><b>可疑('+currentSusp+')</b></td></tr>';
+		 ht+='<tr bgcolor="#E1F2EC" >';
+		 ht+='<td width="60px" height="32px" align="center" style="word-break:break-all;">序号</td>';
+	     ht+='<td width="100px" height="32px" align="center" style="word-break:break-all;">站号</td>';
+	    ht+='<td width="180px" height="32px" align="center" style="word-break:break-all;">要素大类</td>';
+	    ht+='<td width="60px" height="32px" align="center" style="word-break:break-all;">个数</td>';
+	    ht+='<td width="400px" height="32px" align="center" style="word-break:break-all;">要素明细</td>';
+	     ht+='</tr>';
+	  }
+	  
+	  for (var i=0;i<resultList.length;i++) {
+			  str=resultList[i].detail;
+			  if ( str.indexOf("suspi:ZL'all'ZR") != -1 ) {
+			    str="全部";
+			  } else {
+			    tempStr=str.substring( str.indexOf("suspi")+9,str.length );
+				tempStr=tempStr.substring( 0,tempStr.indexOf("ZR") );
+				str = tempStr.replace(new RegExp('"',"gm"), "");
+			  }
+			  str=parent.descEleStr( str );
+			  if ( currentSameCode != resultList[i].v01000 && i+1<resultList.length && resultList[i].v01000 == resultList[i+1].v01000 ) {
+			      currentSameCode=resultList[i].v01000;
+			      hbNum++;
+				  for (var j=i+2;j<resultList.length;j++) {
+				     if ( resultList[i].v01000 == resultList[j].v01000 ) {
+					   hbNum++;
+					 } else break;
+				  }
+				  ht+='<tr ';
+				  ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+				  ht+='>';
+				  ht+='<td width="60px" height="32px" align="center" style="word-break:break-all;">'+(i+1)+'</td>';
+				  ht+='<td rowspan="'+(hbNum+1)+'" width="100px" height="32px" align="center" style="word-break:break-all;">'+getCode2ASII(resultList[i].v01000)+'</td>';
+				  ht+='<td width="180px" height="32px" align="center" style="word-break:break-all;">'+getEleName(resultList[i].elementCode)+'</td>';
+				  ht+='<td width="60px" height="32px" align="center" style="word-break:break-all;">'+resultList[i].suspi+'</td>';
+				  ht+='<td width="400px" height="32px" align="center" style="word-break:break-all;">'+str+'</td>';
+				  ht+='</tr>';
+			  } else {
+				  ht+='<tr ';
+				  ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+				  ht+='>';
+				  ht+='<td width="60px" height="32px" align="center" style="word-break:break-all;">'+(i+1)+'</td>';
+				  if ( hbNum > 0 ) {
+				    hbNum=hbNum-1;
+				  } else {
+				    ht+='<td width="100px" height="32px" align="center" style="word-break:break-all;">'+getCode2ASII(resultList[i].v01000)+'</td>';
+				  }
+				  ht+='<td width="180px" height="32px" align="center" style="word-break:break-all;">'+getEleName(resultList[i].elementCode)+'</td>';
+				  ht+='<td width="60px" height="32px" align="center" style="word-break:break-all;">'+resultList[i].suspi+'</td>';
+				  ht+='<td width="400px" height="32px" align="center" style="word-break:break-all;">'+str+'</td>';
+				  ht+='</tr>';
+			  }
+			  if ( row == 1 ) {
+				 row=0;
+			  } else {
+				 row=1;
+			  }
+	  }
+	  
+	  resultList=detailResult.lack_detail;
+	  if ( resultList.length > 0 ) {
+	    ht+='<tr><td colspan="5"><b>缺测('+currentLack+')</b></td></tr>';
+		ht+='<tr bgcolor="#E1F2EC" >';
+		ht+='<td width="60px" height="32px" align="center" style="word-break:break-all;">序号</td>';
+	    ht+='<td width="100px" height="32px" align="center" style="word-break:break-all;">站号</td>';
+	    ht+='<td width="180px" height="32px" align="center" style="word-break:break-all;">要素大类</td>';
+	    ht+='<td width="60px" height="32px" align="center" style="word-break:break-all;">个数</td>';
+	    ht+='<td width="400px" height="32px" align="center" style="word-break:break-all;">要素明细</td>';
+		ht+='</tr>';
+	  }
+
+	  for (var i=0;i<resultList.length;i++) {
+	          str=resultList[i].detail;
+			  if ( str.indexOf("lack:ZL'all'ZR") != -1 ) {
+			    str="全部";
+			  } else {
+			    tempStr=str.substring( str.indexOf("lack")+8,str.indexOf("ZR") );
+				str = tempStr.replace(new RegExp('"',"gm"), "");
+			  }
+			  str=parent.descEleStr( str );
+			  if ( currentSameCode != resultList[i].v01000 && i+1<resultList.length && resultList[i].v01000 == resultList[i+1].v01000 ) {
+			      currentSameCode=resultList[i].v01000;
+			      hbNum++;
+				  for (var j=i+2;j<resultList.length;j++) {
+				     if ( resultList[i].v01000 == resultList[j].v01000 ) {
+					   hbNum++;
+					 } else break;
+				  }
+				  ht+='<tr ';
+				  ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+				  ht+='>';
+				  ht+='<td width="60px" height="32px" align="center" style="word-break:break-all;">'+(i+1)+'</td>';
+				  ht+='<td rowspan="'+(hbNum+1)+'" width="100px" height="32px" align="center" style="word-break:break-all;">'+getCode2ASII(resultList[i].v01000)+'</td>';
+				  ht+='<td width="180px" height="32px" align="center" style="word-break:break-all;">'+getEleName(resultList[i].elementCode)+'</td>';
+				  ht+='<td width="60px" height="32px" align="center" style="word-break:break-all;">'+resultList[i].lack+'</td>';
+				  ht+='<td width="400px" height="32px" align="center" style="word-break:break-all;">'+str+'</td>';
+				  ht+='</tr>';
+			  } else {
+				  ht+='<tr ';
+				  ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+				  ht+='>';
+				  ht+='<td width="60px" height="32px" align="center" style="word-break:break-all;">'+(i+1)+'</td>';
+				  if ( hbNum > 0 ) {
+				    hbNum=hbNum-1;
+				  } else {
+				    ht+='<td width="100px" height="32px" align="center" style="word-break:break-all;">'+getCode2ASII(resultList[i].v01000)+'</td>';
+				  }
+				  ht+='<td width="180px" height="32px" align="center" style="word-break:break-all;">'+getEleName(resultList[i].elementCode)+'</td>';
+				  ht+='<td width="60px" height="32px" align="center" style="word-break:break-all;">'+resultList[i].lack+'</td>';
+				  ht+='<td width="400px" height="32px" align="center" style="word-break:break-all;">'+str+'</td>';
+				  ht+='</tr>';
+			  }
+			  if ( row == 1 ) {
+				 row=0;
+			  } else {
+				 row=1;
+			  }
+	  }
+	  $("#dataList").html( ht );
+	}catch(e){}
+ }
+ 
+ // 从数字到带字母的ASCII
+function getCode2ASII(code){
+    if ( !code ) return "";
+    if ( code == '' ) return "";
+	code=""+code;
+    try{
+     if ( code.length == 6 ) {
+       code = letters[ Number(code.substring(0,2)) ]+code.substring(2,6);	
+     }
+    }catch(e){
+    }
+    return code;
+}
+</script>
+</head>
+
+<body style="width:100%;">
+  <div id="dataDiv" style="margin: 1px;padding:0;width:820px;background-color:#ffffff;overflow: auto;">
+   <table id="dataList" width="800px" cellpadding="0" cellspacing="2px" border="1" style="border-color:blue"></table>
+  </div>
+</body>
+</html>

@@ -1,0 +1,351 @@
+<html>
+<head>
+    <meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>有奖竞猜抽奖</title>
+	<script src="../js/jquery-1.10.2.min.js"></script>
+
+  <script type="text/javascript">
+   var schedule_id=1;
+   var teamList=[];
+   var guessInfoList=[];
+   var guessCountList=[];
+   var g_UrlBase="";
+   var currentGuessId=0;
+   var currentGuessIndex=0;
+   
+var g_Interval = 100;
+var personList = [];//参加抽奖人数
+var gotList=[];
+var pn=-1;
+var g_Timer;
+var running = false;
+
+function beginRndNum(){
+    if ( personList.length == 0 ) {
+	   return ;
+	}
+	if(running){
+	    $("#userList").show();
+		$("#Result").hide();
+		running = false;
+		clearTimeout(g_Timer);		
+		$('#ResultNum').css('color','red');
+		gotList[gotList.length]=personList[pn];
+		
+		$("#loteryBtn").attr("src","../pages/badminton/img/start.png");
+		   var val=getGuessAnwser(currentGuessId);
+		   var aoData=[];
+		   aoData.push( { "name": "guess.guess_id", "value": currentGuessId } );
+		   aoData.push( { "name": "guess.guess_value", "value": val } );
+		   aoData.push( { "name": "guess.member_id", "value": personList[pn].member_id } );
+		   doSendAjaxRequest("/actions/Guess.action?doGuessLottery",aoData,getGuessByGuessStatusCallback);
+		pn=-1;
+	}
+	else{
+	    $("#userList").hide();
+		$("#Result").show();
+		running = true;
+		$('#ResultNum').css('color','black');
+		//$("#btn").val("结束");
+		$("#loteryBtn").attr("src","../pages/badminton/img/stop.png");
+
+		beginTimer();
+	}
+}
+
+function isGod(mid){
+   if ( !gotList ) return false;
+   for ( var i=0;i<gotList.length;i++ ) {
+     if ( gotList[i].member_id == mid ) return true; 
+   }
+   return false;
+}
+
+function updateRndNum(){
+	pn++;
+	if ( pn >= personList.length ) {
+	  pn=0;
+	}
+	$('#ResultNum').html(personList[pn].member_name);
+}
+
+function beginTimer(){
+	g_Timer = setTimeout(beat, g_Interval);
+}
+
+function beat() {
+	g_Timer = setTimeout(beat, g_Interval);
+	updateRndNum();
+}
+/////////////////////////////////////////////////////////////////////
+   
+   $(document).ready(function() {
+       schedule_id=getUrlParam(document.URL,"schedule_id");
+	   var sw=$(window).width();
+	   $( "#wonderOut" ).css("left",(sw-300)/2 );
+	   personList=['哈哈','aa','e','bbbbb','ccccc','eeeee','sssss','eeeeee'];
+	   getList();
+   } );
+   
+   function getList(){
+       var aoData=[];
+	   aoData.push( { "name": "guess.schedule_id", "value": schedule_id } );
+	   doSendAjaxRequest("/actions/Guess.action?getGuessLotteryBySchedule",aoData,getGuessLotteryByScheduleCallback);
+   }
+   
+   function getGuessLotteryByScheduleCallback(obj){
+       var ht='';
+	   try{
+		 guessInfoList=obj.body.guessInfoList;
+		 if ( !guessInfoList ) return ;
+		 currentGuessId = guessInfoList[0].id;
+		 currentGuessIndex = 0;
+		 guessDetail();
+	   }catch(e){
+	   }
+   }
+   
+   function guessDetail(){
+       var ht='';
+	   try{
+		 var cs=[];
+		 var cn=[];
+		 var countValue=[];
+		 for ( var i=0;i<guessInfoList.length;i++ ) {
+		    if ( guessInfoList[i].id != currentGuessId ) continue;
+		    ht+='<table width="98%" cellspacing="0" cellpadding="2px" border="0" style="margin:5px auto;">';
+			ht+='<tr height="30px">';
+			ht+='<td align="left" colspan="2"><font size="4" color="#ffffff">&nbsp;'+(i+1)+")"+guessInfoList[i].guess_title+'</font></td>';
+			ht+='</tr>';
+			
+			if ( guessInfoList[i].guess_type == 'TEAM') {
+			  
+			} else {
+			  cs=guessInfoList[i].choices.split(";");
+			  cn=guessInfoList[i].choices_name.split(";");
+			  countValue=guessInfoList[i].countValue.split(";");
+			  var max=0;
+			  for (var k=0;k<countValue.length;k++) {
+			    if ( !countValue[k] || countValue[k] == '' ) continue;
+			    if ( max < Number(countValue[k]) ) {
+				  max = Number(countValue[k]);
+				}
+			  }
+			  if ( max > 5000 ) {
+			  } else if ( max > 1000 ) {
+			    max=5000;
+			  } else if ( max > 500 ) {
+			    max=1000;
+			  } else if ( max > 100 ) {
+			    max=500;
+			  } else if ( max > 50 ) {
+			    max=100;
+			  } else if ( max > 10 ) {
+			    max=50;
+			  } else {
+			    max=10;
+			  }
+
+			  for ( var n=0;n<cs.length;n++ ) {
+			      if ( !cs[n] || cs[n] == '' ) continue;
+				  ht+='<tr height="30px">';
+				  ht+='<td align="left" width="150px" ><font size="4" color="#ffffff"><b>&nbsp;'+cs[n]+': '+cn[n]+'</b></font></td>';
+				  ht+='<td align="left" width="220px" valign="middle" align="left">';
+				  ht+='<table cellspacing="0" cellpadding="0" border="0" height="5px">';
+				  if ( Number(countValue[n]) == 0 ) {
+				    ht+='<tr height="5px"><td height="5px" width="10px"></td><td>&nbsp;</td></tr>';
+				  } else {
+				    ht+='<tr height="5px"><td height="5px" width="'+(Number(countValue[n])/max)*220+'px" style="background-color:#bad55e"></td><td><font size="2" color="#ffffff">&nbsp;'+countValue[n]+'</font></td></tr>';
+				  }
+				  ht+='</table>';
+				  ht+='</td>';
+				  ht+='</tr>';
+			  }
+			}
+		    ht+='</table><br/>';
+		 }
+		 $("#content").html( ht );
+	   }catch(e){
+	   }
+	   
+	   if ( currentGuessIndex == 0 ) {
+	      $("#lastBtn").hide();
+	   } else {
+	      $("#lastBtn").show();
+	   }
+	   if ( currentGuessIndex == guessInfoList.length - 1 ) {
+	      $("#nextBtn").hide();
+	   } else {
+	      $("#nextBtn").show();
+	   }
+	   
+	   // getGuessByGuessStatus
+	   var val=getGuessAnwser(currentGuessId);
+	   var aoData=[];
+	   aoData.push( { "name": "guess.guess_id", "value": currentGuessId } );
+	   aoData.push( { "name": "guess.guess_value", "value": val } );
+	   doSendAjaxRequest("/actions/Guess.action?getGuessByGuessStatus",aoData,getGuessByGuessStatusCallback);
+   }
+   
+   function getGuessByGuessStatusCallback(obj){
+       var ht='';
+	   try{
+		 var guessList=obj.guessList;
+		 // 答对而且没有抽中的人员列表
+		 personList=[];
+		 var oPersonList=obj.personList;
+		 if ( oPersonList.length > 0 ) {
+		   for ( var j=0;j<oPersonList.length;j++ ) {
+		    if ( !isGod( oPersonList[j].member_id ) ) {
+			   personList[personList.length]=oPersonList[j];
+			}
+		   }
+		 }
+		 if ( guessList ) {
+		  ht+='<table width="98%" cellspacing="0" cellpadding="2px" border="0" style="margin:5px auto;">';
+		  for ( var i=0;i<guessList.length;i++ ) {
+			ht+='<tr height="30px">';
+			ht+='<td align="center" width="50%"><font size="5" color="#ffffff"><b>&nbsp;'+getCellnumber(guessList[i].cell_phone)+'</b></font></td>';
+			ht+='<td align="center" width="50%"><font size="5" color="#ffffff"><b>&nbsp;'+guessList[i].member_name+'</b></font></td>';
+			ht+='</tr>';
+		  }
+		  ht+='</table>';
+		 }
+		 $("#userList").html( ht );
+	   }catch(e){
+	   }
+   }
+   
+   function getCellnumber(cn){
+       if ( !cn || cn == '' ) return "";
+	   if ( cn.length < 11 ) return cn;
+	   return cn.substring(0,4)+"***"+cn.substring(7,cn.length);
+   }
+   
+   function getRadioValue(ds){
+	  if ( !ds ) return "";
+	  for ( var i=0;i<ds.length;i++ ) {
+			if ( ds[i].checked ) {
+				return ds[i].value;
+			}
+	  }
+	  return "";
+	}
+	
+	function startLottery(){
+	     beginRndNum();
+	}
+	
+	function getGuessAnwser(gid){
+	     for ( var i=0;i<guessInfoList.length;i++ ) {
+		    if ( guessInfoList[i].id == gid ) {
+			   return guessInfoList[i].answer;
+			}
+		 }
+		 return "";
+	}
+	
+	function nextQuestion(){
+	  if ( currentGuessIndex + 1 >= guessInfoList.length ) return ;
+	  currentGuessIndex++;
+	  currentGuessId = guessInfoList[currentGuessIndex].id;
+	  guessDetail();
+	}
+	
+	function lastQuestion(){
+	  if ( currentGuessIndex - 1 < 0 ) return ;
+	  currentGuessIndex--;
+	  currentGuessId = guessInfoList[currentGuessIndex].id;
+	  guessDetail();
+	}
+	
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+		  getList();
+	    } else {
+		  //$("#optResultSpan").html("提交失败");
+		}
+	   }catch(e){
+		  //$("#optResultSpan").html("提交失败");
+	   }
+   }
+   
+  function doSendAjaxRequest(xurl,param,fnCallback){
+	    if ( xurl.indexOf('http://') == -1 ) xurl = g_UrlBase+xurl;
+		$.ajax( {
+			"url":  xurl,
+			"data": param,
+			"timeout" : 10000,
+			"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+			"success": function (json) {
+				try{ fnCallback( json );}catch(e){}
+			},
+			"dataType": "json",
+			"cache": false,
+			"type": "POST",
+			"error": function (xhr, error, thrown) {
+			}
+		} );
+ }
+ 
+ function getUrlParam(xurl,name){
+	    var para="";
+	    if(xurl.lastIndexOf("?")>0){
+	        para=xurl.substring(xurl.lastIndexOf("?")+1,xurl.length);
+			var arr=para.split("&");
+			para="";
+			for(var i=0;i<arr.length;i++){
+			   if(arr[i].split("=")[0]==name) return arr[i].split("=")[1];
+			}
+			return "";
+	   }else{
+	        return "";
+	   }
+	}
+  </script> 
+  
+<style type="text/css">
+#Result{border:3px solid #40AA53;margin:0 auto;text-align:center;width:400px;height:243px;padding:50px 0;background:#efe;}
+#ResultNum{font-size:70pt;}
+#Button{margin:50px 0 0 0;}
+#Button input{font-size:40px;padding:0 50px;}
+#btn{background-color:#40AA53;border:1px solid #40AA53;width:20%;height:45px;margin:0em auto;font-size:1em;border-radius:2.5px;-moz-border-radius:2.5px;-webkit-border-radius:2.5px;color:#FFF;}
+</style>
+
+</head>
+<body background="../pages/badminton/img/lotteryBg.png" style="background-repeat: repeat-x;"">
+ <center>
+  <table background="../pages/badminton/img/lotteryForm.png" width="1126px" height="800px">
+    <tr height="325px"><td colspan="3">&nbsp;</td></tr>
+    <tr height="350px">
+	    <td width="50px">&nbsp;</td>
+	    <td width="465px" id="content" valign="top" cellpadding="10px" >&nbsp;</td>
+		<td width="16px">&nbsp;</td>
+		<td width="410px" valign="top" cellpadding="10px" >
+		    <div id="userList" ></div>
+		    <div id="Result" style="display:none;color:#40AA53;valign:middle">
+				<span id="ResultNum">&nbsp;</span>
+			</div>
+		</td>
+		<td >&nbsp;</td>
+	</tr>
+	<tr height="80px">
+	    <td width="50px">&nbsp;</td>
+	    <td width="465px" align="center" valign="middle">
+		  <table width="100%"><tr>
+		    <td width="50%" align="center" align="middle" ><img onclick="lastQuestion()" id="lastBtn" style="cursor:pointer" src="../pages/badminton/img/last.png"></img></td>
+			<td width="50%" align="center" align="middle" ><img onclick="nextQuestion()" id="nextBtn" style="cursor:pointer" src="../pages/badminton/img/next.png"></img></td>
+		    </tr>
+		  </table>
+		</td>
+		<td width="16px">&nbsp;</td>
+		<td width="410px" align="center" valign="middle"><img id="loteryBtn" style="cursor:pointer" onclick="startLottery()" src="../pages/badminton/img/start.png"></img></td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr><td colspan="3">&nbsp;</td></td></tr>
+  </table>
+ </center>
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/base/ui.all.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+
+<style type="text/css">
+#main{
+	height:100%;
+	padding: 10px;
+}
+</style>
+<script type="text/javascript">
+var isSaveOK=false;
+var colIndex=1;
+var userCode = "";
+
+$(document).ready( function() {
+   initData();
+});
+
+function doBeforeClose(){
+    var obj={
+   		  "isSaveOK":isSaveOK
+	};
+    top.setTempValue(obj);
+}
+
+function doCancel(){
+    top.closeDialog();
+}
+
+function headButtonFun1(){
+    doSubmit();
+}
+function doSubmit(){
+    var fields=top.getAllCheckedValue( document.getElementsByName('col') );
+	if ( fields == '' ) {
+	  top.showInfoWinWarn("请勾选配置的字段");
+	  return;
+	}
+	var aoData=[];
+    aoData.push( { "name": "userConfig.userCode", "value": userCode } );
+	for ( var i=1;i<10;i++ ) {
+	  if ( colIndex == i ) {
+	    aoData.push( { "name": "userConfig.c"+i, "value": fields } );
+	  } else {
+        aoData.push( { "name": "userConfig.c"+i, "value": "INOCHANGEI" } );
+	  }
+	}
+	top.sendAjaxRequest("/actions/User.action?updateUserConfig",aoData,optCallback);
+}
+
+function initData(){
+    colIndex=top.getUrlParam(document.URL,"colIndex");
+	if ( !colIndex ) colIndex=1;
+	colIndex=Number(colIndex);
+	
+	var user = top.getCurrentUser();
+	userCode = user.userCode;
+	
+	var userConfig = top.getUserConfig();
+	if ( userConfig ) {
+	  var v=userConfig.c1;
+	  if ( colIndex == 2 ) { 
+	    v=userConfig.c2;
+	  } else if ( colIndex == 3 ) { 
+	    v=userConfig.c3;
+	  } else if ( colIndex == 4 ) { 
+	    v=userConfig.c4;
+	  } else if ( colIndex == 5 ) { 
+	    v=userConfig.c5;
+	  } else if ( colIndex == 6 ) { 
+	    v=userConfig.c6;
+	  } else if ( colIndex == 7 ) { 
+	    v=userConfig.c7;
+	  } else if ( colIndex == 8 ) { 
+	    v=userConfig.c8;
+	  } else if ( colIndex == 9 ) { 
+	    v=userConfig.c9;
+	  }
+	  if ( v == 'INOCHANGEI' ) return ;
+	  if ( colIndex == 6 && v == '' ) {
+	    top.checkAll(true,document.getElementsByName('col'));
+		document.getElementById("all").checked=true;
+	  } else {
+	    top.initCheckedValue( document.getElementsByName('col'), v);
+	  }
+	}
+}
+
+function optCallback(obj){
+	try{
+	 if ( obj.status == true ){
+	  isSaveOK = true;
+	  top.showInfoWinOK("操作成功");
+	  var userConfig = top.getUserConfig();
+	  if ( !userConfig ) userConfig={};
+	  var v=top.getAllCheckedValue( document.getElementsByName('col') );
+	  if ( colIndex == 1 ) {
+	    userConfig.c1=v;
+	  } else if ( colIndex == 2 ) { 
+	    userConfig.c2=v;
+	  } else if ( colIndex == 3 ) { 
+	    userConfig.c3=v;
+	  } else if ( colIndex == 4 ) { 
+	    userConfig.c4=v;
+	  } else if ( colIndex == 5 ) { 
+	    userConfig.c5=v;
+	  } else if ( colIndex == 6 ) { 
+	    userConfig.c6=v;
+	  } else if ( colIndex == 7 ) { 
+	    userConfig.c7=v;
+	  } else if ( colIndex == 8 ) { 
+	    userConfig.c8=v;
+	  } else if ( colIndex == 9 ) { 
+	    userConfig.c9=v;
+	  }
+	  top.updateUserConfig( userConfig );
+	  top.closeDialog();
+	 }else{
+	  isSaveOK = false;
+	  top.showInfoWinError("操作失败 "+obj.msg);
+	 }
+	}catch(e){
+	  top.showInfoWinError("处理异常:"+e.message);
+	}
+}
+
+function selectAll(){
+   var isChecked=document.getElementById("all").checked;
+   var cs=document.getElementsByName('col');
+   for ( var i=0;i<cs.length;i++ ) {
+      cs[i].checked = isChecked;
+   }
+}
+</script>
+</head>
+<body>
+<div id="main">
+<div id="demo" class="demolayout" style="background-color:#ffffff;">
+<table width="100%">
+<tr>
+<td colspan="3"><input type='checkbox' id="all" onclick="selectAll()" value=''></input>&nbsp;全选</td>
+</tr>
+<tr>
+<td><input type='checkbox' value='c0001' name='col'></input>&nbsp;姓名</td>
+<td><input type='checkbox' value='c0002' name='col'></input>&nbsp;单位</td>
+<td><input type='checkbox' value='c0003' name='col'></input>&nbsp;年龄（初诊）</td>
+</tr><tr>
+<td><input type='checkbox' value='c0004' name='col'></input>&nbsp;病历号</td><td><input type='checkbox' value='c0005' name='col'></input>&nbsp;原发病</td><td><input type='checkbox' value='c0006' name='col'></input>&nbsp;诊断时白细胞</td>
+</tr><tr>
+<td><input type='checkbox' value='c0007' name='col'></input>&nbsp;诊断时血红蛋白</td><td><input type='checkbox' value='c0008' name='col'></input>&nbsp;诊断时血小板</td><td><input type='checkbox' value='c0009' name='col'></input>&nbsp;外周血原始细胞百分比</td>
+</tr><tr>
+<td><input type='checkbox' value='c0010' name='col'></input>&nbsp;骨髓原始细胞百分比</td><td><input type='checkbox' value='c0011' name='col'></input>&nbsp;染色体</td><td><input type='checkbox' value='c0012' name='col'></input>&nbsp;免疫分型</td>
+</tr><tr>
+<td><input type='checkbox' value='c0013' name='col'></input>&nbsp;诊断距开始治疗时间</td><td><input type='checkbox' value='c0014' name='col'></input>&nbsp;治疗方案</td><td><input type='checkbox' value='c0015' name='col'></input>&nbsp;化疗疗程</td>
+</tr><tr>
+<td><input type='checkbox' value='c0016' name='col'></input>&nbsp;蒽环类累积剂量</td><td><input type='checkbox' value='c0017' name='col'></input>&nbsp;环磷酰胺累积剂量</td><td><input type='checkbox' value='c0018' name='col'></input>&nbsp;阿糖胞苷累积剂量</td>
+</tr><tr>
+<td><input type='checkbox' value='c0019' name='col'></input>&nbsp;MTX累积剂量</td><td><input type='checkbox' value='c0020' name='col'></input>&nbsp;腰穿鞘注次数</td><td><input type='checkbox' value='c0021' name='col'></input>&nbsp;使用靶向药物</td>
+</tr><tr>
+<td><input type='checkbox' value='c0022' name='col'></input>&nbsp;靶向药物种类</td><td><input type='checkbox' value='c0023' name='col'></input>&nbsp;靶向药物剂量</td><td><input type='checkbox' value='c0024' name='col'></input>&nbsp;靶向药物疗程</td>
+</tr><tr>
+<td><input type='checkbox' value='c0025' name='col'></input>&nbsp;治疗后最优疗效</td><td><input type='checkbox' value='c0026' name='col'></input>&nbsp;化疗后复发</td><td><input type='checkbox' value='c0027' name='col'></input>&nbsp;化疗后复发时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c0028' name='col'></input>&nbsp;复发后治疗</td><td><input type='checkbox' value='c0029' name='col'></input>&nbsp;化疗后存活情况</td><td><input type='checkbox' value='c0030' name='col'></input>&nbsp;化疗后死亡原因</td>
+</tr><tr>
+<td><input type='checkbox' value='c0031' name='col'></input>&nbsp;化疗后末次随访时间/死亡时间</td><td><input type='checkbox' value='c0032' name='col'></input>&nbsp;是否移植</td><td><input type='checkbox' value='c0033' name='col'></input>&nbsp;移植时间</td>
+</tr><tr>
+<td><input type='checkbox' value='c0034' name='col'></input>&nbsp;移植类型</td><td><input type='checkbox' value='c0035' name='col'></input>&nbsp;移植后并发症</td><td><input type='checkbox' value='c0036' name='col'></input>&nbsp;移植后结局</td>
+</tr><tr>
+<td><input type='checkbox' value='c0037' name='col'></input>&nbsp;末次随访时间</td><td><input type='checkbox' value='c0038' name='col'></input>&nbsp;化疗方案</td><td></td>
+</tr>
+</table>
+</div>
+ 
+</div>
+</body>
+</html> 

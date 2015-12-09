@@ -1,0 +1,381 @@
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css"/>
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css"	media="print, projection, screen"/>
+<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+	    <script type="text/javascript" src="../../js/SimpleMap.js"></script>
+		<script type="text/javascript">
+		
+    var require_id=0;
+	var cost_code='';
+	var is_handle=true;
+	var zhucai_total=0;
+	var fuliao_total=0;
+	var rengong_total=0;
+	var haosun_total=0;
+	var product_total=0;
+	var all_total=0;
+	var cur_head_id='';
+	$(document).ready(function() {
+	 require_id=top.getUrlParam(document.URL,"require_id");
+	 getBudgetInfo();
+   });
+	//初始化方法
+   function getBudgetInfo(){
+	var aoData=[];
+	aoData.push( { "name": "requrireInfo.id", "value": require_id } ); 
+	xurl="/actions/ProjectOrder.action?getBudgetInfoById";
+	top.sendAjaxRequest(xurl,aoData,getBudgetInfoCallback);
+	
+   }
+   function getBudgetInfoCallback(obj){
+	if (obj.status == true){
+		var budgetInfo=obj.body;
+		$( "#view_cust_code").html(budgetInfo.cust_code);
+		$( "#view_cust_name").html(budgetInfo.cust_name);
+		$( "#view_cust_mobile").html(budgetInfo.cust_mobile);
+		$( "#view_addr_all").html(budgetInfo.addr_all);
+		$( "#view_usable_area").html(budgetInfo.usable_area);
+		$( "#view_room_count").html(budgetInfo.room_count);
+		$( "#view_hall_count").html(budgetInfo.hall_count);
+		$( "#view_bath_count").html(budgetInfo.bath_count);
+		$( "#view_room_type").html(top.getCodeName("ROOM_TYPE",budgetInfo.room_type));
+		$( "#view_manager_fee_type").html(top.getCodeName("MANAGER_FEE_TYPE",budgetInfo.manager_fee_type));
+		$( "#view_manager_fee").html(budgetInfo.manager_fee);
+		$( "#manage_total").html(budgetInfo.manager_fee);
+		$( "#view_taxes_scale").html(budgetInfo.taxes_scale);
+		$( "#taxes_fee_scale").html(budgetInfo.taxes_scale);
+		if(budgetInfo.is_report==''){
+			$( "#view_is_report").html("否");
+			$( "#view_table_examine").hide();
+			
+		}else if(budgetInfo.is_report==''||budgetInfo.is_report=='0'){
+			if(budgetInfo.is_report==''){	
+				$( "#view_is_report").html("否");
+			}else{
+				$( "#view_is_report").html("是");
+			}
+			$( "#view_table_examine").hide();
+			
+		}else{
+			$( "#view_table_examine").show();
+			$( "#view_is_report").html("是");
+			$( "#is_report").attr("disabled","true");
+			$( "#view_examine_status").html(top.getCodeName("EXAMINE_STATUS",budgetInfo.is_report));
+		}
+		$( "#view_prefer_info").html(budgetInfo.prefer_info);
+		$( "#view_prefer_money").html(budgetInfo.prefer_money);
+		$( "#prefer_total").html(budgetInfo.prefer_money);
+		$( "#view_budget_type").html(top.getCodeName("BUDGET_TYPE",budgetInfo.budget_type));
+		$( "#view_budget_time").html(top.getTimeStr(budgetInfo.budget_time,true));
+		$( "#view_budget_person").html(budgetInfo.budget_person);
+		$( "#view_examine_person").html(budgetInfo.examine_person);
+		$( "#view_examine_suggest").html(budgetInfo.examine_suggest);
+		$( "#view_examine_time").html(budgetInfo.examine_time);
+    
+		var headList=budgetInfo.budgetHeadInfoList;
+		initBudgetHeadInfo(headList);
+		$("#view_td_room_names").html(genarateRoomsSelectHtml(headList,"view_room_names"));
+		getBudgetItemList();
+	}
+   }
+	function genarateRoomsSelectHtml(headList,idstr){
+		var ht='';
+		ht+='<select id="'+idstr+'" onchange="getBudgetItemList()">';
+		if(headList!=null&&headList.length>0){
+			for(var i=0;i<headList.length;i++){
+				ht+='<option value="'+headList[i].head_id+'">'+headList[i].room_name;
+				ht+='</option>';
+			}
+		//初始显示预算详情信息
+		}
+		ht+='</select>';
+		return ht;
+	}
+	
+    function initBudgetHeadInfo(budgetHeadList){
+		//var view_ht="";
+		var ht='';
+		var roomInfoIndex=0;
+		/*view_ht+="<tr class='tr_data'>";
+		view_ht+="<td width='20%'>房间编号</td>";
+		view_ht+="<td width='21%'>房间类型</td>";
+		view_ht+="<td width='20%'>房间名称</td>";
+		view_ht+="<td width='13%'>地面积(单位：平方米)</td>";
+		view_ht+="<td width='13%'>墙面积（单位：平方米）</td>";
+		view_ht+="<td width='13%'>层高（单位：米）</td>";
+		view_ht+="</tr>";*/
+		if(budgetHeadList!=null&&budgetHeadList.length>0){
+			for(var i=0;i<budgetHeadList.length;i++){
+				/*view_ht+="<tr id='view_tr_room_row"+roomInfoIndex+"'  class='tr_data'>";
+				view_ht+="<td id='view_room_id"+roomInfoIndex+"'>"+budgetHeadList[i].room_id+"</td>";
+				view_ht+="<td id='view_positon"+roomInfoIndex+"'>"+top.getCodeName("BUDGET_ROOM_TYPE",budgetHeadList[i].position)+"</td>";
+				view_ht+="<td id='view_room_name"+roomInfoIndex+"'>"+budgetHeadList[i].room_name+"</td>";
+				view_ht+="<td id='view_earth_area"+roomInfoIndex+"'>"+budgetHeadList[i].earth_area+"</td>";
+				view_ht+="<td id='view_wall_area"+roomInfoIndex+"'>"+budgetHeadList[i].wall_area+"</td>";
+				view_ht+="<td id='view_room_height"+roomInfoIndex+"'>"+budgetHeadList[i].room_height+"</td>";
+				view_ht+="</tr>";*/
+				roomInfoIndex++;
+				ht='<tr class="tr_data"><td style="padding-left:10px" align="left" colspan="11">'+budgetHeadList[i].room_name+'</td></tr>';
+				ht+='<tr class="tr_data" id="tr_'+budgetHeadList[i].head_id+'">';
+				ht+="<td width='6%'>排序</td><td width='10%'>产品名称</td>";
+				ht+="<td width='6%'>单位</td><td width='6%'>单价</td><td width='6%'>数量</td><td width='6%'>主材</td>";
+				ht+="<td width='6%'>辅料</td><td width='6%'>人工</td><td width='6%'>耗损</td>";
+				ht+="<td width='6%'>成本</td><td>工艺做法及材料说明</td>";
+				ht+='</tr>';
+				ht+='<tr class="tr_data"><td colspan="11">无</td></tr>';
+				$("#viewItemList").append(ht);
+				ht='';
+				getBudgetItemList(budgetHeadList[i].head_id);
+			}
+		}else{
+			//view_ht+="<tr class='tr_data'><td colspan='6'>无</td></tr>";
+		}
+		//$("#view_budget_head_list").html(view_ht);
+	}
+	function getBudgetItemList(head_id){
+	   var aoData=[];
+	   aoData.push( { "name": "budgetItem.head_id", "value": head_id } );
+	   aoData.push( { "name": "budgetItem.require_id", "value": require_id } );
+	   top.sendAjaxRequest("/actions/ProjectOrder.action?getBudgetItemList",aoData,getBudgetItemListCallback);
+	}
+	function getBudgetItemListCallback(obj){
+		if(obj){
+		var total=0;
+		var list=obj.aaData;
+			var view_ht='';
+			/*view_ht='<tr class="tr_data">';
+			view_ht+="<td width='6%'>排序</td><td width='10%'>产品名称</td>";
+			view_ht+="<td width='6%'>单位</td><td width='6%'>单价</td><td width='6%'>数量</td><td width='6%'>主材</td>";
+			view_ht+="<td width='6%'>辅料</td><td width='6%'>人工</td><td width='6%'>耗损</td>";
+			view_ht+="<td width='6%'>成本</td><td>工艺做法及材料说明</td>";
+			view_ht+='</tr>';*/
+			for(var i=0;i<list.length;i++){
+				total=list[i].unit_price*list[i].num+list[i].rengong_price+list[i].sunhao_price+list[i].fuliao_cost+list[i].zhucai_price;
+				all_total+=total;
+				product_total+=list[i].unit_price*list[i].num;
+				zhucai_total+=list[i].zhucai_price;
+				fuliao_total+=list[i].fuliao_cost;
+				rengong_total+=list[i].rengong_price;
+				haosun_total+=list[i].sunhao_price;
+				//view
+				view_ht+='<tr class="tr_data">';//head_id,product_id,product_name,product_unit,memo,budget_id,num,sunhao_price,zhucai_price,fuliao_cost,rengong_price,unit_price,total_price,order_num
+				view_ht+='<td>'+list[i].order_num+'</td>';
+				view_ht+='<td>'+list[i].product_name+'</td>';
+				view_ht+='<td>'+list[i].product_unit+'</td>';
+				view_ht+='<td>'+list[i].unit_price+'</td>';
+				view_ht+='<td>'+list[i].num+'</td>';
+				view_ht+='<td>'+list[i].zhucai_price+'</td>';
+				view_ht+='<td>'+list[i].fuliao_cost+'</td>';
+				view_ht+='<td>'+list[i].rengong_price+'</td>';
+				view_ht+='<td>'+list[i].sunhao_price+'</td>';
+				view_ht+='<td>'+total+'</td>';
+				view_ht+='<td>'+list[i].memo+'</td>';
+				view_ht+='</tr>';
+				total=0;
+			}
+			if(list.length>0){
+				$("#tr_"+list[0].head_id).next("tr").remove();
+				$("#tr_"+list[0].head_id).after(view_ht);
+			}
+			
+		}
+			$("#product_total").html(product_total)
+			$("#zhucai_total").html(zhucai_total);
+			$("#fuliao_total").html(fuliao_total);
+			$("#rengong_total").html(rengong_total);
+			$("#haosun_total").html(haosun_total);
+			if(is_handle){
+				//$("#manage_total").html(haosun_total);
+				$("#taxes_total").html($("#rengong_total").html()*$("#taxes_fee_scale").html()/100);
+				all_total-=parseFloat($("#prefer_total").html());
+				all_total+=parseFloat($("#taxes_total").html());
+				all_total+=parseFloat($("#manage_total").html());
+				is_handle=false;
+			}
+			$("#total").html(all_total);
+	}
+	function printBudgetInfo(){
+		$("#budgetPrintBt").hide();
+		window.print();
+	}
+	</script>
+	<style>
+
+	 .p_data{
+		text-align: left;
+		COLOR: #0A0A0A; BACKGROUND-COLOR: #ffffff; 
+	 }
+	 .tr_data {
+		text-align: center;
+		COLOR: #0A0A0A;
+		BACKGROUND-COLOR: #F4FAFF;
+		font-size: 13px;
+		padding: 3px;
+	}
+	table.attention{
+		border-collapse:collapse;
+	}
+	table.attention td{
+		border:solid 1px black;
+	}
+	</style>
+	</head>
+	<body width="97%"><br/>
+	<B>客户信息</B>
+		<table class="attention" border="1" cellpadding="3" cellspacing="1" width="98%" align="center" style="margin:0 auto;background-color: #b9d8f3;">
+				<tr class="tr_data" height="25px">
+						<td width="100px" align="center" class="table_property_title">客户编号：</td>
+						<td align="left" id="view_cust_code"></td>
+						<td width="100px" align="center" class="table_property_title">客户姓名：</td>
+						<td align="left" id="view_cust_name"></td>
+						<td width="100px" align="center" class="table_property_title">地址：</td>
+						<td align="left" id="view_addr_all" colspan="3"></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="10%"class="table_property_title">电话：</td>
+						<td width="15%"align="left" id="view_cust_mobile"></td>
+						<td width="10%"class="table_property_title">房屋类型：</td>
+						<td width="15%"align="left" id="view_room_type"></td>
+						<td width="10%"class="table_property_title">户型：</td>
+						<td width="15%"align="left">
+							<span id="view_room_count" style="padding:5px"></span>室
+							<span id="view_hall_count" style="padding:5px"></span>厅
+							<span id="view_bath_count" style="padding:5px"></span>卫
+						</td>
+						<td width="10%" align="center" class="table_property_title">施工面积：</td>
+						<td align="left"><span  id="view_usable_area">0</span>平方米</td>
+					</tr>
+				</table>
+		<br/>
+	<B>预算信息</B>
+		<table class="attention" border="1" cellpadding="3" cellspacing="1" width="98%" align="center" style="margin:0 auto;background-color: #b9d8f3;">
+			<tr class="tr_data" height="25px">
+				<td class="table_property_title">预算时间：</td>
+				<td align="left" id="view_budget_time"></td>
+				<td class="table_property_title">模板：</td>
+				<td align="left" id="view_budget_type"></td>
+				<td class="table_property_title">预算人：</td>
+				<td align="left" colspan="3" id="view_budget_person"></td>
+			</tr>
+			<tr class="tr_data" height="25px">
+				<td width="10%"class="table_property_title">管理费类型：</td>
+				<td width="15%"align="left" id="view_manager_fee_type"></td>
+				<td width="10%"class="table_property_title">管理费(元)：</td>
+				<td width="15%" align="left" id="view_manager_fee"></td>
+				<td width="10%" class="table_property_title">税金比例：</td>
+				<td width="15%" align="left"><span id="view_taxes_scale"></span>%</td>
+				<td width="10%" class="table_property_title">是否上报：</td>
+				<td width="15%" align="left" id="view_is_report"></td>
+			</tr>
+			<tr class="tr_data" height="25px">
+				<td class="table_property_title">优惠信息：</td>
+				<td align="left" colspan="4" id="view_prefer_info"></td>
+				<td colspan="2" class="table_property_title">优惠金额（合同后）：</td>
+				<td align="left" id="view_prefer_money"></td>
+			</tr>
+		</table>
+		<br/>
+	<B>收费信息</B>
+		<table class="attention" border="1" cellpadding="3" cellspacing="1" width="98%" align="center" style="margin:0 auto;background-color: #b9d8f3;">
+			<tr class='tr_data'>
+				<td width="10%">序号</td>
+				<td width="21%">收费名称</td>
+				<td>收费内容</td>
+				<td width="15%">金额(元)</td>
+			</tr>
+			<tr class='tr_data'>
+				<td>1</td>
+				<td>项目收费</td>
+				<td>所有房间内施工产品数量*单价</td>
+				<td id="product_total"></td>
+			</tr>
+			<tr class='tr_data'>
+				<td>2</td>
+				<td>主材</td>
+				<td>材料费合计</td>
+				<td id="zhucai_total"></td>
+			</tr>
+			<tr class='tr_data'>
+				<td>3</td>
+				<td>辅料</td>
+				<td>辅料费合计</td>
+				<td id="fuliao_total"></td>
+			</tr>
+			<tr class='tr_data'>
+				<td>4</td>
+				<td>人工费</td>
+				<td>人工费合计</td>
+				<td id="rengong_total"></td>
+			</tr>
+			<tr class='tr_data'>
+				<td>5</td>
+				<td>耗损</td>
+				<td>耗损合计</td>
+				<td id="haosun_total"></td>
+			</tr>
+			<tr class='tr_data'>
+				<td>6</td>
+				<td>管理费</td>
+				<td>施工面积*50元/平方（不满3000，按3000计算）</td>
+				<td id="manage_total"></td>
+			</tr>
+			<tr class='tr_data'>
+				<td>7</td>
+				<td>税金</td>
+				<td>人工费*<span id="taxes_fee_scale">0</span>%</td>
+				<td id="taxes_total"></td>
+			</tr>
+			<tr class='tr_data'>
+				<td>8</td>
+				<td>优惠金额</td>
+				<td></td>
+				<td id="prefer_total"></td>
+			</tr>
+			<tr class='tr_data'>
+				<td>9</td>
+				<td style="color:red">合计</td>
+				<td align="left" colspan="2" id="total"></td>
+			</tr>
+		</table>
+		<br/>
+	<!--<B>房间部位</B>
+		<table class="attention" id="view_budget_head_list" border="1" cellpadding="3" cellspacing="1" width="98%" align="center" style="background-color: #b9d8f3;border-top: 0;border-bottom: 0;">
+			<tr class='tr_data'>
+				<td width="20%">房间编号</td>
+				<td width="21%">房间类型</td>
+				<td width="20%">房间名称</td>
+				<td width="13%">地面积(单位：平方米)</td>
+				<td width="13%">墙面积（单位：平方米）</td>
+				<td width="13%">层高（单位：米）</td>
+			</tr>
+		</table>
+		<br/>!-->
+	<B>预算清单</B>
+		<table class="attention" id='viewItemList' border="1" cellpadding="3" cellspacing="1" width="98%" align="center" style="margin:0 auto;background-color: #b9d8f3;">
+		<table  width="90%" id="budgetPrintBt" style="margin: 10px 0px 0px 10px;">
+			<tr>
+				<td width="100%" align="center">
+					<div  class="buttonDivTwo">
+						<a href="javascript:void(0)" onclick="printBudgetInfo()">打印</a>
+					</div>
+				</td>
+			</tr>
+		</table>
+	</body>
+</html>

@@ -1,0 +1,703 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link type="text/css" rel="stylesheet" href="../../css/layout-default-latest.css" />
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery.layout-latest.min.js" ></script>
+	<script type="text/javascript" src="../../js/SimpleMap.js"></script>
+	<script type="text/javascript" src="../../js/checkForm.js"></script>
+<script type="text/javascript">
+var oTable=null;
+var myLayout;
+var currentTypeId="";// 当前商品列表检索的分类
+var currentTypeId1="";// 当前第一分类ID
+var currentTypeId2="";// 当前第二分类ID
+var currentTypeId3="";// 当前第一三分类ID
+var createTypeLevel=1;
+var lev1Size=0;
+var lev2Size=0;
+var lev3Size=0;
+var typeArr=[];
+var currentOptTypeId="";
+var goodsArr=[];//商品列表
+var cartGoodsMap=new SimpleMap();//购物车商品
+
+function GoodsObj(){
+   this.goods_id=0;
+   this.type1=-1;
+   this.type2=-1;
+   this.type3=-1;
+   this.amount=0;
+   this.price=0;
+   this.goodsName="";
+}
+
+$(document).ready( function() {
+	myLayout = $('body').layout({
+			closable:					true
+		,	resizable:					true
+		,	slidable:					true
+		,	livePaneResizing:			true
+		,	north__initClosed:	true
+		,	north__size:			    0
+		,	north__resizable:			false
+		,	north__slidable:			false
+		,	north__togglerLength_closed: '100%'
+		,   north__spacing_open:        0
+		,	north__spacing_closed:		0
+		,	south__initClosed:	true
+		,	south__size:				0
+		,	south__resizable:			false
+		,	south__spacing_open:		0
+		,	south__spacing_closed:		0
+		,	east__initClosed:	true
+		,	east__size:					0
+		,	east__resizable:			false
+		,	east__spacing_open:		    0
+		,	east__spacing_closed:		0
+		,	east__minSize:				0
+		,	east__maxSize:				0 
+		,	center__minWidth:			100
+		,	west__size:					346
+		,	west__resizable:			true
+		,	west__minSize:				250
+		,	west__maxSize:				467 
+		,	west__animatePaneSizing:	false
+		,	west__fxSpeed_size:			"fast"
+		,	west__fxSpeed_open:			1000
+		,	west__fxSettings_open:		{ easing: "easeOutBounce" }
+		,	west__fxName_close:			"none"
+		,	west__showOverflowOnHover:	true
+		,	stateManagement__enabled:	false
+		,	showDebugMessages:			false
+		});
+ 
+    var iaoColumns= [
+       { "sTitle": "商品名称", "mDataProp": "goods_id", "sWidth": "30%",
+          "fnRender": function ( oObj ) {
+		       goodsArr[goodsArr.length]=oObj.aData;
+               return '<a href="javascript:void(0)" onclick=\'goodsInfo('+oObj.aData.goods_id+')\' >&nbsp;'+oObj.aData.name+"</a>";
+          },
+          "bUseRendered": false
+        },
+		{ "sTitle": "状态", "mDataProp": "status", "sWidth": "10%","sClass": "center","bSortable":false,
+		  "fnRender": function ( oObj ) {
+               return top.getCodeName( "ERP_GOODS_STATUS", oObj.aData.status );
+          },
+          "bUseRendered": false
+		},
+        { "sTitle": "单位", "mDataProp": "unit", "sWidth": "10%","sClass": "center","bSortable":false,
+		  "fnRender": function ( oObj ) {
+               return top.getCodeName( "ERP_GOODS_UNIT", oObj.aData.unit );
+          },
+          "bUseRendered": false
+		},
+		{ "sTitle": "规格", "mDataProp": "specification", "sWidth": "10%","sClass": "center","bUseRendered": false},
+		{ "sTitle": "库存", "mDataProp": "inventory", "sWidth": "10%","sClass": "center","bUseRendered": false},
+        { "sTitle": "价格", "mDataProp": "price", "sWidth": "10%","sClass": "center","bUseRendered": false},
+		{ "sTitle": "条形编码", "mDataProp": "barcode", "sWidth": "10%","sClass": "center","bUseRendered": false},
+		{ "sTitle": "检索优先级", "mDataProp": "priority", "sWidth": "10%","sClass": "center","bSortable":false,"bUseRendered": false}
+    ];
+
+    var surl=top.getUrlBase()+"/actions/ProGoods.action?getGoodsList";
+	oTable = $('#goodsTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"sScrollY": ($(window).height()-120)+"px",
+                    "bScrollCollapse": true,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					  goodsArr=[];
+	                  aoData.push( { "name": "info.type1_id", "value": (currentTypeId1==''?-1:currentTypeId1) } );
+	                  aoData.push( { "name": "info.type2_id", "value": (currentTypeId2==''?-1:currentTypeId2) } );
+					  aoData.push( { "name": "info.type3_id", "value": (currentTypeId3==''?-1:currentTypeId3) } );
+					  aoData.push( { "name": "info.status", "value": -1 } );
+  			        },
+			        "sDom": "frtlip",
+				    "sPaginationType": "full_numbers",
+				    "aoColumns": iaoColumns
+	} );
+	
+	top.sendAjaxRequest("/actions/ProGoods.action?getGoodsTypeList",[],callbackGetTypeList);
+	
+	if ( top.g_isPermit("erp_addGoods") ) {
+	  $( "#createGoodsBtn" ).show();
+	} else{
+	  $( "#createGoodsBtn" ).hide();
+	}
+	if ( top.g_isPermit("erp_addGoodsType") ) {
+	  $( "#addType1" ).show();
+	  $( "#addType2" ).show();
+	  $( "#addType3" ).show();
+	} else{
+	  $( "#addType1" ).hide();
+	  $( "#addType2" ).hide();
+	  $( "#addType3" ).hide();
+	}
+	if ( top.g_isPermit("erp_editGoodsType") ) {
+	  $( "#editType1" ).show();
+	  $( "#editType2" ).show();
+	  $( "#editType3" ).show();
+	} else{
+	  $( "#editType1" ).hide();
+	  $( "#editType2" ).hide();
+	  $( "#editType3" ).hide();
+	}
+	if ( top.g_isPermit("erp_deleteGoodsType") ) {
+	  $( "#deleteType1" ).show();
+	  $( "#deleteType2" ).show();
+	  $( "#deleteType3" ).show();
+	} else{
+	  $( "#deleteType1" ).hide();
+	  $( "#deleteType2" ).hide();
+	  $( "#deleteType3" ).hide();
+	}
+	$("#goodsCartListDiv").height( $(window).height() - 260 );
+});
+
+function callbackGetTypeList(obj){
+    typeArr = obj.aaData;
+	top.setCacheMap("ERP_GOODS_TYPE",typeArr);
+	top.setNeedRefreshType();
+    var ht1='';
+	var ht2='';
+	var ht3='';
+	lev1Size=0;
+    lev2Size=0;
+    lev3Size=0;
+	for (var i=0;i<typeArr.length;i++) {
+	    if ( typeArr[i].type_level == 1 ) {
+		  ht1+='<li class="goodsTypeLable" typeLevel="1" id="'+typeArr[i].type_id+'">'+typeArr[i].name+'</li>';
+		  lev1Size++;
+		} else if ( typeArr[i].type_level == 2 && (typeArr[i].parent_id == currentTypeId1 || currentTypeId1=='') ) {
+		  lev2Size++;
+		  if ( currentTypeId1=='' && lev2Size > 12 ) continue;
+		  ht2+='<li class="goodsTypeLable" typeLevel="2" id="'+typeArr[i].type_id+'">'+typeArr[i].name+'</li>';
+		} else if ( typeArr[i].type_level == 3 && (typeArr[i].parent_id == currentTypeId2 || currentTypeId2=='') 
+		          && ( currentTypeId1 == '' || typeArr[i].pp_id == currentTypeId1 ) ){
+		  lev3Size++;
+		  if ( currentTypeId2=='' && lev3Size > 12 ) continue;
+		  ht3+='<li class="goodsTypeLable" typeLevel="3" id="'+typeArr[i].type_id+'">'+typeArr[i].name+'</li>';
+		}
+	}
+	
+	$( "#sortable1" ).html( ht1 );
+	$( "#sortable2" ).html( ht2 );
+	$( "#sortable3" ).html( ht3 );
+	
+	$( "#sortable1" ).sortable({
+	     stop: function( event, ui ) {
+		    sortTypes( document.getElementById("sortable1").childNodes );
+		 }
+    });
+	$( "#sortable2" ).sortable({
+	     stop: function( event, ui ) {
+		    sortTypes( document.getElementById("sortable2").childNodes );
+		 }
+    });
+	$( "#sortable3" ).sortable({
+	     stop: function( event, ui ) {
+		    sortTypes( document.getElementById("sortable3").childNodes );
+		 }
+   });
+	
+	addEffect();
+}
+
+function reDrawType(lev){
+    var ht2='';
+	var ht3='';
+	if ( lev == 2 ) lev2Size=0;
+    if ( lev == 3 ) lev3Size=0;
+	var s3=0;
+	for (var i=0;i<typeArr.length;i++) {
+	    if ( lev == 2 && typeArr[i].type_level == 2 && typeArr[i].parent_id == currentTypeId1 ) {
+		  lev2Size++;
+		  ht2+='<li class="goodsTypeLable" typeLevel="2" id="'+typeArr[i].type_id+'">'+typeArr[i].name+'</li>';
+		} else if ( lev == 2 && typeArr[i].type_level == 3 && typeArr[i].pp_id == currentTypeId1 && currentTypeId2 == '' ) {
+		  s3++;
+		  if ( s3 > 20 ) continue;
+		  ht3+='<li class="goodsTypeLable" typeLevel="3" id="'+typeArr[i].type_id+'">'+typeArr[i].name+'</li>';
+		} else if ( lev == 3 && typeArr[i].type_level == 3 && typeArr[i].parent_id == currentTypeId2 ){
+		  lev3Size++;
+		  ht3+='<li class="goodsTypeLable" typeLevel="3" id="'+typeArr[i].type_id+'">'+typeArr[i].name+'</li>';
+		}
+	}
+	if ( lev == 2 ) {
+	  $( "#sortable2" ).html( ht2 );
+	  $( "#sortable2" ).sortable({
+	     stop: function( event, ui ) {
+		    sortTypes( document.getElementById("sortable2").childNodes );
+		 }
+	  });
+	}
+	$( "#sortable3" ).html( ht3 );
+	$( "#sortable3" ).sortable({
+	     stop: function( event, ui ) {
+		    sortTypes( document.getElementById("sortable3").childNodes );
+		 }
+	  });
+	addEffect();
+}
+
+function sortTypes(nodes){
+    try{
+	  var ids="";
+	  for ( var i=0;i<nodes.length;i++ ) {
+	    ids+=nodes[i].id+",";
+	  }
+	  var aoData=[];
+	  aoData.push( { "name": "ids", "value": ids } );
+	  top.sendAjaxRequest("/actions/ProGoods.action?orderGoodsTypes",aoData,null);
+	}catch(e){
+	}
+}
+
+function addEffect(){
+    $(".goodsTypeLable").mouseover(function(){
+	    if ( currentTypeId1 == $(this).attr("id") || currentTypeId2 == $(this).attr("id") || currentTypeId3 == $(this).attr("id") ) return ;
+        $(this).css("color","#FF8000");
+    });
+	$(".goodsTypeLable").mouseout(function(){
+        if ( currentTypeId1 == $(this).attr("id") || currentTypeId2 == $(this).attr("id") || currentTypeId3 == $(this).attr("id") ) return ;
+		$(this).css("color", "blue");
+    });
+	$(".goodsTypeLable").click(function(){
+	    if ( currentTypeId == $(this).attr("id") ) return ;
+		if ( $(this).attr("typeLevel") == 1 ) {
+		  $("#"+currentTypeId1).css("color", "blue");
+		  currentTypeId1 = $(this).attr("id");
+		  $("#"+currentTypeId2).css("color", "blue");
+		  currentTypeId2 = "";
+		  $("#"+currentTypeId3).css("color", "blue");
+		  currentTypeId3 = "";
+		  reDrawType(2);
+		} else if ( $(this).attr("typeLevel") == 2  ) {
+		  $("#"+currentTypeId2).css("color", "blue");
+		  currentTypeId2 = $(this).attr("id");
+		  $("#"+currentTypeId3).css("color", "blue");
+		  currentTypeId3 = "";
+  	      var o = getTypeById(currentTypeId2);
+		  if ( o != null ) {
+		    if ( currentTypeId1 != o.parent_id ) {
+		     currentTypeId1 = o.parent_id;
+			 reDrawType(1);
+		     reDrawType(2);
+			}
+		  }
+		  reDrawType(3);
+		} else {
+		  $("#"+currentTypeId3).css("color", "blue");
+		  currentTypeId3 = $(this).attr("id");
+		  if ( !currentTypeId3 ) currentTypeId3="";
+	      var o = getTypeById(currentTypeId3);
+		  if ( o != null ) {
+		     if ( currentTypeId2 != o.parent_id || currentTypeId1 != o.pp_id ) {
+		      currentTypeId1 = o.pp_id;
+			  currentTypeId2 = o.parent_id;
+			  reDrawType(1);
+			  reDrawType(2);
+			  reDrawType(3);
+		     }
+		  }
+		}
+		currentTypeId = $(this).attr("id");
+		$(this).css("color", "red");
+		doQuery();
+    });
+	$("#"+currentTypeId1).css("color", "red");
+	$("#"+currentTypeId2).css("color", "red");
+	$("#"+currentTypeId3).css("color", "red");
+}
+
+function searchTxtClick(){
+    if ( $( "#searchTypeTxt" ).val() == '输入分类名称或拼音缩写' ) {
+	    $("#searchTypeTxt").val("");
+	}
+}
+
+function searchTxtBlur(){
+  if ( $("#searchTypeTxt").val() == '' ) {
+     $("#searchTypeTxt").val("输入分类名称或拼音缩写");
+  }
+}
+
+function searchGoodsTxtClick(){
+    if ( $( "#searchGoodsTxt" ).val() == '输入商品名称或拼音缩写' ) {
+	    $("#searchGoodsTxt").val("");
+	}
+}
+
+function searchGoodsTxtBlur(){
+  if ( $("#searchGoodsTxt").val() == '' ) {
+     $("#searchGoodsTxt").val("输入商品名称或拼音缩写");
+  }
+}
+
+function getTypeName( tid ) {
+  var t=getTypeById(tid);
+  if ( t == null ) return  "";
+  return t.name;
+}
+
+function getTypeById( tid ) {
+  for (var i=0;i<typeArr.length;i++) {
+     if ( typeArr[i].type_id == tid ) return  typeArr[i];
+  }
+  return null;
+}
+
+function checkPidBeforeOptType(lev){
+   var pid=-1;
+   if ( lev == 1 ) {
+     pid=0;
+   } else if ( lev == 2 ) {
+     pid=currentTypeId1;
+   } else {
+     pid=currentTypeId2;
+   }
+   if ( lev == 1 ) return true;
+   if ( pid == -1 || pid == '' ) {
+     if ( lev == 2 ) {
+       top.showInfoWinWarn("请先选中第一级商品分类");
+	 } else if ( lev == 3 ){
+	   top.showInfoWinWarn("请先选中第二级商品分类");
+	 }
+     return false;
+   }
+   return true;
+}
+
+function createType(lev){
+   createTypeLevel = lev;
+   currentOptTypeId = '';
+   if ( !checkPidBeforeOptType(lev) ) return ;
+   top.showInputDialog("添加商品分类", "请输入商品分类名称", doCreateOrUpdateType);
+}
+
+function editType(lev){
+   createTypeLevel = lev;
+   currentOptTypeId = '';
+   if ( lev == 1 ) {
+     currentOptTypeId=currentTypeId1;
+   } else if ( lev == 2 ) {
+     currentOptTypeId=currentTypeId2;
+   } else {
+     currentOptTypeId=currentTypeId3;
+   }
+   if ( currentOptTypeId == '' ) {
+     top.showInfoWinWarn("请先选中要修改的商品分类");
+     return ;
+   }
+   if ( !checkPidBeforeOptType(lev) ) return ;
+   var typeName = getTypeName( currentOptTypeId );
+   top.showInputDialog("修改商品分类", "请输入商品分类名称", doCreateOrUpdateType, typeName );
+}
+
+function deleteType(lev){
+   createTypeLevel = lev;
+   currentOptTypeId = '';
+   if ( lev == 1 ) {
+     currentOptTypeId=currentTypeId1;
+   } else if ( lev == 2 ) {
+     currentOptTypeId=currentTypeId2;
+   } else {
+     currentOptTypeId=currentTypeId3;
+   }
+   if ( currentOptTypeId == '' ) {
+     top.showInfoWinWarn("请先选中要删除的商品分类");
+     return ;
+   }
+   var typeName = getTypeName( currentOptTypeId );
+   top.showConfirm("您确定要删除商品分类["+typeName+"]吗？", doDeleteType);
+}
+
+function doCreateOrUpdateType(name){
+	if ( name == '' ) {
+		top.showInputDialog("请输入商品分类名称");
+		return ;
+	}
+	var parentId = 0;
+	var ppid=-1;
+	var sortOrder = 0;
+	if ( createTypeLevel == 1 ) {
+	  parentId = 0;
+	  sortOrder=lev1Size+1;
+	} else if ( createTypeLevel == 2 ) {
+	  parentId = currentTypeId1;
+	  sortOrder=lev2Size+1;
+	} else if ( createTypeLevel == 3 ) {
+	  parentId = currentTypeId2;
+	  ppid = currentTypeId1;
+	  sortOrder=lev3Size+1;
+	}
+	var optType = "insertGoodsType";
+    var aoData=[];
+	if ( currentOptTypeId != '' ) {
+	  aoData.push( { "name": "type.type_id", "value": currentOptTypeId } );
+	  optType = "updateGoodsType";
+    }
+	aoData.push( { "name": "type.pp_id", "value": ppid } );
+	aoData.push( { "name": "type.type_level", "value": createTypeLevel } );
+	aoData.push( { "name": "type.name", "value": name } );
+    aoData.push( { "name": "type.parent_id", "value": parentId } );
+	aoData.push( { "name": "type.sort_order", "value": sortOrder } );
+	top.showLoadingInfo(true);
+    top.sendAjaxRequest("/actions/ProGoods.action?"+optType,aoData,optCallbackType);
+}
+
+function doDeleteType(){
+    var aoData=[];
+	aoData.push( { "name": "type.type_id", "value": currentOptTypeId } );
+	top.showLoadingInfo(true);
+    top.sendAjaxRequest("/actions/ProGoods.action?deleteGoodsType",aoData,optCallbackType);
+}
+
+function optCallbackType(obj){
+    top.showLoadingInfo(false);
+    try{
+      if ( obj.status == true ){
+         top.showInfoWinOK("操作成功");
+		 top.sendAjaxRequest("/actions/ProGoods.action?getGoodsTypeList",[],callbackGetTypeList);
+      }else{
+         top.showInfoWinError("操作失败");
+      }
+    }catch(e){
+      top.showInfoWinError("处理异常:"+e.message);
+    }
+}
+
+function doQuery(){
+	oTable.fnDraw();
+}
+
+function addGoods(){
+	var xurl="pages/erp/goodsInfo.html?opt=insert&type1="+currentTypeId1+"&type2="+currentTypeId2+"&type3="+currentTypeId3;
+	top.openDialog("新增商品",xurl,true,530,500,optGoodsCallBack);
+}
+			
+function goodsInfo(goodsId){
+	var xurl="pages/erp/goodsInfo.html?opt=update&goodsId="+goodsId;
+	top.openDialog("商品信息",xurl,true,530,500,optGoodsCallBack);
+}
+
+function optGoodsCallBack(){
+	try{
+		var obj = top.getTempValue();
+		if(obj.isSaveOK) {
+		  doQuery();
+		  top.loadAllGoodsData();
+		}
+	}catch(e){
+	}
+}
+
+function setCartCashFocus(){
+   if ( document.activeElement.id != 'offTotal' ) {
+     $("#cartCash").focus();
+   }
+}
+
+function doSelectRadio(rid){
+   document.getElementById(rid).checked = true;
+}
+
+function saveSaleRecord(){
+    var keys=cartGoodsMap.keySet();
+    var o=null;
+	var detailStr="";
+	var dmemo="";
+	var t="";
+    for(var i=0;i<keys.length;i++ ){
+		o=cartGoodsMap.get(keys[i]);
+		t=o.goodsName.replace(new RegExp("#","gm"), "");
+		detailStr+=o.goods_id+","+o.type1+","+o.type2+","+o.type3+","+o.amount+","+o.price+","+t+"#";
+		dmemo+=t+",";
+    }
+	if ( detailStr == '' ) {
+	    return ;
+	} else {
+	    dmemo=dmemo.substring(0,dmemo.length-1);
+	}
+	var offT=$("#offTotal").val();
+	if ( offT == '' ) {
+	  offT=0;
+	} else if ( !IsFloat(offT) ) {
+	  offT=0;
+	}
+	var aoData=[];
+	aoData.push( { "name": "salesOrder.total", "value": $("#cartTotal").val() } );
+    aoData.push( { "name": "salesOrder.allowance", "value": offT } );
+    aoData.push( { "name": "salesOrder.received", "value": $("#realTotal").val() } );
+    aoData.push( { "name": "salesOrder.paymentMethod", "value": top.getRadioValue( document.getElementsByName("paymentMethod") ) } );
+    aoData.push( { "name": "salesOrder.memo", "value": top.ellipsis(500,dmemo) } );
+	aoData.push( { "name": "ids", "value": detailStr } );
+	top.showLoadingInfo(true);
+	top.sendAjaxRequest("/actions/ProGoods.action?insertSalesOrder",aoData,optSaveSaleRecordCallback);
+}
+
+function optSaveSaleRecordCallback(obj){
+    top.showLoadingInfo(false);
+    try{
+      if ( obj.status == true ){
+         top.showInfoWinOK("提交成功",true);
+		 cancelSaleRecord();
+      }else{
+         top.showInfoWinError("提交失败");
+      }
+    }catch(e){
+      top.showInfoWinError("处理异常:"+e.message);
+    }
+}
+
+function cancelSaleRecord(){
+    var keys=cartGoodsMap.keySet();
+    for(var i=0;i<keys.length;i++ ){
+		$("#goodsCartTR_"+keys[i]).remove();
+    }
+    cartGoodsMap.clear();
+	$("#cartCash").val("");
+	$("#realTotal").val("0");
+	$("#realTotalTxt").html( "" );
+	$("#cartTotal").val("0");
+	$("#offTotal").val("");
+	$("#cartChange").html("");
+	doSelectRadio('paymentMethod0');
+}
+</script>
+<style>
+  body {
+	background-color:#C7EDCC;
+  }
+  .sortable { list-style-type: none; margin: 0; padding: 0; width: 100%; }
+  #sortable1 li { margin: 2px 2px 2px 2px; float: left; width: 100px; height: 24px; font-size:19px; color:blue; text-align: center; cursor:pointer }
+  #sortable2 li { margin: 2px 2px 2px 2px; float: left; width: 100px; height: 24px; font-size:19px; color:blue;text-align: center; cursor:pointer}
+  #sortable3 li { margin: 2px 2px 2px 2px; float: left; width: 100px; height: 24px; font-size:19px; color:blue;text-align: center; cursor:pointer}
+  .goodsTypeLable{
+    margin: 1px;
+	padding: 1px;
+	background-color : #F3F3F3;
+	border: 1px solid #89A1B9;
+	-moz-border-radius: 12px;
+	-webkit-border-radius: 12px;
+	border-radius: 12px;
+  }
+  .dataTables_info {
+	padding: 7px 2px 1px 1px;
+	width: 33%;
+	float: left;
+  }
+#goodsTable tbody tr.even:hover, #goodsTable tbody tr.even td.highlighted {
+	background-color: #ECFFB3;
+}
+
+#goodsTable tbody tr.odd:hover, #goodsTable tbody tr.odd td.highlighted {
+	background-color: #E6FF99;
+}
+
+#goodsTable tr.even:hover {
+	background-color: #ECFFB3;
+}
+
+#goodsTable tr.odd:hover {
+	background-color: #E6FF99;
+}
+
+.goodsCartTd{
+  border:1px;
+  border-style:dotted none none none;
+  border-color: blue;
+  font-size:14px;
+  color:#000000;
+  padding-left:5px;
+}
+
+</style>
+</head>
+<body>
+<div class="ui-layout-north" style="padding:0px;"></div>
+ 
+<div class="ui-layout-west" style="padding:3px;background-color:#C7EDCC;">
+ <div style="100%;height:100%;overflow:auto;">
+  <table width="100%;height:100%;">
+  <tr><td style="background-color:#99D1D3;padding:5px">
+   <font color="#000000" size="2px">第一级商品分类</font>
+   <span>
+    &nbsp;<img id="addType1" onclick="createType(1)" src="../../img/add.gif" style="cursor:pointer" title="添加第一级商品分类"/>
+    &nbsp;<img id="editType1" src="../../img/btn_edit.gif" onclick="editType(1)" style="cursor:pointer" title="修改选中的第一级商品分类"/>
+	&nbsp;<img id="deleteType1" src="../../img/delete.gif" onclick="deleteType(1)" style="cursor:pointer" title="删除选中的第一级商品分类"/>
+   </span>
+   <br>
+    <ul id="sortable1" class="sortable"></ul>
+  </td></tr>
+  <tr><td style="background-color:#99D1D3;padding:5px">
+  <font color="#000000" size="2px">第二级商品分类</font>
+  <span>
+    &nbsp;<img id="addType2" onclick="createType(2)" src="../../img/add.gif" style="cursor:pointer" title="添加第二级商品分类"/>
+    &nbsp;<img id="editType2" src="../../img/btn_edit.gif" onclick="editType(2)" style="cursor:pointer" title="修改选中的第二级商品分类"/>
+	&nbsp;<img id="deleteType2" src="../../img/delete.gif" onclick="deleteType(2)" style="cursor:pointer" title="删除选中的第二级商品分类"/>
+   </span>
+  <br>
+    <ul id="sortable2" class="sortable"></ul>
+  </td></tr>
+  <tr><td style="background-color:#99D1D3;padding:5px">
+  <font color="#000000" size="2px">第三级商品分类</font>
+  <span>
+    &nbsp;<img id="addType3" onclick="createType(3)" src="../../img/add.gif" style="cursor:pointer" title="添加第三级商品分类"/>
+    &nbsp;<img id="editType3" src="../../img/btn_edit.gif" onclick="editType(3)" style="cursor:pointer" title="修改选中的第三级商品分类"/>
+	&nbsp;<img id="deleteType3" src="../../img/delete.gif" onclick="deleteType(3)" style="cursor:pointer" title="删除选中的第三级商品分类"/>
+   </span>
+  <br>
+    <ul id="sortable3" class="sortable"></ul>
+   </td></tr>
+  </table>
+ </div>
+</div>
+
+<div class="ui-layout-south"></div>
+
+<div class="ui-layout-east" style="padding:0px;background-color:#C7EDCC;">
+</div>
+
+<div class="ui-layout-center" style="padding:3px 0px 0px 0px;background-color:#C7EDCC;">
+   <table cellpadding="0" width="100%" cellspacing="0" border="0">
+    <tr>
+	 <td width="100%" align="left">
+	  <div id="createGoodsBtn" class="buttonDivTwo"><a href="javascript:addGoods()">新增</a></div>
+	 </td>
+	</tr>
+   </table>
+   <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="goodsTable"></table>
+</div>
+</body>
+</html> 

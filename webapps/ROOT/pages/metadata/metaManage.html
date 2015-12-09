@@ -1,0 +1,312 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var responseObj={};
+			var queryFields="";
+			var selectFields="";
+			var pageInited = false;
+			var iaoColumns= [];
+			var headNum=0;
+			$(document).ready(function() {
+			   var aoData=[];
+               aoData.push( { "name": "viewCode", "value": "01" } );
+	           top.sendAjaxRequest("/actions/Metadata.action?getQueryViewInfo",aoData,optCallback);
+			});
+			
+			function optCallback(obj){
+			   try{
+				if ( obj.status == true ){
+				  responseObj = obj.body;
+				  initQueryView();
+				  if ( !pageInited ) {
+				    initResultList();
+					pageInited = true;
+			      }
+				}else{
+				  top.showInfoWin("操作失败 "+obj.msg);
+				}
+			   }catch(e){
+				  top.showInfoWin("处理异常:"+e.message);
+			   }
+			}
+			
+			function initQueryView(){
+			    var queryHt='';
+				queryFields = "";
+				var drawQueryBtn = false;
+			    try{
+			      var cs=responseObj.view.layout.split("#");
+				  var fs=[];
+			      for (var i=0;i<cs.length;i++) {
+				     fs=cs[i].split(";");
+					 queryHt+="<tr>";
+					 for (var j=0;j<fs.length;j++ ){
+					   if ( fs[j] ) {
+					     if ( fs[j].indexOf("datepicker-") == -1 ) {
+						   queryFields = queryFields + fs[j]+",";
+						 } else {
+						   queryFields = queryFields + fs[j].substring( 11 , fs[j].length)+",";
+						 }
+					     queryHt+= getFieldHtml( fs[j] );
+					   }
+					 }
+					 if ( !drawQueryBtn && fs.length * 2 < responseObj.view.colspan ) {
+					   queryHt+="<td align='right' colspan='"+ (responseObj.view.colspan - fs.length * 2 ) +"'><span class='buttonTwo'><a href='javascript:doQuery()'>查询</a></span></td>";
+					   drawQueryBtn = true;
+					 }
+					 queryHt+="</tr>";
+				  }
+				  if ( !drawQueryBtn ) {
+				     queryHt+="<tr><td colspan='"+responseObj.view.colspan+"' align='right'><span class='buttonTwo'><a href='javascript:doQuery()'>查询</a></span></td></tr>";
+				  }
+				  
+				  //queryHt+='<tr bgcolor="#C6DEFF"><td colspan="'+responseObj.view.colspan+'"><table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>';
+				  //queryHt+='<td>&nbsp;'+responseObj.resultConfig.title+'</td></tr></table></td></tr>';
+			    }catch(e){
+			    }
+				$("#dataTableTop").html( queryHt );
+			}
+			
+			function getHeaderObj(code){
+			   selectFields += code+",";
+			   var ro={};
+			   try{
+			      for (var i=0;i<responseObj.obj.fields.length;i++) {
+				     if ( responseObj.obj.fields[i].fieldCode == code ) {
+					   var o = responseObj.obj.fields[i];
+					   var m=headNum;
+					   if ( o.fieldType == 'dict' ) {
+					     if ( o.dicType == 'HOUR_24' ) {
+						     ro={ "sTitle": o.fieldTitle, "mDataProp": "f"+headNum, "sClass": "center","bUseRendered": false};
+					     } else {
+							 ro = { "sTitle": o.fieldTitle, "mDataProp": "f"+headNum, "sClass": "center",
+                                   "fnRender": function ( oObj ) {
+                                        return top.getCodeName( o.dicType, getDataF( oObj , m ) );
+                                   },
+                                   "bUseRendered": false  
+                               };
+						 }
+					   } else {
+					     ro={ "sTitle": o.fieldTitle, "mDataProp": "f"+headNum, "sClass": "center","bUseRendered": false};
+					   }
+					   break;
+					 }
+				  }
+			   }catch(e){
+			   }
+			   headNum ++;
+			   return ro;
+			}
+			
+			function getDataF(o,n){
+			  switch(n){
+			    case 0:return o.aData.f0;break;
+			    case 1:return o.aData.f1;break;
+				case 2:return o.aData.f2;break;
+				case 3:return o.aData.f3;break;
+				case 4:return o.aData.f4;break;
+				case 5:return o.aData.f5;break;
+				case 6:return o.aData.f6;break;
+				case 7:return o.aData.f7;break;
+				case 8:return o.aData.f8;break;
+				case 9:return o.aData.f9;break;
+				case 10:return o.aData.f10;break;
+				case 11:return o.aData.f11;break;
+				case 12:return o.aData.f12;break;
+				case 13:return o.aData.f13;break;
+				case 14:return o.aData.f14;break;
+				case 15:return o.aData.f15;break;
+				case 16:return o.aData.f16;break;
+				case 17:return o.aData.f17;break;
+				case 18:return o.aData.f18;break;
+				case 19:return o.aData.f19;break;
+				case 20:return o.aData.f20;break;
+				default: return ""; break;
+			  }
+			  return "";
+			}
+			
+			function getQueryParam(ao){
+			      if ( !pageInited ) {
+				    return ao;
+				  }
+			      var cs=responseObj.view.layout.split("#");
+				  var fs=[];
+				  var n=0;
+				  var fieldObj = {};
+				  var v = "";
+				  try{
+					  for (var i=0;i<cs.length;i++) {
+						 fs=cs[i].split(";");
+						 for (var j=0;j<fs.length;j++ ){
+						   if ( fs[j] ) {
+							 if ( fs[j].indexOf("datepicker-") != -1 ) {
+							   var dateStr = $( "#q_"+fs[j].replace(new RegExp(",", 'g'), "") ).val();
+							   if ( !dateStr || dateStr == '' ) {
+							     ao.push( { "name": "metaObj.f"+n, "value": "" } );
+								 n++;
+								 ao.push( { "name": "metaObj.f"+n, "value": "" } );
+								 n++;
+								 ao.push( { "name": "metaObj.f"+n, "value": "" } );
+								 n++;
+							     continue;
+							   }
+							   var subf=fs[j].substring(11, fs[j].length);
+	  						   if ( subf && subf.length >= 3 ) {
+									ao.push( { "name": "metaObj.f"+n, "value": dateStr.substring(0,4) } );
+									n++;
+									ao.push( { "name": "metaObj.f"+n, "value": dateStr.substring(5,7) } );
+									n++;
+									ao.push( { "name": "metaObj.f"+n, "value": dateStr.substring(8,10) } );
+									n++;
+							   } else {
+							     ao.push( { "name": "metaObj.f"+n, "value": "" } );
+								 n++;
+								 ao.push( { "name": "metaObj.f"+n, "value": "" } );
+								 n++;
+								 ao.push( { "name": "metaObj.f"+n, "value": "" } );
+								 n++;
+							   }
+							 } else {
+							   fieldObj = getFieldObj( fs[j] );
+							   if ( fieldObj == null ) continue;
+							   if ( fieldObj.queryType == 'interval' ) {
+								  v = $("#q_"+fieldObj.fieldCode+"1").val() + "," + $("#q_"+fieldObj.fieldCode+"2").val();
+							   } else {
+								  v = $("#q_"+fieldObj.fieldCode).val();
+							   }
+							   ao.push( { "name": "metaObj.f"+n, "value": v } );
+							   n++;
+							 }
+						   }
+						 }
+					  }
+				  }catch(e){
+				    //alert(e.message);
+				  }
+				ao.push( { "name": "metaObj.code", "value": responseObj.view.objCode } );
+				ao.push( { "name": "queryFields", "value": queryFields } );
+				ao.push( { "name": "selectFields", "value": selectFields } );
+
+				return ao;
+			}
+			
+			function initResultList(){
+			   selectFields="";
+			   headNum=0;
+			   if ( iaoColumns.length == 0 ) {
+				   var hs=responseObj.resultConfig.th.split(";");
+				   for ( var i=0;i<hs.length;i++ ) {
+					   if ( hs[i] ) iaoColumns[iaoColumns.length] = getHeaderObj( hs[i] );
+				   }
+			   }
+
+			   var surl=top.getUrlBase()+"/actions/Metadata.action?getMetadataList";
+
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					    aoData = getQueryParam( aoData );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+			}
+			
+			function getFieldHtml(code){
+			   var ht='';
+			   if ( code.indexOf("datepicker-") != -1 ) {
+			     ht = '<td align="right" width="10%">日期:</td><td align="left" width="10%"><input type="text" id="q_'+code.replace(new RegExp(",", 'g'), "")+'" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" /></td>';
+			     return ht;
+			   }
+			   
+			   var o={};
+			   try{
+			      for (var i=0;i<responseObj.obj.fields.length;i++) {
+				     if ( responseObj.obj.fields[i].fieldCode == code ) {
+					   o = responseObj.obj.fields[i];
+					   if ( o.fieldType == 'dict' ) {
+					     if ( o.dicType == 'HOUR_24' ) {
+						     ht += '<td align="right" width="10%">'+o.fieldTitle+':</td><td align="left" width="10%">';
+							 ht += top.get24HourSelectHtml("q_"+code,false);
+							 ht += '</td>';
+					     } else {
+							 ht += '<td align="right" width="10%">'+o.fieldTitle+':</td><td align="left" width="10%">';
+							 ht += top.getCodeSelectHtml( o.dicType,"q_"+code,true);
+							 ht += '</td>';
+						 }
+					   } else if ( o.queryType == 'interval' ) {
+					     ht += '<td align="right" width="10%">'+o.fieldTitle+':</td>';
+						 ht += '<td align="left" width="10%"><input type="text" style="width:50px" id="q_' + code+'1" value="" />';
+						 ht += ' -- <input type="text" style="width:50px" id="q_' + code+'2" value="" />';
+						 ht += '</td>';
+					   } else {
+					     ht += '<td align="right" width="10%">'+o.fieldTitle+':</td><td align="left" width="10%"><input type="text" id="q_';
+						 ht += code+'" value="" /></td>';
+					   }
+					   break;
+					 }
+				  }
+			   }catch(e){
+			   }
+			   return ht;
+			}
+			
+			function getFieldObj(code){
+			   for (var i=0;i<responseObj.obj.fields.length;i++) {
+				     if ( responseObj.obj.fields[i].fieldCode == code ) return responseObj.obj.fields[i];
+			   }
+               return null; 
+			}
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+			<table id="dataTableTop" width="100%" align="center" cellpadding="0" cellspacing="0" border="0"></table>
+	        <table id="dataTable" align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display"></table>
+		</div>
+	</body>
+</html>

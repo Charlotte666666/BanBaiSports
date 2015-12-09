@@ -1,0 +1,375 @@
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet"
+			type="text/css">
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css"
+			media="print, projection, screen">
+		<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+		<script type="text/javascript">
+	var isSaveOK=false;
+    var optType="";
+	var g_allUsers=[];
+	var info_id=0;
+   $(document).ready(function() {
+     initData();
+   });
+   
+	// 保存基本信息
+    function doSubmit(){
+		var aoData=[];
+		aoData.push( { "name": "custTousuInfo.cust_code", "value": $("#cust_code").val() } );
+		aoData.push( { "name": "custTousuInfo.cust_name", "value": $("#cust_name").val() } );
+		aoData.push( { "name": "custTousuInfo.project_leader", "value": $("#project_leader").val() } );
+		aoData.push( { "name": "custTousuInfo.handle_status", "value": $("#handle_status").val() } );
+		aoData.push( { "name": "custTousuInfo.project_addr", "value": $("#project_addr").val() } );
+		aoData.push( { "name": "custTousuInfo.quality_inspection", "value": $("#quality_inspection").val() } );
+		aoData.push( { "name": "custTousuInfo.tousu_reason", "value": $("#tousu_reason").val() } );
+		aoData.push( { "name": "custTousuInfo.handle_detail", "value": $("#handle_detail").val() } );
+		aoData.push( { "name": "custTousuInfo.man_handel", "value": $("#man_handel").val() } );
+		aoData.push( { "name": "custTousuInfo.designer", "value": $("#designer").val() } );
+		aoData.push( { "name": "custTousuInfo.handle_user", "value": $("#handle_user").val() } );
+		aoData.push( { "name": "custTousuInfo.handle_time", "value": top.toTimestamp($("#handle_time").val()) } );
+			
+		if ( info_id == 0 ) {
+			//aoData.push( { "name": "custTousuInfo.create_time", "value": top.toTimestamp($("#create_time").val()) } );
+			xurl="/actions/DailyManage.action?insertCustTousuInfo";
+		}else{
+			aoData.push( { "name": "custTousuInfo.id", "value": info_id} );
+			xurl="/actions/DailyManage.action?updateCustTousuInfo";
+		}
+	   
+		top.sendAjaxRequest(xurl,aoData,optCallback);
+   }
+
+   // 关闭当前页面前，页面框架自动调用的函数
+   function doBeforeClose(){
+     var obj={
+              "isSaveOK":isSaveOK
+            };
+     top.setTempValue(obj);
+   }
+
+    function optCallback(obj){
+       try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+			top.closeDialog();
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+   
+    function initData(){
+		$("#handle_user").attr("disabled",true);
+		optType=top.getUrlParam(document.URL,"optType");
+	    if ( optType=='update' ){
+			info_id=top.getUrlParam(document.URL,"id");
+			var aoData=[];
+			aoData.push( { "name": "custTousuInfo.id", "value": info_id } );
+			top.sendAjaxRequest("/actions/DailyManage.action?getCustTousuInfoById",aoData,infoCallback);
+		} else {
+			$("#check1").hide();
+			$("#check2").hide();
+			$("#check3").hide();
+			$("#check4").hide();
+			var now=new Date();
+			$("#create_time").html(top.getTimeStr(now.getTime()),true);
+			$('#tdhandle_status').html(top.getCodeName("HANDEL_STATUS","handle_status"));
+			}
+	
+    }
+	function infoCallback(obj){
+	   try{
+        if ( obj.status){
+		  var o=obj.body;
+		   $("#tousuId").html("投诉单号："+o.id);
+		 $("#chooseCust").hide();
+		 $("#check1").show();
+		 $("#check2").show();
+		 $("#check3").show();
+		 $("#check4").show();
+		 $("#cust_code").val(o.cust_code);
+		 $("#cust_name").val(o.cust_name) ;
+		 $("#project_leader").val(o.project_leader) ;
+		 $("#project_addr").val(o.project_addr) ;
+		 $("#quality_inspection").val(o.quality_inspection);
+		 $("#tousu_reason").val(o.tousu_reason);
+		 $("#handle_detail").val(o.handle_detail);
+		 $("#man_handel").val(o.man_handel) ;
+		 $("#text_designer").val(top.getUserNameByCode(o.designer)) ;
+		 $("#designer").val(o.designer) ;
+		 $("#handle_user").val(o.handle_user) ;
+		 $("#handle_time").val(top.getTimeStr(o.handle_time,true));
+		 
+		  $("#span_cust_code").html(o.cust_code);
+		 $("#span_cust_name").html(o.cust_name) ;
+		 $("#span_project_leader").html(o.project_leader) ;
+		 $("#span_project_addr").html(o.project_addr) ;
+		 $("#span_quality_inspection").html(o.quality_inspection);
+		 $("#span_tousu_reason").html(o.tousu_reason);
+		 $("#span_handle_detail").html(o.handle_detail);
+		 $("#span_man_handel").html(o.man_handel) ;
+		// $("#span_text_designer").html(top.getUserNameByCode(o.designer)) ;
+		 $("#span_designer").html(top.getUserNameByCode(o.designer)) ;
+		 $("#span_handle_user").html(o.handle_user) ;
+		 $("#span_handle_time").html(top.getTimeStr(o.handle_time,true));
+		 
+		 $("#create_time").html(top.getTimeStr(o.create_time,true));
+		 $("#tdhandle_status").html(top.getCodeName("HANDEL_STATUS",o.handle_status));
+		//审核完成
+		  if(o.handle_status=='02'){
+			$("input").attr("disabled",true);
+			$("textarea").attr("disabled",true);
+			$("input").hide();
+			$("textarea").hide();
+			}else{//未审核
+			 $("#check2").hide();
+			 $("#tousu_reason").attr("disabled",true);
+			  $("#tousu_reason").hide();
+			 $("#handle_time").val(top.getTimeStr(o.handle_time,true));
+			if(!top.g_isPermit("09_cust_tousu_handel")){
+				$("#check1").hide();
+				$("#check3").hide();
+				$("#check4").hide();
+			}
+		 $("#cust_code").attr("disabled",true);
+		 $("#cust_name").attr("disabled",true);
+		 $("#project_addr").attr("disabled",true);
+		// $("#text_designer").attr("disabled",true);
+		 $("#project_leader").attr("disabled",true);
+		 $("#quality_inspection").attr("disabled",true);
+		  $("#project_leader").hide();
+		 $("#quality_inspection").hide();
+		
+		}
+			
+		}else{
+          top.showInfoWinError("操作失败");
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	
+
+	function initCheckedValue(boxes,values) {
+	    if ( !values ) return ;
+	    if ( values == null || values == '' ) return ;
+		for (var i = 0; i < boxes.length; i++) {
+			if ( values.indexOf(boxes[i].value+",") != -1 || values.indexOf(","+boxes[i].value) != -1 ) {
+				boxes[i].checked = true;
+			}
+        }
+	}
+ //选择客户
+	function chooseCust(){
+		var xurl="/pages/pro09/chooseCust.html";
+		//top.openSelectDialog("选择客户",xurl,750,500,chooseCustCallBack);
+		openDialog("选择客户",xurl,true,750,500,chooseCustCallBack);
+	}
+	//调用回调函数---调用查询选择方法
+   	function chooseCustCallBack(){
+		try{
+			var o = top.getTempValue();
+			if(o){
+			   // cust_code=o.code; 
+				// 查询需求信息
+				var aoData=[];
+			    aoData.push( { "name": "custInfo.code", "value": o.code } );
+			    top.sendAjaxRequest("/actions/CustInfo.action?getFitmentCustInfo",aoData,custDetailCallback);
+			}
+		}catch(e){}
+   }
+   //回调函数---返回查询的数据赋值给文本框
+	function custDetailCallback(obj){
+	   try{
+			if ( obj.status == true ){
+			  var o=obj.body;
+			  if(o)
+				{
+					$("#cust_code").val(o.code);
+					$("#cust_name").val(o.cust_name);
+					$("#span_cust_code").html(o.code);
+					$("#span_cust_name").html(o.cust_name);
+					 if ( o.requireInfo ) {
+						$("#project_addr").attr("disabled",true);
+						$("#text_designer").attr("disabled",true);
+						$("#project_addr").val(top.getCodeName("DISTRICT",o.requireInfo.district)+o.requireInfo.project_addr);
+						$("#span_project_addr").html(top.getCodeName("DISTRICT",o.requireInfo.district)+o.requireInfo.project_addr);
+						$("#designer").val(o.requireInfo.require_manager); 				
+						$("#span_designer").html(top.getUserNameByCode(o.requireInfo.require_manager)); 				
+					}else{
+					  $("#project_addr").val("");
+					  //$("#text_designer").val("");
+					  $("#designer").val(""); 				
+					}
+				}else{
+					$("#cust_code").val("");
+					$("#cust_name").val("");
+					$("#project_addr").val("");
+					//$("#text_designer").val("");
+					$("#designer").val(""); 
+				}
+		    }
+		}catch(e){}
+	}
+//弹出二层框
+	function openDialog(t,xurl,isModal,w,h,callback){
+		if ( isModal == undefined ) isModal=true;
+		if ( !h ) h=200;
+		if ( !w ) w=400;
+		$( "#dialog" ).dialog({
+			title: t,
+			height: h,
+			width: w,
+			modal: isModal,
+			resizable: false,
+		    beforeClose: function(event, ui) {
+		        try{
+		            document.getElementById("self_iframe").contentWindow.doBeforeClose();
+		            if ( callback ) callback.apply();
+		        }catch(e){
+		        }
+		        return true;
+		    }
+		});
+		document.getElementById("self_iframe").src = xurl;
+    }
+	function closeDialog(){
+		$( "#dialog" ).dialog( "close" );
+	}
+	</script>
+		<style>
+body,td {
+	font-size: 13px;
+}
+
+.roomTd {
+	border: 1px;
+	border-style: dotted none none none;
+	border-color: blue;
+	color: #000000;
+	padding-left: 5px;
+}
+
+#KinSlideshow {
+	overflow: hidden;
+	width: 500px;
+	height: 450px;
+}
+
+.inputBottomLine {
+	border-top: hide;
+	border-left: hide;
+	border-center: hide;
+}
+</style>
+	</head>
+	<body>
+	<br/>
+			<B><span id="tousuId"></span></B>
+			<table cellpadding="1" cellspacing="1" width="95%" 
+					align="center" style="background-color: #b9d8f3;margin:20px">
+						<tr height="35px" class="tr_data">
+							<td width="20%" align="right" width="30%"><B>客户编号</B></td>
+							<td width="25%"  align="left" width="70%">
+							<span id="span_cust_code" ></span>
+								<input type="hidden" id="cust_code"/>
+							</td>
+							<td colspan="2" align="left">
+								<div  id="chooseCust" class="buttonDivTwo" width="30px">
+											<a href="javascript:void(0)" onclick="chooseCust()">选择</a>
+								</div>
+							</td>
+						</tr>
+						
+						<tr height="35px" class="tr_data">	
+							<td align="right"><B>工程地址</B></td>
+							<td colspan="3" align="left">
+							<span id="span_project_addr" ></span>
+							<input type="hidden" size="75" id="project_addr"/></td>
+						
+						</tr>
+						<tr height="35px" class="tr_data">
+							<td width="25%" align="right"><B>客户姓名</B></td>
+							<td width="25%" align="left">
+							<span id="span_cust_name"></span>
+							<input type="hidden" id="cust_name"/></td>
+						
+							<td td width="25%" align="right"><B>设计师</B></td>
+							<td td width="25%" align="left">
+							<span id="span_designer"></span>
+							<input type="hidden" id="designer"></td>
+						</tr>
+						<tr height="35px" class="tr_data">
+							<td align="right"><B>工长</B></td>
+							<td align="left">
+							<span id="span_project_leader"></span>
+							<input type="text" id="project_leader" /></td>
+							<td align="right"><B>质检</B></td>
+							<td align="left">
+							<span id="span_quality_inspection"></span>
+							<input type="text" id="quality_inspection" /></td>
+						</tr> 
+						<tr height="35px" id="check1" class="tr_data">
+							<td align="right"><B>投诉时间</B></td>
+							<td align="left" id="create_time"></td>
+							<td align="right"><B>处理状态</B></td>
+							<td align="left" id="tdhandle_status"></td>
+						</tr>
+						<tr height="35px" id="check2" class="tr_data">
+							<td align="right"><B>处理时间</B></td>
+							<td align="left"><span id="span_handle_time"></span><input type="hidden" id="handle_time" onclick="new Calendar().show(this);" readonly="true"/></td>
+							<td align="right"><B>处理人</B></td>
+							<td align="left"><span id="span_handle_user"></span><input type="hidden" id="handle_user" /></td>
+						</tr>
+						<tr height="60px" class="tr_data">
+							<td align="right"><B>投诉内容</B></td>
+							<td align="left" colspan="3">
+							<span id="span_tousu_reason"></span>
+							<textarea id="tousu_reason" cols="80" rows="5"></textarea></td>
+						</tr>
+						<tr height="60px" id="check3" class="tr_data">
+							<td align="right"><B>处理情况</B></td>
+							<td align="left" colspan="3">
+							<span id="span_handle_detail"></span>
+							<textarea id="handle_detail" cols="80" rows="5"></textarea></td>
+						</tr>
+						<tr height="60px" id="check4" class="tr_data">
+							<td align="right"><B>责任人处理</B></td>
+							<td align="left" colspan="3">
+							<span id="span_man_handel"></span>
+							<textarea id="man_handel" cols="80" rows="5"></textarea></td>
+						</tr>
+					</table>
+				    <center>
+					<div id="saveBtn" class="buttonDivTwo">
+						<a href="javascript:void(0)" onclick="doSubmit()">保存</a>
+					</div>
+					</center>
+					<div id="dialog" title="" style="display: none; padding: 0 0 0 0; margin: 0 0 0 0; z-index: 10000">
+							<iframe id="self_iframe" src="about:blank" width="100%" height="96%"
+								frameborder="0"></iframe>
+					</div>
+	</body>
+</html>

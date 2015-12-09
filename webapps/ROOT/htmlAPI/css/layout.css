@@ -1,0 +1,239 @@
+section,header,nav{
+	display:block;
+}
+* {
+	padding:0;
+	margin:0;
+}
+header {
+	border-bottom: 1px solid #c8c8c8;
+	/*****to fix****/
+	/*
+	position:fixed;
+	z-index: 9999;
+	top: 0;
+	left: 0;
+	*/
+}
+header.staticbanner {
+	position: fixed;
+	z-index: 99;
+	background-color: #fff;
+	top:0;
+	width: 100%;
+}
+td,a,p,h1,h2,h3,h4,h5{
+	text-shadow: 0 0 0 #ffffff;
+}
+
+a {
+	text-decoration: none;
+}
+/*
+header div {
+	display: inline-block;
+}*/
+#headline {
+	top:-3px;
+}
+#downloadforfree .fonts {
+	line-height: 40px;
+	top: 0;
+	right: 0;
+}
+/*************new header**************/
+header #buttonimg {
+	background: url(../img/pic-2.png);
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: 80px 40px;
+}
+/************page2.html***********/
+#morecontent {
+	border-top: 1px solid #c8c8c8;
+}
+#morecontent .fonts {
+	top:-40px;
+}
+/*************shareCommentStatus.html**************/
+#userstates .userhead {
+	top: 0px;
+}
+#userstates .userhead img {
+	border-radius: 50%;
+}
+#userstates .username h4,h5 {
+	display: inline-block;
+}
+#userstates .nice img {
+	border-radius: 50%;
+}
+.useroperation #frame {
+	top:0;
+}
+#userstates .useroperation table .awesome {
+	background: url(../img/circleframe.png);
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: 75px 35px;
+}
+#userstates .useroperation table .saysomething {
+	background: url(../img/circleframe.png);
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: 95px 35px;
+}
+
+/*************************/
+#live div {
+	display: inline-block;
+}
+/************page5.html*************/
+.ranking table {
+	border-bottom: 1px solid #c8c8c8;
+	border-left: 1px solid #c8c8c8;
+	border-right: 1px solid #c8c8c8;
+}
+.ranking table tbody tr td:first {
+	border-right: 1px solid #c8c8c8;
+}
+/************shareCompetitionResultLiving.html*************/
+#competitionbar {
+	width:100%;
+	background-color: #000;
+	background: url(../img/scorebar_02.png) 50% 1px no-repeat, url(../img/scorebar_01.png) repeat-x;
+}
+#competitionbar .teamlogo img {
+	border-radius: 50%;
+}
+#competitionbar table {
+	width:100%;
+}
+#competitionbar table {
+	line-height: 45px;
+}
+#competitionLiving {
+	width:100%;
+	height: 850px;
+	background: url(../img/courtfloor.png) 0 0 repeat-x;
+}
+#competitionLiving table {
+	width: 100%;
+	top: 30px;
+}
+#competitionLiving .realscore {
+	width:18%; 
+	height:75px; 
+	text-align:center;
+}
+#roundBefore {
+	background-color: #fff;
+	opacity:0.6;
+}
+#roundBefore table {
+	border-collapse: collapse;
+}
+#roundBefore table tbody tr {
+	line-height: 40px;
+	border: 1px solid #c8c8c8;
+}	
+/************shareCompetitionAgainstInfo.html*************/
+#againstBaseInfo #againstBaseCenter {
+	width: 150px;
+	background: url(../img/VS_background_02.png);
+	background-size: 150px 150px;
+	line-height: 1.5em;
+}
+#againstBaseInfo #firstTeam {
+	background: url(../img/VS_background_01.png);
+	line-height: 1.4em;
+}
+#againstBaseInfo #secondTeam {
+	background: url(../img/VS_background_03.png);
+	line-height: 1.4em;
+}
+#againstScore table {
+	top:-150px;
+}
+#againstScore table .VSlogo {
+	background: url(../img/circle.png);
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: 1.6em 1.6em;
+}
+
+.againstDetailInfo {
+	border-top: 1px solid #c8c8c8;
+}
+.againstDetailInfo .centerCol {
+	width: 70px;
+}
+.againstDetailInfo .competitionType {
+	background: url(../img/circle.png);
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: 60px 60px;
+}
+.againstDetailInfo table {
+	top: -23px;
+}
+.againstDetailInfo table tbody tr {
+	line-height: 1.4em;
+}
+/************shareMyBaseInformation.html*************/
+#myBaseInfo table {
+	width:100%;
+}
+#myBaseInfo table #focus {
+	background: url(../img/roundedrectangle.png);
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: 100px 20px;
+}	
+#myBaseInfo #frame,#words {
+	top:-60px;
+}
+#underbase div {
+	display: inline-block;
+	width:30%;
+}
+#underbase #tagtwo {
+	border-left: 1px solid #d2d2d2;
+	border-right: 1px solid #d2d2d2;
+}
+#detailinfo div table {
+	border-collapse:collapse; 
+}
+#detailinfo div table tr {
+	border-bottom: 1px solid #d2d2d2;
+	height:60px;
+	line-height: 60px;
+}
+
+#myBaseInfo #button1 {
+	background: url(../img/roundedrectangle.png);
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: 80px 40px;
+}
+#myBaseInfo #button2 {
+	background: url(../img/roundedrectangle.png);
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: 80px 40px;
+}
+/************sharePlayerBaseInformation.html*************/
+#teamName {
+	line-height: 60px;
+}
+#competitionDetail #VSinfo table {
+	border-collapse:collapse; 
+	line-height: 20px;
+}
+#competitionDetail #VSinfo table tr{
+	height: 60px;
+}
+#competitionDetail #VSinfo table tbody tr{
+	border-top: 1px solid #d2d2d2;
+}
+/************shareSmallCompetition.html*************/

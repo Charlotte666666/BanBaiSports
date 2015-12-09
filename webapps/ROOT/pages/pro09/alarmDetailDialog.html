@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css"
+			href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			
+			$(document).ready(function() {
+			 var alarmIndex=top.getUrlParam(document.URL,"alarmIndex");
+			 var alamObjs=top.getTempValue();
+			 initDetail(alarmIndex,alamObjs);
+			});
+			function initDetail(alarmIndex,alamObjs){
+				var ht1="";
+				var ht2="";
+				var ht3="";
+				var ht="<tr>";
+					ht+="<th class=\"ui-state-default\" height=\"23px\" width=\"20%\">告警类型</td>";
+					ht+="<th class=\"ui-state-default\" width=\"18%\">客户姓名</td>";
+					ht+="<th class=\"ui-state-default\" width=\"20%\">登记时间</td>";
+					ht+="<th class=\"ui-state-default\"width=\"20%\">缴纳设计费时间</td>";
+					ht+="<th class=\"ui-state-default\"width=\"22%\">备注</td>";
+					ht+="</tr>";
+				if(alarmIndex=='1'){
+					ht1+=ht;
+					list1=alamObjs;
+					for(var i=0;i<list1.length;i++){
+						ht1+="<tr>";
+						ht1+="<td height=\"30px\">"+list1[i].type+"</td>"
+						ht1+="<td><a href=\'javascript:void(0)\' onclick=\"updateInfo(\'"+list1[i].cust_code+"\')\" >"+list1[i].cust_name+"</a></td>"
+						ht1+="<td>"+top.getTimeStr(list1[i].register_date,true)+"</td>"
+						ht1+="<td>"+top.getTimeStr(list1[i].pay_design_time,true)+"</td>"
+						ht1+="<td>"+list1[i].desc+"</td>"
+						ht1+="</tr>";
+					}
+				$("#alam").html(ht1);
+				}else if(alarmIndex=='2'){
+					ht2+=ht;
+					list2=alamObjs;
+					for(i=0;i<list2.length;i++){
+						ht2+="<tr>";
+						ht2+="<td height=\"30px\">"+list2[i].type+"</td>"
+						ht2+="<td><a href=\'javascript:void(0)\' onclick=\"updateInfo(\'"+list2[i].cust_code+"\')\" >"+list2[i].cust_name+"</a></td>"
+						ht2+="<td>"+top.getTimeStr(list2[i].register_date,true)+"</td>"
+						ht2+="<td>"+top.getTimeStr(list2[i].pay_design_time,true)+"</td>"
+						ht2+="<td>"+list2[i].desc+"</td>"
+						ht2+="</tr>";
+					}
+					$("#alam").html(ht2);
+				}else if(alarmIndex=='3'){
+					ht3+=ht;
+					list3=alamObjs;
+					for(i=0;i<list3.length;i++){
+						ht3+="<tr>";
+						ht3+="<td height=\"30px\">"+list3[i].type+"</td>"
+						ht3+="<td><a href=\'javascript:void(0)\' onclick=\"updateInfo(\'"+list3[i].cust_code+"\')\" >"+list3[i].cust_name+"</a></td>"
+						ht3+="<td>"+top.getTimeStr(list3[i].register_date,true)+"</td>"
+						ht3+="<td>"+top.getTimeStr(list3[i].pay_design_time,true)+"</td>"
+						ht3+="<td>"+list3[i].desc+"</td>"
+						ht3+="</tr>";
+					}
+					$("#alam").html(ht3);
+				}	
+			}
+		function updateInfo(id){
+		  var xurl="/pages/pro09/custUpdate.html?optType=query&id="+id;
+		  top.openSelectDialog("客户详细信息",xurl,900,600,null);
+		}
+			
+		</script>
+		<style type="text/css">
+		table tr td{
+			border-bottom:1px solid #79BAEC;
+		}
+		</style>
+	</head>
+	<body>
+		<div width="100%" style='margin:0px auto'>
+			<table id="alam" style="background-color:#ffffff;margin:0px auto;"></table>
+		</div>
+	</body>
+</html>

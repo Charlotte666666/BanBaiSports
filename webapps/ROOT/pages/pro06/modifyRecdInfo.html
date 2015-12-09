@@ -1,0 +1,161 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <link rel="stylesheet" type="text/css" href="../../css/redmond/jquery.ui.all.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var infoId="";
+   var OSS_BASE="http://bookdoctor.oss-cn-beijing.aliyuncs.com/";
+   var gstatus=0;
+   var modifyList=[];
+    
+   $(document).ready(function() {
+	 initData();
+   } );
+
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   function doSubmit(){
+     var val='';
+	 var tempVal='';
+     for ( var i=0;i<modifyList.length;i++ ){
+	    tempVal=top.getRadioValue( document.getElementsByName("r_"+modifyList[i].id) );
+	    val+=modifyList[i].id+','+tempVal+';';
+	 }
+     if ( val == '' ) return ;
+	 var aoData=[];
+	 var xurl="/actions/Doctor.action?updateModifyRecd";
+     aoData.push( { "name": "value", "value": val } );
+	 top.sendAjaxRequest(xurl,aoData,optCallback);
+   }
+
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      isSaveOK = true;
+	      top.showInfoWinOK("操作成功");
+		  top.closeDialog();
+	    }else{
+	      isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   function initData(){
+	   try{
+		 infoId=top.getUrlParam(document.URL,"infoId");
+		 var aoData=[];
+		 aoData.push( { "name": "doctor.id", "value": infoId } );
+		 top.sendAjaxRequest("/actions/Doctor.action?getModifyRecdListByDoctor",aoData,userInfoCallback);
+	   }catch(e){
+		   top.showInfoWinError(e.message);
+	   }
+   }
+   function userInfoCallback(obj){
+       try{
+          var user=obj.doctor;
+          $("#span_real_name").html( user.real_name );
+		  $("#span_cell_phone").html( user.cell_phone );
+		  $("#span_status" ).html( top.getCodeName("DOC_STATUS",user.status) );
+		  $("#span_sex" ).html( top.getCodeName("SEX",user.sex) );
+		  $("#span_hospital_name").html( user.hospital_name );
+		  $("#span_hospital_dept").html( user.hospital_dept_name );
+		  $("#span_level").html( top.getCodeName( "JOB_LEVEL", user.level ) );
+
+		  if ( user.img_url != '' ) {
+		    $("#pic").attr("src", (OSS_BASE+""+user.img_url) );
+		  }
+		  
+		  modifyList=obj.modifyList;
+		  var ht='<tr class="tr_data"><td width="10%">修改字段</td><td width="30%">现在的值</td><td width="30%">修改后的值</td><td width="30%">审核结果</td></tr>';
+		  for ( var n=0;n<modifyList.length;n++ ) { 
+		    ht+='<tr class="tr_data"><td>'+top.getCodeName("MODIFY_COLUMN",modifyList[n].midify_type)+'</td><td>';
+			if ( modifyList[n].midify_type == 'sex' ) {
+				 ht+=top.getCodeName( "SEX", modifyList[n].before_value );
+		    } else if ( modifyList[n].midify_type == 'level' ) {
+				 ht+=top.getCodeName( "JOB_LEVEL", modifyList[n].before_value );
+			} else {
+				 ht+=modifyList[n].before_value;
+			}
+			ht+='</td><td>';
+			
+			if ( modifyList[n].midify_type == 'sex' ) {
+				 ht+=top.getCodeName( "SEX", modifyList[n].after_value );
+		    } else if ( modifyList[n].midify_type == 'level' ) {
+				 ht+=top.getCodeName( "JOB_LEVEL", modifyList[n].after_value );
+			} else {
+				 ht+=modifyList[n].after_value;
+			}
+
+			ht+='<td><input name="r_'+modifyList[n].id+'" type="radio" value="1" checked />通过&nbsp;<input name="r_'+modifyList[n].id+'" type="radio" value="2" />不通过</td></tr>';
+		  }
+		  $("#modifyList").html( ht );
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+  </script> 
+</head>
+<body>
+<br/>
+
+<table width="100%" border="0" padding="0" spacing="0">
+ <tr class="tr_data">
+    <td colspan="2" rowspan="7" valign="top">
+		<img src="../../img/photos.png" height="180px" id="pic"/>
+		<input type="hidden" id="img_url" value="" />
+	</td>
+    <td align="right">手机号码:</td>
+    <td align="left" align="left"><span id="span_cell_phone"></span></td>
+ </tr>
+  <tr id="tr_status" class="tr_data">
+    <td align="right">帐号状态:</td>
+    <td align="left" ><span id="span_status"></span></td>
+ </tr>
+  <tr class="tr_data">
+	<td width="30%" align="right">姓名:</td>
+    <td width="70%" align="left"><span id="span_real_name"></span></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">医院:</td>
+    <td align="left"><span id="span_hospital_name"></span></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">科室:</td>
+    <td align="left" ><span id="span_hospital_dept"></span></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">职称:</td>
+    <td align="left" ><span id="span_level"></span></td>
+ </tr>
+ <tr id="tr_status" class="tr_data">
+    <td align="right">性别:</td>
+    <td align="left" ><span id="span_sex"></span></td>
+ </tr>
+</table>
+<br/>
+ <table id="modifyList" width="100%" border="0" cellpadding="0" cellspacing="2px">
+     
+ </table>
+
+<p align="center">
+   <table><tr>
+		    <td><span id="okBtn" class="buttonTwo"><a href="javascript:doSubmit()">提交</a></span></td>
+   </tr></table>
+</p>
+</body>
+</html>

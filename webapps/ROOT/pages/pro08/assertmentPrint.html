@@ -1,0 +1,259 @@
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<style type="text/css"> 
+	table,table td,table th{border:1px solid #ff0000;border-collapse:collapse;}
+	</style>
+	<script src="../../js/jquery-1.7.2.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+	<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+	<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+	<script type="text/javascript" language="JavaScript1.2" src="../../js/helpyouworkeasy-core.js"></script>
+	<script type="text/javascript">
+		var delegateInfo={};
+		var approvaInfo={};
+		
+		$(document).ready(function() {
+			try{
+				delegateInfo=opener.getDelegateValue();
+				approvaInfo=opener.getApprovaValue();
+				$("#delegate_unit_name").html( delegateInfo.delegate_unit_name );
+				$("#defendant_name").html(delegateInfo.defendant_name );
+			  
+				//$("#correct_type").html(opener.getCodeName( "CORRECT_TYPE",delegateInfo.correct_type));
+				$("#defendant_sex").html(opener.getCodeName("SEX",delegateInfo.defendant_sex ));
+				$("#criminal_type").html(opener.getCodeName("CRIMINAL_TYPE",delegateInfo.criminal_type));
+				$("#addr").html( delegateInfo.addr );
+				$("#domicile_place").html(delegateInfo.domicile_place);
+				if(delegateInfo.expect_reply_date!=null&&delegateInfo.expect_reply_date!=''){
+				 $("#expect_reply_date").html(opener.getTimeStr( delegateInfo.expect_reply_date) );
+				}
+				if(delegateInfo.create_time!=null&&delegateInfo.create_time!=''){
+				 $("#create_time").html(opener.getTimeStr(delegateInfo.create_time ));
+			    }
+				$("#worker_opinion").html(approvaInfo.worker_opinion);
+				$("#manager_opinion").html(approvaInfo.manager_opinion);
+				$("#leader_opinion").html(approvaInfo.leader_opinion);
+				$("#memo").html(approvaInfo.memo);
+				$("#justice_bureau").html(approvaInfo.justice_bureau);
+				$("#judicial").html(approvaInfo.judicial);
+				if(approvaInfo.start_date!=null&&approvaInfo.start_date!=''){
+					$("#start_date").html(opener.getTimeStr(approvaInfo.start_date));
+				}
+				if(approvaInfo.start_date!=null&&approvaInfo.start_date!=''){
+					$("#end_date").html(opener.getTimeStr(approvaInfo.end_date));
+				}
+				
+				$("#title").html(top.getPrintSysTitle());
+			}catch(e){}
+	   } );
+	   		function doPrint(){
+			$("#printBtn").hide();
+			window.print();
+		}
+	</script>
+</head>
+
+ <body style="background-color:#7B7B7B">
+  <div style="width:620px;margin-left:auto;margin-right:auto;background-color:white;;padding-left:90px;padding-right:90px;padding-top:90px;padding-bottom:20px">
+	<p style="text-align:center">
+       <strong><span style="font-size:24px;font-family:宋体">黑河市<span id="title"></span>开展社区矫正适用前调查评估审批表</span></strong>
+    </p>
+	<p>
+		<strong><span style="font-size:21px;font-family:楷体_GB2312">填报单位：（公章）</span></strong>
+	</p>
+	<table cellspacing="0" cellpadding="0" width="612" >
+			<tr style=";height:41px" class="firstRow">
+				<td width="111" style="border-color: windowtext; border-width: 1px; padding: 0px 7px;" height="41">
+					<p style="text-align:center;line-height:27px">
+						<strong><span style="font-size:21px;font-family:仿宋_GB2312">委托单位</span></strong>
+					</p>
+				</td>
+				<td id="delegate_unit_name" width="501" colspan="10" style="border-top-color: windowtext; border-right-color: windowtext; border-bottom-color: windowtext; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-style: none; padding: 0px 7px;" height="41"></td>
+			</tr>
+			<tr style=";height:41px">
+				<td width="111" style="border-right-color: windowtext; border-bottom-color: windowtext; border-left-color: windowtext; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-style: none; padding: 0px 7px;" height="41">
+					<p style="text-align:center;line-height:27px">
+						<strong><span style="font-size:21px;font-family:仿宋_GB2312">委托时间</span></strong>
+					</p>
+				</td>
+				<td id="create_time" width="204" colspan="6" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="41"></td>
+				<td width="132" colspan="2" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="41">
+					<p style="text-align:center;line-height:27px">
+						<strong><span style="font-size:21px;font-family:仿宋_GB2312">收函时间</span></strong>
+					</p>
+				</td>
+				<td id="expect_reply_date" width="165" colspan="2" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="41"></td>
+			</tr>
+			<tr style=";height:41px">
+				<td width="111" rowspan="4" style="border-right-color: windowtext; border-bottom-color: windowtext; border-left-color: windowtext; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-style: none; padding: 0px 7px;" height="41">
+					<p style="text-align:center;line-height:27px">
+						<strong><span style="font-size:21px;font-family:仿宋_GB2312">调 查</span></strong>
+					</p>
+					<p style="text-align:center;line-height:27px">
+						<strong><span style="font-size:21px;font-family:仿宋_GB2312">评 估</span></strong>
+					</p>
+					<p style="text-align:center;line-height:27px">
+						<strong><span style="font-size:21px;font-family:仿宋_GB2312">对 象</span></strong>
+					</p>
+					<p style="text-align:center;line-height:27px">
+						<strong><span style="font-size:21px;font-family:仿宋_GB2312">情 况</span></strong>
+					</p>
+				</td>
+				<td width="111" colspan="2" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="41">
+					<p style="text-align:center;line-height:27px">
+						<strong><span style="font-size:21px;font-family:仿宋_GB2312">姓名</span></strong>
+					</p>
+				</td>
+				<td id="defendant_name" width="100" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="41"></td>
+				<td width="65" colspan="2" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="41">
+					<p style="text-align:center;line-height:27px">
+						<strong><span style="font-size:21px;font-family:仿宋_GB2312">性 别</span></strong>
+					</p>
+				</td>
+				<td id="defendant_sex" width="60" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="41"></td>
+				<td width="72" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="41">
+					<p style="text-align:center;line-height:27px">
+						<strong><span style="font-size:21px;font-family:仿宋_GB2312">民 族</span></strong>
+					</p>
+				</td>
+				<td width="93" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="41"></td>
+			</tr>
+			<tr style=";height:41px">
+				<td width="152" colspan="2" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="41">
+					<p style="text-align:center;line-height:27px">
+						<strong><span style="font-size:21px;font-family:仿宋_GB2312">户籍地</span></strong>
+					</p>
+				</td>
+				<td id="domicile_place" width="360" colspan="8" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="41"></td>
+			</tr>
+			<tr style=";height:41px">
+				<td width="152" colspan="2" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="41">
+					<p style="text-align:center;line-height:27px">
+						<strong><span style="font-size:21px;font-family:仿宋_GB2312">居住地</span></strong>
+					</p>
+				</td>
+				<td id="addr" width="360" colspan="8" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="41"></td>
+			</tr>
+			<tr style=";height:41px">
+				<td width="120" colspan="4" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="41">
+					<p style="text-align:center;line-height:27px">
+						<strong><span style="font-size:21px;font-family:仿宋_GB2312">涉嫌罪名</span></strong>
+					</p>
+				</td>
+				<td id="criminal_type" width="156" colspan="3" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="41"></td>
+				<td width="132" colspan="2" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="41">
+					<p style="text-align:center;line-height:27px">
+						<strong><span style="font-size:21px;font-family:仿宋_GB2312">拟矫正类别</span></strong>
+					</p>
+				</td>
+				<td id="" width="93" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="41"></td>
+			</tr>
+			<tr style=";height:40px">
+				<td width="111" rowspan="2" style="border-right-color: windowtext; border-bottom-color: windowtext; border-left-color: windowtext; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-style: none; padding: 0px 7px;" height="40">
+					<p style="text-align:center;line-height:27px">
+						<strong><span style="font-size:21px;font-family:仿宋_GB2312">开展调查评估人员</span></strong>
+					</p>
+				</td>
+				<td width="501" colspan="10" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="40">
+					<p style="line-height:27px">
+						<strong><span style="font-size:21px;font-family:   仿宋_GB2312">司法局：</span></strong>
+						<span id="justice_bureau"></span>
+					</p>
+				</td>
+			</tr>
+			<tr style=";height:41px">
+				<td width="501" colspan="10" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="41">
+					<p style="line-height:27px">
+						<strong><span style="font-size:21px;font-family:   仿宋_GB2312">司法所：</span></strong>
+						<span id="judicial"></span>
+					</p>
+				</td>
+			</tr>
+			<tr style=";height:41px">
+				<td width="208" colspan="4" style="border-right-color: windowtext; border-bottom-color: windowtext; border-left-color: windowtext; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-style: none; padding: 0px 7px;" height="41">
+					<p style="line-height:27px">
+						<strong><span style="font-size:21px;font-family:   仿宋_GB2312">调查评估起止时限</span></strong>
+					</p>
+				</td>
+				<td width="404" colspan="7" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="41">
+					<span id="start_date"></span>~<span id="end_date"></span>
+				</td>
+			</tr>
+			<tr style=";height:112px">
+				<td width="136" colspan="2" style="border-right-color: windowtext; border-bottom-color: windowtext; border-left-color: windowtext; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-style: none; padding: 0px 7px;" height="112">
+					<p style="text-align:center;line-height:27px">
+						<strong><span style="font-size:21px;font-family:仿宋_GB2312">社区矫正股工作人员</span></strong>
+					</p>
+					<p style="text-align:center;line-height:27px">
+						<strong><span style="font-size:21px;font-family:仿宋_GB2312">意&nbsp;&nbsp;&nbsp; 见</span></strong>
+					</p>
+				</td>
+				<td width="476" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="112">
+					<p style="text-align:left;line-height:27px">
+						<span id="worker_opinion" style="font-size:21px;font-family:仿宋_GB2312"></span>
+					</p>
+					
+					<p style="text-align:right;line-height:27px">
+						<span style="font-size:21px;font-family:仿宋_GB2312">年&nbsp; 月&nbsp; 日</span>
+					</p>
+				</td>
+			</tr>
+			<tr style=";height:114px">
+				<td width="136" colspan="2" style="border-right-color: windowtext; border-bottom-color: windowtext; border-left-color: windowtext; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-style: none; padding: 0px 7px;" height="114">
+					<p style="text-align:center;line-height:27px">
+						<strong><span style="font-size:21px;font-family:仿宋_GB2312">社区矫正股负 责 人</span></strong>
+					</p>
+					<p style="text-align:center;line-height:27px">
+						<strong><span style="font-size:21px;font-family:仿宋_GB2312">意&nbsp;&nbsp;&nbsp; 见</span></strong>
+					</p>
+				</td>
+				<td width="476" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="114">
+					<p style="margin-right:11px;text-align:left;line-height:27px">
+						<span id="manager_opinion" style="font-size:21px;font-family:仿宋_GB2312"></span>
+					</p>
+					
+					<p style="margin-right:11px;text-align:right;line-height:27px">
+						<span style="font-size:21px;font-family:仿宋_GB2312">年&nbsp;月&nbsp; 日</span>
+					</p>
+				</td>
+			</tr>
+			<tr style=";height:113px">
+				<td width="136" colspan="2" style="border-right-color: windowtext; border-bottom-color: windowtext; border-left-color: windowtext; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-style: none; padding: 0px 7px;" height="113">
+					<p style="text-align:center;line-height:27px">
+						<strong><span style="font-size:21px;font-family:仿宋_GB2312">司 法 局</span></strong>
+					</p>
+					<p style="text-align:center;line-height:27px">
+						<strong><span style="font-size:21px;font-family:仿宋_GB2312">主管领导</span></strong>
+					</p>
+					<p style="text-align:center;line-height:27px">
+						<strong><span style="font-size:21px;font-family:仿宋_GB2312">意&nbsp;&nbsp;&nbsp; 见</span></strong>
+					</p>
+				</td>
+				<td width="476" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="113">
+					<p style="text-align:left;line-height:27px">
+						<span id="leader_opinion" style="font-size:21px;font-family:仿宋_GB2312"></span>
+					</p>
+					
+					<p style="text-align:right;line-height:27px">
+						<span style="font-size:21px;font-family:仿宋_GB2312">年&nbsp; 月&nbsp; 日</span>
+					</p>
+				</td>
+			</tr>
+			<tr style=";height:124px">
+				<td width="136" colspan="2" style="border-right-color: windowtext; border-bottom-color: windowtext; border-left-color: windowtext; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-style: none; padding: 0px 7px;" height="124">
+					<p style="text-align:center;line-height:27px">
+						<strong><span style="font-size:21px;font-family:仿宋_GB2312">备&nbsp;&nbsp;&nbsp; 注</span></strong>
+					</p>
+				</td>
+				<td id="memo" width="476" colspan="9" style="border-top-style: none; border-left-style: none; border-bottom-color: windowtext; border-bottom-width: 1px; border-right-color: windowtext; border-right-width: 1px; padding: 0px 7px;" height="124"></td>
+			</tr>
+	</table>
+
+	<div width="100%" id="printBtn" style="margin_top:10px;font-size:20px;position:absolute;left:30pxx;top:50px"><center><a style="text-decoration: none"href="javascript:doPrint()"><span>[ 打印 ]</span></a></center></div>
+
+  </div>
+</body>
+</html>

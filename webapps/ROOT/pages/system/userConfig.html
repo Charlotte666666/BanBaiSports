@@ -1,0 +1,96 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var userCode = "";
+   
+   $(document).ready(function() {
+      initData();
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   function doSubmit(){
+	 var aoData=[];
+     aoData.push( { "name": "userConfig.userCode", "value": userCode } );
+     aoData.push( { "name": "userConfig.c1", "value": $("#c1").val() } );
+     aoData.push( { "name": "userConfig.c2", "value": top.getRadioValue( document.getElementsByName("c2") ) } );
+     aoData.push( { "name": "userConfig.c3", "value": $("#c3").val() } );
+	 top.sendAjaxRequest("/actions/User.action?updateUserConfig",aoData,optCallback);
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功");
+		 var user = top.getCurrentUser();
+		 var config = {};
+		 if ( user.config ) config = user.config;
+		 config.c1 = $("#c1").val();
+		 config.c2 = top.getRadioValue( document.getElementsByName("c2") );
+		 config.c3 = $("#c3").val();
+		 top.updateUserConfig( config );
+	    }else{
+	      isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   function initData(){
+	   try{
+		   var user = top.getCurrentUser();
+		   userCode = user.userCode;
+		   if ( user.config ) {
+		      $("#c1").val( user.config.c1 );
+			  top.initRadioValue(  document.getElementsByName("c2"), user.config.c2 );
+			  $("#c3").val( user.config.c3 );
+		   }
+	   }catch(e){
+	   }
+   }
+  </script> 
+</head>
+<body>
+<div style="padding:20px">
+系统首页选择:<br>
+	  <select id="c1">
+	    <option value="default" selected>地面实况</option>
+		<option value="pages/pro01/countInfo.html">实时统计</option>
+		<option value="pages/pro01/report.html">评估报告</option>
+	  </select>
+<br><br>
+初始化地面实况页面时是否自动加载数据:<br>
+<input type="radio" name="c2" value="1" checked >是</input>&nbsp;&nbsp;<input type="radio" name="c2" value="0">否</input>
+<br><br>
+初始化地面实况页面时自动加载的元素:<br>
+	  <select id="c3">
+	    <option value="rain" selected>降水</option>
+		<option value="temperature">气温</option>
+		<option value="wind">风</option>
+		<option value="pressure">气压</option>
+		<option value="humidity">相对温度</option>
+	  </select>
+</div>
+<br><br>
+<p align="center">
+   <table><tr>
+		    <td><span id="okBtn" class="buttonTwo"><a href="javascript:doSubmit()">提交</a></span></td>
+		    <td><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+   </tr></table>
+</p>
+</body>
+</html>

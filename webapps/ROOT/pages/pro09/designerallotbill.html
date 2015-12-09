@@ -1,0 +1,225 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title></title>
+<link href="../../css/comm.css" rel="stylesheet" type="text/css" />
+<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript">
+
+$(document).ready(function() {
+	var day=0;
+	var ds=[];
+	var wh=$(window).height();
+	$("#dataDiv").height( (wh - 150)+"px" );
+	var today=new Date();
+	var y=today.getFullYear();
+    var m = today.getMonth() + 1;
+	$("#span_year").html( top.get5YearSelectHtml("year",false,y,"doQuery()" ));
+	$("#span_month").html( top.get12MonthSelectHtml("month",false,m,"doQuery()") );
+	
+	doQuery();
+ });
+
+ function doQuery(){
+    var aoData=[];
+    aoData.push( { "name": "year", "value": $("#year").val() } );
+	aoData.push( { "name": "month", "value": $("#month").val() } );
+	var xurl="/actions/DesignPlan.action?queryDesignerBills";
+	top.sendAjaxRequest(xurl,aoData,queryDesignerBillsCallback);
+ }
+ //查询设计师派单详细信息
+function queryDetailInfo(designerCode,day){
+	var year=$("#year").val();
+	var month=$("#month").val();
+	var t1=year+"-"+top.getTwoNumberStr(month)+"-"+top.getTwoNumberStr(day);
+	var time1=top.toTimestamp(t1);
+	var time2=Number(time1)+ 24*60*60000;
+	var xurl="pages/pro09/designerBillDetailInfo.html?time1="+time1+"&designerCode="+designerCode+"&time2="+time2;
+	top.openDialog("派单详细信息",xurl,true,600,400,null);
+}
+
+
+ function queryDesignerBillsCallback(obj){
+    try{
+	  ds=obj.aaData;
+
+	  var ht="";
+	  var row=1;
+	  var j=0;
+	  var m=0;
+	   var finalday=0;
+			 var year= $("#year").val();
+			 var month=0;
+			 month=$("#month").val();
+			 var str=''+year+'-'+month+'-01 00:00:00';
+			 var d=new Date(str);
+			 month=d.getMonth()+1;
+			 var str1=''+year+'-'+top.getTwoNumberStr(month+1)+'-01 00:00:00';
+			 var t2=top.toTimestamp(str1,true)-24*60*60000;
+			 var d=new Date(t2);
+			 var day=d.getDate();
+			 ht='<tr  class="tr_data" style="background-color: #b9d8f3;">';
+			 ht+='<td width="120px" height="32px" align="center">设计师</td>';
+			 ht+=' <td width="32px" height="32px" align="center">1</td>';
+			 ht+=' <td width="32px" height="32px" align="center">2</td>';
+			 ht+=' <td width="32px" height="32px" align="center">3</td>';
+			 ht+=' <td width="32px" height="32px" align="center">4</td>';
+			 ht+=' <td width="32px" height="32px" align="center">5</td>';
+			 ht+=' <td width="32px" height="32px" align="center">6</td>';
+			 ht+=' <td width="32px" height="32px" align="center">7</td>';
+			 ht+=' <td width="32px" height="32px" align="center">8</td>';
+			  ht+='<td width="32px" height="32px" align="center">9</td>';
+			 ht+=' <td width="32px" height="32px" align="center">10</td>';
+			 ht+=' <td width="32px" height="32px" align="center">11</td>';
+			 ht+=' <td width="32px" height="32px" align="center">12</td>';
+			 ht+=' <td width="32px" height="32px" align="center">13</td>';
+			 ht+=' <td width="32px" height="32px" align="center">14</td>';
+			 ht+=' <td width="32px" height="32px" align="center">15</td>';
+			 ht+=' <td width="32px" height="32px" align="center">16</td>';
+			 ht+=' <td width="32px" height="32px" align="center">17</td>';
+			 ht+=' <td width="32px" height="32px" align="center">18</td>';
+			 ht+=' <td width="32px" height="32px" align="center">19</td>';
+			 ht+=' <td width="32px" height="32px" align="center">20</td>';
+			 ht+=' <td width="32px" height="32px" align="center">21</td>';
+			 ht+=' <td width="32px" height="32px" align="center">22</td>';
+			 ht+=' <td width="32px" height="32px" align="center">23</td>';
+			 ht+=' <td width="32px" height="32px" align="center">24</td>';
+			 ht+=' <td width="32px" height="32px" align="center">25</td>';
+			 ht+=' <td width="32px" height="32px" align="center">26</td>';
+			 ht+=' <td width="32px" height="32px" align="center">27</td>';
+			 ht+=' <td width="32px" height="32px" align="center">28</td>';
+			 if(day>28){
+			    ht+=' <td width="32px" height="32px" align="center" id="d29">29</td>';
+			 } 
+             if(day>29){			 
+			    ht+=' <td width="32px" height="32px" align="center" id="d30">30</td>';
+			 }
+			 if(day>30){
+			    ht+=' <td width="32px" height="32px" align="center" id="d31">31</td>';
+			 }
+			  ht+='</tr>';
+			for (var i=0;i<ds.length;i++) {
+			  ht+='<tr  class="tr_data"';
+			  //ht+=' bgcolor="'+(row==0?"#C9E4D6":"#E5F4F9")+'" ';
+			  ht+='>';
+			  ht+='<td width="120px" height="32px" align="center" style="word-break:break-all;"><b>'+top.getUserNameByCode(ds[i].user_code)+'</b></td>';
+		
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',1)">'+getNums(ds[i].d1)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',2)">'+getNums(ds[i].d2)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',3)">'+getNums(ds[i].d3)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',4)">'+getNums(ds[i].d4)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',5">'+getNums(ds[i].d5)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',6)">'+getNums(ds[i].d6)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',7)">'+getNums(ds[i].d7)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',8)">'+getNums(ds[i].d8)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',9)">'+getNums(ds[i].d9)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',10)">'+getNums(ds[i].d10)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',11)">'+getNums(ds[i].d11)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',12)">'+getNums(ds[i].d12)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',13)">'+getNums(ds[i].d13)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',14)">'+getNums(ds[i].d14)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',15)">'+getNums(ds[i].d15)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',16)">'+getNums(ds[i].d16)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',17)">'+getNums(ds[i].d17)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',18)">'+getNums(ds[i].d18)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',19)">'+getNums(ds[i].d19)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',20)">'+getNums(ds[i].d20)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',21)">'+getNums(ds[i].d21)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',22)">'+getNums(ds[i].d22)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',23)">'+getNums(ds[i].d23)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',24)">'+getNums(ds[i].d24)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',25)">'+getNums(ds[i].d25)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',26)">'+getNums(ds[i].d26)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',27)">'+getNums(ds[i].d27)+'</a></b></td>';
+			  ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void(0)" onclick="queryDetailInfo(\''+ds[i].user_code+'\',28)">'+getNums(ds[i].d28)+'</a></b></td>';
+			  
+			  if(day > 28) {
+			    ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void()" onclick="queryDetailInfo(\''+ds[i].user_code+'\',29)">'+getNums(ds[i].d29)+'</a></b></td>';
+			  } 
+			  if(day > 29 ) {
+			    ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void()" onclick="queryDetailInfo(\''+ds[i].user_code+'\',30)">'+getNums(ds[i].d30)+'</a></b></td>';
+			  }
+			  if(day > 30 ) {
+			    ht+='<td width="32px" height="32px" align="center" style="word-break:break-all;"><b><a href="javascript:void()" onclick="queryDetailInfo(\''+ds[i].user_code+'\',31)">'+getNums(ds[i].d31)+'</a></b></td>';
+              }
+			  ht+='</tr>';
+			  if ( row == 1 ) {
+				 row=0;
+			  } else {
+				 row=1;
+			  }
+	  }
+	  $("#dataList").html( ht );
+	   if(day==30)
+			 {
+				$("#d31").hide();
+			 }else if(day==29)
+			 {
+				$("#d31").hide();
+				$("#d30").hide();
+			 }else if(day==28)
+			 {
+				$("#d31").hide();
+				$("#d30").hide();
+				$("#d29").hide();
+			 }else
+			 {
+				$("#d31").show();
+				$("#d30").show();
+				$("#d29").show();
+			 }
+	}catch(e){}
+ }
+ 
+ function getNums(d){
+    if ( d == 0 ) return "";
+	return d;
+ }
+	//导出
+ 	function exportData(){
+		var aoData=[];
+		 aoData.push( { "name": "year", "value": $("#year").val() } );
+		 aoData.push( { "name": "month", "value": $("#month").val() } );
+		 aoData.push( { "name": "day", "value": day } );
+		 aoData.push( { "name": "total_length", "value": ds.length } );
+		 
+		top.showLoadingInfo(true);
+		top.sendAjaxRequest("/actions/DesignPlan.action?exportDesignerBill",aoData,callBackExportData);
+	}
+	function callBackExportData(obj){
+     top.showLoadingInfo(false);
+	 try{
+	    if ( obj.status == true ){
+		   var downUrl=top.getUrlBase()+"/download?filePath="+obj.msg+"&fileName=设计师每日接单统计.xls";
+		   document.location.href=downUrl;
+	    }else{
+		   top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	 }catch(e){
+	    top.showInfoWinError("处理异常:"+e.message);
+	 }
+ } 
+</script>
+</head>
+
+<body style="width:100%;">
+<p align="center" style="margin: 4px;"><span id="span_year"></span>年<span id="span_month"></span>月&nbsp;<b>设计师派单情况一览表</b></p>
+		<table width="100%">
+			<tr>
+				<td width="100%" align="right">
+					<div id="exportBtn" class="buttonDivTwo">
+						<a href="javascript:exportData()">导出</a>
+					</div>
+				</td>
+			</tr>
+		</table>
+
+<center>
+  <div id="dataDiv" style="margin:5px;padding:0;width:1260px;background-color:#ffffff;overflow: auto;">
+   <table id="dataList" width="100%" cellpadding="3" cellspacing="1" border="1" style="background-color: #b9d8f3;" align="center"></table>
+  </div>
+</center>
+</body>
+</html>

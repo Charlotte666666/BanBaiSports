@@ -1,0 +1,305 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+		    var optType="";
+			var objs=[];
+			var isHasCreateRight=false;
+			
+			$(document).ready(function() {
+			   $( "#tdStatus" ).html( top.getCodeSelectHtml("PROJECT_STATUS","q_project_status",true,null,null,"全部") );
+			   $( "#td_project_manager_id" ).html( top.getProjectManagerHtmlList("q_project_manager_id", true,null,null,"全部") );
+			   $( "#td_senior_project_manager" ).html( top.getSeniorProjectManagerHtmlList("q_senior_project_manager", true,null,null,"全部") );
+			   $( "#td_project_director" ).html( top.getDirectorProjectManagerHtmlList("q_project_director", true,null,null,"全部") );
+			   
+			   $( "#td_contract_type" ).html( top.getCodeSelectHtml("CONTRACT_TYPE","q_contract_type",true,null,null,"全部") );
+			   
+			   isHasCreateRight = top.g_isPermit('mvt_createProject');
+			   
+			   if ( top.g_isPermit('mvt_importFinance') ) {
+			     $("#importFinanceBtn").show();
+			   } else {
+			     $("#importFinanceBtn").hide();
+			   }
+			   
+			   /**var currentUser=top.top.getCurrentUser();
+			   if ( !top.isPMO( currentUser.userCode ) ) {
+			     if ( top.isDirectorPM( currentUser.userCode ) ) {
+			       $("#q_project_director").val( currentUser.userCode );
+				   $("#q_project_director").attr("disabled",true);
+				 } else if ( top.isSeniorPM( currentUser.userCode ) ) {
+				   $("#q_senior_project_manager").val( currentUser.userCode );
+				   $("#q_senior_project_manager").attr("disabled",true);
+				 } else {
+				   $("#q_project_manager_id").val( currentUser.userCode );
+				   $("#q_project_manager_id").attr("disabled",true);
+				 }
+			   } */
+			   
+			    if ( !isHasCreateRight ) {
+				   $('#createBtn').hide();
+				} else {
+				   $('#createBtn').show();
+				}
+			   
+			   optType=top.getUrlParam(document.URL,"optType");
+			   var htTemp="";
+			   var iaoColumns= [
+                               { "sTitle": "项目号", "mDataProp": "project_code", "sWidth": "10%","sClass": "left",
+                                      "fnRender": function ( oObj ) {
+									       objs[objs.length]=oObj.aData;
+                                           return '<a href=\'javascript:void(0)\' onclick="updateProject(\''+oObj.aData.id+'\',\''+oObj.aData.project_name+'\')" >'+oObj.aData.project_code+"</a>" ;
+                                      },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "项目名称", "mDataProp": "project_name", "sWidth": "30%","sClass": "left",
+                                      "fnRender": function ( oObj ) {
+									       htTemp='';
+										   if ( isHasCreateRight && oObj.aData.project_status != 4 && oObj.aData.project_status != 5 ) {
+										     htTemp+='<img src="../../img/btn_edit.gif" title="修改项目基本信息" onclick="updateProjectBaseInfo(\''+oObj.aData.id+'\')" />&nbsp;';
+										   }
+										   htTemp+=oObj.aData.project_name;
+		                                   return htTemp;
+                                      },
+                                      "bUseRendered": false 
+							   },
+							   { "sTitle": "FID", "mDataProp": "funnel_id", "sWidth": "10%", "bUseRendered": false },
+							   { "sTitle": "合同号", "mDataProp": "contract_code", "sWidth": "10%", "bUseRendered": false },
+							   { "sTitle": "合同类型", "mDataProp": "contract_type", "sWidth": "10%", "bUseRendered": false },
+							   { "sTitle": "项目经理", "mDataProp": "project_manager_id", "sWidth": "10%", 
+                                  "fnRender": function ( oObj ) {
+                                       return top.getUserNameByCode( oObj.aData.project_manager_id );
+                                  },
+                                  "bUseRendered": false 							   },
+							   { "sTitle": "创建日期","mDataProp": "create_date","sWidth": "10%", "sClass": "center",
+                            	  "fnRender": function ( oObj ) {
+                                       return top.getTimeStr( oObj.aData.create_date, true );
+                                  },
+                                  "bUseRendered": false 
+                               },
+							   { "sTitle": "项目状态", "mDataProp": "project_status", "sWidth": "10%", "sClass": "center",
+                                   "fnRender": function ( oObj ) {
+                                        return top.getCodeName( "PROJECT_STATUS", oObj.aData.project_status );
+                                   },
+                                  "bUseRendered": false
+							   }
+               ];
+
+			   var surl=top.getUrlBase()+"/actions/ProMVTProject.action?getProProjectInfoList";
+
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"aaSorting": [[ 6, "desc" ]],
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     var temp="";
+					     aoData.push( { "name": "time1", "value": $("#q_time1").val() } );
+						 aoData.push( { "name": "time2", "value": $("#q_time2").val() } );
+						 aoData.push( { "name": "time3", "value": $("#q_time3").val() } );
+						 aoData.push( { "name": "time4", "value": $("#q_time4").val() } );
+						 temp = $("#q_project_status").val();
+						 if ( temp == '' ) temp = -1;
+						 aoData.push( { "name": "info.project_name", "value": $("#q_project_name").val() } );
+						 aoData.push( { "name": "info.project_code", "value": $("#q_project_code").val() } );
+						 aoData.push( { "name": "info.project_manager_id", "value": $("#q_project_manager_id").val() } );
+						 aoData.push( { "name": "info.senior_project_manager", "value": $("#q_senior_project_manager").val() } );
+						 aoData.push( { "name": "info.project_director", "value": $("#q_project_director").val() } );
+						 aoData.push( { "name": "info.funnel_id", "value": $("#q_funnel_id").val() } );
+						 aoData.push( { "name": "info.contract_type", "value": $("#q_contract_type").val() } );
+						 aoData.push( { "name": "info.project_status", "value": temp } );
+						 aoData.push( { "name": "info.service_type_id", "value": -1 } );
+						 aoData.push( { "name": "info.product_line_id", "value": -1 } );
+						 aoData.push( { "name": "info.first_factory_id", "value": -1 } );
+						 aoData.push( { "name": "info.customer_area_id", "value": -1 } );
+						 aoData.push( { "name": "info.customer_type_id", "value": -1 } );
+						 aoData.push( { "name": "info.plan_contact_money", "value": -1 } );
+						 aoData.push( { "name": "info.contract_code", "value": $("#q_contract_code").val() } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+			    objs=[];
+				oTable.fnDraw();
+			}
+			
+			function getObj(infoId){
+			   for ( var i=0;i<objs.length;i++ ) {
+			     if ( objs[i].id == infoId ) return objs[i];
+			   }
+			   return null;
+			}
+
+			function addProject(){
+				var xurl="pages/pro04/createProject.html?opt=create";
+				top.openDialog("创建项目",xurl,true,800,350,saveCallBack);
+			}
+			
+			function updateProjectBaseInfo(proid){
+			    var o=getObj(proid);
+			    top.setTempValue( o );
+			    var xurl="pages/pro04/createProject.html?opt=update&infoId="+proid;
+				top.openDialog("修改项目基本信息",xurl,true,800,350,saveCallBack);
+			}
+			
+			function updateProject(projectId,project_name){
+				var xurl="pages/pro04/projectInfo.html?opt=update&projectId="+projectId;
+				top.openDialog("项目【"+project_name+"】详细信息",xurl,true,1100,620,saveCallBack);
+			}
+			
+			function saveCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				  
+				}
+			}
+			
+			function optCallback(obj){
+			       try{
+			        if ( obj.status == true ){
+			          top.showInfoWinOK("操作成功");
+			          doQuery();
+			        }else{
+			          top.showInfoWinError("操作失败 "+obj.msg);
+			        }
+			       }catch(e){
+			          top.showInfoWinError("处理异常:"+e.message);
+			       }
+		  }
+		  
+		  function importFinance(){
+				var xurl="pages/pro04/importFinance.html";
+				top.openDialog("导入财务数据",xurl,true,500,200,null);
+		  }
+		  
+ function exportData(){
+     var aoData=[];
+     var temp="";
+     aoData.push( { "name": "time1", "value": $("#q_time1").val() } );
+	 aoData.push( { "name": "time2", "value": $("#q_time2").val() } );
+	 aoData.push( { "name": "time3", "value": $("#q_time3").val() } );
+	 aoData.push( { "name": "time4", "value": $("#q_time4").val() } );
+	 temp = $("#q_project_status").val();
+	 if ( temp == '' ) temp = -1;
+	 aoData.push( { "name": "info.project_name", "value": $("#q_project_name").val() } );
+	 aoData.push( { "name": "info.project_code", "value": $("#q_project_code").val() } );
+	 aoData.push( { "name": "info.project_manager_id", "value": $("#q_project_manager_id").val() } );
+	 aoData.push( { "name": "info.senior_project_manager", "value": $("#q_senior_project_manager").val() } );
+	 aoData.push( { "name": "info.project_director", "value": $("#q_project_director").val() } );
+	 aoData.push( { "name": "info.funnel_id", "value": $("#q_funnel_id").val() } );
+	 aoData.push( { "name": "info.contract_type", "value": $("#q_contract_type").val() } );
+	 aoData.push( { "name": "info.project_status", "value": temp } );
+	 aoData.push( { "name": "info.service_type_id", "value": -1 } );
+	 aoData.push( { "name": "info.product_line_id", "value": -1 } );
+	 aoData.push( { "name": "info.first_factory_id", "value": -1 } );
+	 aoData.push( { "name": "info.customer_area_id", "value": -1 } );
+	 aoData.push( { "name": "info.customer_type_id", "value": -1 } );
+	 aoData.push( { "name": "info.plan_contact_money", "value": -1 } );
+	 aoData.push( { "name": "info.contract_code", "value": $("#q_contract_code").val() } );
+	 top.showLoadingInfo(true);
+     top.sendAjaxRequest("/actions/ProMVTProject.action?exportProjectInfo",aoData,callBackExportData);
+ }
+ 
+ function callBackExportData(obj){
+     top.showLoadingInfo(false);
+	 try{
+	    if ( obj.status == true ){
+		   var downUrl=top.getUrlBase()+"/download?filePath="+obj.msg+"&fileName=项目列表.xls";
+		   document.location.href=downUrl;
+	    }else{
+		   top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	 }catch(e){
+	    top.showInfoWinError("处理异常:"+e.message);
+	 }
+ }
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+		    <div style='border: 2px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="110px">&nbsp;项目查询&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+			      <td align="right" width="10%">项目号:</td><td align="left" width="15%"><input type="text" id="q_project_code" value="" style="width:120px" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+			      <td align="right" width="10%">FID:</td><td align="left" width="15%"><input type="text" id="q_funnel_id" value="" style="width:120px" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+				  <td align="right" width="10%">合同号:</td><td align="left" width="15%"><input type="text" id="q_contract_code" value="" style="width:120px" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+				  <td align="right" width="10%">项目状态:</td><td align="left" width="15%" id="tdStatus"></td>
+				 </tr><tr class="tr_data">
+				  <td align='right' >项目经理:</td><td align='left' id="td_project_manager_id"></td>
+				  <td align='right' >服务负责人:</td><td align='left' id="td_senior_project_manager"></td>
+				  <td align='right' >分公司负责人:</td><td align='left' id="td_project_director"></td>
+				  <td align='right' >合同类型:</td><td align='left' id="td_contract_type"></td>
+				 </tr><tr class="tr_data">
+				  <td align="right">开始时间从:</td><td align="left" ><input type="text" id="q_time3" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" />
+				     到:<input type="text" id="q_time4" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" /></td>
+				  <td align="right">创建时间从:</td><td align="left" width="20%" ><input type="text" id="q_time1" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" />
+				     到:<input type="text" id="q_time2" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" /></td>
+				  <td align="right">项目名称:</td><td align="left" colspan="3"><input type="text" id="q_project_name" value="" size="40" onkeydown="if(event.keyCode==13) doQuery();"/></td>
+			     </tr>
+			 </table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				    <td>&nbsp;查询结果列表&nbsp;</td>
+					<td><div id="createBtn" class="buttonDivTwo"><a href="javascript:addProject()">创建</a></div></td>
+					<td><div id="importFinanceBtn" class="buttonDivSix"><a href="javascript:importFinance()">导入财务数据</a></div></td>
+					<td><div id="exportBtn" class="buttonDivTwo"><a href="javascript:exportData()">导出</a></div></td>
+			       </tr></table></td>
+			  </tr>
+			</table>
+	        <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

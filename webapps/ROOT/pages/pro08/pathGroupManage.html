@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+<script type="text/javascript" charset="utf-8">
+var interGetResult1=0;
+var qDeptId="";
+var qDeptName="";
+
+$(document).ready(function() {
+    var wh=$(window).height();
+	var ww=$(window).width();
+	$('#map').css("height",wh - 50);
+	try{
+	 clearInterval( interGetResult1 );
+	 interGetResult1 = setInterval("getNewestPath()", 5000 );
+    }catch(e){}
+} );
+
+function getNewestPath(){
+   if(qDeptId!=""){
+    var aoData=[];
+	aoData.push( { "name": "deptId", "value": qDeptId } );
+	top.sendAjaxRequest("/actions/Pro08Path.action?getNewestPathByGroup",aoData,getPathCallback,true);
+	}
+}
+
+function getPathCallback(obj){
+	if ( obj ) {
+		var ps=[];
+		for (var i=0; i<obj.body.paths.length ; i++) {
+			ps[i]=[obj.body.paths[i].lon,obj.body.paths[i].lat,obj.body.paths[i].prison_code];
+		}
+		var mapFrame = document.getElementById("mapFrame");
+		try{
+		  if ( mapFrame ) mapFrame.contentWindow.drawDots( ps );
+		}catch(e){
+		}
+	}
+}
+
+function selectDept(){
+	var xurl="pages/organization/selectTreeNode.html?type=dept";
+	top.openSelectDialog("选择部门",xurl,300,450,selectDeptCallback);
+}
+		   
+function selectDeptCallback(){
+	try{
+	    var obj = top.getTempValue();
+	    if ( obj.nodeId == -1 ) return ;
+	    if ( obj.nodeId == -2 ) {
+	        qDeptId = "";
+	        qDeptName = "";
+	    } else {
+	        qDeptId = obj.nodeId;
+            qDeptName = obj.nodeName;
+	    }
+	    $("#q_deptname").val(qDeptName);
+		getNewestPath();
+	}catch(e){
+	}
+}
+</script>
+</head>
+<body>
+
+<div width="100%">
+	        <div style='border: 2px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="150px">&nbsp;按部门定位监控&nbsp;</td>
+				  <td align="right">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			     <tr class="tr_data">
+				  <td align="center"  width="100%">选择部门（司法所/司法局）:<input type="text" id="q_deptname" value="" size="50" readonly onclick="selectDept()" /></td>	
+			     </tr>
+			 </table>
+			</div>
+</div>
+<div id="map">
+  <iframe id="mapFrame" src="baiduMap.html" width="100%" height="100%" style="background-color:#ffffff" frameborder="0"></iframe>
+</div>
+</body>
+</html>

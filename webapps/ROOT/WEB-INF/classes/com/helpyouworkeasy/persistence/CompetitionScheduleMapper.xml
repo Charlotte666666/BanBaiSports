@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.helpyouworkeasy.persistence.CompetitionScheduleMapper">
+  
+  <insert id="insertCompetitionSchedule" parameterType="CompetitionSchedule">
+    INSERT INTO tbl_competition_schedule (title,sponsor,venue,schedule_desc,contest_rules,roadmap_shuttle_bus,status,cost,athletes_num,
+    img_url,phone,qualification,schedule_type,chengban,xieban,yunyin,id,start_date,end_date,apply_end,promotion_names,
+    is_deleted,inning_count,total_score,max_score,competition_types,show_type,round_count,area_count,not_round,not_round_name)
+    VALUES (#{title}, #{sponsor}, #{venue}, #{schedule_desc}, #{contest_rules}, #{roadmap_shuttle_bus}, #{status}, #{cost}, #{athletes_num}, 
+    #{img_url}, #{phone}, #{qualification}, #{schedule_type}, #{chengban}, #{xieban}, #{yunyin}, #{id}, #{start_date}, #{end_date}, #{apply_end},#{promotion_names},
+    #{is_deleted}, #{inning_count}, #{total_score}, #{max_score},#{competition_types},#{show_type},#{round_count},#{area_count},#{not_round},#{not_round_name})
+  </insert>
+  
+  <update id="updateCompetitionSchedule" parameterType="CompetitionSchedule">
+    update tbl_competition_schedule set 
+    title=#{title},sponsor=#{sponsor},venue=#{venue},schedule_desc=#{schedule_desc},contest_rules=#{contest_rules},roadmap_shuttle_bus=#{roadmap_shuttle_bus},
+    status=#{status},cost=#{cost},athletes_num=#{athletes_num},phone=#{phone},qualification=#{qualification},
+    schedule_type=#{schedule_type},start_date=#{start_date},end_date=#{end_date},inning_count=#{inning_count},
+    total_score=#{total_score},max_score=#{max_score},chengban=#{chengban},xieban=#{xieban},yunyin=#{yunyin},
+    competition_types=#{competition_types},show_type=#{show_type},round_count=#{round_count},area_count=#{area_count},
+    not_round=#{not_round},not_round_name=#{not_round_name},apply_end=#{apply_end},promotion_names=#{promotion_names} 
+    where id=#{id}
+  </update>
+  
+  <update id="updateCompetitionScheduleImg" parameterType="CompetitionSchedule">
+    update tbl_competition_schedule set 
+      img_url=#{img_url}
+    where id=#{id}
+  </update>
+  
+  <update id="updateSchedulePromotionTable" parameterType="map">
+    update tbl_competition_schedule set 
+      promotion_table=#{promotion_table}
+    where id=#{id}
+  </update>
+
+  <select id="getCompetitionScheduleListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_competition_schedule where is_deleted=0
+    <if test="o.title != '' and o.title != null" >
+      and title=#{o.title}
+    </if>
+    <if test="o.sponsor != '' and o.sponsor != null" >
+      and sponsor=#{o.sponsor}
+    </if>
+    <if test="o.venue != '' and o.venue != null" >
+      and venue=#{o.venue}
+    </if>
+    <if test="o.status != '' and o.status != null" >
+      and status=#{o.status}
+    </if>
+    <if test="time1 != -1" >
+      and start_date>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=start_date
+    </if>
+  </select>
+
+  <select id="getCompetitionSchedulePageList" parameterType="map" resultType="CompetitionSchedule">
+    select 
+      title,sponsor,venue,schedule_desc,contest_rules,roadmap_shuttle_bus,status,cost,athletes_num,img_url,phone,area_count,
+      qualification,schedule_type,id,start_date,end_date,inning_count,total_score,max_score,chengban,xieban,yunyin,round_count,
+      competition_types,show_type,promotion_table,apply_end,promotion_names 
+    from tbl_competition_schedule where is_deleted=0
+    <if test="o.title != '' and o.title != null" >
+      and title=#{o.title}
+    </if>
+    <if test="o.sponsor != '' and o.sponsor != null" >
+      and sponsor=#{o.sponsor}
+    </if>
+    <if test="o.venue != '' and o.venue != null" >
+      and venue=#{o.venue}
+    </if>
+    <if test="o.status != '' and o.status != null" >
+      and status=#{o.status}
+    </if>
+    <if test="time1 != -1" >
+      and start_date>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=start_date
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+
+  <select id="getCompetitionScheduleById" parameterType="map" resultType="CompetitionSchedule">
+    select 
+      title,sponsor,venue,schedule_desc,contest_rules,roadmap_shuttle_bus,status,cost,athletes_num,img_url,round_count,area_count,not_round,not_round_name,
+      phone,qualification,schedule_type,id,start_date,end_date,inning_count,total_score,max_score,chengban,xieban,yunyin,competition_types,
+      show_type,promotion_table,apply_end,promotion_names 
+    from tbl_competition_schedule where id=#{id}
+  </select>
+
+  <insert id="insertCompetitionSmallSchedule" parameterType="CompetitionSmallSchedule">
+    INSERT INTO tbl_competition_small_schedule (title,team1_players,team2_players,img_url1,img_url2,create_id,addr,opponent_leader_id,status,team1_name,team2_name,id,create_time,schedule_time,inning_count,score_count,score_1,score_2,type)
+    VALUES (#{title}, #{team1_players}, #{team2_players}, #{img_url1}, #{img_url2}, #{create_id}, #{addr}, #{opponent_leader_id}, #{status}, #{team1_name}, #{team2_name}, #{id}, #{create_time}, #{schedule_time}, #{inning_count}, #{score_count}, #{score_1}, #{score_2}, #{type})
+  </insert>
+
+  <update id="updateCompetitionSmallSchedule" parameterType="CompetitionSmallSchedule">
+    update tbl_competition_small_schedule set 
+    title=#{title},team1_players=#{team1_players},team2_players=#{team2_players},img_url1=#{img_url1},img_url2=#{img_url2},create_id=#{create_id},addr=#{addr},opponent_leader_id=#{opponent_leader_id},status=#{status},team1_name=#{team1_name},team2_name=#{team2_name},create_time=#{create_time},schedule_time=#{schedule_time},inning_count=#{inning_count},score_count=#{score_count},score_1=#{score_1},score_2=#{score_2}
+    where id=#{id}
+  </update>
+  
+  <delete id="deleteCompetitionSmallSchedule" parameterType="CompetitionSmallSchedule">
+    delete from tbl_competition_small_schedule where id=#{id}
+  </delete>
+  
+  <update id="updateCompetitionSmallScheduleTeam1" parameterType="CompetitionSmallSchedule">
+    update tbl_competition_small_schedule set 
+     team1_players=#{team1_players},img_url1=#{img_url1},team1_name=#{team1_name}
+    where id=#{id}
+  </update>
+  
+  <update id="updateCompetitionSmallScheduleTeam2" parameterType="CompetitionSmallSchedule">
+    update tbl_competition_small_schedule set 
+     team2_players=#{team2_players},img_url2=#{img_url2},team2_name=#{team2_name}
+    where id=#{id}
+  </update>
+  
+  <update id="updateCompetitionSmallScheduleTeam1Players" parameterType="CompetitionSmallSchedule">
+    update tbl_competition_small_schedule set 
+     team1_players=#{team1_players}
+    where id=#{id}
+  </update>
+  
+  <update id="updateCompetitionSmallScheduleTeam2Players" parameterType="CompetitionSmallSchedule">
+    update tbl_competition_small_schedule set 
+     team2_players=#{team2_players}
+    where id=#{id}
+  </update>
+  
+  <update id="updateCompetitionSmallScheduleScore" parameterType="map">
+    update tbl_competition_small_schedule set 
+     score_1=#{score_1},score_2=#{score_2},status=#{status}
+    where id=#{id}
+  </update>
+
+  <select id="getCompetitionSmallScheduleListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_competition_small_schedule where 1=1 
+    <if test="o.title != '' and o.title != null" >
+      and title=#{o.title}
+    </if>
+    <if test="o.type != -1" >
+      and type=#{o.type}
+    </if>
+    <if test="o.create_id != -1" >
+      and create_id=#{o.create_id}
+    </if>
+    <if test="o.status != '' and o.status != null" >
+      and status=#{o.status}
+    </if>
+    <if test="time1 != -1" >
+      and schedule_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=schedule_time
+    </if>
+  </select>
+
+  <select id="getCompetitionSmallSchedulePageList" parameterType="map" resultType="CompetitionSmallSchedule">
+    select 
+    title,team1_players,team2_players,img_url1,img_url2,create_id,addr,opponent_leader_id,status,team1_name,team2_name,id,create_time,
+    schedule_time,inning_count,score_count,score_1,score_2,type
+    from tbl_competition_small_schedule where 1=1 
+    <if test="o.title != '' and o.title != null" >
+      and title=#{o.title}
+    </if>
+    <if test="o.create_id != -1" >
+      and create_id=#{o.create_id}
+    </if>
+    <if test="o.type != -1" >
+      and type=#{o.type}
+    </if>
+    <if test="o.status != '' and o.status != null" >
+      and status=#{o.status}
+    </if>
+    <if test="time1 != -1" >
+      and schedule_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=schedule_time
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+  
+  
+  <select id="getCompetitionSmallScheduleById" parameterType="map" resultType="CompetitionSmallSchedule">
+    select 
+    title,team1_players,team2_players,img_url1,img_url2,create_id,addr,opponent_leader_id,status,team1_name,team2_name,id,create_time,
+    schedule_time,inning_count,score_count,score_1,score_2,type
+    from tbl_competition_small_schedule where id=#{id}
+  </select>
+  
+    <insert id="insertEnrollInfo" parameterType="EnrollInfo">
+    INSERT INTO tbl_enroll_info (cell_phone,user_name,school_code,edu_level,job,email,school_else,unit,fit_size,id,schedule_id,graduate_year,play_year,sex,file_path)
+    VALUES (#{cell_phone}, #{user_name}, #{school_code}, #{edu_level}, #{job}, #{email}, #{school_else}, #{unit}, #{fit_size}, #{id}, #{schedule_id}, #{graduate_year}, #{play_year}, #{sex}, file_path)
+  </insert>
+
+  <update id="updateEnrollInfo" parameterType="EnrollInfo">
+    update tbl_enroll_info set 
+    cell_phone=#{cell_phone},user_name=#{user_name},school_code=#{school_code},sex=#{sex},edu_level=#{edu_level},job=#{job},email=#{email},school_else=#{school_else},unit=#{unit},fit_size=#{fit_size},schedule_id=#{schedule_id},graduate_year=#{graduate_year},play_year=#{play_year}
+    where id=#{id}
+  </update>
+
+  <select id="getEnrollInfoListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_enroll_info where 1=1 
+    <if test="o.cell_phone != '' and o.cell_phone != null" >
+      and cell_phone=#{o.cell_phone}
+    </if>
+    <if test="o.user_name != '' and o.user_name != null" >
+      and user_name like '%${o.user_name}%'
+    </if>
+    <if test="o.school_code != '' and o.school_code != null" >
+      and school_code=#{o.school_code}
+    </if>
+    <if test="o.school_else != '' and o.school_else != null" >
+      and school_else=#{o.school_else}
+    </if>
+    <if test="o.fit_size != '' and o.fit_size != null" >
+      and fit_size=#{o.fit_size}
+    </if>
+    <if test="o.schedule_id != -1" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+  </select>
+
+  <select id="getEnrollInfoPageList" parameterType="map" resultType="EnrollInfo">
+    select 
+    cell_phone,user_name,school_code,edu_level,job,email,school_else,unit,fit_size,id,schedule_id,graduate_year,play_year,sex,file_path
+    from tbl_enroll_info where 1=1 
+    <if test="o.cell_phone != '' and o.cell_phone != null" >
+      and cell_phone=#{o.cell_phone}
+    </if>
+    <if test="o.user_name != '' and o.user_name != null" >
+      and user_name=#{o.user_name}
+    </if>
+    <if test="o.school_code != '' and o.school_code != null" >
+      and school_code=#{o.school_code}
+    </if>
+    <if test="o.school_else != '' and o.school_else != null" >
+      and school_else=#{o.school_else}
+    </if>
+    <if test="o.fit_size != '' and o.fit_size != null" >
+      and fit_size=#{o.fit_size}
+    </if>
+    <if test="o.schedule_id != -1" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+  
+  <insert id="insertWonderful" parameterType="Wonderful">
+    INSERT INTO tbl_wonderful_info (img_url,id,schedule_id)
+    VALUES (#{img_url}, #{id}, #{schedule_id})
+  </insert>
+
+  <update id="updateWonderful" parameterType="Wonderful">
+    update tbl_wonderful_info set 
+    img_url=#{img_url},schedule_id=#{schedule_id}
+    where id=#{id}
+  </update>
+  
+  <delete id="deleteWonderful" parameterType="Wonderful">
+    delete from tbl_wonderful_info where id=#{id}
+  </delete>
+
+  <select id="getWonderfulListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_wonderful_info where 1=1 
+    <if test="o.schedule_id != -1" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+  </select>
+
+  <select id="getWonderfulPageList" parameterType="map" resultType="Wonderful">
+    select 
+    img_url,id,schedule_id
+    from tbl_wonderful_info where 1=1 
+    <if test="o.schedule_id != -1" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+
+  
+
+</mapper>

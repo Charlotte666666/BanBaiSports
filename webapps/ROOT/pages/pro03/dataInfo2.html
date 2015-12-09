@@ -1,0 +1,205 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var infoId="";
+
+   $(document).ready(function() {
+     initData();
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    	 };
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   function doSubmit(){
+	 var aoData=[];
+     var url = "/actions/ProCmaDataInfo.action?updateDataInfo3";
+	 var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+
+     aoData.push( { "name": "info.info_id", "value": infoId } );
+	 
+	 var temp = top.getRadioValue( document.getElementsByName("online_desc_radio") );
+	 if ( temp == 1 ) {
+	   temp = $("#online_desc_month").val();
+	 }
+	 aoData.push( { "name": "info.online_desc", "value": temp } );
+	 aoData.push( { "name": "info.online_addr", "value": $("#online_addr").val() } );
+	 aoData.push( { "name": "info.online_table", "value": $("#online_table").val() } );
+	 aoData.push( { "name": "info.online_dir", "value": $("#online_dir").val() } );
+	 aoData.push( { "name": "info.near_desc", "value": $("#near_desc").val() } );
+	 aoData.push( { "name": "info.near_addr", "value": $("#near_addr").val() } );
+	 aoData.push( { "name": "info.near_dir", "value": $("#near_dir").val() } );
+	 aoData.push( { "name": "info.arc_desc", "value": $("#arc_desc").val() } );
+	 aoData.push( { "name": "info.arc_addr", "value": $("#arc_addr").val() } );
+	 aoData.push( { "name": "info.arc_dir", "value": $("#arc_dir").val() } );
+	 aoData.push( { "name": "info.arc_dir_strut", "value": $("#arc_dir_strut").val() } );
+	 aoData.push( { "name": "info.ext_desc", "value": $("#ext_desc").val() } );
+	 aoData.push( { "name": "info.save_type", "value": $("#save_type").val() } );
+	 aoData.push( { "name": "info.update_desc2", "value": $("#update_desc2").val() } );
+	 top.sendAjaxRequest(url,aoData,optCallback);
+   }
+   
+   function checkForm(){
+     var temp = "";
+	 temp += checkString($("#online_addr").val(),false,128,"在线地址");
+	 temp += checkString($("#online_table").val(),false,128,"在线表名");
+	 temp += checkString($("#online_dir").val(),false,128,"在线目录名");
+	 temp += checkString($("#near_desc").val(),false,512,"近线说明");
+	 temp += checkString($("#near_addr").val(),false,128,"近线地址");
+	 temp += checkString($("#near_dir").val(),false,128,"近线目录名");
+	 temp += checkString($("#arc_desc").val(),false,512,"归档说明");
+	 temp += checkString($("#arc_addr").val(),false,128,"归档地址");
+	 temp += checkString($("#arc_dir_strut").val(),false,128,"归档目录结构");
+	 temp += checkString($("#ext_desc").val(),false,512,"记带说明");
+	 temp += checkString($("#update_desc2").val(),false,512,"更新说明");
+     return temp;
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      isSaveOK = true;
+	      top.showInfoWinOK("操作成功");
+	    }else{
+	      isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+   function initData(){
+	   try{
+	      var o=top.getTempValue();
+		  optType=top.getUrlParam(document.URL,"opt");
+		  infoId=top.getUrlParam(document.URL,"infoId");
+		  $("#save_type_td").html( top.getCodeSelectHtml("02_SAVE_TYPE","save_type",true,o.save_type) );
+          //$("#online_desc").val( o.online_desc );
+		  $("#online_addr").val( o.online_addr );
+		  $("#online_table").val( o.online_table );
+		  $("#online_dir").val( o.online_dir );
+		  $("#near_desc").val( o.near_desc );
+		  $("#near_addr").val( o.near_addr );
+		  $("#near_dir").val( o.near_dir );
+		  $("#arc_desc").val( o.arc_desc );
+		  $("#arc_addr").val( o.arc_addr );
+		  $("#arc_dir").val( o.arc_dir );
+		  $("#arc_dir_strut").val( o.arc_dir_strut );
+		  $("#ext_desc").val( o.ext_desc );
+		  $("#update_desc2").val( o.update_desc2 );
+		  $("#tdupdate_user2").html( o.update_user2 );
+		  $("#tdupdate_time2").html( top.getTimeStr( o.update_time2 ) );
+		  if ( o.online_desc == 0 ) {
+		    $("#online_desc_radio_forever").attr("checked", true);
+		  } else {
+		    $("#online_desc_radio_mon").attr("checked", true);
+			$("#online_desc_month").val( o.online_desc );
+		  }
+		  
+		   if ( optType == 'update' ) {
+		     $( "#submitBtn" ).show();
+	     	 $( "#closeBtn" ).show();
+		   } else {
+		     $( "#submitBtn" ).hide();
+	     	 $( "#closeBtn" ).hide();
+		   }
+	   }catch(e){
+		   top.showInfoWinError(e.message);
+	   }
+   }
+  </script> 
+</head>
+<body>
+<table width="100%" border="0" padding="0" spacing="0">
+ <tr>
+    <td width="20%" align="right">在线时长:</td>
+    <td width="80%" align="left" colspan="3">
+	  <input type="radio" name="online_desc_radio" id="online_desc_radio_mon" value="1" ></input>&nbsp;<input type="text" size="3" id="online_desc_month" value=""></input>个月
+	  &nbsp;&nbsp;<input type="radio" name="online_desc_radio" id="online_desc_radio_forever" value="0" >永久</input>
+	</td>
+ </tr>
+ <tr>
+    <td align="right">存储方式:</td>
+    <td align="left" colspan="3" id="save_type_td"></td>
+ </tr>
+ <tr>
+    <td align="right">在线地址:</td>
+    <td align="left" colspan="3"><textarea id="online_addr" cols="70" rows="3" ></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">在线表名:</td>
+    <td align="left" colspan="3"><textarea id="online_table" cols="70" rows="3" ></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">在线目录名:</td>
+	<td align="left" colspan="3"><textarea id="online_dir" cols="70" rows="3" ></textarea></td>
+</tr>
+ <tr>
+    <td align="right">近线说明:</td>
+    <td align="left" colspan="3"><textarea id="near_desc" cols="70" rows="3" ></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">近线地址:</td>
+    <td align="left" colspan="3"><textarea id="near_addr" cols="70" rows="3" ></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">近线目录名:</td>
+    <td align="left" colspan="3"><textarea id="near_dir" cols="70" rows="3" ></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">归档说明:</td>
+    <td align="left" colspan="3"><textarea id="arc_desc" cols="70" rows="3" ></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">归档地址:</td>
+    <td align="left" colspan="3"><textarea id="arc_addr" cols="70" rows="3" ></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">归档目录名:</td>
+    <td align="left" colspan="3"><textarea id="arc_dir" cols="70" rows="3" ></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">归档目录结构:</td>
+    <td align="left" colspan="3"><textarea id="arc_dir_strut" cols="70" rows="3" ></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">记带说明:</td>
+    <td align="left" colspan="3"><textarea id="ext_desc" cols="70" rows="3" ></textarea></td>
+ </tr>
+ <tr>
+    <td align="right">更新说明:</td>
+    <td align="left" colspan="3"><textarea id="update_desc2" cols="70" rows="3" ></textarea></td>
+ </tr>
+ <tr>
+    <td width="20%" align="right">上次更新时间:</td>
+    <td width="30%" align="left" id="tdupdate_time2"></td>
+	<td width="20%" align="right">更新人:</td>
+    <td width="30%" align="left" id="tdupdate_user2"></td>
+ </tr>
+</table>
+<p align="center">
+   <table><tr>
+		    <td><span id="submitBtn" class="buttonTwo"><a href="javascript:doSubmit()">提交</a></span></td>
+		    <td><span id="closeBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+   </tr></table>
+</p>
+</body>
+</html>

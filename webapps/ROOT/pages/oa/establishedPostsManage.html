@@ -1,0 +1,462 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css" media="print, projection, screen">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"  src="../../js/Calendar3.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var queryCtlMark=0;//查询条件显示收缩标志变量
+			var deptList=[];
+			var filialeList=[];
+			var buList=[];
+			$(document).ready(function() {
+			   $("#tabs ul").tabs();
+			   top.sendAjaxRequest("/actions/User.action?getAllDeptList",[],getAllDeptListCallback);
+			   $(".dept").hide();
+			   $(".job_title").hide();
+			   $( "#tdjob_title" ).html( top.getCodeSelectHtml("SYS_POSITION","job_title",true) );
+			   $( "#tdposition" ).html( top.getCodeSelectHtml("SYS_POSITION","job_title",true) );
+			 var iaoColumns= [
+			                { "sTitle": "部门", "mDataProp": "dept_id", "sWidth": "8%","sClass": "left",
+							    "fnRender":function(oObj){
+								  return "<input name='checkId' value='"+oObj.aData.id+"' type='checkbox'/><a href='javascript:void(0)' onclick='update(\""+oObj.aData.id+"\")'>"+top.getDeptPath(oObj.aData.dept_id)+"</a>";
+								},
+								"bUseRendered": false
+							},
+							{ "sTitle": "岗位", "mDataProp": "job_title", "sWidth": "8%","sClass": "center",
+							   "fnRender":function(oObj){
+							      return top.getCodeName("SYS_POSITION",oObj.aData.job_title);
+							   },
+							  "bUseRendered": false
+							},
+							{ "sTitle": "编制人数", "mDataProp": "establish_member", "sWidth": "8%","sClass": "center",
+							"bUseRendered": false
+							},
+							{ "sTitle": "允许编制超过人数", "mDataProp": "allowable_value", "sWidth": "8%","sClass": "center",
+							  "bUseRendered": false
+							}
+               ];			
+			   var surl=top.getUrlBase()+"/actions/EstablishedPosts.action?getEstablishedPostsList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData=getParamDate(aoData);
+			    },
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+
+		    function getParamDate(aoData){
+			    aoData.push( { "name": "info.id", "value":"-1" } );;
+			    aoData.push( { "name": "info.dept_id", "value":$("#dept").val() } );;
+			    aoData.push( { "name": "info.job_title", "value":$("#job_title").val() } );
+				return aoData;
+			}
+		 //查询条件的展开与收缩
+		 function dwOup(){
+		   if(queryCtlMark==0){//展开
+			 $("#queryCtlIcon").attr("src","../../img/icons/arrow-up.gif"); 
+			 $("#queryTab").slideToggle();
+			 queryCtlMark=1;
+		   }else{//收缩
+			 $("#queryCtlIcon").attr("src","../../img/icons/arrow-down.gif"); 
+			 $("#queryTab").slideToggle();
+			 queryCtlMark=0;
+		   }
+		 }
+		 
+		 function add(){
+		    top.openDialog("添加部门岗位编制","pages/oa/addDeptJobEstablish.html?optType=insert",true,550,260,doQuery);
+		 }
+		 
+		 function update(id){
+		    top.openDialog("添加部门岗位编制","pages/oa/addDeptJobEstablish.html?optType=update&id="+id,true,550,260,doQuery);
+		 }
+		 
+		 function deleteInfo(){
+		    var ids=top.getAllCheckedValue( document.getElementsByName('checkId') );
+			if (ids.length > 0){
+				top.showConfirm("您确定要删除选中的岗位编制信息吗？", doDelete);
+			}else{
+				top.showInfoWinWarn("请选择要删除的岗位编制信息!");
+			} 
+		 }
+		 
+		 function doDelete(){
+		    var ids=top.getAllCheckedValue( document.getElementsByName('checkId') );
+			var aoData=[];
+			aoData.push( { "name":"ids","value":ids} );
+			top.sendAjaxRequest("/actions/EstablishedPosts.action?deleteEstablishById",aoData,optCallback);
+		 }
+		
+		function optCallback(obj){
+		  if(obj.status==true){
+		    top.showInfoWinOK("操作成功！");
+			doQuery();
+		  }else{
+		    top.showInfoWinError("操作失败！");
+		  }
+		}
+		
+		function getAllDeptListCallback(obj){
+			   var bu="<select id='bu_id' style='width:120px' onchange='getFiliale()'>";
+			   var filiale="<select id='filiale' style='width:120px;' onchange='getDept()'>";
+			   var dept="<select id='dept' style='width:120px;'>";
+			   bu+="<option value=''></option>";
+			   filiale+="<option value=''></option>";
+			   dept+="<option value=''></option>";
+			   if(obj.status==true){
+			      if(obj.body){
+                      var o=obj.body;
+                      for(var i=0;i<o.length;i++){
+                        if(o[i].dept_type=="group"){
+						  bu+="<option value='"+o[i].deptId+"'>"+o[i].name+"</option>";
+						  buList.push(o[i]);
+						}else if(o[i].dept_type=="filiale"){
+						  filiale+="<option value='"+o[i].deptId+"'>"+o[i].name+"</option>";
+						  filialeList.push(o[i]);
+						}else if( o[i].parentId!=-1 && (o[i].dept_type=="dept" || o[i].dept_type=="") ){
+						  dept+="<option value='"+o[i].deptId+"'>"+o[i].name+"</option>";
+						  deptList.push(o[i]);
+						}
+					  }	
+				  }
+			   }
+			   bu+="</select>";
+			   filiale+="</select>";
+			   dept+="</select>";
+			   $("#tdbu").html(bu);
+			   $("#tdfiliale").html(filiale);
+			   $("#tddept").html(dept);
+			}
+			
+			function getFiliale(){
+			  var ht="<select id='filiale' style='width:120px;' onchange='getDept()'>";
+			  ht+="<option value=''></option>";
+			  if(filialeList.length>0 && buList.length>0){
+			    for(var i=0;i<filialeList.length;i++){
+				    if(filialeList[i].parentId==$("#bu_id").val()){
+                       ht+="<option value='"+filialeList[i].deptId+"'>"+filialeList[i].name+"</option>";
+                    }					
+				}
+			  }
+			  ht+="</select>";
+			  $("#tdfiliale").html(ht);
+			  getDept();
+			}
+			
+			function getDept(){
+			  var ht="<select id='dept' style='width:120px;'>";
+			  ht+="<option value=''></option>";
+			  if(deptList.length>0 && filialeList.length>0){
+			    for(var i=0;i<deptList.length;i++){
+					if(deptList[i].parentId==$("#filiale").val()){
+					    ht+="<option value='"+deptList[i].deptId+"'>"+deptList[i].name+"</option>";				
+					}
+				}
+			  }
+			  ht+="</select>";
+			  $("#tddept").html(ht);
+			}
+			
+			function changeBtn(obj){
+			  switch(obj){
+			    case 1://编制人数管理
+				   $("#establishMemberTable").show();
+				   $("#allowEstablishedTable").hide();
+				   $("#exceedLackTable").hide();
+				   $("#query").attr("onclick","establishedQuery()");
+				   $(".dept").hide();
+			       $(".job_title").hide();
+				break;
+				case 2://允许超编人数
+				   $("#establishMemberTable").hide();
+				   $("#exceedLackTable").hide();
+				   $("#allowEstablishedTable").show();
+				   $("#query").attr("onclick","allowQuery()");
+				   $(".dept").show();
+			       $(".job_title").show();
+				break;
+				case 3://超缺编人数
+				   $("#establishMemberTable").hide();
+				   $("#allowEstablishedTable").hide();
+				   $("#exceedLackTable").show();
+				   $("#query").attr("onclick","exceedQuery()");
+				   $(".dept").hide();
+			       $(".job_title").hide();
+				break;
+			  }
+			}
+			
+			//编制人数查询
+			function establishedQuery(){
+			  var aoData=[];
+			  aoData.push( { "name":"bu_id","value":$("#bu_id").val() } );
+			  aoData.push( { "name":"filiale","value":$("#filiale").val() } );
+			  aoData.push( { "name":"info.dept_id","value":$("#dept").val() } );
+			  aoData.push( { "name":"info.job_title","value":$("#job_title").val() } );
+			  top.sendAjaxRequest("/actions/EstablishedPosts.action?getEstablishPosts",aoData,getEstablishPostsCallback);
+			}
+			//编制人数查询加调函数
+			function getEstablishPostsCallback(obj){
+			   var ht='<tr class="tr_data" height="30px"><th rowspan="2">序号</th><th rowspan="2">分公司</th><th rowspan="2">总经办</th><th>营销部</th><th>网络部</th><th colspan="3">设计部</th><th colspan="2">工程部</th><th rowspan="2">材料部</th><th rowspan="2">人力行政部</th><th rowspan="2">财务部</th></tr>';
+		       ht+='<tr class="tr_data" height="15px"><th>负责人+家装顾问</th><th>网络专员</th><th>负责人+设计师</th><th>客户经理</th><th>绘图师</th><th>负责人</th><th>监理</th></tr>';  			  
+			   if(obj.status==true){
+			     if(obj.body.length>0){
+				    var o=obj.body;
+					for(var i=0;i<o.length;i++){
+					   ht+="<tr>";
+					   ht+="<td>"+(i+1)+"</td>";
+					   ht+="<td>"+top.getDeptPath(o[i].filiale)+"</td>";
+					   var dept=o[i].dept;
+					   for(var j=0;j<dept.length;j++){
+						 var estab=dept[j].estab;
+						 var content="";
+						 for(var k=0;k<estab.length;k++){
+						    content+="<td align='center'>"+estab[k].establish_member+"</td>";
+						 }
+						 var dept_name=top.getDeptPath(dept[j].dept_id).split(">>");
+						 if(dept_name[1].indexOf("总经办")!=-1 || dept_name[1].indexOf("营销部")!=-1 || dept_name[1].indexOf("网络部")!=-1 || dept_name[1].indexOf("材料部")!=-1 || dept_name[1].indexOf("人力行政部")!=-1 || dept_name[1].indexOf("财务部")!=-1){
+						    if(content==""){
+							    ht+="<td></td>";
+							}else{
+							    ht+=content;
+							}
+						 }else if(dept_name[1].indexOf("设计部")!=-1){
+						    var first="";
+							var second="";
+							var third="";
+							for(var k=0;k<estab.length;k++){
+							   if(top.getCodeName("SYS_POSITION",estab[k].job_title).indexOf("客户经理")!=-1){
+							     second+="<td align='center'>"+estab[k].establish_member+"</td>";
+							   }else if(top.getCodeName("SYS_POSITION",estab[k].job_title).indexOf("绘图师")!=-1){
+							     third+="<td align='center'>"+estab[k].establish_member+"</td>";
+							   }else{
+							     first+="<td align='center'>"+estab[k].establish_member+"</td>";
+							   }
+						    }
+							if(first==""){
+							   ht+="<td></td>";
+							}else{
+							   ht+=first;
+							}
+							if(second==""){
+							   ht+="<td></td>";
+							}else{
+							   ht+=second;
+							}
+							if(third==""){
+							   ht+="<td></td>";
+							}else{
+							   ht+=third;
+							}
+						 }else if(dept_name[1].indexOf("工程部")!=-1){
+						    var first="";
+							var second="";
+							for(var k=0;k<estab.length;k++){
+							   if(top.getCodeName("SYS_POSITION",estab[k].job_title).indexOf("监理")!=-1){
+							     first+="<td align='center'>"+estab[k].establish_member+"</td>";
+							   }else{
+							     second+="<td align='center'>"+estab[k].establish_member+"</td>";
+							   }
+						    }
+							if(first==""){
+							   ht+="<td></td>";
+							}else{
+							   ht+=first;
+							}
+							if(second==""){
+							   ht+="<td></td>";
+							}else{
+							   ht+=second;
+							}
+						 }
+					   }
+					   ht+="</tr>";
+					}
+				 }
+			   }
+			   $("#establishMemberTable").html(ht);
+			}
+			
+			//导入公司编制信息
+			function importEstablish(){
+			   top.openDialog("导入编制信息","pages/oa/importEstablished.html",true,300,100,establishedQuery);
+			}
+			
+			//允许超编人数查询
+			function allowQuery(){
+			  alert("allowQuery");
+			}
+			//超缺编人数查询
+		    function exceedQuery(){
+			   alert("exceedQuery");
+			}
+			
+			function addAllow(){
+			   
+			}
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+		    <div  id="tabs">
+			   <ul>
+			     <li><a href="#establishedMember" onclick="changeBtn(1)"><span>编制人数管理</span></a></li>
+			     <li><a href="#allowEstablishEdMember" onclick="changeBtn(2)"><span>允许超编人数</span></a></li>
+			     <li><a href="#exceedLackMember" onclick="changeBtn(3)"><span>超缺编人数</span></a></li>
+			   </ul>
+			</div>
+			<!--<div style='border: 1px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="150px">
+							&nbsp;
+							编制管理&nbsp;
+						</td>
+						<td align="right">
+							<span><image id="queryCtlIcon" src="../../img/icons/arrow-down.gif" alt="展开" onclick="javascript:dwOup();"/></span>
+						</td>
+						<td width="2px">
+							&nbsp;
+						</td>
+					</tr>
+				</table>
+				<table width="100%" align="center" cellpadding="1px" id="queryTab" style="display:none"
+					cellspacing="1px" border="0">
+					<tr class="tr_data">
+						<td align="right">部门:</td>
+						<td align="left"><input id="dept" type="hidden"/><input id="deptname" type="text" size="20" onclick="selectDept()"/></td>
+					    <td align="right">职位:</td>
+						<td align="left" id="tdposition">
+						</td>
+						<td align="center" width="10%">
+						   <div class="buttonDivTwo">
+								<a href="javascript:doQuery()">查询</a>
+						   </div>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0"
+				border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									&nbsp;查询结果列表&nbsp;
+								</td>
+								<td>
+								  <div class="buttonDivTwo" id="applyBtn">
+								    <a href="javascript:void(0)" onclick="add()">添加</a>
+								  </div>
+								</td>
+								<td>
+								  <div class="buttonDivTwo" id="applyBtn">
+								    <a href="javascript:void(0)" onclick="deleteInfo()">删除</a>
+								  </div>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>-->
+		<div id="establishedMember" style="margin-bottom:0;padding-bottom:0;">
+		  <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0">
+		    <tr class="tr_data" height="30px">
+			  <td align="left">
+			    <div class="buttonDivTwo" style="float:left;">
+				  <a href="javascript:void(0)" onclick="importEstablish()">导入</a>
+				</div>
+				<div class="buttonDivTwo" id="applyBtn" style="float:left;">
+				  <a href="javascript:void(0)" onclick="add()">添加</a>
+				</div>
+				<!--<div class="buttonDivTwo" id="applyBtn" style="float:left;">
+				  <a href="javascript:void(0)" onclick="deleteInfo()">删除</a>
+				</div>-->
+			  </td>
+
+			 
+			</tr>
+		  </table>
+		  
+		</div>
+		<div id="allowEstablishEdMember" style="margin-bottom:0;padding-bottom:0;">
+		  <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0">
+		    <tr class="tr_data" height="30px">
+			  <td>
+			    <div class="buttonDivTwo" style="float:left;"><a href="javascript:void(0)" onclick="addAllow()">新增</a></div>
+			    <div class="buttonDivTwo" style="float:left;"><a href="javascript:void(0)" onclick="editAllow()">修改</a></div>
+			    <div class="buttonDivTwo" style="float:left;"><a href="javascript:void(0)" onclick="deleteAllow()">删除</a></div>
+			  </td>
+			</tr>
+		  </table>
+		</div>
+		<div id="exceedLackMember" style="margin-bottom:0;padding-bottom:0;"></div>
+		<table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" style="margin-top:0;">
+			  <tr class="tr_data" height="30px">
+				   <td align="right">事业部:</td><td align="left" id="tdbu"></td>
+				   <td align="right">分公司:</td><td align="left" id="tdfiliale"></td>
+				   <td align="right" class="dept">部门:</td><td align="left" id="tddept" class="dept"></td>
+				   <td align="right" class="job_title">岗位:</td><td align="left" id="tdjob_title" class="job_title"></td>
+				   <td align="center"><div class="buttonDivTwo"><a href="javascript:void(0)"  id="query" onclick="establishedQuery()">查询</a></div></td>
+			  </tr>
+		</table>
+		<table id="establishMemberTable" width="100%">
+		
+		</table>
+		<table id="allowEstablishedTable" style="display:none;" width="100%">
+		    <tr><td>2</td></tr>
+		</table>
+		<table id="exceedLackTable" style="display:none;" width="100%">
+			<tr><td>3</td></tr>
+		</table>
+
+	</body>
+</html>

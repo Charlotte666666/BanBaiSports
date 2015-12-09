@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+    <link rel="stylesheet" type="text/css" href="../../css/drag-drop-folder-tree.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/context-menu.css"></link>
+    <link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+    <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js" ></script>
+	<script type="text/javascript" language="javascript" src="../../js/myDtree.js" ></script>
+	<script type="text/javascript" language="javascript" src="../../js/context-menu.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/drag-drop-folder-tree.js" ></script>
+	<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+	<script type="text/javascript" >
+       var d=null;
+       var treeObj=null;
+       var currentProId=0;
+	   var opt='';
+
+       $(document).ready(function(){
+    	   opt=top.getUrlParam(document.URL,"opt");
+		   loadProTree();	   
+		   $("#treeDetail").height( $(window).height() - 30 );
+       });
+	   function getOpt(){
+		return opt;
+	   }
+       // 加载产品类型数据
+       function loadProTree(){
+    	   top.sendAjaxRequest("/actions/Projectquote.action?getProquoteTypeList",[],initProductTypeTree);
+       }
+       // 初始化产品类型树
+       function initProductTypeTree(obj){
+    	   d=new dTree('d');
+           d.config.useSelection = true;
+           d.config.folderLinks = true;
+           d.config.useStatusText = false;
+           d.config.useLines = false;
+           currentProId=0;
+
+           if( obj.aaData ){
+        	   for(var i=0;i<obj.aaData.length;i++){
+        		   d.add( obj.aaData[i].type_id,obj.aaData[i].parent_id,obj.aaData[i].type_name );
+        	   }
+           }
+		   
+		   top.setProductTypeTree( d );
+
+           $("#ProTypeTree").html( d.toString() );
+           treeObj = new JSDragDropTree();
+           treeObj.setTreeId('dhtmlgoodies_tree2');
+           treeObj.setMaximumDepth(20);
+           treeObj.setMessageMaximumDepthReached('已到达最大的层次'); 
+           treeObj.setRenameAllowed(true);
+           treeObj.setDeleteAllowed(true);
+           treeObj.initTree();
+           treeObj.expandAll();
+       }
+       // 选中产品了类型节点后触发函数
+       function onSelectedNode(nid){
+    	   if ( currentProId == nid ) return ;
+    	   var name="";
+    	   currentProId = nid;
+    	   if ( nid == 0 ) {
+    		   nid="";
+    		   name="";
+    	   }else name=d.getNodePath(nid);
+		    document.getElementById("QuoteProductFrame").contentWindow.queryBySelectedPro(nid,name);
+       }
+
+	   //添加报价类型
+       function createProType(){
+    	   top.showInputDialog("创建下级产品类型", "请输入报价类型名称", doCreateProType);
+       }
+       // 执行添加报价类型操作
+       function doCreateProType(name){
+    	   var aoData=[];
+		   aoData.push( { "name": "proquoteType.type_name", "value":name } );
+           aoData.push( { "name": "proquoteType.parent_id", "value":currentProId } );
+           top.sendAjaxRequest("/actions/Projectquote.action?insertProquoteType",aoData,optCallback);
+       }
+       // 弹出删除操作确认框
+       function deleteProType(){
+    	   if ( currentProId == 0 ) {
+    		   top.showInfoWinWarn("不允许删除根节点");
+           return ;
+    	   }
+    	   if ( d.getSubNodesNum( currentProId ) > 0 ) {
+    		   top.showInfoWinWarn("不允许删除还有下级节点的类型");
+           return ;
+    	   }
+    	   top.showConfirm("您确定要删除选中的报价类型吗？", doDeleteProType);
+       }
+	   // 执行删除操作
+       function doDeleteProType(){
+           var aoData=[];
+           aoData.push( { "name": "proquoteType.type_id", "value":currentProId } );
+           top.sendAjaxRequest("/actions/Projectquote.action?deleteProquoteTypeById",aoData,optCallback);
+       }
+	   // 弹出修改名称对话框
+       function editProType(){
+    	   top.showInputDialog("修改报价类型名称", "请输入新报价类型名称", doEditProType);
+       }
+       // 执行修改操作
+       function doEditProType(name){
+    	   if ( name == '' ) {
+    		   top.showInfoWinWarn("请输入报价类型名称");
+               return ;
+    	   }
+           var aoData=[];
+			aoData.push( { "name": "proquoteType.type_id", "value": currentProId} );
+			aoData.push( { "name": "proquoteType.type_name", "value":name } );
+
+           top.sendAjaxRequest("/actions/Projectquote.action?updateProquoteType",aoData,optCallback);
+       }
+
+       // 新建、删除或修改操作回调函数
+       function optCallback(obj){
+           try{
+            if ( obj.status == true ){
+              loadProTree();
+              top.showInfoWinOK("操作成功");
+			  top.closeDialog();
+            }else{
+              top.showInfoWinError("操作失败");
+            }
+           }catch(e){
+              top.showInfoWinError("处理异常:"+e.message);
+           }
+       }
+      function saveTreeOrder(){
+           var aoData=[];
+           aoData.push( { "name": "ids", "value": treeObj.getNodeOrders() } );
+           isNeedReloadUsers=false;
+           top.sendAjaxRequest("/actions/Projectquote.action?saveOrders",aoData,optCallback);
+       }
+	    function doBeforeClose(){
+    	  top.setTempValue(window.document.getElementById('QuoteProductFrame').contentWindow.getIds());
+		 }
+    </script>
+</head>
+<body>
+<table style="width:100%;height:100%;padding:0;spacing:0;">
+  <tr class="tr_data" style="width:100%;text-align:left">
+   <td style="width:30%;height:450px;scroll-y:auto;border:1px;border-style: dotted;border-color: #A0CFEC;" valign="top">
+		<div class="dtree" id="ProTypeTree" style="padding:3px;" >
+		</div>
+   </td>
+	<td id="treeDetail" style="width:70%;border:1px;border-style: dotted dotted dotted none;border-color: #A0CFEC;" valign="top">
+      <iframe id="QuoteProductFrame" src="budgetItemManage.html" width="100%" height="100%" frameborder="0"></iframe>
+   </td>
+  </tr>	
+</table>
+</body>
+</html>

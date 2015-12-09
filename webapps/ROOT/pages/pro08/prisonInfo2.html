@@ -1,0 +1,1709 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>全国社区矫正信息管理系统</title>
+<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+ <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+ <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+ <script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+ <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+<script type="text/javascript" src="js/correctionInfoB.js"></script>
+<style type="text/css">
+#menu{display:inline;float:left;}
+.menu_title {
+font-weight: bold; color: #000000; position: relative; top: 2px; font-size:12px; text-indent:30px;
+}
+.menu_title2 {
+font-weight: bold; color: #FF0000; position: relative; top: 2px; font-size:12px; text-indent:30px;
+}
+.ruleTypeBg{background-color:#CDCD9A;border-style:solid;border-color:blue;border: 1px;padding:2px}	
+table td { border-collapse:collapse;  border: solid #C6DEFF; border-width:1px }
+table th { border-collapse:collapse;  border: solid #C6DEFF; border-width:1px }
+.markStatus{display:inline}
+</style>
+
+<script>
+var infoId="";
+var optType="";
+var menu=1;
+var prisonInfo=null;
+var gStatus=0;
+var isChange = false;
+ $(document).ready(function() {
+ 
+    infoId=parent.getInfoId();
+   $("#tdArea").html(top.getAllAreaSelect("area",""));
+   $( "#tdb_1" ).html( top.getCodeSelectHtml("YES_NO","b_1",false));
+   $( "#tdb_4" ).html( top.getCodeSelectHtml("NATIONAL","b_4",false));
+   $( "#tdb_6" ).html( top.getCodeSelectHtml("YES_NO","b_6",false));
+   $( "#tdb_9" ).html( top.getCodeSelectHtml("YES_NO","b_9",false));
+   $( "#tdb_10" ).html( top.getCodeSelectHtml("YES_NO","b_10",false));
+   $( "#tdb_14" ).html( top.getCodeSelectHtml("YES_NO","b_14",false));
+   $( "#tdb_16" ).html( top.getCodeSelectHtml("YES_NO","b_16",false));
+   $( "#tdj_14" ).html( top.getCodeSelectHtml("YES_NO","j_14",false));
+   $( "#tdb_1" ).html( top.getCodeSelectHtml("YES_NO","b_1",false));
+   $( "#tdb_12" ).html( top.getCodeSelectHtml("HEALTH","b_12",false));
+   $( "#tdb_21" ).html( top.getCodeSelectHtml("EDUCATION","b_21",false));
+   $( "#tdprison_sex").html(top.getCodeSelectHtml("SEX","prison_sex",false));
+   $( "#tdb_22" ).html( top.getCodeSelectHtml("MARITAL_STATUS","b_22",false));
+   $( "#tdb_23" ).html( top.getCodeSelectHtml("JOB_TYPE","b_23",false));
+   $( "#tdb_19" ).html( top.getCodeSelectHtml("POLITICAL_STATUS","b_19",false));
+   $( "#tdb_20" ).html( top.getCodeSelectHtml("POLITICAL_STATUS","b_20",false));
+   $( "#tdb_27" ).html( top.getCodeSelectHtml("REGISTRATION_NATURE","b_27",false));
+   $( "#tdb_28" ).html( top.getCodeSelectHtml("YES_NO","b_28",false));
+   $( "#tdb_29" ).html( top.getCodeSelectHtml("YES_NO","b_29",false));
+   $( "#tdx_9" ).html( top.getCodeSelectHtml("CRIMINAL_TYPE","x_9",false));
+   $( "#tdx_15" ).html( top.getCodeSelectHtml("YES_NO","x_15",false));
+   $( "#tdx_16" ).html( top.getCodeSelectHtml("YES_NO","x_16",false));
+   $( "#tdx_19" ).html( top.getCodeSelectHtml("YES_NO","x_19",false));
+   $( "#tdx_26" ).html( top.getCodeSelectHtml("YES_NO","x_26",false));
+   $( "#tdx_17" ).html( top.getCodeSelectHtml("YES_NO","x_17",false));
+   $( "#tdx_18" ).html( top.getCodeSelectHtml("YES_NO","x_18",false));
+   $( "#tdx_19" ).html( top.getCodeSelectHtml("YES_NO","x_19",false));
+   $( "#tdx_28" ).html( top.getCodeSelectHtml("YES_NO","x_28",false));
+   $( "#tdx_29" ).html( top.getCodeSelectHtml("YES_NO","x_29",false));
+   $( "#tdj_3" ).html( top.getCodeSelectHtml("PRISON_EXECUTION","j_3",false));
+   $( "#tdj_7" ).html( top.getCodeSelectHtml("DEAD_TYPE","j_7",false));
+   $( "#tdj_11" ).html( top.getCodeSelectHtml("YES_NO","j_11",false));
+   $( "#tdj_12" ).html( top.getCodeSelectHtml("YES_NO","j_12",false));
+   $( "#tdj_14" ).html( top.getCodeSelectHtml("YES_NO","j_14",false));
+   $( "#tdcorrect_type" ).html(top.getCodeSelectHtml("CORRECT_TYPE","correct_type",false)); 
+    $( "#tdcorrect_category").html(top.getCodeSelectHtml("CORRECT_CATEGORY","correct_category",false)); 
+	 $( "#tdj_1" ).html(top.getCodeSelectHtml("STOP_TYPE","j_1",false)); 
+    
+	$("#edit_view1").hide();
+	$("#edit_view2").hide();
+	$("#edit_view3").hide();
+	$("#edit_view4").hide();
+	$("#edit_view5").hide();
+	
+	//权限判断
+	if(!top.g_isPermit("08_info_editUser")){
+	  $("#baseEditBt").hide();
+	  $("#bEditBt").hide();
+	  $("#fEditBt").hide();
+	  $("#xEditBt").hide();
+	  $("#tEditBt").hide();
+	  $("#jEditBt").hide();
+	  $("#div_escort").hide();
+	  $("#div_accusation").hide();
+	  $("#div_term").hide();
+	}
+	 $("#a1").addClass("ruleTypeBg");
+   if( infoId==null || infoId=='' ){
+	optType="insert";
+   // $("#a1").addClass("ruleTypeBg");
+   } else{
+    optType="update";
+	var aoData=[];
+	aoData.push( { "name": "prison.prison_code", "value":infoId } );
+	top.sendAjaxRequest("/actions/Prison.action?getPrisonInfoById",aoData,infoCallback);
+  }
+  $("input").change(function(){
+       isChange = true;
+    });
+	$("textarea").change(function(){
+       isChange = true;	   
+    });
+	$("select").change(function(){
+       isChange = true;	   
+    });
+ } );
+   function selectDept(){
+       var xurl="pages/organization/selectTreeNode.html?type=dept";
+       top.openSelectDialog("选择部门",xurl,300,450,selectDeptCallback);
+   }
+   function selectDeptCallback(){
+       try{
+         var obj = top.getTempValue();
+         if ( obj.nodeId == -1 ) return ;
+         if ( obj.nodeId == -2 ) {
+             qDeptId = "";
+             qDeptName = "";
+         } else {
+             qDeptId = obj.nodeId;
+             qDeptName = obj.nodeName;
+         }
+       
+         document.getElementById("deptName").value = qDeptName;
+		 document.getElementById("deptId").value = qDeptId;
+       }catch(e){
+       }
+   }
+   
+   function openXPrintPreView(){
+	var xurl="XPrint.html";
+	window.open(xurl,"_blank","width=900,height=800");
+   }
+   function openBPrintPreView(){
+	var xurl="BPrint.html";
+	window.open(xurl,"_blank","width=900,height=800");
+}
+  function openFPrintPreView(){
+	var xurl="FPrint.html";
+	window.open(xurl,"_blank","width=900,height=800");
+}
+ function openJPrintPreView(){
+	var xurl="JPrint.html";
+	window.open(xurl,"_blank","width=900,height=800");
+}
+ function getPrisonInfoValue(){
+	return prisonInfo;
+ }
+ function getCorrect_type(){
+    return $("#correct_type").val();
+ }
+ function setCorrect_type(c){
+    $("#correct_type").val(c);
+ }
+ function getStartDate(){
+   return top.toTimestamp($("#start_date").val());
+ }
+ function getEndDate(){
+   return top.toTimestamp($("#end_date").val());
+ }
+ 
+  //上传附件
+	function uploadFile(){
+	 if(infoId==""){
+	   	top.showInfoWinWarn("请先添加基本信息!");
+	   return;
+	}
+		var xurl="../uploadFile.html?belong_id="+infoId+"_resume&belong_type=knowledge";
+		openDialog("上传文件",xurl,true,600,230,saveFileCallBack);
+	}
+	//调用回调函数---上传文件
+   	function saveFileCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) 
+				  selectAllUploadFile();
+				}catch(e){
+				}
+	}
+	//查询所有上传的附件
+	function selectAllUploadFile(){
+		var aoData=[];
+		aoData.push( { "name": "fileinfo.belong_id", "value": infoId+"_resume"} );
+	    top.sendAjaxRequest("/actions/File.action?getFileInfoList",aoData,FileinfoCallback);
+   }
+   
+   function FileinfoCallback(obj){
+     var o = obj.aaData;
+	 if(o.length>0){
+	    var ht = "";
+		for(var i = 0;i<o.length;i++){
+		ht+='<tr class="tr_data"><td align="left">';
+		ht+='<a href="'+top.getUrlBase()+'/download?filePath='+o[i].file_path+'+"&fileName="'+o[i].file_name+'">'+o[i].file_name.substring(o[i].file_name.lastIndexOf("_"),o[i].file_name.length)+'</a>';
+		ht+='</td></tr>';
+		}
+		$('#resume_List').html(ht);
+		$("#check_resume_List").html(ht);
+	 }
+   }
+   	//预览
+	function previewFile(filePath,fileName){
+		var xurl="../openFile.html?filePath="+filePath+"&fileName="+fileName;
+		openDialog("文件预览",xurl,true,700,600,null);
+	}
+	//弹出二层框
+	function openDialog(t,xurl,isModal,w,h,callback){
+		if ( isModal == undefined ) isModal=true;
+		if ( !h ) h=200;
+		if ( !w ) w=400;
+		$( "#dialog" ).dialog({
+			title: t,
+			height: h,
+			width: w,
+			modal: isModal,
+			resizable: false,
+		    beforeClose: function(event, ui) {
+		        try{
+		            document.getElementById("self_iframe").contentWindow.doBeforeClose();
+		            if ( callback ) callback.apply();
+		        }catch(e){
+		        }
+		        return true;
+		    }
+		});
+		document.getElementById("self_iframe").src = xurl;
+    }
+	function closeDialog(){
+		$( "#dialog" ).dialog( "close" );
+	}
+	function editBaseInfo(){
+	$("#check_view1").hide();
+	$("#edit_view1").show();
+	$("#baseReturnBt").show();
+	$("#baseSaveBt").show();
+	$("#baseEditBt").hide();
+	}
+	function cancelBaseInfo(){
+	if(isChange==true){
+	 top.showConfirm("内容已被编辑，是否保存？",saveBaseInfo,cancelUpdate);
+	}
+	 else{
+	 returnBaseView();
+	 }
+	}
+	function returnBaseView(){
+	$("#check_view1").show();
+	$("#edit_view1").hide();
+	$("#baseReturnBt").hide();
+	$("#baseSaveBt").hide();
+	$("#baseEditBt").show();
+	}
+	function editFInfo(){
+	$("#check_view2").hide();
+	$("#edit_view2").show();
+	$("#fReturnBt").show();
+	$("#fSaveBt").show();
+	$("#fEditBt").hide();
+	}
+	function cancelFInfo(){
+	if(isChange==true){
+	 top.showConfirm("内容已被编辑，是否保存？", saveFInfo,cancelUpdate);
+	}
+	else{
+	$("#check_view2").show();
+	$("#edit_view2").hide();
+	$("#fReturnBt").hide();
+	$("#fSaveBt").hide();
+	$("#fEditBt").show();
+	}
+	}
+	
+	function returnFView(){
+	$("#check_view2").show();
+	$("#edit_view2").hide();
+	$("#fReturnBt").hide();
+	$("#fSaveBt").hide();
+	$("#fEditBt").show();
+	}
+	function editXInfo(){
+	$("#check_view3").hide();
+	$("#edit_view3").show();
+	$("#xReturnBt").show();
+	$("#xSaveBt").show();
+	$("#xEditBt").hide();
+	}
+	function cancelXInfo(){
+	if(isChange==true){
+	 top.showConfirm("内容已被编辑，是否保存？", saveXInfo,cancelUpdate);
+	}
+	else{
+	returnXView();
+	}
+	}
+	function returnXView(){
+	$("#check_view3").show();
+	$("#edit_view3").hide();
+	$("#xReturnBt").hide();
+	$("#xSaveBt").hide();
+	$("#xEditBt").show();
+	}
+	function editTInfo(){
+	$("#check_view4").hide();
+	$("#edit_view4").show();
+	$("#tReturnBt").show();
+	$("#tSaveBt").show();
+	$("#tEditBt").hide();
+	}
+	function cancelTInfo(){
+	if(isChange==true){
+	 top.showConfirm("内容已被编辑，是否保存？", saveTInfo,cancelUpdate);
+	}
+	else{
+	 returnTView();
+	}
+	}
+	
+	function returnTView(){
+	$("#check_view4").show();
+	$("#edit_view4").hide();
+	$("#tReturnBt").hide();
+	$("#tSaveBt").hide();
+	$("#tEditBt").show();
+	}
+	function editJInfo(){
+	$("#check_view5").hide();
+	$("#edit_view5").show();
+	$("#jReturnBt").show();
+	$("#jSaveBt").show();
+	$("#jEditBt").hide();
+	}
+	function cancelJInfo(){
+	if(isChange==true){
+	 top.showConfirm("内容已被编辑，是否保存？", saveJInfo,cancelUpdate);
+	}
+	else{
+	returnJView();
+	}
+	}
+	function returnJView(){
+	$("#check_view5").show();
+	$("#edit_view5").hide();
+	$("#jReturnBt").hide();
+	$("#jSaveBt").hide();
+	$("#jEditBt").show();
+	}
+	function cancelUpdate(){
+	   isChange = false;
+	   refreshInfo();
+	}
+	function refreshInfo(){
+	if(optType=="update"){
+	var aoData=[];
+	aoData.push( { "name": "prison.prison_code", "value":infoId } );
+	top.sendAjaxRequest("/actions/Prison.action?getPrisonInfoById",aoData,refreshInfoCallback);
+	}
+	}
+	function refreshInfoCallback(obj){
+	     if ( obj.status == true ) {
+		   var o=obj.body;
+		   prisonInfo=o.proCorrectionInfo;
+		   parent.setPrisonInfoObj( prisonInfo );
+		   showB();
+		   showF(); 
+		   showX(); 
+		   showT(); 
+		   showJ(); 
+		   returnBaseView();
+		   returnFView();
+		   returnXView();
+		   returnTView();
+		   returnJView();
+			  
+		 } 
+	}
+	
+</script>
+
+</head>
+
+<body>
+<table width="100%">
+  <tr>
+   <td width="20%" valign="top">
+	<div id="menu">
+			<table width="100%" cellpadding="0" cellspacing="0" style="table-layout:fixed">
+				<tr valign="top">
+					<td >
+						<table width="100%"  align="center" cellpadding="0" cellspacing="0">
+							<tr width="100%" ><td height="23px" id="imgmenu1" class="menu_title" style="background-color: #C6DEFF;">接收执行</td></tr>
+							<tr><td id="submenu1" style="display:;">
+								<table  width="99%"  cellspacing="0" cellpadding="0">
+									<tr>
+										<td width="99%"  class="STYLE3" style="height:23px; text-indent:20px;" width="100%" >
+										<img src="images/left.gif" width="10" src="images/left.gif" height="10" />
+										  <a id="a1" onclick="selectMenu(1)" style="cursor:hand">基本信息</a>
+										</td>
+									  </tr>
+									<tr>
+										<td class="STYLE3" style="height:23px; text-indent:20px;">
+										<img  width="10" src="images/left.gif" height="10" />
+										<a id="a2" onclick="selectMenu(2)" src="images/left.gif" style="cursor:hand">法律文书</a>
+										</td>
+									  </tr>
+									<tr>
+										<td class="STYLE3" style="height:23px; text-indent:20px;">
+										<img  width="10" src="images/left.gif" height="10" />
+										<a id="a3" onclick="selectMenu(3)" src="images/left.gif" style="cursor:hand">刑罚执行</a>
+										</td>
+									  </tr>
+									<tr>
+										<td class="STYLE3" style="height:23px; text-indent:20px;">
+										<img width="10" src="images/left.gif" height="10" />
+										  <a id="a4" onclick="selectMenu(4);showEscortRecd();" style="cursor:hand">押送情况</a>
+										</td>
+									  </tr>
+									<tr>
+										<td class="STYLE3" style="height:23px; text-indent:20px;">
+										<img width="10" src="images/left.gif" height="10" />
+										<a id="a5" onclick="selectMenu(5)" style="cursor:hand">矫正脱管</a>
+										</td>
+									  </tr>
+								</table>
+							</td></tr>
+						</table>
+					</td>
+				</tr>
+				<tr valign="top">
+				<td width="99%" >
+					<table width="99%"  align="center" cellpadding="0" cellspacing="5">
+						<tr width="99%" ><td width="100%"  height="23px" style="background-color: #C6DEFF;" id="imgmenu2" class="menu_title" style="cursor:hand">解除矫正</td></tr>
+						<tr>
+							<td id="submenu2" style="display:;">
+								<table width="99%"   cellspacing="0" cellpadding="0">
+									<tr>
+										<td width="99%"  class="STYLE3" style="height:23px; text-indent:20px;">
+										<img src="images/left.gif" width="10" height="10" />
+										<a id="a6" onclick="selectMenu(6)" style="cursor:hand">期满鉴定</a>
+										</td>
+									  </tr>
+									<tr>
+										<td class="STYLE3" style="height:23px; text-indent:20px;">
+										<img src="images/left.gif" width="10px" height="10px" />
+										<a id="a7" onclick="selectMenu(7);showOtherAccusation();" style="cursor:hand">余罪或再罪有关情况</a>
+										</td>
+									</tr>
+									<tr>
+										<td class="STYLE3" style="height:23px; text-indent:20px;">
+										<img src="images/left.gif" width="10" height="10" />
+										<a id="a8" onclick="selectMenu(8);showTermChangeInfo();" style="cursor:hand">刑期变动情况</a>
+										</td>
+									</tr>
+								</table>
+							</td>
+					  </tr>
+					</table>
+				</td>
+				</tr>
+			</table>
+	</div>
+ </td>
+ <td width="80%" valign="top">
+     <input type="hidden" id="deptId" value="" />
+     <div style="width:800px; margin:0px auto;background-color: #F0F8FF;" id="menu1"> 
+		<table width="99%" cellpadding="0" cellspacing="0" >
+			<tr align="left">
+			<td class="thead_td" width="100" height="30px" style="margin-left:10px;background-color: #C6DEFF;">
+			基本信息
+			</td>
+			<td style="margin-left:10px;background-color: #C6DEFF;">
+			<img src="images/edit.gif" title="编辑" onclick="editBaseInfo()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:0px;right:0px;" id="baseEditBt"/>
+			<img src="images/return.png" title="取消" onclick="cancelBaseInfo()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:-3px;right:0px;display:none;" id="baseReturnBt"/>
+			<img src="images/save.png" title="保存" onclick="saveBaseInfo()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:4px;right:5px;display:none;" id="baseSaveBt"/>
+			</td>
+			</tr>
+		</table>
+		<div id="edit_view1">
+		<table width="99%" cellpadding="0" cellspacing="0"  style="border-color:#C6DEFF" class="maintable" style="table-layout:fixed" align="center">
+			<tr><th class="tbody_td" width="120" height="28px" >状态</th>
+				<td class="tbody_td" align="left" width="180px" id="tdstatus"></td>
+				<th class="tbody_td" width="120" height="28px">所属部门<font color="red">(*)</font></th>
+				<td class="tbody_td" align="left" width="180px" ><textarea id="deptName" onclick="selectDept()" cols="24" rows="2"></textarea></td></tr>
+			<tr>
+				<th class="tbody_td" width="120" height="28px">是否成年</th>
+				<td class="tbody_td" align="left" width="180px" id="tdb_1"></td>
+				<th class="tbody_td" width="100" height="28px">人员编号<font color="red">(*)</font></th>
+				<td class="tbody_td" align="left" width="180px"><input type="text" id="prison_code"/></td>
+				<th class="tbody_td" height="28px">照片&nbsp;<input type="button" id="btnUploadPic" onclick="uploadPic()" value="上传"/></th>
+			</tr>
+			<tr>
+				<th class="tbody_td" height="28px">姓名<font color="red">(*)</font></th>
+				<td class="tbody_td" align="left">
+				  <input type="text" id="prison_name"/></td>
+				<th class="tbody_td">曾用名</th>
+				<td class="tbody_td" align="left">
+				  <input type="text" id="b_2"/>
+				</td>
+				<th class="tbody_td"  rowspan="6" valign="top">
+				<img src="images/photos.png"  width="180px" height="180px" id="pic">
+				</th>
+			</tr>
+			<tr>
+				<th class="tbody_td" height="28px">身份证号<font color="red">(*)</font></th>
+				<td class="tbody_td" align="left">
+				<input type="text" id="id_card" onchange="ExtractionBirthday('id_card','b_3')"/></td>
+				<th class="tbody_td">出生日期</th>
+				<td class="tbody_td" align="left">
+					<input type="text" id="b_3" value="" disabled="true"/>
+				</td>
+			</tr>
+			<tr>
+				<th class="tbody_td">性别</th>
+				<td class="tbody_td" align="left" id="tdprison_sex">
+				</td>
+				<th class="tbody_td" height="28px">民族</th>
+				<td class="tbody_td" align="left" id="tdb_4">
+				</td>
+			</tr>
+			<tr>
+				<th class="tbody_td">有无护照</th>
+				<td class="tbody_td" align="left" id="tdb_29">
+				</td>
+				<th class="tbody_td" height="28px">护照号码</th>
+				<td class="tbody_td" align="left">
+				<input type="text" id="b_5"/>
+				</td>
+			</tr>
+			<tr>
+				<th class="tbody_td">有无回乡证</th>
+				<td class="tbody_td" align="left" id="tdb_6">
+				</td>
+				<th class="tbody_td" height="28px">回乡证号码</th>
+				<td class="tbody_td" align="left">
+				<input type="text" id="b_7"/>
+				</td>
+			</tr>
+			<tr>
+				<th class="tbody_td">有无港澳台身份证</th>
+				<td class="tbody_td" align="left" id="tdb_9">
+				</td>
+				<th class="tbody_td" height="28px">证件号码</th>
+				<td class="tbody_td" align="left">
+				<input type="text" id="b_8"/>
+				</td>
+			</tr>
+			<tr>
+				<th class="tbody_td">有无港澳台通行证</th>
+				<td class="tbody_td" align="left" id="tdb_10">
+				</td>
+				<th class="tbody_td" height="28px">港澳台通行证号码</th>
+				<td class="tbody_td" align="left" colspan="2">
+				<input type="text" id="b_11"/>
+				</td>
+			</tr>
+			<tr>
+				<th class="tbody_td" height="28px">健康状况</th>
+				<td class="tbody_td" align="left" id="tdb_12"></td>
+				<th class="tbody_td" height="28px">具体健康状况</th>
+				<td class="tbody_td" align="left" colspan="2">
+				<textarea cols="45" id="b_13"></textarea>
+				</td>
+			</tr>
+			<tr>
+				<th class="tbody_td" height="28px">是否有传染病史</th>
+				<td class="tbody_td" align="left" id="tdb_14">
+				</td>
+				<th class="tbody_td" height="28px">具体传染病史</th>
+				<td class="tbody_td" align="left" colspan="2">
+				<input type="text" id="b_15"/></td>
+			</tr>
+			<tr>
+				<th class="tbody_td" height="28px">是否心理健康</th>
+				<td class="tbody_td" align="left"id="tdb_16">
+				</td>
+				<th class="tbody_td" height="28px">鉴定机构</th>
+				<td class="tbody_td" align="left" colspan="2">
+				<input type="text" id="b_17"/>
+				</td>
+			</tr>
+			<tr>
+				<th class="tbody_td" height="28px">具体心理健康状况</th>
+				<td class="tbody_td" align="left" colspan="4">
+				<textarea style="width:670px" cols="3" id="b_18"></textarea>
+				</td>
+			</tr>
+			<tr>
+				<th class="tbody_td" height="28px" >政治面貌</th>
+				<td class="tbody_td" align="left" id="tdb_19"></td>
+				<th class="tbody_td" >原政治面貌</th>
+				<td class="tbody_td" align="left" colspan="2" id="tdb_20"></td>
+			</tr>
+			<tr>
+				<th class="tbody_td" height="28px">文化程度</th>
+				<td class="tbody_td" align="left" id="tdb_21"></td>
+				<th class="tbody_td">婚姻状况</th>
+				<td class="tbody_td" align="left" colspan="2"id="tdb_22"></td>
+			</tr>
+			<tr>
+				<th class="tbody_td" height="28px">就业就学情况</th>
+				<td class="tbody_td" align="left" id="tdb_23">
+					<input type="text" id="b_23"/>
+				</td>
+				<th class="tbody_td">联系电话</th>
+				<td class="tbody_td" align="left" colspan="2">
+					<input type="text" id="b_24"/></td>
+			</tr>
+			<tr>
+				<th class="tbody_td" height="28px">现工作单位</th>
+				<td class="tbody_td" align="left">
+					<input type="text" id="b_25"/>
+				</td>
+				<th class="tbody_td">单位联系电话</th>
+				<td class="tbody_td" align="left" colspan="2">
+					<input type="text" id="b_26"/>
+			</td>
+			</tr>
+			<tr>
+				<th class="tbody_td" height="28px">户籍性质</th>
+				<td class="tbody_td" align="left" id="tdb_27"></td>
+				<th class="tbody_td" >户籍地是否与居住地相同</th>
+				<td class="tbody_td" colspan="2" align="left" id="tdb_28">
+				</td>
+			</tr>
+			<tr>
+				<th class="tbody_td" height="30px">居住地</th>
+				<td class="tbody_td" align="left" colspan="4">
+					<input type="hidden" value="" id="register_province"/>
+					<input type="hidden" value=""  id="register_city"/>
+					<input type="hidden" value=""  id="register_county"/>
+					<input type="text" style="width:670px" id="live_addr"/>
+				</td>
+			</tr>
+			<tr id="hujidiv">
+				<th class="tbody_td" height="28px">户籍地址</th>
+				<td class="tbody_td" align="left" colspan="4">
+					<input type="hidden" value="" id="live_province"/>
+					<input type="hidden" value="" id="live_city"/>
+					<input type="hidden" value="" id="live_county"/>
+					<input type="text" style="width:670px" id="register_addr"/></td>
+			</tr>
+			<tr>
+				<th class="tbody_td" height="28px">身体缺陷情况</th>
+				<td class="tbody_td" align="left" colspan="4">
+				<textarea style="width:670px" rows="3"  id="b_30"></textarea>
+				</td>
+			</tr>
+		</table>
+		<table width="99%" cellpadding="0" cellspacing="0" >
+			<tr align="left">
+				<td class="thead_td" height="30px" width="30%">&nbsp;
+				<img src="images/tb.gif" width="15"  height="15"  />
+				个人简历
+				</td>
+				<td><div class="buttonDivTwo"><a href="javascript:addResume()">添加</a></div></td>
+			</tr>
+		</table>
+		<table width="99%" id="Resumetable" cellpadding="0" cellspacing="0"  style="border-color:#C6DEFF" class="maintable" align="center">
+		</table>
+		<table width="99%"  cellpadding="0" cellspacing="0"  style="border-color:#C6DEFF" class="maintable" align="center">
+		        <tr align="left">
+				<td width="30%" align="center"><div class="buttonDivTwo"><a href="javascript:uploadFile()">附件</a></div></td>
+				<td>
+				  <table id="resume_List" class="display" cellpadding="0" width="99%" cellspacing="0" border="0" ></table>
+				</td>
+				</tr>
+		</table>
+		<table width="99%" cellpadding="0" cellspacing="0" >
+			<tr align="left">
+				<td class="thead_td" height="30px" width="30%">&nbsp;
+				<img src="images/tb.gif" width="15" height="15"  />
+				家庭成员及主要社会关系
+				</td>
+				<td><div class="buttonDivTwo"><a href="javascript:addRelation()">添加</a></div></td>
+			</tr>
+		</table>
+		
+		 <table id="Relationtable" width="99%" cellpadding="0" cellspacing="0"  style="border-color:#C6DEFF" class="maintable" align="center">
+		 </table>
+		 
+		<table width="99%" align="center" cellpadding="0" cellspacing="0">
+			   <tr>
+			     <!--td width="50%" align="right" style="margin-left:10px"><div id="saveBaseBtn" class="buttonTwo"><a href="javascript:saveBaseInfo()">保存</a></div></td-->
+				 <td  align="center" ><div class="buttonTwo"><a href="javascript:openBPrintPreView()">打印</a></div></td>
+			   </tr>
+		</table>
+		</div>
+		<div id="check_view1">
+		<table width="99%" cellpadding="0" cellspacing="0"  style="border-color:#C6DEFF" class="maintable" style="table-layout:fixed" align="center">
+			<tr><th class="tbody_td" width="120" height="28px" >状态</th>
+				<td class="tbody_td" align="left" width="180px" id="check_tdstatus"></td>
+				<th class="tbody_td" width="120" height="28px">所属部门</th>
+				<td class="tbody_td" align="left" width="180px" id="check_deptName"></td></tr>
+			<tr>
+				<th class="tbody_td" width="120" height="28px">是否成年</th>
+				<td class="tbody_td" align="left" width="180px" id="check_tdb_1"></td>
+				<th class="tbody_td" width="100" height="28px">人员编号</th>
+				<td class="tbody_td" align="left" width="180px" id="check_prison_code"></td>
+				<th class="tbody_td" height="28px">照片</th>
+			</tr>
+			<tr>
+				<th class="tbody_td" height="28px">姓名</th>
+				<td class="tbody_td" align="left" id="check_prison_name"></td>
+				<th class="tbody_td">曾用名</th>
+				<td class="tbody_td" align="left" id="check_b_2"></td>
+				<th class="tbody_td"  rowspan="6" valign="top">
+				<img src="images/photos.png"  width="180px" height="180px" id="check_pic">
+				</th>
+			</tr>
+			<tr>
+				<th class="tbody_td" height="28px">身份证号</th>
+				<td class="tbody_td" align="left" id="check_id_card">
+				<th class="tbody_td">出生日期</th>
+				<td class="tbody_td" align="left" id="check_b_3"></td>
+			</tr>
+			<tr>
+				<th class="tbody_td">性别</th>
+				<td class="tbody_td" align="left" id="check_tdprison_sex">
+				</td>
+				<th class="tbody_td" height="28px">民族</th>
+				<td class="tbody_td" align="left" id="check_tdb_4">
+				</td>
+			</tr>
+			<tr>
+				<th class="tbody_td">有无护照</th>
+				<td class="tbody_td" align="left" id="check_tdb_29">
+				</td>
+				<th class="tbody_td" height="28px">护照号码</th>
+				<td class="tbody_td" align="left" id="check_b_5"></td>
+			</tr>
+			<tr>
+				<th class="tbody_td">有无回乡证</th>
+				<td class="tbody_td" align="left" id="check_tdb_6">
+				</td>
+				<th class="tbody_td" height="28px">回乡证号码</th>
+				<td class="tbody_td" align="left" id="check_b_7"></td>
+			</tr>
+			<tr>
+				<th class="tbody_td">有无港澳台身份证</th>
+				<td class="tbody_td" align="left" id="check_tdb_9">
+				</td>
+				<th class="tbody_td" height="28px">证件号码</th>
+				<td class="tbody_td" align="left" id="check_b_8">
+				</td>
+			</tr>
+			<tr>
+				<th class="tbody_td">有无港澳台通行证</th>
+				<td class="tbody_td" align="left" id="check_tdb_10">
+				</td>
+				<th class="tbody_td" height="28px">港澳台通行证号码</th>
+				<td class="tbody_td" align="left" colspan="2" id="check_b_11">
+				</td>
+			</tr>
+			<tr>
+				<th class="tbody_td" height="28px">健康状况</th>
+				<td class="tbody_td" align="left" id="check_tdb_12"></td>
+				<th class="tbody_td" height="28px">具体健康状况</th>
+				<td class="tbody_td" align="left" colspan="2" id="check_b_13">
+				</td>
+			</tr>
+			<tr>
+				<th class="tbody_td" height="28px">是否有传染病史</th>
+				<td class="tbody_td" align="left" id="check_tdb_14">
+				</td>
+				<th class="tbody_td" height="28px">具体传染病史</th>
+				<td class="tbody_td" align="left" colspan="2" id="check_b_15"></td>
+			</tr>
+			<tr>
+				<th class="tbody_td" height="28px">是否心理健康</th>
+				<td class="tbody_td" align="left"id="check_tdb_16">
+				</td>
+				<th class="tbody_td" height="28px">鉴定机构</th>
+				<td class="tbody_td" align="left" colspan="2" id="check_b_17">
+				</td>
+			</tr>
+			<tr>
+				<th class="tbody_td" height="28px">具体心理健康状况</th>
+				<td class="tbody_td" align="left" colspan="4" id="check_b_18">
+				</td>
+			</tr>
+			<tr>
+				<th class="tbody_td" height="28px" >政治面貌</th>
+				<td class="tbody_td" align="left" id="check_tdb_19"></td>
+				<th class="tbody_td" >原政治面貌</th>
+				<td class="tbody_td" align="left" colspan="2" id="check_tdb_20"></td>
+			</tr>
+			<tr>
+				<th class="tbody_td" height="28px">文化程度</th>
+				<td class="tbody_td" align="left" id="check_tdb_21"></td>
+				<th class="tbody_td">婚姻状况</th>
+				<td class="tbody_td" align="left" colspan="2"id="check_tdb_22"></td>
+			</tr>
+			<tr>
+				<th class="tbody_td" height="28px">就业就学情况</th>
+				<td class="tbody_td" align="left" id="check_tdb_23">
+				</td>
+				<th class="tbody_td">联系电话</th>
+				<td class="tbody_td" align="left" colspan="2" id="check_b_24">
+			</tr>
+			<tr>
+				<th class="tbody_td" height="28px">现工作单位</th>
+				<td class="tbody_td" align="left" id="check_b_25">
+				</td>
+				<th class="tbody_td">单位联系电话</th>
+				<td class="tbody_td" align="left" colspan="2" id="check_b_26">
+			</td>
+			</tr>
+			<tr>
+				<th class="tbody_td" height="28px">户籍性质</th>
+				<td class="tbody_td" align="left" id="check_tdb_27"></td>
+				<th class="tbody_td" >户籍地是否与居住地相同</th>
+				<td class="tbody_td" colspan="2" align="left" id="check_tdb_28">
+				</td>
+			</tr>
+			<tr>
+				<th class="tbody_td" height="30px">居住地</th>
+				<td class="tbody_td" align="left" colspan="4" id="check_live_addr">
+					<input type="hidden" value="" id="register_province"/>
+					<input type="hidden" value=""  id="register_city"/>
+					<input type="hidden" value=""  id="register_county"/>
+				</td>
+			</tr>
+			<tr id="check_hujidiv">
+				<th class="tbody_td" height="28px">户籍地址</th>
+				<td class="tbody_td" align="left" colspan="4" id="check_register_addr">
+					<input type="hidden" value="" id="live_province"/>
+					<input type="hidden" value="" id="live_city"/>
+					<input type="hidden" value="" id="live_county"/>
+		    </td>
+			</tr>
+			<tr>
+				<th class="tbody_td" height="28px">身体缺陷情况</th>
+				<td class="tbody_td" align="left" colspan="4" id="check_b_30">
+				</td>
+			</tr>
+		</table>
+		<table width="99%" cellpadding="0" cellspacing="0" >
+			<tr align="left">
+				<td class="thead_td" height="30px" width="30%">&nbsp;
+				<img src="images/tb.gif" width="15"  height="15"  />
+				个人简历
+				</td>
+				<td></td>
+			</tr>
+		</table>
+		<table width="99%" id="check_Resumetable" cellpadding="0" cellspacing="0"  style="border-color:#C6DEFF" class="maintable" align="center">
+		</table>
+		<table width="99%"  cellpadding="0" cellspacing="0"  style="border-color:#C6DEFF" class="maintable" align="center">
+		        <tr align="left" height="30px">
+				<td width="30%" align="center">附件</td>
+				<td>
+				  <table id="check_resume_List" class="display" cellpadding="0" width="100%" cellspacing="0" border="0" ></table>
+				</td>
+				</tr>
+		</table>
+		<table width="99%" cellpadding="0" cellspacing="0" >
+			<tr align="left">
+				<td class="thead_td" height="30px" width="30%">&nbsp;
+				<img src="images/tb.gif" width="15" height="15"  />
+				家庭成员及主要社会关系
+				</td>
+				<td></td>
+			</tr>
+		</table>
+		 <table id="check_Relationtable" width="99%" cellpadding="0" cellspacing="0"  style="border-color:#C6DEFF" class="maintable" align="center">
+		 </table>
+		 <table width="99%" align="center" cellpadding="0" cellspacing="0">
+			   <tr>
+				 <td  align="center" ><div class="buttonTwo"><a href="javascript:openBPrintPreView()">打印</a></div></td>
+			   </tr>
+		</table>
+		</div>
+	</div>
+ 
+     <div style="display:none;width:800px; margin:0px auto;background-color: #F0F8FF;" id="menu2">
+		<table width="99%" cellpadding="0" cellspacing="0" >
+		<tr align="left">
+		<td class="thead_td" height="30px" style="margin-left:10px;background-color: #C6DEFF;">
+		违法犯罪
+		</td>
+		<td style="margin-left:10px;background-color: #C6DEFF;">
+		<img src="images/edit.gif" title="编辑" onclick="editFInfo()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:0px;right:0px;" id="fEditBt"/>
+		<img src="images/return.png" title="取消" onclick="cancelFInfo()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:-3px;right:0px;display:none;" id="fReturnBt"/>
+		<img src="images/save.png" title="保存" onclick="saveFInfo()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:4px;right:5px;display:none;" id="fSaveBt"/>
+		</td>
+		</tr>
+		</table>
+		<div id="edit_view2">
+		<table width="99%" cellpadding="0" cellspacing="0"  style="border-color:#C6DEFF" class="maintable" align="center">
+		<tr>
+			<th class="tbody_td" width="100px" height="35">侦查机关</th>
+			<td class="tbody_td" align="left" width="150" >
+			<input type="text" size="15" id="tdf_1"/>
+			</td>
+			<th class="tbody_td" width="100px">拘留日期</th>
+			<td class="tbody_td" align="left" width="150" >
+			<input type="text" size="15"  id="tdf_3" value="" onclick="new Calendar().show(this);"/>
+			</td>
+			<th class="tbody_td" width="100px">立案日期</th>
+			<td class="tbody_td" align="left">
+			<input type="text" size="15"  id="tdf_2" value="" onclick="new Calendar().show(this);"/>
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100px" height="35">决定/批准<br />逮捕机关</th>
+			<td class="tbody_td" align="left">
+			<input type="text" size="15"  id="tdf_4"/>
+			</td>
+			<th class="tbody_td" width="100px">逮捕日期</th>
+			<td class="tbody_td" align="left">
+			<input type="text" size="15"  id="tdf_5" value="" onclick="new Calendar().show(this);"/>
+			</td>
+			<th class="tbody_td" width="100px">侦结日期</th>
+			<td class="tbody_td" align="left">
+			<input type="text" size="15"  id="tdf_6" value="" onclick="new Calendar().show(this);"/>
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100px" height="35">公诉机关<br />(自诉人)</th>
+			<td class="tbody_td" align="left">
+			<input type="text" size="15"  id="tdf_7"/></td>
+			<th class="tbody_td" width="100px">提起起诉日期</th>
+			<td class="tbody_td" align="left">
+			<input type="text" size="15"  id="tdf_8" value="" onclick="new Calendar().show(this);"/></td>
+			<th class="tbody_td" width="100px">起诉书编号</th>
+			<td class="tbody_td" align="left">
+			<input type="text" size="15"  id="tdf_9"/></td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="30px">审判机关名称</th>
+			<td class="tbody_td" align="left">
+			<input type="text" size="15"  id="tdf_10"/></td>
+			<th class="tbody_td" width="100">判决书编号</th>
+			<td class="tbody_td" align="left">
+			<input type="text" size="15"  id="tdf_11"/></td>
+			<th class="tbody_td" width="100">判决日期</th>
+			<td class="tbody_td" align="left">
+			<input type="text" size="15"  id="tdf_12" value="" onclick="new Calendar().show(this);"/></td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="35">执行通知书<br />文号及日期</th>
+			<td class="tbody_td" align="left">
+			<input type="text" size="15"  id="tdf_13" />
+			<th class="tbody_td" width="100">原羁押场所</th>
+			<td class="tbody_td" align="left">
+			<input type="text" size="15"  id="tdf_15"/>
+			</td>
+			<th class="tbody_td" width="100">交付执行日期</th>
+			<td class="tbody_td" align="left">
+			<input type="text" size="15"  id="tdf_16" value="" onclick="new Calendar().show(this);"/>
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="35">社区矫正<br />决定机关</th>
+			<td class="tbody_td" align="left">
+			<input type="text" size="15"  id="tdf_17"/></td>
+			<th class="tbody_td" width="100">文书类型</th>
+			<td class="tbody_td" align="left">
+			<input type="text" size="15" size="15"  id="tdf_18"/></td>
+			<th class="tbody_td" width="100">文书编号</th>
+			<td class="tbody_td" align="left">
+			<input type="text" size="15"  id="tdf_19"/></td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100"  height="100">文书生效日期</th>
+			<td class="tbody_td" align="left">
+			<input type="text" size="15" size="15"  id="tdf_20" value="" onclick="new Calendar().show(this);"/></td>
+			<th class="tbody_td" width="100">主要犯罪事实</th>
+			<td class="tbody_td" align="left" colspan="3">
+				<textarea style="width:413px;height:80px" id="tdf_21"></textarea>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" rowspan="2">本次犯罪前的<br />违法犯罪记录</th>
+			<th class="tbody_td" height="30px">行政处罚/处分</th>
+			<td class="tbody_td" align="left" colspan="4">
+				<textarea style="width:514px;height:40px" id="tdf_22"></textarea></td>
+		</tr>
+		<tr>
+			<th class="tbody_td" height="30px">刑事处罚<br />违法犯罪记录</th>
+			<td class="tbody_td" align="left" colspan="4">
+				<textarea style="width:514px;height:40px" id="tdf_23"></textarea></td>
+		</tr>
+		</table>
+		<table width="99%" cellpadding="0" cellspacing="0">
+			   <tr>
+			     <td width="99%" align="center" style="margin-left:10px"><div class="buttonTwo"><a href="javascript:openFPrintPreView()">打印</a></div></td>
+			   </tr>
+		</table>
+		</div>
+		<div id="check_view2">
+		<table width="99%" cellpadding="0" cellspacing="0"  style="border-color:#C6DEFF" class="maintable" align="center">
+		<tr>
+			<th class="tbody_td" width="100" height="35">侦查机关</th>
+			<td class="tbody_td" align="left" width="150" id="check_tdf_1" >
+			</td>
+			<th class="tbody_td" width="100">拘留日期</th>
+			<td class="tbody_td" align="left" width="150" id="check_tdf_3" >
+			</td>
+			<th class="tbody_td" width="100">立案日期</th>
+			<td class="tbody_td" align="left" id="check_tdf_2">
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="35">决定/批准<br />逮捕机关</th>
+			<td class="tbody_td" align="left" id="check_tdf_4">
+			</td>
+			<th class="tbody_td" width="100">逮捕日期</th>
+			<td class="tbody_td" align="left"  id="check_tdf_5">
+			</td>
+			<th class="tbody_td" width="100">侦结日期</th>
+			<td class="tbody_td" align="left" id="check_tdf_6">
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="35">公诉机关<br />(自诉人)</th>
+			<td class="tbody_td" align="left"  id="check_tdf_7"></td>
+			<th class="tbody_td" width="100">提起起诉日期</th>
+			<td class="tbody_td" align="left"   id="check_tdf_8"></td>
+			<th class="tbody_td" width="100">起诉书编号</th>
+			<td class="tbody_td" align="left" id="check_tdf_9"></td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="30px">审判机关名称</th>
+			<td class="tbody_td" align="left" id="check_tdf_10"></td>
+			<th class="tbody_td" width="100">判决书编号</th>
+			<td class="tbody_td" align="left"  id="check_tdf_11"></td>
+			<th class="tbody_td" width="100">判决日期</th>
+			<td class="tbody_td" align="left"  id="check_tdf_12"></td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="35">执行通知书<br />文号及日期</th>
+			<td class="tbody_td" align="left"  id="check_tdf_13"></td>
+			<th class="tbody_td" width="100">原羁押场所</th>
+			<td class="tbody_td" align="left" id="check_tdf_15"></td>
+			</td>
+			<th class="tbody_td" width="100">交付执行日期</th>
+			<td class="tbody_td" align="left" id="check_tdf_16"></td>
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="35">社区矫正<br />决定机关</th>
+			<td class="tbody_td" align="left" id="check_tdf_17"></td>
+			<th class="tbody_td" width="100">文书类型</th>
+			<td class="tbody_td" align="left"  id="check_tdf_18"></td>
+			<th class="tbody_td" width="100">文书编号</th>
+			<td class="tbody_td" align="left"  id="check_tdf_19"></td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100"  height="100">文书生效日期</th>
+			<td class="tbody_td" align="left"  id="check_tdf_20"></td>
+			<th class="tbody_td" width="100">主要犯罪事实</th>
+			<td class="tbody_td" align="left" colspan="3" id="check_tdf_21"></td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" rowspan="2">本次犯罪前的<br />违法犯罪记录</th>
+			<th class="tbody_td" height="30px">行政处罚/处分</th>
+			<td class="tbody_td" align="left" colspan="4"  id="check_tdf_22">
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" height="30px">刑事处罚<br />违法犯罪记录</th>
+			<td class="tbody_td" align="left" colspan="4" id="check_tdf_23">
+			</td>
+		</tr>
+		</table>
+		<table width="99%" cellpadding="0" cellspacing="0">
+			   <tr>
+			     <td width="99%" align="center" style="margin-left:10px"><div class="buttonTwo"><a href="javascript:openFPrintPreView()">打印</a></div></td>
+			   </tr>
+		</table>
+		</div>
+     </div>
+
+<div style="display:none;width:800px; margin:0px auto;background-color: #F0F8FF;" id="menu3">
+	<table width="99%" cellpadding="0" cellspacing="0" >
+		<tr align="left">
+			<td class="thead_td" height="30px"style="margin-left:10px;background-color: #C6DEFF;">
+			刑罚信息
+			</td>
+			<td style="margin-left:10px;background-color: #C6DEFF;">
+			<img src="images/edit.gif" title="编辑" onclick="editXInfo()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:0px;right:0px;" id="xEditBt"/>
+			<img src="images/return.png" title="取消" onclick="cancelXInfo()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:-3px;right:0px;display:none;" id="xReturnBt"/>
+			<img src="images/save.png" title="保存" onclick="saveXInfo()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:4px;right:5px;display:none;" id="xSaveBt"/>
+			</td>
+		</tr>
+	</table>
+	<div id="edit_view3">
+	<table width="99%" cellpadding="0" cellspacing="0"  style="border-color:#C6DEFF" class="maintable" align="center" style=" table-layout:fixed;">
+	<tr>
+	<th class="tbody_td" width="15%" align="right">矫正类别</th>
+	<td class="tbody_td" width="35%" align="left" id="tdcorrect_category"></td>
+	<th class="tbody_td" width="15%" align="right">矫正期限</th>
+	<td class="tbody_td" width="35%" align="left"><input type="text" id="x_8"/></td>
+	</tr>
+	<tr>
+	<th class="tbody_td" align="right">矫正起止日</th>
+	<td class="tbody_td" align="left" >
+	<input type="text" name="time" size="10" id="start_date" onclick="new Calendar().show(this);"/>~<input type="text" size="10" id="end_date"  onclick="new Calendar().show(this);"/>
+	</td>
+	<th class="tbody_td" align="right">犯罪类型</th>
+	<td class="tbody_td" align="left" id="tdx_9">
+	</tr>
+	<tr>
+	<th class="tbody_td" align="right">具体罪名</th>
+	<td class="tbody_td" align="left" colspan="3">
+	<textarea style="width:626px;height:40px" id="charges"></textarea>
+	</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" align="right">原判刑罚</th>
+	<td class="tbody_td" align="left">
+	<input type="text" id="x_1"/></td>
+	<th id="qixiandiv" class="tbody_td" align="right">有期徒刑期限</th>
+	<td class="tbody_td" align="left">
+	<input type="text" id="x_10"/></td>
+	</tr>
+	<tr>
+	<th class="tbody_td" align="right">原判刑期<br />起止日</th>
+	<td class="tbody_td" align="left" >
+	<input type="text" size="10" id="x_3" value="" onclick="new Calendar().show(this);"/>~<input type="text" size="10" id="x_4" value="" onclick="new Calendar().show(this);"/>
+	</td>
+	<th id="xinqidiv" class="tbody_td" align="right">原判刑期</th>
+	<td class="tbody_td" align="left">
+	<input type="text" id="x_11" />
+	</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" align="right">附加刑</th>
+	<td class="tbody_td" align="left" colspan="3">
+	<textarea style="width:626px;height:40px" id="x_5"></textarea>
+	</td>
+	</tr>
+	<tr id="boquandiv1">
+	<th class="tbody_td" align="right">剥夺政治<br />权利期限</th>
+	<td class="tbody_td" align="left">
+	<input type="text" id="x_6"/>
+	</td>
+	<th class="tbody_td" align="right">接收剥夺政治权利<br />人员的公安机关名称</th>
+	<td class="tbody_td" align="left">
+	<input type="text" id="x_7"/>
+	</td>
+	</tr>
+	<tr id="boquandiv2">
+	<th class="tbody_td" align="right">剥夺政治<br />权利起止日</th>
+	<td class="tbody_td" align="left" colspan="3">
+	<input type="text" id="x_2" size="10" value="" onclick="new Calendar().show(this);"/>~<input type="text" id="x_12" size="10" value="" onclick="new Calendar().show(this);"/>
+	</td>
+	</tr>
+	<tr id="boquandiv3">
+	<th class="tbody_td" align="right">接收人</th>
+	<td class="tbody_td" align="left" >
+	<input type="text" id="x_13"/>
+	</td>
+	<th class="tbody_td" align="right">移交日期</th>
+	<td class="tbody_td" align="left">
+	<input type="text" id="x_14" size="10" value="" onclick="new Calendar().show(this);"/>
+	</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" align="right">是否有“四史”</th>
+	<td class="tbody_td" align="left" id="tdx_15">
+	</td>
+	<th class="tbody_td" width="15%" align="right">是否累犯</th>
+	<td class="tbody_td" align="left" id="tdx_16">
+	</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" align="right">是否三涉</th>
+	<td class="tbody_td" align="left" id="tdx_17">
+	</td>
+	<th class="tbody_td" align="right">是否共同犯罪</th>
+	<td class="tbody_td" align="left"id="tdx_18">
+	</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" align="right">是否被宣<br />告禁止令</th>
+	<td class="tbody_td" align="left"id="tdx_19">
+	</td>
+	<th class="tbody_td" align="right">禁止期限<br />起止日</th>
+	<td class="tbody_td" align="left" >
+	<input type="text" id="x_20" size="10" value="" onclick="new Calendar().show(this);"/>~<input type="text" size="10" id="x_21" value="" onclick="new Calendar().show(this);"/>
+	</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" align="right">禁止令内容</th>
+	<td class="tbody_td" align="left" colspan="3">
+	<textarea style="width:626px;height:40px" id="x_22"></textarea>
+	</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" align="right">报到情况</th>
+	<td class="tbody_td" align="left" colspan="3">
+	<textarea style="width:626px;height:40px" id="x_23"></textarea></td>
+	</tr>
+	<tr>
+	<th class="tbody_td"  align="right">接收方式</th>
+	<td class="tbody_td" align="left">
+	<input type="text" id="x_24"/></td>
+	<th class="tbody_td"  align="right">接收日期</th>
+	<td class="tbody_td" align="left" >
+	<input type="text" id="x_25" size="10" value="" onclick="new Calendar().show(this);"/>
+	</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" align="right">矫正管理等级</th>
+	<td class="tbody_td" align="left"  id="tdcorrect_type"></td>
+	<th class="tbody_td" align="right">活动区域</th>
+	<td class="tbody_td" align="left" id="tdArea"></td>
+	</tr>
+	<tr>
+	<th class="tbody_td" align="right">是否建立<br />矫正小组</th>
+	<td class="tbody_td" align="left"id="tdx_26"></td>
+	<th class="tbody_td" align="right">矫正小组人<br />员组成情况</th>
+	<td class="tbody_td" align="left" >
+	<textarea cols="35" rows="3" id="x_27"></textarea>
+	</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" align="right">是否实行信<br />息化管理</th>
+	<td class="tbody_td" align="left"id="tdx_28">
+	</td>
+	<th class="tbody_td" align="right">是否发放<br />定位手机</th>
+	<td class="tbody_td" align="left" id="tdx_29">
+	</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" align="right">定位手机编号</th>
+	<td class="tbody_td" align="left"id="x_28">
+	<input type="text" id="trace_cell_id"/>
+	</td>
+	<th class="tbody_td" align="right">腕带编号</th>
+	<td class="tbody_td" align="left" id="tdx_29">
+	<input type="text" id="wrist_code"/>
+	</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" align="right">备注</th>
+	<td class="tbody_td" align="left" colspan="3">
+	<textarea style="width:626px;height:40px" id="x_30"></textarea>
+	</td>
+	</tr>
+	</table>
+	<table width="99%" cellpadding="0" cellspacing="0">
+		  <tr>
+			<td width="99%" align="center" style="margin-left:10px"><div id="savetBtn" class="buttonTwo"><a href="javascript:openXPrintPreView()">打印</a></div></td>
+		  </tr>
+	</table>
+	</div>
+	<div id="check_view3">
+	<table width="99%" cellpadding="0" cellspacing="0"  style="border-color:#C6DEFF" class="maintable" align="center" style=" table-layout:fixed;">
+	<tr height="40px">
+	<th class="tbody_td" width="15%" align="right">矫正类别</th>
+	<td class="tbody_td" width="35%" align="left" id="check_tdcorrect_category"></td>
+	<th class="tbody_td" width="15%" align="right">矫正期限</th>
+	<td class="tbody_td" width="35%" align="left" id="check_x_8">
+	</td>
+	</tr>
+	<tr height="40px">
+	<th class="tbody_td" align="right">矫正起止日</th>
+	<td class="tbody_td" align="left" id="check_start_date">
+	</td>
+	<th class="tbody_td" align="right">犯罪类型</th>
+	<td class="tbody_td" align="left" id="check_tdx_9">
+	</tr>
+	<tr height="40px">
+	<th class="tbody_td" align="right">具体罪名</th>
+	<td class="tbody_td" align="left" colspan="3" id="check_charges">
+	</td>
+	</tr>
+	<tr height="40px">
+	<th class="tbody_td" align="right">原判刑罚</th>
+	<td class="tbody_td" align="left" id="check_x_1">
+	</td>
+	<th class="tbody_td" align="right">有期徒刑期限</th>
+	<td class="tbody_td" align="left" id="check_x_10">
+	</td>
+	</tr>
+	<tr height="40px">
+	<th class="tbody_td" align="right">原判刑期<br />起止日</th>
+	<td class="tbody_td" align="left" id="check_x_3">
+	</td>
+	<th  class="tbody_td" align="right">原判刑期</th>
+	<td class="tbody_td" align="left" id="check_x_11">
+	</td>
+	</tr>
+	<tr height="40px">
+	<th class="tbody_td" align="right">附加刑</th>
+	<td class="tbody_td" align="left" colspan="3"  id="check_x_5">
+	</td>
+	</tr>
+	<tr height="40px">
+	<th class="tbody_td" align="right">剥夺政治<br />权利期限</th>
+	<td class="tbody_td" align="left" id="check_x_6">
+	</td>
+	<th class="tbody_td" align="right">接收剥夺政治权利<br />人员的公安机关名称</th>
+	<td class="tbody_td" align="left" id="check_x_7">
+	</td>
+	</tr>
+	<tr height="40px">
+	<th class="tbody_td" align="right">剥夺政治<br />权利起止日</th>
+	<td class="tbody_td" align="left" colspan="3" id="check_x_2">
+	</td>
+	</tr>
+	<tr id="boquandiv3" height="40px">
+	<th class="tbody_td" align="right">接收人</th>
+	<td class="tbody_td" align="left" id="check_x_13">
+	</td>
+	<th class="tbody_td" align="right">移交日期</th>
+	<td class="tbody_td" align="left" id="check_x_14" >
+	</td>
+	</tr>
+	<tr height="40px">
+	<th class="tbody_td" align="right">是否有“四史”</th>
+	<td class="tbody_td" align="left" id="check_tdx_15">
+	</td>
+	<th class="tbody_td" align="right">是否累犯</th>
+	<td class="tbody_td" align="left" id="check_tdx_16">
+	</td>
+	</tr>
+	<tr height="40px">
+	<th class="tbody_td" align="right">是否三涉</th>
+	<td class="tbody_td" align="left" id="check_tdx_17">
+	</td>
+	<th class="tbody_td" align="right">是否共同犯罪</th>
+	<td class="tbody_td" align="left"id="check_tdx_18">
+	</td>
+	</tr>
+	<tr height="40px">
+	<th class="tbody_td" align="right">是否被宣<br />告禁止令</th>
+	<td class="tbody_td" align="left"id="check_tdx_19">
+	</td>
+	<th class="tbody_td" align="right">禁止期限<br />起止日</th>
+	<td class="tbody_td" align="left" id="check_x_20">
+	</td>
+	</tr>
+	<tr height="40px">
+	<th class="tbody_td" align="right">禁止令内容</th>
+	<td class="tbody_td" align="left" colspan="3" id="check_x_22">
+	</td>
+	</tr>
+	<tr height="40px">
+	<th class="tbody_td" align="right">报到情况</th>
+	<td class="tbody_td" align="left" colspan="3" id="check_x_23">
+   </td>
+	</tr>
+	<tr height="40px">
+	<th class="tbody_td" width="100" height="30px">接收方式</th>
+	<td class="tbody_td" align="left" id="check_x_24">
+	</td>
+	<th class="tbody_td" align="right">接收日期</th>
+	<td class="tbody_td" align="left" id="check_x_25">
+	</td>
+	</tr>
+	<tr height="40px">
+	<th class="tbody_td" align="right">矫正管理等级</th>
+	<td class="tbody_td" align="left"  id="check_tdcorrect_type"></td>
+	<th class="tbody_td" align="right">活动区域</th>
+	<td class="tbody_td" align="left"  id="check_tdArea"></td>
+	</tr>
+	<tr height="40px">
+	<th class="tbody_td" align="right">是否建立<br />矫正小组</th>
+	<td class="tbody_td" align="left"id="check_tdx_26"></td>
+	<th class="tbody_td" align="right">矫正小组人<br />员组成情况</th>
+	<td class="tbody_td" align="left" id="check_x_27">
+	</td>
+	</tr>
+	<tr height="40px">
+	<th class="tbody_td" align="right">是否实行信<br />息化管理</th>
+	<td class="tbody_td" align="left" id="check_tdx_28">
+	</td>
+	<th class="tbody_td" align="right">是否发放<br />定位手机</th>
+	<td class="tbody_td" align="left" id="check_tdx_29">
+	</td>
+	</tr>
+	<tr height="40px">
+	<th class="tbody_td" align="right">定位手机编号</th>
+	<td class="tbody_td" align="left" id="check_trace_cell_id">
+	</td>
+	<th class="tbody_td" align="right">腕带编号</th>
+	<td class="tbody_td" align="left" id="check_wrist_code">
+	</td>
+	</tr>
+	<tr height="40px">
+	<th class="tbody_td" align="right">备注</th>
+	<td class="tbody_td" align="left" colspan="3" id="check_x_30">
+	</td>
+	</tr>
+	</table>
+	<table width="99%" cellpadding="0" cellspacing="0">
+		  <tr>
+			<td width="99%" align="center" style="margin-left:10px"><div id="savetBtn" class="buttonTwo"><a href="javascript:openXPrintPreView()">打印</a></div></td>
+		  </tr>
+	</table>
+	</div>
+</div>
+
+<div style="display:none;width:800px; margin:0px auto;background-color: #F0F8FF;" id="menu4">
+	<table width="99%" cellpadding="0" cellspacing="0" >
+		<tr align="left">
+			<td class="thead_td" height="30px"style="margin-left:10px;background-color: #C6DEFF;">
+			暂予监外执行罪犯押送情况
+			<div id="div_escort" class="markStatus">[<a href="javascript:void(0);" onclick="addEscortRecd()">添加</a>]</div>
+			</td>
+		</tr>
+	</table>
+	<table width="99%" id="escortRecdDataTable" width="100%"  cellpadding="0" cellspacing="0"  style="border-color:#C6DEFF" class="maintable" align="center">
+	</table>
+</div>
+
+<div style="display:none;width:800px; margin:0px auto;background-color: #F0F8FF;" id="menu5">
+	<table width="99%" cellpadding="0" cellspacing="0" >
+		<tr align="left">
+			<td class="thead_td" height="30px"style="margin-left:10px;background-color: #C6DEFF;">
+			矫正脱管
+			</td>
+			<td style="margin-left:10px;background-color: #C6DEFF;">
+			<img src="images/edit.gif" title="编辑" onclick="editTInfo()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:0px;right:0px;" id="tEditBt"/>
+			<img src="images/return.png" title="取消" onclick="cancelTInfo()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:-3px;right:0px;display:none;" id="tReturnBt"/>
+			<img src="images/save.png" title="保存" onclick="saveTInfo()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:4px;right:5px;display:none;" id="tSaveBt"/>
+			</td>
+		</tr>
+	</table>
+	<div id="edit_view4">
+	<table width="99%" cellpadding="0" cellspacing="0"  style="border-color:#C6DEFF" class="maintable" align="center">
+		<tr>
+			<th class="tbody_td" width="100" height="35">脱管时间</th>
+			<td class="tbody_td" align="left">
+			<input type="text" id="t_1" value="" onclick="new Calendar().show(this);"/>
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="105">脱管原因</th>
+			<td class="tbody_td" align="left">
+			<textarea cols="75" rows="6" id="t_2"></textarea>
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="105">备注</th>
+			<td class="tbody_td" align="left">
+			<textarea cols="75" rows="6" id="t_3"></textarea>
+			</td>
+		</tr>
+	</table>
+	</div>
+	<div id="check_view4">
+	<table width="99%" cellpadding="0" cellspacing="0"  style="border-color:#C6DEFF" class="maintable" align="center">
+		<tr>
+			<th class="tbody_td" width="100" height="35">脱管时间</th>
+			<td class="tbody_td" align="left" id="check_t_1">
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="105">脱管原因</th>
+			<td class="tbody_td" align="left"  id="check_t_2">
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="105">备注</th>
+			<td class="tbody_td" align="left" id="check_t_3">
+			</td>
+		</tr>
+	</table>
+	</div>
+</div>
+
+<div style="display:none;width:800px; margin:0px auto;background-color: #F0F8FF;" id="menu6">
+	<table width="99%" cellpadding="0" cellspacing="0" >
+		<tr align="left">
+			<td class="thead_td" height="30px" style="margin-left:10px;background-color: #C6DEFF;">
+			期满鉴定
+			</td>
+			<td style="margin-left:10px;background-color: #C6DEFF;">
+			<img src="images/edit.gif" title="编辑" onclick="editJInfo()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:0px;right:0px;" id="jEditBt"/>
+			<img src="images/return.png" title="取消" onclick="cancelJInfo()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:-3px;right:0px;display:none;" id="jReturnBt"/>
+			<img src="images/save.png" title="保存" onclick="saveJInfo()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:4px;right:5px;display:none;" id="jSaveBt"/>
+			</td>
+		</tr>
+	</table>
+	<div id="edit_view5">
+	<table width="99%" cellpadding="0" cellspacing="0"  style="border-color:#C6DEFF" class="maintable" align="center">
+		<tr>
+			<th class="tbody_td" width="100">解除/终止<br />矫正时间</th>
+			<td class="tbody_td" align="left">
+			<input type="text" id="j_2" value="" onclick="new Calendar().show(this);"/>
+			</td>
+			<th class="tbody_td" width="100" height="35">解除/终止<br />矫正原因</th>
+			<td class="tbody_td" align="left" id="tdj_1">
+			<input type="text" id="j_1"/>
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="30px">收监执行类型</th>
+			<td class="tbody_td" width="160" align="left" id="tdj_3">
+			<input type="text" id="j_3"/>
+			</td>
+			<th class="tbody_td" width="100">收监执行日期</th>
+			<td class="tbody_td" align="left">
+			<input type="text" id="j_4" value="" onclick="new Calendar().show(this);"/>
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100">收监执行原因</th>
+			<td class="tbody_td" width="180px" align="left" colspan="3">
+			<textarea cols="45" rows="2" id="j_5"></textarea>
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="30px">死亡日期</th>
+			<td class="tbody_td" align="left">
+			<input type="text" id="j_6" value="" onclick="new Calendar().show(this);"/>
+			</td>
+			<th class="tbody_td" width="100">死亡原因</th>
+			<td class="tbody_td" align="left" id="tdj_7">
+		    <input type="text" id="j_7"/>
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100">具体死因</th>
+			<td class="tbody_td" align="left" colspan="3">
+			<textarea cols="65" rows="3" id="j_8"></textarea>
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="30px">矫正期间表现</th>
+			<td class="tbody_td" align="left" colspan="3">
+			<textarea cols="65" rows="3" id="j_9"></textarea>
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100">认罪态度</th>
+			<td class="tbody_td" align="left" colspan="3">
+			<textarea cols="65" rows="3" id="j_10"></textarea></td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100">矫正期间是否参加职业技能培训</th>
+			<td class="tbody_td" align="left" id="tdj_11">
+			</td>
+			<th class="tbody_td" width="100" height="30px">矫正期间是否获得职业技能证书</th>
+			<td class="tbody_td" align="left" id="tdj_12">
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100">技术特长及等级</th>
+			<td class="tbody_td" align="left" colspan="3">
+			<input type="text" id="j_13"/>
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="30px" >是否三无人员</th>
+			<td class="tbody_td" align="left" id="tdj_14"></td>
+			<th class="tbody_td" width="100">危险性评估</th>
+			<td class="tbody_td" align="left">
+			<input type="text" id="j_15"/></td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100">家庭联系情况</th>
+			<td class="tbody_td" align="left" colspan="3">
+			<textarea cols="65" rows="3" id="j_16"></textarea>
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="35">鉴定意见及安置帮教建议</th>
+			<td class="tbody_td" align="left" colspan="3">
+			<textarea cols="65" rows="3" id="j_17"></textarea>
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="35">备注</th>
+			<td class="tbody_td" align="left" colspan="3">
+			<textarea cols="45" rows="2" id="j_18"></textarea>
+			</td>
+		</tr>
+	</table>
+	      <table width="99%" cellpadding="0" cellspacing="0">
+	        <tr>
+		    	<td width="99%" align="center" style="margin-left:10px"><div class="buttonTwo"><a href="javascript:openJPrintPreView()">打印</a></div></td>
+			</tr>
+		   </table>
+		   </div>
+		   <div id="check_view5">
+		   <table width="99%" cellpadding="0" cellspacing="0"  style="border-color:#C6DEFF" class="maintable" align="center">
+		<tr>
+			<th class="tbody_td" width="100">解除/终止<br />矫正时间</th>
+			<td class="tbody_td" align="left" id="check_j_2">
+			</td>
+			<th class="tbody_td" width="100" height="35">解除/终止<br />矫正原因</th>
+			<td class="tbody_td" align="left" id="check_j_1">
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="30px">收监执行类型</th>
+			<td class="tbody_td" width="160" align="left" id="check_j_3">
+			</td>
+			<th class="tbody_td" width="100">收监执行日期</th>
+			<td class="tbody_td" align="left" id="check_j_4">
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100">收监执行原因</th>
+			<td class="tbody_td" width="180px" height="30px" align="left" colspan="3" id="check_j_5">
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="30px">死亡日期</th>
+			<td class="tbody_td" align="left" id="check_j_6">
+			</td>
+			<th class="tbody_td" width="100">死亡原因</th>
+			<td class="tbody_td" align="left" id="check_j_7">
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100">具体死因</th>
+			<td class="tbody_td" align="left" height="30px" colspan="3" id="check_j_8">
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="30px">矫正期间表现</th>
+			<td class="tbody_td" align="left" colspan="3" id="check_j_9">
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100">认罪态度</th>
+			<td class="tbody_td" align="left" height="30px" colspan="3"  id="check_j_10"></td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100">矫正期间是否参加职业技能培训</th>
+			<td class="tbody_td" align="left" id="check_tdj_11">
+			</td>
+			<th class="tbody_td" width="100" height="30px">矫正期间是否获得职业技能证书</th>
+			<td class="tbody_td" align="left" id="check_tdj_12">
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100">技术特长及等级</th>
+			<td class="tbody_td" align="left" height="30px" colspan="3" id="check_j_13">
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="30px" >是否三无人员</th>
+			<td class="tbody_td" align="left" id="check_tdj_14"></td>
+			<th class="tbody_td" width="100">危险性评估</th>
+			<td class="tbody_td" align="left" id="check_j_15"></td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100">家庭联系情况</th>
+			<td class="tbody_td" align="left" height="30px" colspan="3" id="check_j_16">
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="35">鉴定意见及安置帮教建议</th>
+			<td class="tbody_td" align="left" colspan="3" id="check_j_17">
+			</td>
+		</tr>
+		<tr>
+			<th class="tbody_td" width="100" height="35">备注</th>
+			<td class="tbody_td" align="left" colspan="3" id="check_j_18">
+			</td>
+		</tr>
+	</table>
+	      <table width="99%" cellpadding="0" cellspacing="0">
+	        <tr>
+		    	<td width="100%" align="center" style="margin-left:10px"><div class="buttonTwo"><a href="javascript:openJPrintPreView()">打印</a></div></td>
+			</tr>
+		   </table>
+		   </div>
+</div>
+
+<div style="display:none;width:800px; margin:0px auto;background-color: #F0F8FF;" id="menu7">
+	<table width="99%" cellpadding="0" cellspacing="0" >
+			<tr align="left">
+			<td class="thead_td" height="30px" style="margin-left:10px;background-color: #C6DEFF;">
+			余罪或再罪有关情况记录<div id="div_accusation" class="markStatus">[<a href="javascript:void(0);" onclick="addOtherAccusation()">添加</a>]</div>
+			</td>
+		</tr>
+	</table>
+	<table width="99%" id="otheAccusationDataTable" width="100%"  cellpadding="0" cellspacing="0"  style="border-color:#C6DEFF" class="maintable" align="center">
+	</table>
+</div>
+
+
+<div style="display:none;width:800px; margin:0px auto;background-color: #F0F8FF;" id="menu8">
+	<table width="99%" cellpadding="0" cellspacing="0" >
+		<tr align="left">
+			<td class="thead_td" height="30px" style="margin-left:10px;background-color: #C6DEFF;">
+			刑期变动情况记录<div id="div_term" class="markStatus">[<a href="javascript:void(0);" onclick="addPrisonTermChange()">添加</a>]</div>
+			</td>
+		</tr>
+	</table>
+	<table width="99%" id="termChangeDataTable" width="100%"  cellpadding="0" cellspacing="0"  style="border-color:#C6DEFF" class="maintable" align="center">
+	</table>
+</div>
+
+</td>
+</tr>
+</table>
+
+
+<div id="dialog" title="" style="display:none;padding: 0 0 0 0;margin: 0 0 0 0;z-index:10000">
+    <iframe id="self_iframe" src="about:blank" width="100%" height="96%" frameborder="0"></iframe>
+ </div>
+ 
+</body>
+</html>

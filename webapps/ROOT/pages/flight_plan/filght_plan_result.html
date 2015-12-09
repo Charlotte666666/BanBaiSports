@@ -1,0 +1,138 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css" media="print, projection, screen">
+<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+<script src="../../js/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+  <script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+  <script type="text/javascript">
+	
+	
+   $(document).ready(function() {
+     $( "#tabs ul" ).tabs();
+   });
+
+</script>
+<style>
+body,td{
+ font-size: 13px;
+}
+.roomTd{
+  border:1px;
+  border-style:dotted none none none;
+  border-color: blue;
+  color:#000000;
+  padding-left:5px;
+}
+#KinSlideshow{ overflow: hidden;width: 500px;height: 450px; } 
+.inputBottomLine{
+	border-top:hide;
+	border-left:hide;
+	border-center:hide;
+}
+
+</style>  
+</head>
+<body>
+<div id="tabs" style="margin: 10px;">
+	<ul>
+		<li><a href="#tabs-0"><span>基本信息</span></a></li>
+		<li id="picLi"><a href="#tabs-1"><span>回访信息</span></a></li>
+		<li id="followLi"><a href="#tabs-2"><span>跟进记录</span></a></li>
+	</ul>
+	<div id="tabs-0">
+			<h2 align="center">飞行计划申报结果</h2>
+			<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				<tr class="tr_data" height="35px">
+						<td  align="right"  colspan="2"><a href="">更多飞行计划</a></td>
+				</tr>
+				<tr class="tr_data" height="35px">
+						<td width="50%" align="right">&nbsp;&nbsp;所对应的飞行计划:</td>
+						<td  align="left">
+							<select>
+								<option>1111111111111111111111111111111111</option>
+							</select>
+							<input type="radio" name="result"/>通过<input type="radio" name="result"/>不通过
+						</td>
+				</tr>
+				<tr class="tr_data" height="35px">
+						<td  align="right" width="50%">审&nbsp;批结果扫描&nbsp;件:</td>
+						<td align="left"><input type="text" id="shaomiao_reusult"/><input type="file" value="浏览"/></td>
+				</tr>
+				<tr class="tr_data" height="35px">
+						<td  align="right">备&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;注:</td>
+						<td align="left"><textarea id="memo" cols="50" rows="2"></textarea></td>
+				</tr>
+			</table>
+			   <br/>
+		<table width="100%" style="margin: 10px;">
+			<tr>
+				<td width="100%" align="center"><a href="flight_plan.html">上一步</a>
+					<a href="plan_meeting.html" >下一步</a>
+				</td>
+			</tr>
+	   </table> 
+	</div>
+	
+	<div id="tabs-1">
+	   	<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+					<tr class="tr_data" height="35px">
+						<td  align="left" colspan="2"><input type="checkbox" name="isToDesigner_agree" value="是"/>客户对设计师是否认可</td>
+						<td  align="left" colspan="2"><input type="checkbox" name="isToCompany_agree" value="是"/>客户对公司是否认可</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td align="left" colspan="2"><input type="checkbox" name="isConsuleAgain" value="是"/>客户是否有意愿再来公司咨询</td>
+						<td  align="left" colspan="2"><input type="checkbox" name="isHaveCustFriend" value="是"/>客户是否有朋友也要装修</td>
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td  align="left" colspan="2"><input type="checkbox" name="isSignOfLive" value="是"/>是否现场签订设计协议</td>
+						<td align="left" colspan="2"><input type="checkbox" name="isOldCust" value="是"/>是否是公司的老客户</td>	
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td  align="left" colspan="2"><input type="checkbox" name="isSignOfLive" value="是"/>是否现场签订设计协议</td>
+						<td align="left" colspan="2"><input type="checkbox" name="isOldCust" value="是"/>是否是公司的老客户</td>	
+					</tr>
+					<tr class="tr_data" height="35px">
+						<td  align="left" colspan="2">回访日期&nbsp;&nbsp;<input type="text" id="callBack_date"  onclick="new Calendar().show(this);" /></td>
+						<td  align="left" colspan="2">填写日期&nbsp;&nbsp;<input type="text" id="fill_date"  onclick="new Calendar().show(this);" /></td>
+					</tr>
+		</table>
+	     <br/>
+       <table width="100%" style="margin: 10px;">
+		  <tr>
+		   <td width="100%" align="center"><div id="saveCustBtn" class="buttonDivTwo"><a href="javascript:void(0)" onclick="addCallBack()">保存</a></div></td>
+		  </tr>
+	   </table> 
+	</div>
+	
+   <div id="tabs-2">
+	<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				    <td>&nbsp;查询结果列表&nbsp;</td>
+					<td><div class="buttonDivTwo"><a href="javascript:void(0)" onclick="addFollowInfo()">添加</a></div></td>
+			       </tr></table></td>
+			  </tr>
+	 </table>
+	 <div style="height:300px;width:100%">
+      <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable">
+	  </table>
+	 </div>
+	</div>
+
+ </div>
+ <div id="dialog" title="" style="display:none;padding: 0 0 0 0;margin: 0 0 0 0;z-index:10000">
+    <iframe id="self_iframe" src="about:blank" width="100%" height="96%" frameborder="0"></iframe>
+ </div>
+</body>
+</html>

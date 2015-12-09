@@ -1,0 +1,574 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>中国家居装饰智能管理系统</title>
+<link href="css/login_css.css" rel="stylesheet" type="text/css">
+<link href="css/comm.css" rel="stylesheet" type="text/css" />
+<link href="css/map_css.css" rel="stylesheet" type="text/css" />
+<link href="css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<link href="css/commMenu.css" rel="stylesheet" type="text/css" />
+<link type="text/css" href="css/bootstrap.css" rel="stylesheet" />
+<link type="text/css" href="pages/pro08/css/common.css" rel="stylesheet" />
+<script type="text/javascript" src="js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="js/SimpleMap.js"></script>
+<script type="text/javascript" src="js/helpyouworkeasy-core.js"></script>
+<script type="text/javascript" src="js/md5.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.16.custom.min.js"></script>
+
+<script type="text/javascript">
+var adjustInter = -1;
+var userConfig = null;
+var interId = 0;
+var hasRunServers="";
+var g_allUsers=[];
+var g_allDesigner=[];
+var g_allBuildinfo=[];
+
+jQuery(document).ready(function() {
+    g_systemVersion="v1.0.0";
+    initGlobalData(true);
+	adjustPosition();
+	$("#userCode").focus();
+	window.onresize = function(){ adjustPosition(); };
+	
+	getAllDesigner();
+	getAllBuilding();
+	
+	$('.sid-t').click(function(){
+	  $('.arr-active').removeClass('arr-active');
+	  $('.sub-active').removeClass('sub-active');
+	  $(this).find('.sid-arr').addClass('arr-active');
+	  $(this).next().addClass('sub-active');
+   });
+   
+ });
+
+ function adjustPosition(){
+	if ( adjustInter != -1 ) {
+	   clearInterval( adjustInter );
+	   adjustInter = -1;
+	}
+    var wh=$(window).height();
+	var ww=$(window).width();
+
+	$('#leftMenu').height((wh-60)+"px");
+	$('#leftMenu').css("min-height",(wh-60)+"px");
+    $('#m_workbench').width((ww-220)+"px");
+    $('#m_workbench').height((wh-60)+"px");
+
+	$('#versionInfoTxt').html( "<font color='white'>版本号:&nbsp;"+g_systemVersion+"</font>&nbsp;&nbsp;&nbsp;&nbsp;<span style='cursor:pointer' onclick='javascript:showHelpWin(550,370,\"pages/system/help.html\")'>系统帮助</span>" );
+    $('#loginMain').height(wh - 51);
+	$('#loginResult').css({"left":(ww - 100)/2+"px"});
+ }
+
+ function loginSuccess(){
+    sendAjaxRequest("/actions/User.action?getAllUserSimpleList",[],getAllUserCallback);
+	
+	getAllToolBookTypes();
+	
+    $("body").css({"background-image":"url(img/bg2_body1.png)"});
+	$('#loginTop').hide();
+	$('#loginClear').hide();
+	$('#loginMain').hide();
+	$('#ind_footer').hide();
+	$('#loginResult').hide();
+	$('#main').show();
+	$("#userPass").val("");
+	$('#loginResult').html("");
+	adjustInter = setInterval("adjustPosition()",500);
+	$("#m_workbench").html( '<iframe id="workbenchFrame" src="workbench.html?main=pages/pro09/main2.html" width="'+($(window).width()-200)+'px" style="left:0px;top:0px;background-color:#ffffff;" height="100%" frameborder="0"></iframe>' );
+ }
+ 
+ function loginFail(){
+    $("body").css({"background-image":"url(img/bg1_home2.jpg)"});
+	$('#loginTop').show();
+	$('#loginClear').show();
+	$('#loginMain').show();
+	$('#ind_footer').show();
+	$('#loginResult').show();
+	$("#m_workbench").show();
+	$('#main').hide();
+ }
+ 
+ function toSysTab(title,xurl){
+    try{
+	  document.getElementById("workbenchFrame").contentWindow.openPage(title,xurl);
+    }catch(e){}
+  }
+ 
+ function doLogin(){
+   	   var userCode = $("#userCode").val();
+   	   var pass = $("#userPass").val();
+   	   if ( userCode == '' || pass == '' ) {
+   	 	 showInfoWin("请输入登录账号和密码");
+   	 	 return ;
+   	   }
+	   $('#loginResult').html("");
+	   var aoData=[];
+       aoData.push( { "name": "user.userCode", "value": userCode } );
+       aoData.push( { "name": "user.password", "value": hex_md5(pass) } );
+	   sendAjaxRequest("/actions/User.action?signon",aoData,loginCallback);
+ }
+ function loginCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	    	setCurrentUser(obj.body,obj.msg);
+			loginSuccess();
+	    }else{
+		  $('#loginResult').html("登录失败:"+obj.msg);
+	    }
+	   }catch(e){
+		  $('#loginResult').html("登录异常:"+e.message);
+	   }
+ }
+ 
+ function register(){
+    var xurl="pages/organization/userInfo.html?opt=register";
+	top.openDialog("用户注册",xurl,true,400,400,null);
+ }
+/**
+ * 初始化项目个性化全局缓存数据
+ */
+function proInitGlobalData(){
+	g_dictionary.put("EDIT_DIC_TYPECUST_FROM_TYPE", new Code("CUST_FROM_TYPE","EDIT_DIC_TYPE","客户来源","1"));
+	g_dictionary.put("EDIT_DIC_TYPECUST_TYPE", new Code("CUST_TYPE","EDIT_DIC_TYPE","客户类型","1"));
+	g_dictionary.put("EDIT_DIC_TYPECUST_JOB", new Code("CUST_JOB","EDIT_DIC_TYPE","客户职业","1"));
+	g_dictionary.put("EDIT_DIC_TYPEROOM_TYPE", new Code("ROOM_TYPE","EDIT_DIC_TYPE","居室类型","1"));
+	g_dictionary.put("EDIT_DIC_TYPECALLBACK_TYPE", new Code("CALLBACK_TYPE","EDIT_DIC_TYPE","回访类型","1"));
+	g_dictionary.put("EDIT_DIC_TYPEINTENTION_EVALUATE", new Code("INTENTION_EVALUATE","EDIT_DIC_TYPE","意向评估","1"));
+	g_dictionary.put("EDIT_DIC_TYPEORDER_TYPE", new Code("ORDER_TYPE","EDIT_DIC_TYPE","订单类型","1"));
+	g_dictionary.put("EDIT_DIC_TYPEPRODUCT_BRAND", new Code("PRODUCT_BRAND","EDIT_DIC_TYPE","产品品牌","1"));
+	g_dictionary.put("EDIT_DIC_TYPEUNIT", new Code("UNIT","EDIT_DIC_TYPE","产品单位","1"));
+	g_dictionary.put("EDIT_DIC_TYPEAPPRAISE_DESIGNER", new Code("APPRAISE_DESIGNER","EDIT_DIC_TYPE","客户对设计师的评价","1"));
+	
+	g_dictionary.put("EDIT_DIC_TYPEBUILDING_TYPE", new Code("BUILDING_TYPE","EDIT_DIC_TYPE","楼盘类型","1"));
+	g_dictionary.put("EDIT_DIC_TYPEBUILDING_AREA", new Code("BUILDING_AREA","EDIT_DIC_TYPE","楼盘区域","1"));
+	g_dictionary.put("EDIT_DIC_TYPEHOUSE_TYPE", new Code("HOUSE_TYPE","EDIT_DIC_TYPE","住宅类型","1"));
+	g_dictionary.put("EDIT_DIC_TYPEHAND_HOUSE_STATUS", new Code("HAND_HOUSE_STATUS","EDIT_DIC_TYPE","交房状态","1"));
+	g_dictionary.put("EDIT_DIC_TYPECLASSICS_TYPE", new Code("CLASSICS_TYPE","EDIT_DIC_TYPE","古典户型","1"));
+	g_dictionary.put("EDIT_DIC_TYPEFITMENT_DEGREE", new Code("FITMENT_DEGREE","EDIT_DIC_TYPE","装修程度","1"));
+	g_dictionary.put("EDIT_DIC_TYPEVOCATION", new Code("VOCATION","EDIT_DIC_TYPE","行业","1"));
+	g_dictionary.put("EDIT_DIC_TYPEWORK_TYPE", new Code("WORK_TYPE","EDIT_DIC_TYPE","工作类别","1"));
+	g_dictionary.put("EDIT_DIC_TYPEPOTENTIAL_CUST_STATUS", new Code("POTENTIAL_CUST_STATUS","EDIT_DIC_TYPE","潜在客户状态","1"));
+	g_dictionary.put("EDIT_DIC_TYPEDESIGNER_LEVEL", new Code("DESIGNER_LEVEL","EDIT_DIC_TYPE","设计师级别","1"));
+	g_dictionary.put("EDIT_DIC_TYPESTATUS", new Code("STATUS","EDIT_DIC_TYPE","设计师状态","1"));
+	g_dictionary.put("EDIT_DIC_TYPEISYESORNO", new Code("ISYESORNO","EDIT_DIC_TYPE","是否","1"));
+	g_dictionary.put("EDIT_DIC_TYPEPRO_STATUS", new Code("PRO_STATUS","EDIT_DIC_TYPE","工程状态","1"));
+	g_dictionary.put("EDIT_DIC_TYPECHECK_RESULT", new Code("CHECK_RESULT","EDIT_DIC_TYPE","设计方案审核结果","1"));
+	g_dictionary.put("EDIT_DIC_TYPEBELONG_TYPE", new Code("BELONG_TYPE","EDIT_DIC_TYPE","宿主类型","1"));
+	g_dictionary.put("EDIT_DIC_TYPEFILE_TYPE", new Code("FILE_TYPE","EDIT_DIC_TYPE","文件类型","1"));
+	g_dictionary.put("EDIT_DIC_TYPECUST_STATUS", new Code("CUST_STATUS","EDIT_DIC_TYPE","客户状态","1"));
+	g_dictionary.put("EDIT_DIC_TYPEREPORT_TYPE", new Code("REPORT_TYPE","EDIT_DIC_TYPE","漏斗类型","1"));
+	g_dictionary.put("EDIT_DIC_TYPEREDISTRICT", new Code("DISTRICT","EDIT_DIC_TYPE","小区","1"));
+	g_dictionary.put("EDIT_DIC_TYPECONSTRUCT_STATUS", new Code("CONSTRUCT_STATUS","EDIT_DIC_TYPE","施工进度","1"));
+	g_dictionary.put("EDIT_DIC_TYPEORDER_STATUS", new Code("ORDER_STATUS","EDIT_DIC_TYPE","订单状态","1"));
+	g_dictionary.put("EDIT_DIC_TYPEWATER_HEATER_TYPE", new Code("WATER_HEATER_TYPE","EDIT_DIC_TYPE","热水器类型","1"));
+	g_dictionary.put("EDIT_DIC_TYPECONSTRUCTIONSTATUS_STATUS", new Code("CONSTRUCTIONSTATUS_STATUS","EDIT_DIC_TYPE","施工进度状态","1"));
+	g_dictionary.put("EDIT_DIC_TYPEPROHOUSE_TYPE", new Code("PROHOUSE_TYPE","EDIT_DIC_TYPE","工程报价中的户型","1"));
+	g_dictionary.put("EDIT_DIC_TYPEPRODESIGN_STYLE", new Code("PRODESIGN_STYLE","EDIT_DIC_TYPE","设计风格","1"));
+	g_dictionary.put("EDIT_DIC_TYPETARGET_TYPE", new Code("TARGET_TYPE","EDIT_DIC_TYPE","目标类型","1"));
+	g_dictionary.put("EDIT_DIC_TYPERESULT_STATUS", new Code("RESULT_STATUS","EDIT_DIC_TYPE","首次回访结果达成","1"));
+	g_dictionary.put("EDIT_DIC_TYPEMEETING_TYPE", new Code("MEETING_TYPE","EDIT_DIC_TYPE","会议类型","1"));
+	g_dictionary.put("EDIT_DIC_TYPECOMPUTE_TYPE", new Code("COMPUTE_TYPE","EDIT_DIC_TYPE","计算类型","1"));
+	g_dictionary.put("EDIT_DIC_TYPEINTERPOSE_TYPE", new Code("INTERPOSE_TYPE","EDIT_DIC_TYPE","干预原因","1"));
+	g_dictionary.put("EDIT_DIC_TYPEORDER_DETAIL_STATUS", new Code("ORDER_DETAIL_STATUS","EDIT_DIC_TYPE","订单详情状态","1"));
+    g_dictionary.put("EDIT_DIC_TYPEPRO_ORDER_STATUS", new Code("PRO_ORDER_STATUS","EDIT_DIC_TYPE","产品订单状态","1"));
+	g_dictionary.put("EDIT_DIC_TYPEFOLLOW_STATUS", new Code("FOLLOW_STATUS","EDIT_DIC_TYPE","跟进状态","1"));
+	g_dictionary.put("EDIT_DIC_TYPEPURCHASE_STATUS", new Code("PURCHASE_STATUS","EDIT_DIC_TYPE","采购单状态","1"));
+	g_dictionary.put("EDIT_DIC_IMPRESSION", new Code("IMPRESSION","EDIT_DIC_TYPE","印象","1"));
+	g_dictionary.put("EDIT_DIC_MONEY_TYPE", new Code("MONEY_TYPE","EDIT_DIC_TYPE","交款类型","1"));
+
+	}  
+
+function openUserConfig(){
+  var xurl="pages/system/userConfig.html";
+  openDialog("个人设置",xurl,true,350,320,null);
+}
+
+function getHouseFacilityHtml(vs,cname,size){
+  if ( !size ) size=10;
+  var str="<table width='100%'><tr>";
+  var temp="";
+  var codes=top.getCodeListByType("HOUSE_FACILITY");
+  var n=0;
+  for ( var i=0;i<codes.length;i++ ) {
+     temp=codes[i].code;
+	 n++;
+     str += "<td><input type='checkbox' name='"+cname+"' value='"+temp+"' ";
+	 if ( vs.indexOf(temp+",") != -1 || vs.indexOf("," +temp) != -1 || vs == temp ) str += " checked ";
+	 str += "></input>"+temp+"</td>";
+	 if ( n >= size ) {
+	   str+="</tr><tr>";
+	   n=0;
+	 }
+  }
+  for (var i=n;i<size;i++) {
+     str+="<td></td>";
+  }
+  str+="</tr></table>";
+  return str;
+}
+
+ function getUserNameByCode(code){
+    if ( g_allUsers == null ) return code;
+	for ( var i=0;i<g_allUsers.length;i++ ) {
+	  if ( g_allUsers[i].userCode == code ) return g_allUsers[i].userName;
+	}
+	return code;
+ }
+ 
+ function getAllUserCallback(obj){
+    try{
+	  g_allUsers=obj.aaData;
+	  sendAjaxRequest("/actions/Role.action?getAllRoleUserSimpleList",[],getAllRoleUserCallback);
+	}catch(e){
+	}
+ }
+ 
+ function getAllRoleUserCallback(obj){
+    try{
+	  g_allRoleUser=obj.aaData;
+	  for(var i=0;i<g_allRoleUser.length;i++){
+	    g_allRoleUser[i].userName=getUserNameByCode( g_allRoleUser[i].userCode );
+	  }
+	}catch(e){
+	}
+ }
+ 
+ function getAllUserSelect(sid,initUserCode){
+    if ( !initUserCode ) initUserCode="";
+	var ht="<select id='"+sid+"' style='width:120px'>";
+	ht+="<option value=''></option>";
+    for(var i=0;i<g_allUsers.length;i++){
+	  ht+="<option value='"+g_allUsers[i].userCode+"'";
+	  if ( g_allUsers[i].userCode == initUserCode ) ht+="selected ";
+	  ht+=">"+g_allUsers[i].userName+"</option>";
+	}
+	ht+="</select>";
+	return ht;
+ }
+ // rid:角色ID   sid:生成select语句的对象ID  isHasEmpty：是否有空选项
+  function getUserListByRole(rid,sid,isHasEmpty){
+    var ht="<select id='"+sid+"' style='width:120px'>";
+	if ( isHasEmpty ) ht+="<option value=''></option>";
+    for(var i=0;i<g_allRoleUser.length;i++){
+	  if ( g_allRoleUser[i].roleId == rid ) {
+	    ht+="<option value='"+g_allRoleUser[i].userCode+"'>"+g_allRoleUser[i].userName+"</option>";
+	  }
+	}
+	ht+="</select>";
+	return ht;
+ }
+ 
+ function getAllDesigner(){
+	  top.sendAjaxRequest("/actions/DesignPlan.action?getAvailableDesignerInfoList",[],getAllDesignerCallback);
+ }
+	 
+ function getAllDesignerCallback(obj){
+	try{
+	  g_allDesigner=obj.aaData;
+	}catch(e){
+	}
+ }
+	 
+ function getAllDesignerSelect(sid,init_user_code){
+        if ( !g_allDesigner ) return "";
+		if ( !init_user_code ) init_user_code="";
+		var ht="<select id='"+sid+"' style='width:120px'>";
+		ht+="<option value=''></option>";
+		for(var i=0;i<g_allDesigner.length;i++){
+		  ht+="<option value='"+g_allDesigner[i].user_code+"'";
+		  if ( g_allDesigner[i].user_code == init_user_code ) ht+="selected ";
+		  ht+=">"+top.getUserNameByCode( g_allDesigner[i].user_code);+"</option>";
+		}
+		ht+="</select>";
+		return ht;
+ }
+ //查询所有楼盘信息
+ function getAllBuilding(){
+	  top.sendAjaxRequest("/actions/Market.action?getBuildingInfoList",[],getAllBuildingCallback);
+ }
+	 
+ function getAllBuildingCallback(obj){
+	try{
+	  g_allBuildinfo=obj.aaData;
+	}catch(e){
+	}
+ }
+	 
+ function getAllBuildingSelect(sid,init_id){
+        if ( !g_allBuildinfo ) return "";
+		if ( !init_id ) init_user_code="";
+		var ht="<select id='"+sid+"' style='width:120px'>";
+		ht+="<option value=''></option>";
+		for(var i=0;i<g_allBuildinfo.length;i++){
+		  ht+="<option value='"+g_allBuildinfo[i].id+"'";
+		  if ( g_allBuildinfo[i].id == init_id ) ht+="selected ";
+		  ht+=">"+g_allBuildinfo[i].building_name+"</option>";
+		}
+		ht+="</select>";
+		return ht;
+ }
+ 
+ function setProductTypeTree(t){
+    productTypeTree=t;
+ }
+ 
+ function getProductTypeNameById(pid){
+   var tName="";
+   try{
+      tName = productTypeTree.getNodePath(pid);
+   }catch(e){
+   }
+   return tName;
+ }
+ 
+ function isCanPreview(fileName){
+    if ( !fileName ) return false;
+    var endWiths="jpg|png|gif|jpeg|bmp|swf|jpeg2000|svg|tgA|eps|fli|flc|emf|wmf|dxf|pcx";
+
+	var ews=endWiths.split("|");
+	fileName=fileName.toLocaleLowerCase();
+	for (var i=0;i<ews.length;i++ ) {
+	  if (endWith(fileName,"."+ews[i])) return true;
+	}
+	 return false;
+ }
+ function endWith(str1,str2){
+	if(!str1) return false;
+	if(!str2) return true;
+	for(var i=0;i<str2.length;i++){
+		if(str1.substring(str1.length-str2.length)==str2)
+		return true;
+	 }
+	return false;
+ }
+ 
+ 
+   function getAllToolBookTypes(){
+	  top.sendAjaxRequest("/actions/ToolBook.action?getToolTypeList",[],getAllToolBookTypesCallback);
+ }
+ function getAllToolBookTypesCallback(obj){
+	try{
+	  allToolBookTypesList=obj.aaData;
+	}catch(e){
+	}
+ }
+  function getAllToolBookTypesSelect(sid,init_type_code){
+        if ( !allToolBookTypesList ) return "";
+		if ( !init_type_code ) init_type_code="";
+		var ht="<select id='"+sid+"' style='width:120px'>";
+		ht+="<option value=''></option>";
+		for(var i=0;i<allToolBookTypesList.length;i++){
+		  ht+="<option value='"+allToolBookTypesList[i].init_type_code+"'";
+		  if ( allToolBookTypesList[i].type_id == init_type_code ) ht+="selected ";
+		  ht+=">"+allToolBookTypesList[i].type_name+"</option>";
+		}
+		ht+="</select>";
+		return ht;
+ }
+
+ function getToolBookTypeNameById(typeId){
+	for(var i=0;i<allToolBookTypesList.length;i++){
+		  if( allToolBookTypesList[i].type_id == typeId ) {
+			return allToolBookTypesList[i].type_name;
+		  }
+	}
+	return "";
+ }
+ 
+ function getToolBookTypeById(typeId){
+	for(var i=0;i<allToolBookTypesList.length;i++){
+		  if( allToolBookTypesList[i].type_id == typeId ) {
+			return allToolBookTypesList[i];
+		  }
+    }
+	return null;
+ }
+ </script>
+</head>
+<body>
+	<div id="loginTop"></div>
+	<div id="loginClear" class="clear"></div>
+	<div id="loginMain">
+	  <div class="ind_logo" style="padding-top: 75px;padding-left: 85px;"><img src="img/logo32.png" ></div>
+	  <div class="ind_info" style="margin-top: 20px;background-image: url(img/bg1_info_none.png);">
+	    <ul style="padding-top: 20px;padding-left: 60px;"><li>
+	      <font size="5" color="#006096"><b>中国家居装饰智能管理系统</b></font>
+		</li>
+		</ul>
+		<ul class="user_1" style="padding: 10px 0px 0px 60px;">
+		  <li class="u1_1"><img src="img/pic1_user.png" width="29" height="35"></li>
+		  <li class="u1_2">账&nbsp;&nbsp;号：</li>
+		  <li class="u1_3">
+			<input type="text" name="textfield" id="userCode" style="width:160px;" onkeydown="if(event.keyCode==13) doLogin();" >
+		  </li>
+		</ul><div class="clear"></div>
+		<ul class="user_2" style="padding: 0px 0px 0px 60px;">
+		  <li class="u2_1"><img src="img/pic_1user2.png" width="24" height="30"></li>
+		  <li class="u2_2">密&nbsp;&nbsp;码：</li>
+		  <li class="u2_3"> 
+			<input type="password" name="textfield" id="userPass" style="width:160px;" onkeydown="if(event.keyCode==13) doLogin();" >
+		  </li>
+		</ul>
+		<ul class="user_3" style="padding: 0px 0px 0px 60px;"><li class="u3_1" onclick="doLogin()"><a href="javascript:void(0)">登&nbsp;录</a></li><li class="u3_2" onclick="register()"><a href="javascript:void(0)" >注&nbsp;册</a></li></ul>
+	  </div>
+	</div>
+	<div id="loginResult"></div>
+	<div id="ind_footer" style="float:center">
+	  <font color="white">&nbsp;&nbsp;Copyright &copy; 北京一维慧动科技有限公司&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span id="versionInfoTxt" >v1.0.0</span></font>
+	</div>
+
+<div id="main" style="display:none;background-image: url(img/empty.gif);">
+  <!-- 顶部 -->
+   <div class="common-top">
+	   <div class="container">
+    		 <span class="user-info pull-right">
+      			<a href="javascript:void(0)" class="user" id="currentUserInfo"></a>&nbsp;<a href="javascript:isLogout()" class="layout">退出</a>
+		     </span>
+    		 <p class="pull-left fs-20 fc-white fw-normal" style="padding: 12px 0 10px 10px;margin: 10px 40px 0 10px;color:white;font-size:20px">中国家居装饰智能管理系统</p>
+       </div>
+   </div>
+  
+  
+  
+  <!-- 左侧菜单区-->
+  <div id="leftMenu" class="sidbar" style="position: absolute;top:60px;height:400px;width:200px;margin-top:0px;padding:0px;float:left;overflow:auto;">
+    <ul class="nav nav-list sidbar-cont">
+			<li class="bdline">
+				<span class="sid-t ic-2">客户管理<i class="sid-arr"></i></span>
+				<div class="sid-sub">
+				    <a href="javascript:void(0)" onclick="javascript:toSysTab('客户查询','pages/pro09/custManage.html')">客户查询</a>
+				    <a href="javascript:void(0)" onclick="javascript:toSysTab('派单一览表','pages/pro09/designerallotbill.html')">派单一览表</a>
+				    <a href="javascript:void(0)" onclick="javascript:toSysTab('合同查询','pages/pro09/constractManager.html')">合同查询</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('人工干预查询','pages/pro09/manInterQuery.html')">人工干预查询</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('我的客户','pages/pro09/myCustManager.html')">我的客户</a>
+
+				</div>
+			</li>
+			<li class="bdline">
+				<span class="sid-t ic-3">工程管理<i class="sid-arr"></i></span>
+				<div class="sid-sub">
+				   <a href="javascript:void(0)" onclick="javascript:toSysTab('工程订单查询','pages/pro09/orderManage.html')">工程订单查询</a>
+				   <a href="javascript:void(0)" onclick="javascript:toSysTab('工程报价','pages/pro09/quotedprice.html')">工程报价</a>
+				   <a href="javascript:void(0)" onclick="javascript:toSysTab('工程报价管理','pages/pro09/quoteProductTypeManage.html')">工程报价管理</a>
+				   <a href="javascript:void(0)" onclick="javascript:toSysTab('工程报表统计','pages/pro09/proTableCount.html')">工程报表统计</a>
+				</div>
+			</li>
+			<li class="bdline">
+				<span class="sid-t ic-5">销售管理<i class="sid-arr"></i></span>
+				<div class="sid-sub">
+				 <a href="javascript:void(0)" onclick="javascript:toSysTab('产品报价','pages/pro09/productQuoteManage.html')">产品报价</a>
+				 <a href="javascript:void(0)" onclick="javascript:toSysTab('订单跟踪','pages/pro09/orderFollow.html')">订单跟踪</a>
+				</div>
+			</li>
+			<li class="bdline">
+				<span class="sid-t ic-5">订单处理<i class="sid-arr"></i></span>
+				<div class="sid-sub">
+				    <a href="javascript:void(0)" onclick="javascript:toSysTab('订单查询','pages/pro09/orderQuery.html')">订单查询</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('配送','pages/pro09/productInstall.html')">配送</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('验收','pages/pro09/productCheck.html')">验收</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('结算','pages/pro09/productSettle.html')">结算</a>
+					
+				</div>
+			</li>
+			<li class="bdline">
+				<span class="sid-t ic-3">产品订单<i class="sid-arr"></i></span>
+				<div class="sid-sub">
+				   <a href="javascript:void(0)" onclick="javascript:toSysTab('产品订单查询','pages/pro09/ProOrderManage.html')">产品订单查询</a>
+				   <a href="javascript:void(0)" onclick="javascript:toSysTab('采购管理','pages/pro09/orderHandle.html')">采购管理</a>
+				   <!--<a href="javascript:void(0)" onclick="javascript:toSysTab('采购单查询','pages/pro09/purOrderManage.html')">采购单查询</a>-->
+				    <a href="javascript:void(0)" onclick="javascript:toSysTab('未购买产品','pages/pro09/productNotBuyManage.html')">未购买产品</a>
+				</div>
+			</li>
+			<li class="bdline">
+				<span class="sid-t ic-4">市场管理<i class="sid-arr"></i></span>
+				<div class="sid-sub">
+				   <a href="javascript:void(0)" onclick="javascript:toSysTab('楼盘信息','pages/pro09/marketManage.html')">楼盘信息</a>
+				   <a href="javascript:void(0)" onclick="javascript:toSysTab('潜在客户','pages/pro09/potentialcustomersManage.html')">潜在客户</a>
+				</div>
+			</li>
+			<li class="bdline">
+				<span class="sid-t ic-5">日常管理<i class="sid-arr"></i></span>
+				<div class="sid-sub">
+				   <a href="javascript:void(0)" onclick="javascript:toSysTab('日常检查','pages/pro09/dailyInspectionManage.html')">日常检查</a>
+				   <a href="javascript:void(0)" onclick="javascript:toSysTab('会议记录','pages/pro09/meetingManage.html')">会议记录</a>
+				   <a href="javascript:void(0)" onclick="javascript:toSysTab('业绩产值目标','pages/pro09/yearTotalTargetManage.html')">业绩产值目标</a>
+				   <a href="javascript:void(0)" onclick="javascript:toSysTab('业绩产值对比信息','pages/pro09/yearFactAndTargetValue.html')">业绩产值对比信息</a>
+				   <a href="javascript:void(0)" onclick="javascript:toSysTab('今日申请','pages/pro09/todayApplyManage.html')">今日申请</a>
+				   <a href="javascript:void(0)" onclick="javascript:toSysTab('客户投诉管理','pages/pro09/custTousu.html')">客户投诉管理</a>
+				    <a href="javascript:void(0)" onclick="javascript:toSysTab('大易智库','pages/oa/tooltypeManage.html')">知识库</a>
+				</div>
+			</li>
+			<li class="bdline">
+				<span class="sid-t ic-9">统计分析<i class="sid-arr"></i></span>
+				<div class="sid-sub">
+				   <a href="javascript:void(0)" onclick="javascript:toSysTab('日报统计','pages/pro09/dayTableManage.html')">日报统计</a>
+				   <a href="javascript:void(0)" onclick="javascript:toSysTab('周报统计','pages/pro09/weekTableManage.html')">周报统计</a>
+				   <a href="javascript:void(0)" onclick="javascript:toSysTab('月报统计','pages/pro09/monthTableManage.html')">月报统计</a>
+				   <a href="javascript:void(0)" onclick="javascript:toSysTab('服务流程统计表','pages/pro09/serviceTableManage.html')">服务流程统计表</a>
+				   <a href="javascript:void(0)" onclick="javascript:toSysTab('跑单原因分析表','pages/pro09/failTableManage.html')">跑单原因分析表</a>
+				   <a href="javascript:void(0)" onclick="javascript:toSysTab('重点客户统计','pages/pro09/vipCustTableManage.html')">重点客户统计</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('漏斗管理','pages/pro09/funnelManage.html')">漏斗管理</a>
+				</div>
+			</li>
+			<li class="bdline">
+				<span class="sid-t ic-6">基础数据<i class="sid-arr"></i></span>
+				<div class="sid-sub">
+				   <a href="javascript:void(0)" onclick="javascript:toSysTab('设计师信息','pages/pro09/designerManage.html')">设计师信息</a>
+			       <a href="javascript:void(0)" onclick="javascript:toSysTab('产品信息','pages/pro09/productTypeManage.html')">产品信息</a>
+				    <a href="javascript:void(0)" onclick="javascript:toSysTab('短信模板','pages/pro09/smsManage.html')">短信模板</a>
+				</div>
+			</li>
+			<li class="bdline">
+				<span class="sid-t ic-7">系统管理<i class="sid-arr"></i></span>
+				<div class="sid-sub">
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('用户管理','pages/organization/userManage.html')">用户管理</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('部门管理','pages/organization/deptManage.html')">部门管理</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('角色管理','pages/organization/roleManage.html')">角色管理</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('字典管理','pages/system/dicManage.html')">字典管理</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('系统配置','pages/system/parameterManage.html')">系统配置</a>
+					<!--li name="menu" rightId="sys_bug" id="s7"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/bug/bugManage.html')">Bug管理</a></li>
+					<li name="menu" rightId="sys_sql" id="s8"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/system/sql.html')">SQL</a></li-->
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('操作日志','pages/system/operationManage.html')">操作日志</a>
+				</div>
+			</li>
+			<li class="bdline">
+				<span class="sid-t ic-8">我的账号<i class="sid-arr"></i></span>
+				<div class="sid-sub">
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('备忘录','pages/notes/notesManage.html')">备忘录</a>
+					<a href="javascript:void(0)" onclick="javascript:g_changepass()">修改密码</a>
+				 </div>
+			</li>
+			<li class="bdline">
+				<span class="sid-t ic-8">财务管理<i class="sid-arr"></i></span>
+				<div class="sid-sub">
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('预算管理','pages/notes/notesManage.html')">预算管理</a>
+				 	<a href="javascript:void(0)" onclick="javascript:toSysTab('财务审批','pages/notes/notesManage.html')">财务审批</a>
+				 	<a href="javascript:void(0)" onclick="javascript:toSysTab('账务管理','pages/notes/notesManage.html')">账务管理</a>
+				 	<a href="javascript:void(0)" onclick="javascript:toSysTab('现金管理','pages/notes/notesManage.html')">现金管理</a>
+				 	<a href="javascript:void(0)" onclick="javascript:toSysTab('结算管理','pages/notes/notesManage.html')">结算管理</a>
+				 </div>
+			</li>
+			<li class="bdline">
+				<span class="sid-t ic-8">人力资源<i class="sid-arr"></i></span>
+				<div class="sid-sub">
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('绩效管理','pages/notes/notesManage.html')">绩效管理</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('考勤管理','pages/notes/notesManage.html')">考勤管理</a>
+					<a href="javascript:void(0)" onclick="javascript:toSysTab('薪酬绩效','pages/notes/notesManage.html')">薪酬绩效</a>
+				</div>
+			</li>
+		</ul>
+  </div>
+  
+  
+  <!-- 工作区 -->
+  <div id="m_workbench" style="position:absolute;top:60px;left:200px;padding:0p
+  x;">
+  </div>
+  
+</div> <!-- end of main -->
+<script type="text/javascript" >writeCommonDiv();</script>
+</body>
+</html>

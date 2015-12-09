@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.helpyouworkeasy.persistence.OMFeedbackMapper">
+
+  <insert id="insertOMFeedback" parameterType="OMFeedback">
+    INSERT INTO tbl_om_feedback (user_code,contact_info,content,user_name,id,opt_time,star)
+    VALUES (#{user_code}, #{contact_info}, #{content}, #{user_name}, #{id}, #{opt_time}, #{star})
+  </insert>
+
+  <select id="getOMFeedbackListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_om_feedback where 1=1 
+    <if test="o.cell_phone != '' and o.cell_phone != null" >
+      and cell_phone=#{o.cell_phone}
+    </if>
+    <if test="o.star != -1" >
+      and star=#{o.star}
+    </if>
+    <if test="time1 != -1" >
+      and opt_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=opt_time
+    </if>
+  </select>
+
+  <select id="getOMFeedbackPageList" parameterType="map" resultType="OMFeedback">
+    select 
+    user_code,contact_info,content,user_name,id,opt_time,star
+    from tbl_om_feedback where 1=1 
+    <if test="o.star != -1" >
+      and star=#{o.star}
+    </if>
+    <if test="time1 != -1" >
+      and opt_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=opt_time
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+
+</mapper>

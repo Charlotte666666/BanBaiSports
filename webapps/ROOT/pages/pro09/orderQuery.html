@@ -1,0 +1,319 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet"
+			type="text/css"/>
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css"
+			media="print, projection, screen"/>
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+	   <style type="text/css"> 
+	 .versionStyle{background-color:#6CA6CD;margin-bottom:10px; text-align: center;color:#FFFFFF; width:100px;height:30px;}
+	 .versionStyle2{background-color:#FF7F00;margin-bottom:10px; text-align: center;color:#FFFFFF; width:100px;height:30px;}
+	 </style>
+		<script type="text/javascript" charset="utf-8">
+			var orderChangeTable=null;
+			var oTable=null;
+		    var ids="";
+			var time2 =new Date() ;
+			var time1 = new Date().setMonth(time2.getMonth()-1);
+			var type_id=0;
+			$(document).ready(function() {
+			$( "#tabs ul" ).tabs();
+			$("#q_time1").val(top.getTimeStr(time1,true));
+			$("#q_time2").val(top.getTimeStr(time2,true));
+			$("#time1").val(top.getTimeStr(time1,true));
+			$("#time2").val(top.getTimeStr(time2,true));
+			$("#tdchange_status").html(top.getCodeSelectHtml("PRO_CHANGE_STATUS","change_status"));
+			$("#tdchange_type").html(top.getCodeSelectHtml("PRO_CHANGE_TYPE","change_type",true));
+			getProOrderChangeList();
+			$("#s_status").html(top.getCodeSelectHtml("EXAMINE_STATUS","status",true));
+			getProductType();
+			} );
+		function getProductType(){
+		 top.sendAjaxRequest("/actions/ProductInfo.action?getProductTypeList",null,productTypeCallback);
+		}
+		function productTypeCallback(obj){
+		   var type = obj.aaData;
+		   var len = type.length;
+		   var ht='';
+		    ht+='<tr class="tr_data" height="35px"><td  align="center"><b>产品类别</b></td></tr>';
+			if(len>0){
+			for(var i=0;i<len;i++){
+			if(i==0){
+			ht+='<tr class="tr_data" height="35px"><td  id="td_'+type[i].type_id+'" class="versionStyle2" align="center" onclick="queryProductList(\''+type[i].type_id+'\')">'+type[i].type_name+'</td></tr>';
+			}
+			else{
+			ht+='<tr class="tr_data" height="35px"><td  id="td_'+type[i].type_id+'" class="versionStyle" align="center" onclick="queryProductList(\''+type[i].type_id+'\')">'+type[i].type_name+'</td></tr>';
+			}
+			}
+			type_id = type[0].type_id;
+			queryProductList(type_id);
+			}
+		     $("#table_product_type").html( ht );
+		}
+		function queryProductList(type){
+		   $("#td_"+type_id).removeClass('versionStyle2');
+	       $("#td_"+type_id).addClass('versionStyle');
+           type_id = type;
+	       $("#td_"+type_id).removeClass('versionStyle');
+	       $("#td_"+type_id).addClass('versionStyle2');
+		   doQuery();
+		}
+		function doQuery(){
+		 var iaoColumns= [
+                               { "sTitle": "产品名称", "mDataProp": "product_name", "sWidth": "20%","bUseRendered": false},
+							   { "sTitle": "单位","mDataProp": "unit","sWidth": "10%", "sClass": "center",
+								    "fnRender": function ( oObj ) {
+                                           return top.getCodeName( "UNIT", oObj.aData.unit );
+                                      },
+							        "bUseRendered": false },
+							   { "sTitle": "价格(元)", "mDataProp": "price","sWidth": "10%","sClass": "center","bUseRendered": false  },
+                               { "sTitle": "品牌", "mDataProp": "product_brand", "sWidth": "15%","sClass": "center",
+									    "fnRender": function ( oObj ) {
+                                           return top.getSupplierNameById(oObj.aData.product_brand );
+                                      },
+							         "bUseRendered": false },
+                               { "sTitle": "型号", "mDataProp": "product_model", "sWidth": "15%", "sClass": "center","bUseRendered": false},
+                               { "sTitle": "规格", "mDataProp": "product_standard","sWidth": "15%","sClass": "center","bUseRendered": false },
+							   { "sTitle": "数量", "mDataProp": "sum","sWidth": "15%","sClass": "center","bUseRendered": false }
+               ];
+			   
+			  var surl=top.getUrlBase()+"/actions/ProductOrder.action?getOrderDetailListByType";
+
+			   oTable = $('#table_product_list').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+							aoData.push( { "name": "product_type.type_id", "value":type_id } );
+							aoData.push( { "name": "time1", "value":$("#q_time1").val()} );
+							aoData.push( { "name": "time2", "value":$("#q_time2").val() } );
+					},
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+		}
+
+		
+		function getProOrderChangeList(){
+		   var iaoColumns= [ 
+								{ "sTitle": "订单编号", "mDataProp": "order_id", "sWidth": "16%","sClass": "center","bUseRendered": false},
+                               { "sTitle": "变更时间", "mDataProp": "opt_time", "sWidth": "18%","sClass": "center",
+									    "fnRender": function ( oObj ) {
+                                           return top.getTimeStr( oObj.aData.opt_time ,true);
+                                      },
+							         "bUseRendered": false },
+                               { "sTitle": "状态", "mDataProp": "check_status", "sWidth": "16%", "sClass": "center",
+									"fnRender": function ( oObj ) {
+                                           return top.getCodeName("EXAMINE_STATUS",oObj.aData.check_status);
+                                      },
+                                      "bUseRendered": false
+							   },
+							   { "sTitle": "操作", "mDataProp": "id", "sWidth": "18%", "sClass": "center",
+									"fnRender": function ( oObj ) {
+										if( oObj.aData.change_status!='01'){
+											return "<a href='javascript:void(0)' onclick='openOrderChangeCheck("+oObj.aData.id+")'>查看</a>";
+										}else if(top.g_isPermit("check_product_order_change")&&oObj.aData.change_status=='01'){
+                                           return "<a href='javascript:void(0)' onclick='openOrderChangeCheck("+oObj.aData.id+")'>审批</a>";
+										}else{
+											 return "<a href='javascript:void(0)' onclick='openOrderChangeCheck("+oObj.aData.id+")'>查看</a>";
+										}
+									  },
+                                      "bUseRendered": false
+							   },
+                 ];
+			   
+			  var surl=top.getUrlBase()+"/actions/ProductOrder.action?getProductOrderChangeList";
+
+			   orderChangeTable = $('#orderChangeTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+						aoData.push( { "name": "productOrderChange.order_id", "value":$("#order_id").val()} );
+						aoData.push( { "name": "productOrderChange.change_status", "value":$("#change_status").val() } );
+						aoData.push( { "name": "productOrderChange.change_type", "value":$("#change_type").val()} );
+						aoData.push( { "name": "time1", "value":$("#time1").val() } );
+						aoData.push( { "name": "time2", "value":$("#time2").val() } );
+					},
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+	}
+	
+	function queryProductChange(){
+		orderChangeTable.fnDraw();
+	}
+	function openOrderChangeCheck(orderChangeId){
+		var xurl="/pages/pro09/orderChangeCheckPage.html?product_change_id="+orderChangeId;
+		if(top.g_isPermit("check_product_order_change")){
+			top.openSelectDialog("产品变更审核",xurl,900,500,null);
+		}else{
+			top.openSelectDialog("产品变更信息",xurl,900,500,null);
+		}
+	}	
+	
+
+		</script>
+	</head>
+	<body>
+		<div id="tabs" style="margin: 10px 0px 0px 0px;">
+			<ul>
+				<li>
+					<a href="#tabs-0"><span>订货清单</span>
+					</a>
+				</li>
+				<li>
+					<a href="#tabs-2"><span>产品变更</span>
+					</a>
+				</li>
+			</ul>
+		</div>
+		<div id="tabs-0">
+			<table style="width:100%;height:100%;padding:20px;spacing:0;">
+				<tr class="tr_data" style="width:100%;height:100%;text-align:left">
+					<td style="width:150px;border:1px;border-style: dotted;border-color: #A0CFEC;" valign="top">
+						<table border="1" cellpadding="3" cellspacing="1" width="150px"  align="right" style="background-color: #b9d8f3;" id="table_product_type"></table>
+				   </td>
+					<td style="width:85%;border:1px;border-style: dotted dotted dotted none;border-color: #A0CFEC;" valign="top">
+						<table width="99%" align="center" cellpadding="1px" cellspacing="1px" border="0">
+							<tr class="tr_data" height="35px">
+								<td align="right" style="width:20%;">
+									<b>下单时间</b>
+								</td>
+								<td align="left" style="width:40%;" >
+									&nbsp;<input type="text" id="q_time1" value="" size="15"  onclick="new Calendar().show(this);"/>&nbsp;--
+									<input type="text" id="q_time2" value="" size="15"   onclick="new Calendar().show(this);" />
+								</td>
+								<td align="left" style="width:40%;">
+									<div class="buttonDivTwo">
+										<a href="javascript:doQuery()">查询</a>
+									</div>
+								</td>
+							</tr>
+						</table>
+						<table border="1" cellspacing="1" width="99%"  align="center" style="background-color: #b9d8f3;" class="display" id="table_product_list"></table>
+				  </td>
+			 </tr>	
+		</table>
+	</div>
+	<div id="tabs-2">
+	<div style='border: 1px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="150px">
+							&nbsp;产品变更查询&nbsp;
+						</td>
+						<td align="right">
+							<div class="buttonDivTwo">
+								<a href="javascript:queryProductChange()">查询</a>
+							</div>
+						</td>
+						<td width="2px">
+							&nbsp;
+						</td>
+					</tr>
+				</table>
+				<table width="100%" align="center" cellpadding="1px"
+					cellspacing="1px" border="0">
+					<tr class="tr_data">
+						<td align="right">
+							订单编号
+						</td>
+						<td align="left" id="custId">
+							<input type="text" id="order_id" value="" size="15"
+								onkeydown="if(event.keyCode==13) doQuery();" />
+						</td>
+						<td align="right">
+							变更日期
+						</td>
+						<td align="left">   
+							<input type="text" id="time1" value="" size="15"
+								onclick="new Calendar().show(this);"  onkeydown="if(event.keyCode==13) doQuery();" />
+							<input type="text" id="time2" value="" size="15"
+								onclick="new Calendar().show(this);"  onkeydown="if(event.keyCode==13) doQuery();" />
+						</td>
+						<td align="right">
+							状态
+						</td>
+						<td align="left" id="tdchange_status">
+						</td>
+						<td align="right">
+							变更类别
+						</td>
+						<td align="left" id="tdchange_type">
+						</td>
+					</tr>
+				</table>
+			</div>
+	<span>产品变更信息列表</span>
+			<table border="1" cellpadding="3" cellspacing="1" width="100%" class="display" 
+						align="center" style="background-color: #b9d8f3;" id="orderChangeTable">
+			</table>
+	</div>	
+    <div id="tabs-4"></div>		
+	</body>
+</html>

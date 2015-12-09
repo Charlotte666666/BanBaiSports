@@ -1,0 +1,293 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css" media="print, projection, screen">
+<script src="../../js/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+<script type="text/javascript">
+ 
+   var isCreated=false;
+   var isSaveOK=false;
+   //var optType="";
+   var infoId="";
+   var is_customized="";
+   $(document).ready(function() {
+		infoId=top.getUrlParam(document.URL,"infoId");
+		is_customized=top.getUrlParam(document.URL,"is_customized");
+		var aoData=[];
+		aoData.push( { "name": "purInfo.order_id", "value": infoId } );
+		top.sendAjaxRequest("/actions/ProductOrder.action?getPurchaseOrderList",aoData,getInfoCallBack);
+   } );
+   function getInfoCallBack(obj){
+       try{
+        if ( obj.iTotalRecords >0 ){
+			var o=obj.aaData;
+			$("#order_id").html(o[0].order_id);
+			$("#order_time").html(top.getTimeStr(o[0].order_time));
+			$("#product_supplier").html(o[0].product_supplier);
+			$("#money").html(o[0].money);
+			$("#opt_user").html(top.getUserNameByCode(o[0].opt_user));
+			$("#follow_time").html(top.getTimeStr(o[0].follow_time));
+			$("#check_user").val( o[0].check_user);
+			//$("#check_time").val(o[0].check_time);
+			$("#memo").val(o[0].memo);
+			$("#product_status").html(top.getCodeName("PURCHASE_STATUS",o[0].product_status));
+			getPurchaseDetail();
+        }else{
+          top.showInfoWinError("操作失败");
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+    function checkFormDoSubmit(){
+		var msg="";
+		msg += checkString($("#check_user").val(),true,20,"验收人");
+		msg += checkString($("#check_time").val(),true,20,"验收时间");
+		return msg;
+	 }
+   function saveBaseInfo(){
+   var msg = checkFormDoSubmit();
+     if(msg!=''){
+	 top.showInfoWinWarn(msg);
+	 return;
+	 }
+	 var aoData=[];
+	     aoData.push( { "name": "purInfo.order_id", "value": infoId } );
+		 aoData.push( { "name": "purInfo.check_user", "value": $("#check_user").val() } );
+		 aoData.push( { "name": "purInfo.check_time", "value":top.toTimestamp( $("#check_time").val() )} );
+		 aoData.push( { "name": "purInfo.memo", "value": $("#memo").val() } );
+		 aoData.push( { "name": "purInfo.is_customized","value":is_customized} );
+	    var xurl="/actions/ProductOrder.action?checkPurchaseOrder";
+	   top.sendAjaxRequest(xurl,aoData,optCallback);
+   }
+    function getPurchaseDetail(){
+		var aoData=[];
+	   aoData.push( { "name": "purInfo.order_id", "value":infoId} );
+	   top.sendAjaxRequest("/actions/ProductOrder.action?getPurchaseOrderById",aoData,getPurchaseDetailCallback);
+	}
+   function getPurchaseDetailCallback(obj){
+	 info = obj.body;
+     var aoData=[];
+	 if(!is_customized){
+	    is_customized=info.is_customized;
+	 }
+	 if(is_customized=="1"){//订制产品
+	   xurl="/actions/ProductOrder.action?getProCustomizeByPurId";
+       aoData.push( { "name": "customize.purchase_id", "value":infoId} );
+	 }else{//非订制产品
+	   xurl="/actions/ProductOrder.action?getOrderDetailListByPurId";
+       aoData.push( { "name": "orderdetail.purchase_id", "value":infoId} );
+	 }
+	 top.sendAjaxRequest(xurl,aoData,getOrderDetailCallback);
+   }
+   function getOrderDetailCallback(obj){
+		list=obj.aaData;
+		var money=0;
+		var ht='';
+		ht+='<tbody>';
+		ht+='<tr class="tr_data" height="35px">';
+		ht+=' <td width="147" align="center">';
+		ht+=' <span style="font-size: 10px;"> 品牌</span>';
+		ht+='</td>';
+		ht+='<td width="147"  align="center">';
+		ht+='  <span style="font-size: 10px;">产品名称</span>';
+		ht+=' </td>';
+		ht+=' <td width="100"  align="center">';
+		ht+='  <span style="font-size: 10px;"> 单位</span>';
+		ht+='</td>';
+		ht+=' <td width="100"  align="center">';
+		ht+='  <span style="font-size: 10px;"> 规格</span>';
+		ht+='</td>';
+		ht+=' <td width="100"  align="center">';
+		ht+='  <span style="font-size: 10px;"> 型号</span>';
+		ht+='</td>';
+		ht+='<td width="100"  align="center">';
+		ht+='   <span style="font-size: 10px;"> 数量</span>';
+		ht+=' </td>';
+		ht+=' <td width="100"  align="center">';
+		ht+='    <span style="font-size: 10px;"> 单价</span>';
+		ht+='</td>';
+		ht+='<td width="100"  align="center">';
+		ht+='   <span style="font-size: 10px;"> 金额</span>';
+		ht+='</td>';
+		ht+=' </tr>';
+	   for(var i=0;i<list.length;i++){
+	   money+=list[i].money;
+       ht+=' <tr class="tr_data" height="35px">';
+           ht+=' <td width="147"  align="center"> <span style="font-size: 12px;">'+top.getSupplierNameById(list[i].product_brand)+'</span></td>';
+           ht+=' <td width="147"  align="center"> <span style="font-size: 12px;">'+list[i].product_name+'</span></td>';
+           ht+='<td width="147"  align="center"> <span style="font-size: 12px;">'+top.getCodeName("UNIT",list[i].unit)+'</span></td>';
+           ht+='<td width="147"  align="center"> <span style="font-size: 12px;">'+list[i].product_size+'</span></td>';
+           ht+='<td width="147"  align="center"> <span style="font-size: 12px;">'+list[i].product_model+'</span></td>';
+           ht+='<td width="147"  align="center"> <span style="font-size: 12px;">'+list[i].product_count+'</span></td>';
+           ht+='<td width="147"  align="center"> <span style="font-size: 12px;">'+list[i].price+'</span></td>';
+           ht+='<td width="147"  align="center"> <span style="font-size: 12px;">'+list[i].money+'</span></td>';
+           ht+='</tr>';
+		}
+        ht+='<tr class="tr_data" height="35px">';
+            ht+='<td width="147"  align="center">';
+            ht+='   <span style="font-size: 10px;">  金额合计(大写)</span>';
+            ht+='</td>';
+           ht+=' <td width="147"  colspan="3"  align="center"><span id="Chinese_money" style="font-size: 10px;"/></span></td>';
+            ht+='<td width="147"  colspan="3" align="center">';
+            ht+='  <span style="font-size: 10px;">金额合计（小写）</span>';
+           ht+=' </td>';
+            ht+='<td width="147"  align="center"> <span id="purchase_money" style="font-size: 10px;"></span></td>';
+       ht+=' </tr>';
+        ht+='<tr class="tr_data" height="60px">';
+           ht+=' <td width="147"  align="center">';
+             ht+='  <span style="font-size: 10px;"> 备注</span>';
+            ht+='</td>';
+            ht+='<td  align="left" colspan="7"><span style="font-size: 12px;" id="span_memo"></span></td>';
+       ht+=' </tr>';
+    ht+='</tbody>';
+	$("#datable").html(ht);
+	$("#order_id").html(info.order_id);
+	$("#span_product_supplier").html(info.product_supplier);
+	//$("#memo").val(info.memo);
+	$("#span_memo").html(info.memo);
+	//$("#memo").hide();
+	$("#opt_user").html(top.getUserNameByCode(info.opt_user));
+	$("#order_time").html(top.getTimeStr(info.order_time,false));
+	$("#purchase_money").html(money);
+	$("#Chinese_money").html(atoc(money));
+   }
+   function atoc(numberValue){
+		var numberValue=new String(Math.round(numberValue*100)); // 数字金额
+		var chineseValue=""; // 转换后的汉字金额
+		var String1 = "零壹贰叁肆伍陆柒捌玖"; // 汉字数字
+		var String2 = "万仟佰拾亿仟佰拾万仟佰拾元角分"; // 对应单位
+		var len=numberValue.length; // numberValue 的字符串长度
+		var Ch1; // 数字的汉语读法
+		var Ch2; // 数字位的汉字读法
+		var nZero=0; // 用来计算连续的零值的个数
+		var String3; // 指定位置的数值
+		if(len>15){
+			alert("超出计算范围");
+			return "";
+		}
+		if (numberValue==0){
+			chineseValue = "零元整";
+			return chineseValue;
+		}
+		String2 = String2.substr(String2.length-len, len); // 取出对应位数的STRING2的值
+		for(var i=0; i<len; i++){
+		String3 = parseInt(numberValue.substr(i, 1),10); // 取出需转换的某一位的值
+		if ( i != (len - 3) && i != (len - 7) && i != (len - 11) && i !=(len - 15) ){
+			if ( String3 == 0 ){
+				Ch1 = "";
+				Ch2 = "";
+				nZero = nZero + 1;
+			}else if ( String3 != 0 && nZero != 0 ){
+				Ch1 = " 零 " + String1.substr(String3, 1);
+				Ch2 = String2.substr(i, 1);
+				nZero = 0;
+			}else{
+				Ch1 = String1.substr(String3, 1);
+				Ch2 = String2.substr(i, 1);
+				nZero = 0;
+			}
+		}else{ // 该位是万亿，亿，万，元位等关键位
+			if( String3 != 0 && nZero != 0 ){
+				Ch1 = "零" + String1.substr(String3, 1);
+				Ch2 = String2.substr(i, 1);
+				nZero = 0;
+			}else if ( String3 != 0 && nZero == 0 ){
+				Ch1 = String1.substr(String3, 1);
+				Ch2 = String2.substr(i, 1);
+				nZero = 0;
+			}else if( String3 == 0 && nZero >= 3 ){
+				Ch1 = "";
+				Ch2 = "";
+				nZero = nZero + 1;
+			}else{
+				Ch1 = "";
+				Ch2 = String2.substr(i, 1);
+				nZero = nZero + 1;
+			}
+			if( i == (len - 11) || i == (len - 3)){ // 如果该位是亿位或元位，则必须写上
+				Ch2 = String2.substr(i, 1);
+			}
+		}
+		chineseValue = chineseValue + Ch1 + Ch2;
+		}
+		if ( String3 == 0 ){ // 最后一位（分）为0时，加上“整”
+			chineseValue = chineseValue + "整";
+		}
+		return chineseValue;
+	}
+   function doCancel(){
+     top.closeDialog();
+   }
+    function doBeforeClose(){
+    
+   }
+   
+    function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	        isSaveOK = true;
+	        top.showInfoWinOK("操作成功");
+			 var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+           top.setTempValue(obj);
+		    top.closeDialog();
+	    }else{
+	    	isSaveOK = false;
+			 var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+           top.setTempValue(obj);
+	        top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		    top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+
+  </script> 
+</head>
+<body>
+<br/>
+	<span style="padding:20px">采购单详情：</span>
+	<table id="datable"  border="1" cellpadding="3" cellspacing="1" width="95%" align="center" style="background-color: #b9d8f3;margin:0px auto"></table>
+	<br/>
+	<span style="padding:20px">采购验收：</span>
+	<table border="1" cellpadding="3" cellspacing="1" width="95%" align="center" style="background-color: #b9d8f3;margin:0px auto">
+				<tr class="tr_data">
+				  <td width="20%" height="30" class="table_property_title">采购单号</td><td width="30%" align="left">&nbsp;&nbsp;<label id="order_id"/></td>
+				  <td height="30"  width="20%" class="table_property_title">供应商</td><td align="left">&nbsp;&nbsp;<label id="product_supplier"/></td>
+				</tr>
+				<tr class="tr_data"> 
+					<td height="30" class="table_property_title">下单时间</td><td align="left">&nbsp;&nbsp;<label id="order_time"/></td>
+					<td height="30" class="table_property_title">采购金额</td><td align="left">&nbsp;&nbsp;<label id="money"/></td>
+				</tr>
+				<tr class="tr_data">
+					<td height="30" class="table_property_title">下单人员</td><td align="left">&nbsp;&nbsp;<label id="opt_user"/></td>
+					<td height="30" class="table_property_title">采购状态</td><td align="left">&nbsp;&nbsp;<label id="product_status"/></td>
+				</tr>	
+				<tr class="tr_data">
+					<td height="30" class="table_property_title">验收时间<span style="color:red;">(*)</span></td><td align="left">&nbsp;&nbsp;<input type="text" id="check_time" onclick="new Calendar().show(this);" readonly="true"/></td>
+					<td height="30" class="table_property_title">验收人<span style="color:red;">(*)</span></td><td align="left">&nbsp;&nbsp;<input type="text" id="check_user"/></td>
+				</tr>
+				 <tr class="tr_data">
+				 <td class="table_property_title">备注</td><td colspan="3" align="left" >&nbsp;&nbsp;<textarea id="memo" style="width:99%" rows="5"></textarea></td></tr>	
+		</table>
+		<p align="center" id="optBtnArea">
+		   <table><tr>
+					<td><span id="okBtn" class="buttonTwo"><a href="javascript:saveBaseInfo()">验收</a></span></td>
+					<td><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+		   </tr></table>
+		</p>
+		<br/>
+	
+</body>
+</html>

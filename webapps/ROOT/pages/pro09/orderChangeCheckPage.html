@@ -1,0 +1,192 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css"
+			href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		   var product_change_id="";
+		   var change_type="";
+		   var order_detail_id=""
+			$(document).ready(function() {
+				product_change_id=top.getUrlParam(document.URL,"product_change_id");
+				$("#td_change_status").html(top.getCodeSelectHtml("PRO_CHANGE_STATUS","change_status",false));
+				getProductOrderChangeById();
+			} );
+		
+  function doBeforeClose(){
+   }
+
+		
+	function getProductOrderChangeById(){
+		var aoData=[];
+		aoData.push( { "name": "productOrderChange.product_change_id", "value":product_change_id } );
+		var xurl="/actions/ProductOrder.action?getProductOrderChangeById";
+		top.sendAjaxRequest(xurl,aoData,getProductOrderChangeCallBack);	
+	}
+	function getProductOrderChangeCallBack(obj){
+		var orderChangObj=obj.body;
+		var ht="";
+		
+		if(orderChangObj){
+			$("#change_type").html(top.getCodeName("PRO_CHANGE_TYPE",orderChangObj.change_type));
+			change_type=orderChangObj.change_type;
+			order_detail_id=orderChangObj.order_detail_id;
+				
+			if(orderChangObj.change_type!='01'){
+				$("#tr_oldProduct").show();
+				
+				ht+="<td>原产品</td>";
+				ht+="<td>"+orderChangObj.old_type_name+"</td>";
+				ht+="<td>"+orderChangObj.old_product_name+"</td>";
+				ht+="<td>"+top.getSupplierNameById(orderChangObj.old_product_brand)+"</td>";
+				ht+="<td>"+orderChangObj.old_product_model+"</td>";
+				ht+="<td>"+orderChangObj.old_product_standard+"</td>";
+				ht+="<td>"+top.getCodeName("UNIT",orderChangObj.old_unit)+"</td>";
+				ht+="<td>"+orderChangObj.old_sale_price+"</td>";
+				ht+="<td>"+orderChangObj.old_discount+"</td>";
+				ht+="<td>"+orderChangObj.old_use_position+"</td>";
+				ht+="<td>"+orderChangObj.old_amount+"</td>";
+				$("#tr_oldProduct").html(ht);
+			}
+			if(orderChangObj.change_type!='02'){
+				$("#tr_newProduct").show();
+				$("#new_product_name").html(orderChangObj.new_product_name)
+				$("#new_type_name").html(orderChangObj.new_type_name)
+				$("#new_product_model").html(orderChangObj.new_product_model);
+				$("#new_product_standard").html(orderChangObj.new_product_standard);
+				$("#new_sale_price").html(orderChangObj.new_sale_price);
+				$("#new_discount").html(orderChangObj.new_discount);
+				$("#new_amount").html(orderChangObj.new_amount);
+				$("#new_use_position").html(orderChangObj.new_use_position);
+				$("#tdnew_product_brand").html(top.getSupplierNameById(orderChangObj.new_product_brand));
+				$("#tdnew_unit").html(top.getCodeName("UNIT",orderChangObj.new_unit));
+			}
+			if(orderChangObj.change_status!='01'){
+				$("#tr_check_man").show();
+				$("#check_man").html(top.getUserNameByCode(orderChangObj.check_man));
+				$("#td_check_suggest").html(orderChangObj.check_suggest);
+				$("#td_change_status").html(top.getCodeName("PRO_CHANGE_STATUS",orderChangObj.change_status));
+			}
+			else{
+			$("#check_suggest").val(orderChangObj.check_suggest); 
+			$("#td_change_status").html(top.getCodeSelectHtml("PRO_CHANGE_STATUS","change_status",false,orderChangObj.change_status));
+			}
+			
+			
+			if(orderChangObj.change_status!='01'){
+				$("#check_suggest").attr("disabled",true);
+				$("#change_status").attr("disabled",true);
+				$("#tr_save_button").hide();
+			}
+			
+	}
+	}
+	function saveOrderChangeCheckResult(){
+		var aoData=[];
+		aoData.push( { "name": "productOrderChange.product_change_id", "value":product_change_id } );
+		aoData.push( { "name": "productOrderChange.check_suggest", "value":$("#check_suggest").val() } );
+		aoData.push( { "name": "productOrderChange.change_status", "value":$("#change_status").val() } );
+		aoData.push( { "name": "productOrderChange.change_type", "value":change_type } );
+		aoData.push( { "name": "productOrderChange.order_detail_id", "value":order_detail_id } );
+		var xurl="/actions/ProductOrder.action?checkProOrderChange";
+		top.sendAjaxRequest(xurl,aoData,optCallBack);	
+	}
+	
+	
+	function optCallBack(obj){
+		try{
+			if ( obj.status == true ){
+				isSaveOK = true;
+				top.showInfoWinOK("操作成功");
+				getProductOrderChangeById();
+				doCancel();
+			}else{
+				isSaveOK = false;
+				top.showInfoWinError("操作失败 "+obj.msg);
+			}
+		   }catch(e){
+			  top.showInfoWinError("处理异常:"+e.message);
+		   }
+		
+	   }
+  function doCancel(){
+	  top.closeSelectDialog();
+   }
+		</script>
+	</head>
+	<body>
+		<div width="100%" style="margin:20px">
+			<span>产品变更：<span id="change_type"></span></span>
+			<br>
+			<table border="1" cellpadding="3" cellspacing="1" width="100%"
+					 style="background-color: #b9d8f3;" align="center" width="98%">
+						
+						
+						<tr align="center" id="tr_newProduct_Title">
+							<td width="80px"></td>
+							<td width="180px">产品类别</td><td width="80px">名称</td>
+							<td width="80px">品牌</td><td width="80px">型号</td>
+							<td width="80px">规格</td><td width="80px">单位</td>
+							<td width="80px">单价</td><td width="80px">折扣</td>
+							<td width="100px">使用位置</td><td width="80px">数量</td>
+						</tr>
+						<tr height="28px" class='tr_data' id="tr_oldProduct" style="display:none"></tr>
+						
+						<tr height="28px" class='tr_data' id="tr_newProduct" style="display:none">
+							<td>变更产品</td>
+							<td id="new_type_name"></td>
+							<td id="new_product_name"></td>
+							<td id="tdnew_product_brand"></td> 
+							<td id="new_product_model"></td>
+							<td id="new_product_standard"></td>
+							<td id="tdnew_unit"></td>
+							
+							<td id="new_sale_price"></td>
+							<td id="new_discount"></td>
+							<td id="new_use_position"></td>
+							<td id="new_amount"></td>
+						</tr>
+					</table>
+					<p>
+				<div id="checkDiv" style="margin-top:10px">
+					<span>产品审批</span><br>
+					<table border="1" cellpadding="3" cellspacing="1" width="90%"   id="check_table" align="center" style="background-color: #b9d8f3;font-size:13px" >
+						<tr  class='tr_data' height="35px">
+							<td  width="100px">审批</td><td align="left" id="td_change_status"></td>
+						</tr>
+						<tr class='tr_data' id="tr_check_man" style="display:none" height="35px">
+							<td>审批人</td><td align="left"><label id="check_man"></label></td>
+						</tr>
+						
+						<tr class='tr_data' height="80px">
+							<td rowspan='3'>审批意见</td>
+							<td  id="td_check_suggest"align="left">
+								<textarea id="check_suggest" cols="100" rows="3"></textarea>
+							</td>
+						</tr>
+						<tr id="tr_save_button" class='tr_data' height="40px">
+							<td rowspan='2'>
+								<div class="buttonDivTwo">
+										<a href="javascript:void(0)" onclick="saveOrderChangeCheckResult()">保存</a>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div>
+		</div>
+
+	</body>
+</html>

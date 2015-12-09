@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+    <link rel="stylesheet" type="text/css" href="../../css/drag-drop-folder-tree.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/context-menu.css"></link>
+    <link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css"	href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css"	media="print, projection, screen"/>
+<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+    <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js" ></script>
+	<script type="text/javascript" language="javascript" src="../../js/myDtree.js" ></script>
+	<script type="text/javascript" language="javascript" src="../../js/context-menu.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/drag-drop-folder-tree.js" ></script>
+	<script type="text/javascript" language="javascript" src="../../js/ui.tabs.js" ></script>
+    <script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+	<script type="text/javascript" >
+	   var oTable=null;
+       var d=null;
+       var treeObj=null;
+       var currentProId=0;
+	   var productList=[];
+	   var typeList=[];
+	   var currentOptBaseId=-1;
+	   var isNeedReloadPro=false;
+	   var wall_s=0;
+	   var optType='';
+	   var require_id="";
+	   var cust_code="";
+	   var pageName='';
+	   var remind_id='';
+	   
+       $(document).ready(function(){
+	        $( "#project_tabs ul" ).tabs();
+
+			$("#tdcompute_type").html( top.getCodeSelectHtml("COMPUTE_TYPE","compute_type",false));
+	        
+			var wh=$(window).height();
+	        $("#ProTypeTree").height( wh - 120 );
+			$("#baseInfoDiv").height( wh - 90 );
+
+			loadProTree();
+			optType=top.getUrlParam(document.URL,"optType");
+			remind_id=top.getUrlParam(document.URL,"remind_id");
+			
+			if(optType=='create'){
+				require_id=top.getUrlParam(document.URL,"require_id");
+				cust_code=top.getUrlParam(document.URL,"cust_code");
+				$("#projectListLi").hide();
+				$("#project_tabs-0").hide();
+				$("#project_tabs-1").show();
+			}else if(optType=='update'){
+				currentProId=top.getUrlParam(document.URL,"base_id");
+				pageName=top.getUrlParam(document.URL,"pageName");
+				$("#projectListLi").hide();
+				$("#project_tabs-0").hide();
+				$("#project_tabs-1").show();
+			}else{
+				initProjectList();
+			}
+			
+			$("#quotedList").height( $(window).height() - 25 );
+       });
+	   function initProjectQuote(){
+	     document.getElementById("ProquoteInfo").contentWindow.getDetailInfo(currentProId,'update');
+	   }
+	   function getRequire_id(){
+	     return require_id;
+	   }
+	   
+	   function getOptType(){
+	     return optType;
+	   }
+	   function getRemind_id(){
+	     return remind_id;
+	   }
+	   function getPageName(){
+	     return pageName;
+	   }
+	   function getCurrentProId(){
+	     return currentProId;
+	   }
+	   
+	   function getCust_code(){
+	      return cust_code;
+	   }
+	   function initProjectList(){
+			var iaoColumns= [
+				{ "sTitle": "装饰工程名称", "mDataProp": "pro_title", "sWidth": "70%","sClass": "left","bUseRendered": false}
+			   ];
+			   
+			   var surl=top.getUrlBase()+"/actions/Projectquote.action?getProquoteInfoList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+								var aTrs = oTable.fnGetNodes();
+								if ( aTrs != null && aTrs.length > 0 ) {
+									$(aTrs[0]).addClass("row_selected");
+									selectProject();
+								}
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData.push( { "name": "proquoteInfo.base_id", "value": -1 } );
+			    },
+			    "sDom": "frtp",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			
+			
+			$('#dataTable tbody').click(function (e) {
+                $(oTable.fnSettings().aoData).each(function () {
+                    $(this.nTr).removeClass("row_selected");
+                });
+                $(e.target.parentNode).addClass("row_selected");
+				selectProject();
+            });
+			
+	   }
+	   function doQuery(){
+		  oTable.fnDraw();
+	   }
+	   
+		// 关闭当前页面前，页面框架自动调用的函数
+		function doBeforeClose(){
+		 var obj="{'isSaveOK':isSaveOK}";
+		 top.setTempValue(obj);
+	   }
+	   
+	   function selectProject(){
+	      var sel = fnGetSelected(oTable);
+		  if(sel!=null&&sel.length>0){
+          currentProId = oTable.fnGetData(sel[0]).base_id;
+		  try{
+		    document.getElementById("ProquoteInfo").contentWindow.getDetailInfo(currentProId,'update');
+		  }catch(e){
+		  }
+		  }
+	   }
+	  
+	   function fnGetSelected(oTable) {
+            var aReturn = new Array();
+            var aTrs = oTable.fnGetNodes();
+            for (var i = 0; i < aTrs.length; i++) {
+                if ($(aTrs[i]).hasClass('row_selected')) {
+                    aReturn.push(aTrs[i]);
+                }
+            }
+            return aReturn;
+        }
+	   
+	   // 加载产品类型数据
+       function loadProTree(){
+    	   top.sendAjaxRequest("/actions/Projectquote.action?getProquoteProductAndType",[],initProductTypeTree);
+       }
+
+       // 初始化工程类型树
+       function initProductTypeTree(obj){
+    	   d=new dTree('d');
+           d.config.useSelection = true;
+           d.config.folderLinks = true;
+           d.config.useStatusText = false;
+           d.config.useLines = false;
+		   var i=0;
+		   
+		   try{
+			   productList=obj.body.productList;
+			   typeList=obj.body.typeList;
+			   if ( typeList ) {
+					for(i=0;i<typeList.length;i++){
+					  
+					  if ( typeList[i].parent_id == 0 || typeList[i].type_id==0 ) {
+					    d.add( typeList[i].type_id,typeList[i].parent_id, typeList[i].type_name);
+					  }
+					}
+			   }
+			   if ( productList ) {
+					for(i=0;i<productList.length;i++){
+					  addProductToTree( productList[i] );
+					}
+			   }
+		   }catch(e){
+		       //alert(e.message);
+		   }
+		   
+           $("#ProTypeTree").html( d.toString() );
+           treeObj = new JSDragDropTree();
+           treeObj.setTreeId('dhtmlgoodies_tree2');
+           treeObj.setMaximumDepth(20);
+           treeObj.setMessageMaximumDepthReached('已到达最大的层次'); 
+           treeObj.setRenameAllowed(true);
+           treeObj.setDeleteAllowed(true);
+           treeObj.initTree();
+       }
+	   
+	   function addInfo(){
+	       top.showInputDialog("创建装饰工程", "请输入装饰工程名称", doCreateProject);
+	   }
+	   
+	   function doCreateProject(name){
+    	   var aoData=[];
+           aoData.push( { "name": "proquoteInfo.pro_title", "value":name } );
+           top.sendAjaxRequest("/actions/Projectquote.action?insertProquoteInfo",aoData,addCallback);
+       }
+	   
+	   function addCallback(obj){
+           try{
+            if ( obj.status == true ){
+			  doQuery();
+              top.showInfoWinOK("操作成功");
+            }else{
+              top.showInfoWinError("操作失败");
+            }
+           }catch(e){
+              top.showInfoWinError("处理异常:"+e.message);
+           }
+       }
+	   
+	   function getProductById(pid){
+	      
+	     for (var i=0;i<productList.length;i++) {
+		   if ( productList[i].product_id == pid ) return productList[i];
+		 }
+	     return null;
+	   }
+	   
+	   function addProductToTree(p){
+	       var tname=p.product_name;
+		   var tid=p.type_id;
+		   var pid=p.product_id;
+		   if ( tid != 0 ) {
+			   var pt=getTypeById(tid);
+			   var n=0;
+			   while ( pt.parent_id != 0 && n < 10 ) {
+				 tname=pt.type_name+"/"+tname;
+				 pt=getTypeById( pt.parent_id );
+				 tid=pt.type_id;
+				 n++;
+			   }
+		   }
+		   tname='<span onclick="selectProduct(\''+pid+'\')">'+tname+'</span>';
+		   d.add( pid, tid, tname);
+	   }
+	   
+	   function getTypeById(tid){
+	      for (var i=0;i<typeList.length;i++) {
+		    if ( typeList[i].type_id == tid ) return typeList[i];
+		  }
+		  return null;
+	   }
+	   
+	   function getProductById(pid){
+	      for (var i=0;i<productList.length;i++) {
+		    if ( productList[i].product_id == pid ) return productList[i];
+		  }
+		  return null;
+	   }
+	   
+	   function onSelectedNode(pid){
+			 if ( currentProId == pid ) return ;
+    	   currentProId = pid;
+    	   if ( pid == 0 ) {
+    		   pid="";
+    	   }else name=d.getNodePath(pid);
+		    document.getElementById("ProquoteInfo").contentWindow.queryBySelectedPro(pid);
+	   }
+	   
+	   function selectProduct(pid){
+	      try{
+		
+		    var p=getProductById(pid);
+			
+			
+		  }catch(e){}
+	   }
+	   //计算墙面面积
+	   function computeWall(){
+			 // 检查
+			var checkMsg = checkFormComputeWall();
+				if ( checkMsg != '' ) {
+				top.showInfoWinWarn(checkMsg);
+				return ;
+			}
+			var l=$("#wall_l").val();
+			var h=$("#wall_h").val();
+			var k=$("#wall_k").val();
+			var sunhao=$("#sunhao").val();
+			
+			wall_s=Number(l*h*2)+Number(k*h*2);
+			var top_s=Number(l*k);
+			
+			if(sunhao!=0){
+				wall_s=Number(wall_s*(1-sunhao/100));
+			}
+			
+			$("#wall_s").val( wall_s );
+			$("#top_s").val( top_s );
+	   }
+	   
+	   //计算扣除门窗后的结果
+	   function removeWD(){
+			 // 检查
+			var checkMsg = checkFormremoveWD();
+				if ( checkMsg != '' ) {
+				top.showInfoWinWarn(checkMsg);
+				return ;
+			}
+			var l=$("#wd_h").val();
+			var k=$("#wd_k").val();
+			var num=$("#wd_num").val();
+			var rate=$("#rate").val();
+			if($("#rate").val()==''){
+				rate=1;
+			}
+			var result=Number(l*k*num*rate);
+			computeWall();
+			$("#wall_s").val($("#wall_s").val()-result );
+	   }
+	   
+	//校验输入是否合法
+	function checkFormComputeWall(){	
+		var msg="";
+	    if ( $("#wall_l").val() != '' && !IsFloat( $("#wall_l").val() )) msg += "[长]应为数字类型<br>";
+		if ( $("#wall_k").val() != '' && !IsFloat( $("#wall_k").val() )) msg +="[宽]应为数字类型<br>";
+		if ( $("#sunhao").val() != '' && !IsFloat( $("#sunhao").val() )) {
+			msg +="[损耗比例]应为0~100之间的数字类型<br>";
+		}else{
+			if($("#sunhao").val()>100||$("#sunhao").val()<0){
+				msg +="[损耗比例]应为0~100之间的数字类型<br>";
+			}
+		}
+		if ( $("#wall_h").val() != '' && !IsFloat( $("#wall_h").val() )) msg +="[高]应为数字类型<br>";
+		msg += checkString($("#wall_l").val(),true,64,"长");
+		msg += checkString($("#wall_k").val(),true,20,"宽");
+		msg += checkString($("#wall_h").val(),true,32,"高");
+		return msg;
+   }
+   
+   function checkFormremoveWD(){
+		var msg="";
+		if ( $("#wd_h").val() != '' && !IsFloat( $("#wd_h").val() )) msg +="[高]应为数字类型<br>";
+		if ( $("#wd_k").val() != '' && !IsFloat( $("#wd_k").val() )) msg +="[宽]应为数字类型<br>";
+		if ( $("#rate").val() != '' && !IsFloat( $("#rate").val() )) msg +="[门窗比率]应为数字类型<br>";
+		if ( $("#wd_num").val() != '' && !IsNumber( $("#wd_num").val() )) msg +="[门窗个数]应是正整数!<br>";
+		msg += checkString($("#wd_h").val(),true,256,"门窗的高");
+		msg += checkString($("#wd_k").val(),true,256,"门窗的宽");
+		msg += checkString($("#wd_num").val(),true,256,"门窗的个数");
+		return msg;
+   }
+    </script>
+</head>
+<body>
+<table style="width:100%;height:100%;padding:0;spacing:0;">
+  <tr class="tr_data" style="width:100%;height:100%;text-align:left">
+   <td style="width:35%;border:1px;border-style: dotted;border-color: #A0CFEC;" valign="top">
+       <br/>
+       <div id="project_tabs">
+			<ul>
+				<li id="projectListLi">
+					<a href="#project_tabs-0"><span>装饰工程</span></a>
+				</li>
+				<li>
+					<a href="#project_tabs-1"><span>施工项目</span></a>
+				</li>
+				<li>
+					<a href="#project_tabs-2"><span>工具</span></a>
+				</li>
+			</ul>
+		</div>
+		<div id="project_tabs-0">
+		  <div id="baseInfoDiv" style="width:100%;">
+		   <table align="left" cellpadding="1px" cellspacing="0" border="0">
+				<tr>
+							<td>
+								<div id="createBtn" class="buttonDivTwo">
+									<a href="javascript:addInfo()">新建</a>
+								</div>
+							</td>
+				</tr>
+		   </table>
+		   <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		  </div>
+		</div>
+        <div id="project_tabs-1">
+			<div style="padding:3px;float:top;">
+				<img src="../../img/folderopen.gif" style="cursor:pointer" title="全部展开" onclick="treeObj.expandAll()" />
+				<img src="../../img/folder.gif" style="cursor:pointer" title="全部收缩" onclick="treeObj.collapseAll()" />
+			</div>
+			<div class="dtree" id="ProTypeTree" style="padding:3px;height:500px;overflow: auto;"></div>
+		</div>
+		<div id="project_tabs-2">
+				<table border="1" cellpadding="3" cellspacing="1" width="90%" height="90%" align="center" style="background-color: #b9d8f3;">
+					<tr class="tr_data" height="40px">
+						<td colspan="4"  width="100%" id="tdcompute_type"></td>
+					</tr>
+					<tr class="tr_data" height="40px">
+						<td width="20%">长:</td>
+						<td width="30%">
+							<input type="text" id="wall_l" size="5"/>
+						</td>
+						<td width="20%">宽:</td>
+						<td width="30%">
+							<input type="text" id="wall_k" size="5"/>
+						</td>
+					</tr>
+					<tr class="tr_data" height="40px">
+						<td>高:</td>
+						<td>
+							<input type="text" id="wall_h" size="5"/>
+						</td>
+						<td >损耗比例:</td>
+						<td>
+							<input type="text" id="sunhao" size="5" value="0"/>%
+						</td>
+					</tr>
+					<tr class="tr_data" height="40px">
+						<td colspan="4"><input type="button" value="计算结果" onclick="computeWall()"/></td>
+					</tr>
+					<tr class="tr_data" height="40px">
+						<td colspan="4" align="center">墙面面积：<input type="text" id="wall_s"/></td>
+					</tr>
+					<tr class="tr_data" height="40px">
+						<td colspan="4" align="center">顶面面积：<input type="text" id="top_s"/></td>
+					</tr>
+					<tr class="tr_data" height="40px">
+						<td colspan="4"><input type="button" value="扣&nbsp;门&nbsp;窗" onclick="removeWD()"/></td>
+					</tr>
+					<tr class="tr_data" height="40px">
+						<td width="20%">高:</td>
+						<td width="30%">
+							<input type="text" id="wd_h" size="5"/>
+						</td>
+						<td width="20%">宽:</td>
+						<td width="30%">
+							<input type="text" id="wd_k" size="5"/>
+						</td>
+					</tr>
+					<tr class="tr_data" height="40px" >
+						<td>个:</td>
+						<td>
+							<input type="text" id="wd_num" size="5"/>
+						</td>
+						<td >比率:</td>
+						<td>
+							<input type="text" id="rate" size="5"/>
+						</td>
+					</tr>
+				</table>
+			</center>
+		</div>
+   </td>
+   <td id="quotedList" style="width:65%;border:1px;border-style: dotted dotted dotted none;border-color: #A0CFEC;" valign="top">
+         <iframe id="ProquoteInfo" name='ProquoteInfo' src="proquoteInfo.html" width="100%" height="100%" frameborder="0"></iframe>
+   </td>
+  </tr>	
+</table>
+</body>
+</html>

@@ -1,0 +1,396 @@
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css"/>
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css"	media="print, projection, screen"/>
+<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+	    <script type="text/javascript" src="../../js/SimpleMap.js"></script>
+		<script type="text/javascript">
+		
+    var isSaveOK=false;
+    var baseId=0;
+    var currentRoomNum=1;
+	var tabId=1;
+	var qProId="";
+	var rowId=1;
+	var selectedProMap=new SimpleMap();
+
+	
+	$(document).ready(function() {
+		baseId=top.getUrlParam(document.URL,"baseId");
+		getDetailInfo(baseId);
+   });
+	
+	// 关闭当前页面前，页面框架自动调用的函数
+		function doBeforeClose(){
+		 var obj={
+				  "isSaveOK":isSaveOK
+				};
+		 top.setTempValue(obj);
+	   }
+	   function getDetailInfo(base_id){
+			//查询工程基本信息和、报价明细和合同信息
+			var aoData=[];
+			aoData.push( { "name": "proquoteInfo.base_id", "value":baseId } );
+			top.sendAjaxRequest("/actions/Projectquote.action?getProquoteById",aoData,infoCallback);
+	   }
+   
+   //调用回调函数----查询工程报价详细信息
+		function infoCallback(obj){
+			if(obj!=null){
+				var o=obj.body;
+			}
+			try{
+			 if( o ){
+			    $("#cust_name").html(o.cust_name);
+			    $("#designer").html(top.getUserNameByCode(o.designer));
+			    $("#base_id").html(o.base_id);
+			    $("#opt_time").html(top.getTimeStr(o.opt_time,true));
+			    $("#pro_addr").html(o.pro_addr);
+				var xuhao=1;
+				
+				var ht="";
+				if(o.room!=0){
+					for(var i=1;i<=o.room;i++ ){
+
+						ht+='<div id="room'+xuhao+'" style="width:100%; background-color:#D8D8D8; margin: 2px;padding:3px"">';
+						ht+='<font color="blue" size="5">&nbsp;<b>卧室'+i+'</b></font><br/>';
+						ht+='<center>';
+						ht+='<table  class="attention" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="table'+xuhao+'">';	
+						ht+='</table>';
+						ht+='</center>';
+						ht+='<br/>';
+						ht+='</div>';
+						xuhao++;
+					}
+				}
+				if(o.hall!=0){
+				for(var i=1;i<=o.hall;i++ ){
+
+					ht+='<div id="room'+xuhao+'" style="width:100%; background-color:#D8D8D8; margin: 2px;padding:3px"">';
+					ht+='<font color="blue" size="5">&nbsp;<b>厅'+i+'</b></font><br/>';
+					ht+='<center>';
+					ht+='<table class="attention"  border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="table'+xuhao+'">';	
+					ht+='</table>';
+					ht+='</center>';
+					ht+='<br/>';
+					ht+='</div>';
+					xuhao++;
+				}}
+				if(o.bath!=0){
+				for(var i=1;i<=o.bath;i++ ){
+
+					ht+='<div id="room'+xuhao+'" style="width:100%; background-color:#D8D8D8; margin: 2px;padding:3px"">';
+					ht+='<font color="blue" size="5">&nbsp;<b>卫'+i+'</b></font><br/>';
+					ht+='<center>';
+					ht+='<table class="attention" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="table'+xuhao+'">';	
+					ht+='</table>';
+					ht+='</center>';
+					ht+='<br/>';
+					ht+='</div>';
+					xuhao++;
+				}}
+				if(o.balcony!=0){
+				for(var i=1;i<=o.balcony;i++ ){
+
+					ht+='<div id="room'+xuhao+'" style="width:100%; background-color:#D8D8D8; margin: 2px;padding:3px"">';
+					ht+='<font color="blue" size="5">&nbsp;<b>阳台'+i+'</b></font><br/>';
+					ht+='<center>';
+					ht+='<table class="attention" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="table'+xuhao+'">';	
+					ht+='</table>';
+					ht+='</center>';
+					ht+='<br/>';
+					ht+='</div>';
+					
+					xuhao++;
+				}}
+				if(o.kitchen!=0){
+				
+				for(var i=1;i<=o.kitchen;i++ ){
+
+					ht+='<div id="room'+xuhao+'" style="width:100%; background-color:#D8D8D8; margin: 2px;padding:3px"">';
+					ht+='<font color="blue" size="5">&nbsp;<b>厨房'+i+'</b></font><br/>';
+					ht+='<center>';
+					ht+='<table class="attention" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="table'+xuhao+'">';	
+					ht+='</table>';
+					ht+='</center>';
+					ht+='<br/>';
+					ht+='</div>';
+					xuhao++;
+				}}
+				if(o.gangway!=0){
+				for(var i=1;i<=o.gangway;i++ ){
+		
+					ht+='<div id="room'+xuhao+'" style="width:100%; background-color:#D8D8D8; margin: 2px;padding:3px"">';
+					ht+='<font color="blue" size="5">&nbsp;<b>过道'+i+'</b></font><br/>';
+					ht+='<center>';
+					ht+='<table class="attention" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="table'+xuhao+'">';	
+					ht+='</table>';
+					ht+='</center>';
+					ht+='<br/>';
+					ht+='</div>';
+					xuhao++;
+				}}
+				if(o.store_room!=0){
+				for(var i=1;i<=o.store_room;i++ ){
+		
+					ht+='<div id="room'+xuhao+'" style="width:100%; background-color:#D8D8D8; margin: 2px;padding:3px"">';
+					ht+='<font color="blue" size="5">&nbsp;<b>储物间'+i+'</b></font><br/>';
+					ht+='<center>';
+					ht+='<table class="attention" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="table'+xuhao+'">';	
+					ht+='</table>';
+					ht+='</center>';
+					ht+='<br/>';
+					ht+='</div>';
+					xuhao++;
+				}}
+				if(o.entrance_door!=0){
+				for(var i=1;i<=o.entrance_door;i++ ){
+
+					ht+='<div id="room'+xuhao+'" style="width:100%; background-color:#D8D8D8; margin: 2px;padding:3px"">';
+					ht+='<font color="blue" size="5">&nbsp;<b>玄关'+i+'</b></font><br/>';
+					ht+='<center>';
+					ht+='<table class="attention" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="table'+xuhao+'">';	
+					ht+='</table>';
+					ht+='</center>';
+					ht+='<br/>';
+					ht+='</div>';
+					xuhao++;
+				}}
+				if(o.stairs!=0){
+					for(var i=1;i<=o.stairs;i++ ){
+
+					ht+='<div id="room'+xuhao+'" style="width:100%; background-color:#D8D8D8; margin: 2px;padding:3px"">';
+					ht+='<font color="blue" size="5">&nbsp;<b>楼梯'+i+'</b></font><br/>';
+					ht+='<center>';
+					ht+='<table class="attention" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="table'+xuhao+'">';	
+					ht+='</table>';
+					ht+='</center>';
+					ht+='<br/>';
+					ht+='</div>';
+					xuhao++;
+				}}
+				if(o.hydroelectricity!=0){
+				for(var i=1;i<= o.hydroelectricity;i++ ){
+
+					ht+='<div id="room'+xuhao+'" style="width:100%; background-color:#D8D8D8; margin: 2px;padding:3px"">';
+					ht+='<font color="blue" size="5">&nbsp;<b>水电'+i+'</b></font><br/>';
+					ht+='<center>';
+					ht+='<table class="attention" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="table'+xuhao+'">';	
+					ht+='</table>';
+					ht+='</center>';
+					ht+='<br/>';
+					ht+='</div>';
+					xuhao++;
+				}}
+				if(o.other!=0){
+					for(var i=1;i<=o.other;i++ ){
+						ht+='<div id="room'+xuhao+'" style="width:100%; background-color:#D8D8D8; margin: 2px;padding:3px"">';
+						ht+='<font color="blue" size="5">&nbsp;<b>其它'+i+'</b></font><br/>';
+						ht+='<center>';
+						ht+='<table class="attention" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="table'+xuhao+'">';	
+						ht+='</table>';
+						ht+='</center>';
+						ht+='<br/>';
+						ht+='</div>';
+						xuhao++;
+					}
+				}
+				$("#ListPro").html( ht );
+				if( o.detailList ) {
+				   initDetail( o.detailList );
+				}
+			 }
+			}catch(e){
+				alert(e.message);
+			}
+		}
+
+		function queryBySelectedPro(pid){
+				 qProId = pid;
+				if(qProId==''){
+					return;
+				}
+				getquoteProductById(pid);
+			}
+			
+		function getquoteProductById(pid){
+			var aoData=[];
+			aoData.push( { "name": "proquoteProduct.product_id", "value":pid } );
+			top.sendAjaxRequest("/actions/Projectquote.action?getProquoteProductById",aoData,QProductinfoCallback);
+		}
+		
+		function QProductinfoCallback(obj){
+			var ht="";
+			try{
+				if(obj.status==true){
+					var o=obj.body;
+				}
+				if( o ){
+					selectedProMap.put(rowId, o);
+					room_num=currentRoomNum;
+					
+					ht+='<tr class="tr_data" height="25px" id="tr_'+rowId+'">';
+					ht+='<td align="center" width="20%"><input type="hidden" id="roomNum_'+rowId+'" value="'+currentRoomNum+'"/><label id="product_name_'+rowId+'">'+o.product_name+'</label></td>';
+					ht+='<td align="center" width="10%"><input type="text" id="unit_price_'+rowId+'" value="'+o.unit_price+'" size="5" disabled /></td>';
+					ht+='<td align="center" width="10%" ><input type="text" id="quantity_'+rowId+'" size="5" value="1" onChange="changeTotalPrice(\''+rowId+'\')"/></td>';
+					ht+='<td align="center" width="10%"><label id="product_unit_'+rowId+'" >'+top.getCodeName("UNIT",o.product_unit)+'</label></td>';
+					ht+='<td align="center" width="10%"><input type="text" id="total_price_'+rowId+'" size="5" value="'+o.unit_price+'" disabled/></td>';
+					ht+='<td align="center" width="30%"><label id="memo_'+rowId+'">'+o.memo+'</label></td>';
+					ht+='<td align="center" width="10%"><a href="javaScript:void(0)" onclick="deleteRow(\''+rowId+'\')">删除</a></td>';
+					ht+='</tr>';
+				}
+				
+				rowId++;
+				$("#room"+currentRoomNum).append( ht );
+
+			}catch(e){
+				alert(e.message);
+			}
+		}
+
+		function initDetail(rs){
+		  if( !rs ) return ;
+		  for (var n=0;n<100;n++) {
+		    try{
+		      $("#table"+n).html( "" );
+			}catch(e){
+			}
+		  }
+		  rowId=0;
+		  var totalPrice=0;
+		  selectedProMap.clear();
+		  var ht="";
+		  for ( var i=0;i<rs.length;i++ ) { 
+		        selectedProMap.put(rowId, rs[i]);
+				ht='<tr class="tr_data" height="25px" id="tr_'+rowId+'">';
+				totalPrice+=rs[i].total_price;
+				ht+='<td align="center" width="20%"><input type="hidden" id="roomNum_'+rowId+'" value="'+rs[i].room_num+'"/><label id="product_name_'+rowId+'">'+rs[i].construction_pro+'</label></td>';
+				ht+='<td align="center" width="15%"><label id="lab_unit_price_'+rowId+'">'+rs[i].unit_price+'</label><input type="hidden" id="unit_price_'+rowId+'" value="'+rs[i].unit_price+'" size="5" disabled /></td>';
+				ht+='<td align="center" width="15%" ><label id="lab_quantity_'+rowId+'">'+rs[i].quantity+'</label><input type="hidden" id="quantity_'+rowId+'" size="5" value="'+rs[i].quantity+'"/></td>';
+				ht+='<td align="center" width="10%"><label id="product_unit_'+rowId+'" >'+top.getCodeName("UNIT",rs[i].unit)+'</label></td>';
+				ht+='<td align="center" width="10%"><label id="lab_total_price_'+rowId+'">'+rs[i].total_price+'</label><input type="hidden" id="total_price_'+rowId+'" size="5" value="'+rs[i].total_price+'" disabled/></td>';
+				ht+='<td align="center" width="30%"><label id="memo_'+rowId+'">'+rs[i].memo+'</label></td>';
+				ht+='</tr>';
+				rowId++;
+				$("#room"+rs[i].room_num).append( ht );
+		  }
+				$("#All_total_price").html(totalPrice);
+		}
+		
+		function allTotalPrice(){
+			try{
+			  var t=null;
+			  var total=0;
+			  for( var i=0;i<rowId;i++ ) {
+			    t=$("#total_price_"+i).val();
+				if ( t ) {
+				  total+=Number(t);
+				}
+			  }
+			 $("#All_total_price").html(total);
+			}catch(e){
+			}
+		}
+		
+		function changeTotalPrice(pid){
+			var sPrice=0;
+			var unitPrice=$("#unit_price_"+pid).val();
+			var quantity=$("#quantity_"+pid).val();
+			sPrice=Number(unitPrice)*Number(quantity);
+			$("#total_price_"+pid).val(sPrice);
+			allTotalPrice();
+		}
+
+		function printingQuoteProInfo(){
+			$("#saveProjectDetailBtn").hide();
+			window.print();
+		}
+	</script>
+	<style>
+
+	 .p_data{
+		text-align: left;
+		COLOR: #0A0A0A; BACKGROUND-COLOR: #ffffff; 
+	 }
+	 .tr_data {
+		text-align: center;
+		COLOR: #0A0A0A;
+		BACKGROUND-COLOR: #F4FAFF;
+		font-size: 13px;
+		padding: 3px;
+	}
+	table.attention{
+		border-collapse:collapse;
+	}
+	table.attention td{
+		border:solid 1px black;
+	}
+	</style>
+	</head>
+	<body><br/>
+	<table cellpadding="3" cellspacing="1" width="100%"  style="margin:0px auto">
+	<tr height="25px">
+	  <td align="right">客户姓名:</td><td  align="left"  id="cust_name"></td>
+	  <td align="right">设计师:</td><td  align="left"  id="designer"></td>
+	  <td align="right">订单编号:</td><td  align="left"  id="base_id"></td>
+	</tr>
+	<tr height="25px">
+	  <td align="right">订货日期:</td><td align="left" id="opt_time"></td>
+	  <td align="right">工程地址:</td><td align="left"  colspan="3" id="pro_addr"></td>
+	</tr>
+	</table>
+		<table class="attention" border="1" cellpadding="3" cellspacing="1" width="95%" style="margin:0px auto" align="center">
+			<tr height="20px">
+				<td align="center" width="20%">工程项目</td>
+				<td align="center" width="15%">单价</td>
+				<td align="center" width="15%">数量</td>
+				<td align="center" width="10%">单位</td>
+				<td align="center" width="10%">合价(元)</td>
+				<td align="center" width="30%">工艺做法及材料说明</td>
+			</tr>
+		</table>
+		<table class="attention" border="1" cellpadding="3" cellspacing="1" width="95%" style="margin:0px auto" align="center" id="ListPro">		
+		</table>
+		总价：<B><label id="All_total_price"></label>&nbsp;&nbsp;元</B><br/>
+		<br/>
+		<table style="border:0px;margin:0px;auto;font-size:12px" width="100%" >
+		<tr>
+		<td colspan="4">
+		注：1、订货单一式两份，盖章有效。如复件有该动，以原件内容为准。此单订完后，原件转财务，复印件产品部留底。
+		</td></tr>
+		<tr>
+		<td colspan="4">
+		<span style="padding-left:25px">2、合作商在接到订单后及时与客户联系，确认所订厂产品的型号、颜色、数量等相关数据，确认订单的正确性。</span>
+		</td></tr>
+		<tr>
+			<td align="right" width="20%">设计师：</td><td  width="25%">&nbsp;</td>
+			<td align="right"  width="20%">产品设计师：</td><td>&nbsp;</td>
+		</tr>
+		<tr><td align="right" width="20%">监理：</td><td colspan="3">&nbsp;</td></tr>
+		<table>
+		<table width="90%" id="saveProjectDetailBtn" style="margin: 10px 0px 0px 10px;">
+			<tr>
+				<td width="100%" align="center">
+					<div  class="buttonDivTwo">
+						<a href="javascript:void(0)" onclick="printingQuoteProInfo()">打印</a>
+					</div>
+				</td>
+			</tr>
+		</table>
+	</body>
+</html>

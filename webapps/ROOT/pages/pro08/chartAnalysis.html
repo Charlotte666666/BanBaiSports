@@ -1,0 +1,197 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css" media="print, projection, screen">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="js/jquery.cookie.js"/>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/chart.js"></script>
+  <script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+  <script type="text/javascript">
+	var dataStr ="";
+	var countType=0;
+	var codeName="";
+	
+	 $(document).ready(function() {
+		countType=getAnalysisType();
+		$("#analysisType").get(0).selectedIndex=countType;
+		doQuery();
+	 });
+	function doQuery(){
+		var aoData=[];
+		countType=$("#analysisType").val();
+		setAnalysisType(countType);
+		aoData.push( { "name": "time1", "value": top.toTimestamp($("#time1").val()) } );
+		aoData.push( { "name": "time2", "value":  top.toTimestamp($("#time2").val()) } );
+		aoData.push( { "name": "countType", "value":countType } );
+		xurl="/actions/Prison.action?getPrisonInfoCount";
+		top.sendAjaxRequest(xurl,aoData,queryCallback);
+	}
+	function queryCallback(obj){
+		try{
+			var countList=obj.aaData;
+			var labelVal=""
+			var dataVal="";
+			if(!countList){
+				//alert("查询结果为空！");
+				top.showInfoWinWarn("查询结果为空");
+				return;
+			}
+			else{
+				for(var i=0;i<countList.length;i++)
+				{
+					if(countType==1){
+							if(i!=0){
+							if(countList[i].count_name==null||countList[i].count_name=="")
+							{
+								labelVal+=",未知";
+							}else{
+								labelVal+=","+ifAdult(countList[i].count_name);
+							}
+							dataVal+=","+countList[i].count_val;
+						}else{
+							if(countList[i].count_name==null||countList[i].count_name=="")
+							{
+								labelVal+="未知";
+							}else{
+								labelVal+=ifAdult(countList[i].count_name);
+							}
+							dataVal+=countList[i].count_val;
+						}
+					}else{
+						getCodeName();
+						if(i!=0){
+							if(countList[i].count_name==null||countList[i].count_name=="")
+							{
+								labelVal+=",未知";
+							}else{
+								labelVal+=","+top.getCodeName(codeName,countList[i].count_name);
+							}
+							dataVal+=","+countList[i].count_val;
+						}else{
+							if(countList[i].count_name==null||countList[i].count_name=="")
+							{
+								labelVal+="未知";
+							}else{
+								labelVal+=top.getCodeName(codeName,countList[i].count_name);
+							}
+							dataVal+=countList[i].count_val;
+						}
+					}
+				}
+			}
+			dataStr ='<chart title="'+$("#analysisType").find("option:selected").text()+'" types="pie" ><data labels="'+labelVal+'" values="'+dataVal+'" /></chart>';
+			drawChart();
+	   
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+	}
+	
+	function getCodeName(){
+			if(countType==0){
+					codeName="SEX";
+				}else if(countType==2){
+					codeName="CRIMINAL_TYPE";
+				}else if(countType==3){
+					codeName="REGISTRATION_NATURE";
+				}else if(countType==4){
+					codeName="CORRECT_CATEGORY";
+				}else if(countType==5){
+					codeName="EDUCATION";
+				}else if(countType==6){
+				  codeName="JOB_TYPE";
+				}else if(countType==7){
+					codeName="STOP_TYPE";
+				}
+		return codeName;
+	}
+	function ifAdult(code){
+		if(code=='0')
+		  return "成年"; 
+		else
+		  return '未成年';
+	}
+	
+	function drawChart(){
+	if ( dataStr == '' ){return ;}
+   	   try{
+	     var mid="chartFrame";
+         var chartFrame = document.getElementById( mid );
+         if ( chartFrame.contentWindow.isLoaded() ) {
+           chartFrame.contentWindow.doDrawChart( dataStr );
+		   dataStr="";
+         }
+       }catch(e){
+       }
+   }
+   
+   // 由图标控件调用
+   function getChartStr(){
+      return dataStr;
+   }
+   
+   function charPrint(){
+	
+   }
+   
+   function setAnalysisType(Id){
+	 $.cookie('typeId',Id);
+	}
+
+	function getAnalysisType(){
+	 if($.cookie("typeId")!=null){
+		 return $.cookie('typeId');
+	 }
+	 return 0;
+	}
+  
+  </script>
+<style type="text/css"> 
+</style>
+ <body height="100%">
+ <div style='border: 2px solid #89A1B9;' height="20%">
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+				<tr bgcolor="#C6DEFF">
+			      <td align="left" width="180px">&nbsp;数据图形分析&nbsp;</td>
+				</tr>
+			 </table>
+		     <table width="100%" align="left"  cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+			      <td  align="right" width="10%">分析类型:</td>
+				  <td align="left" width="90%">
+					  <select id="analysisType" style="width:200px" onkeydown="if(event.keyCode==13) doQuery();" >
+						<option value="0" selected>服刑人员性别比例分析</option>
+						<option value="1">服刑人员年龄比例分析</option>
+						<option value="2">服刑人员犯罪类型比例分析</option>
+						<option value="3">服刑人员户籍比例分析</option>
+						<option value="4">服刑人员矫正类别比例分析</option>
+						<option value="5">服刑人员文化比例分析</option>
+						<option value="6">服刑人员就业就学比例分析</option>
+					   <option value="7">解除矫正类型比例分析</option>
+					   <option value="8">终止矫正类型比例分析</option>
+					     <!--   <option value="9">服刑人员总数历年变化图</option>
+					    <option value="10">服刑人员再犯罪数历年变化图</option>
+					    <option value="11">服刑人员数历年变化图</option>
+					    <option value="12">收监执行人员历年变化图</option>-->
+					  </select></td>
+				 </tr>
+				 <tr class="tr_data">
+				  <td align="right">起止时间:</td>
+				  <td align="left">
+				   <input type="text" id="time1" value="" onclick="new Calendar().show(this);" style="width:100px" size="15" /> - <input type="text" id="time2" value="" onclick="new Calendar().show(this);" style="width:100px" size="15" />
+				   <input onclick="doQuery()" type="button" value="统计"></input>
+				   <input onclick="charPrint()" type="button" value="打印"></input>
+				 </td>
+				  
+				 </tr>
+			</table>
+		</div>
+		<div style="margin-left:auto,margin-right:auto" height="80%">
+			<center><iframe align="middle" id="chartFrame" src="../chart.html" width="700px" height="500px" frameborder="0"></iframe>
+		</center></div>
+  </div>
+</body>
+</html>

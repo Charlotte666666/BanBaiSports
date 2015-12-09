@@ -1,0 +1,201 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <link rel="stylesheet" type="text/css" href="../../css/redmond/jquery.ui.all.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var infoId="";
+   var OSS_BASE="http://bookdoctor.oss-cn-beijing.aliyuncs.com/";
+    
+   $(document).ready(function() {
+     initData();
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   function doSubmit(){
+	 var aoData=[];
+	 var xurl="/actions/Member.action?updateMember";
+
+     if ( optType == 'insert' ) {
+       aoData.push( { "name": "member.password", "value": top.hex_md5("12345678") } );
+	   xurl="/actions/Member.action?insertMember";
+     }
+	 var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+     aoData.push( { "name": "member.id", "value": infoId } );
+     aoData.push( { "name": "member.cell_phone", "value":$("#cell_phone").val() } );
+     aoData.push( { "name": "member.real_name", "value": $("#real_name").val() } );
+     aoData.push( { "name": "member.img_url", "value":$("#img_url").val() } );
+	 aoData.push( { "name": "member.sex", "value":$("#sex").val() } );
+	 aoData.push( { "name": "member.birth_year", "value":$("#birth_year").val() } );
+	 top.sendAjaxRequest(xurl,aoData,optCallback);
+   }
+   
+   function checkForm(){
+     var msg = "";
+     return msg;
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      isSaveOK = true;
+	      top.showInfoWinOK("操作成功");
+		  top.closeDialog();
+	    }else{
+	      isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   function initData(){
+	   try{
+		   optType=top.getUrlParam(document.URL,"opt");
+		   infoId=top.getUrlParam(document.URL,"infoId");
+		   if ( optType == 'update' ) {
+			 var aoData=[];
+		     aoData.push( { "name": "member.id", "value": infoId } );
+		     top.sendAjaxRequest("/actions/Member.action?getMemberById",aoData,userInfoCallback);
+		   }else{
+			 $( "#tdStatus" ).html( top.getCodeName("MEMBER_STATUS",'1') );
+			 $( "#tdsex" ).html( top.getCodeSelectHtml("SEX","sex",true) );
+		   }
+	   }catch(e){
+		   top.showInfoWinError(e.message);
+	   }
+   }
+   function userInfoCallback(obj){
+       try{
+        if ( obj.status == true ){
+          var user=obj.body;
+          $("#birth_year").html(user.birth_year);
+          $("#real_name").html( user.real_name );
+		  $("#cell_phone").html( user.cell_phone );
+          $( "#tdStatus" ).html( top.getCodeName("MEMBER_STATUS",user.status) );
+		  $( "#tdsex" ).html( top.getCodeName("SEX",user.sex) );
+		  $( "#education" ).html( top.getCodeName("EDUCATION",user.education) );
+		  $( "#job" ).html( user.job );
+		  $( "#member_id" ).html( user.id );
+		  $("#regist_time_td").html( top.getTimeStr(user.regist_time) );
+		  if ( user.img_url != '' ) {
+			$("#pic").attr("src", (OSS_BASE+""+user.img_url) );
+		  }
+        }else{
+          top.showInfoWinError("操作失败");
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+   
+ function uploadPic(){
+     var xurl="../uploadFileSimple.html?preFix=USER";
+     openDialog( "上传人员照片",xurl,true,500,200,uploadPicCallback);
+ }
+ 
+ function uploadPicCallback(obj){
+     try{
+	   var obj=top.getTempValue();
+	   if ( obj.isSaveOK ) {
+		  $("#pic").attr("src",top.getUrlBase()+"/download?filePath="+obj.filePath);
+		  $("#img_url").val( obj.filePath );
+	   }
+	 }catch(e){}
+ }
+ 
+ function openDialog(t,xurl,isModal,w,h,callback){
+		if ( isModal == undefined ) isModal=true;
+		if ( !h ) h=150;
+		if ( !w ) w=300;
+		$( "#dialog" ).dialog({
+			title: t,
+			height: h,
+			width: w,
+			modal: isModal,
+			resizable: false,
+		    beforeClose: function(event, ui) {
+		        try{
+		            document.getElementById("self_iframe").contentWindow.doBeforeClose();
+		            if ( callback ) callback.apply();
+		        }catch(e){
+		        }
+		        return true;
+		    }
+		});
+		document.getElementById("self_iframe").src = xurl;
+    }
+  </script> 
+</head>
+<body style="overflow:hidden;">
+<br>
+<table width="100%" border="0" padding="0" spacing="0">
+ <tr class="tr_data">
+    <td rowspan="9" valign="top">
+		<img src="../../img/photos.png" height="180px" id="pic"/>
+	</td>
+    <td align="right">姓名:</td>
+    <td align="left"><span id="real_name" ></span></td>
+ </tr>
+ <tr class="tr_data">
+    <td width="30%" align="right">手机号码:</td>
+    <td width="70%" align="left"><span id="cell_phone" ></span></td>
+ </tr>
+ <tr id="tr_status" class="tr_data">
+    <td align="right">帐号状态:</td>
+    <td align="left" id="tdStatus"></td>
+ </tr>
+ <tr id="tr_status" class="tr_data">
+    <td align="right">性别:</td>
+    <td align="left" id="tdsex"></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">出生年份:</td>
+    <td align="left" ><span id="birth_year" ></span></td>
+ </tr>
+  <tr id="tr_status" class="tr_data">
+    <td align="right">学历:</td>
+    <td align="left" id="education"></td>
+ </tr>
+ <tr id="tr_status" class="tr_data">
+    <td align="right">职业:</td>
+    <td align="left" id="job"></td>
+ </tr>
+ <tr class="tr_data">
+    <td align="right">注册时间:</td>
+    <td align="left" id="regist_time_td"></td>
+ </tr>
+ <tr id="tr_status" class="tr_data">
+    <td align="right">用户编号:</td>
+    <td align="left" id="member_id"></td>
+ </tr>
+</table>
+<!--p align="center">
+   <table><tr>
+		    <td><span id="okBtn" class="buttonTwo"><a href="javascript:doSubmit()">提交</a></span></td>
+		    <td><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+   </tr></table>
+</p-->
+<div id="dialog" title="" style="display:none;padding: 0 0 0 0;margin: 0 0 0 0;z-index:10000">
+    <iframe id="self_iframe" src="about:blank" width="100%" height="96%" frameborder="0"></iframe>
+ </div>
+</body>
+</html>

@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/map_css.css"/>
+	<link rel="stylesheet" type="text/css" href="../../css/simpleTab.css">
+	<link rel="stylesheet" type="text/css" href="../../css/drag-drop-folder-tree.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/context-menu.css"></link>
+	<link type="text/css" rel="stylesheet" href="../../css/layout-default-latest.css" />
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/SimpleMap.js"></script>
+    <script type="text/javascript" src="../../js/yetii-min.js"></script>
+    <script type="text/javascript" language="javascript" src="../../js/myDtree.js" ></script>
+    <script type="text/javascript" language="javascript" src="../../js/context-menu.js"></script>
+    <script type="text/javascript" language="javascript" src="../../js/drag-drop-folder-tree.js" ></script>
+	<script type="text/javascript" language="javascript" src="../../js/jquery.layout-latest.min.js" ></script>
+
+<style type="text/css">
+body {
+	font-size: 13px;
+	font-weight: bold;
+	text-decoration: none;
+	overflow-x: hidden; 
+	overflow-y: hidden;
+	background-image: url(../../img/bg2_body1.png);
+	background-repeat: repeat;
+}
+body, div, ul, li, p, table, tr, td, a, img, ul, li  {
+	padding: 0px;
+	margin: 0px;
+	list-style-type: none;
+	border-top-style: none;
+	border-right-style: none;
+	border-bottom-style: none;
+	border-left-style: none;
+}
+ul.demolayout li {
+	margin: 0 2px 0 0;
+	float: left;
+	background-color: #ADD8E6;
+}
+.tabs-container {
+	clear: left;
+	border: 1px solid #ccc;
+	border-top: 0;
+	padding: 20px 3px 0 8px;
+	background-color: #ADD8E6;
+}  
+.tab{
+   height:100%;
+   overflow: auto;
+   background-color: #ADD8E6;
+}
+ul.demolayout a.active {
+	background: #ADD8E6;
+}
+</style>
+<script type="text/javascript">
+var d=null;
+var tabber1 = null;
+var data_Dbbfile=[];
+var data_Device=[];
+var data_Factors=[];
+var data_Keyprocess=[];
+var data_Suspendfiles=[];
+var data_Grib=[];
+var data_Statistics=[];
+var data_Timelimit=[];
+var data_Dbspace=[];
+var data_Insert=[];
+var data_Clear=[];
+var currentNodeName="";
+var serverResponse={};
+var imgStatus="";
+var ibmServerType="";
+var rowNum = 0;
+var ruleList={};
+var interGetResult=0;
+var interPlayAlert=0;
+var isNeedAlarm=false;
+var alertMap = top.getAlertMap();
+var currentAlertObjs=[];
+var myLayout;
+
+function addAlertObj(code){
+  try{
+      code = code.replace(new RegExp(" ","gm"), "");
+	  var s = alertMap.get(code);
+	  if ( s == "" ) {
+		alertMap.put(code,"0");
+	  } else {
+	    var lm=Number(s) - (Number( $("#time_fre").val()) / 60000);
+		if ( lm <= 0 ) {
+		 lm ="0";
+		}
+		alertMap.put(code, lm+"");
+	  }
+  }catch(e){
+  }
+}
+
+function debugShowAlert(){
+  var str="";
+  var es= alertMap.getEntrys();
+  for (var i=0;i<es.length;i++ ) {
+     str+= es[i].toString()+"\n";
+  }
+  alert(str);
+}
+
+function refreshAlertMap(){
+    var keys=alertMap.keySet();
+	var s=null;
+	var has = false;
+	var noKeys = [];
+	for(var i=0;i<keys.length;i++ ) {
+	    has = false; 
+		for ( var j=0;j<currentAlertObjs.length;j++ ) {
+		  if ( keys[i] == currentAlertObjs[j] ) {
+		    has = true;
+		  }
+		}
+		if ( !has ) noKeys[noKeys.length] = keys[i];
+    }
+	
+	for(var i=0;i<noKeys.length;i++ ) {
+	    alertMap.remove( noKeys[i] );
+	}
+	
+	top.setAlertMap( alertMap );
+}
+
+/**
+  返回是否需要显示 “取消报警” 按钮
+*/
+function checkAlertObj(code){
+   try{
+      if ( !code ) return false;
+	  code = code.replace(new RegExp(" ","gm"), "");
+	  var s = alertMap.get(code);
+	  if ( s == "" ) {
+		return false;
+	  } else {
+	    var lm=Number(s);
+		if ( lm > 0 ) {
+		  return false;
+		} else {
+		  return true;
+		}
+	  }
+  }catch(e){
+  }
+  return false;
+}
+
+function cancelAlertObj(code,btnId){
+  try{
+      if ( !btnId ) btnId="cancelBtnSpan";
+	  btnId = btnId.replace(new RegExp(" ","gm"), "");
+	  code = code.replace(new RegExp(" ","gm"), "");
+	  var s = alertMap.get(code);
+	  if ( s == "" ) {
+		return ;
+	  } else {
+		alertMap.put(code, "30");
+	  }
+	  checkNeedAlert();
+	  $('#'+btnId).hide();
+  }catch(e){
+  }
+}
+
+function checkNeedAlert(){
+    isNeedAlarm = false;
+    var keys=alertMap.keySet();
+	var s=null;
+	for(var i=0;i<keys.length;i++ ) {
+		s = alertMap.get(keys[i]);
+		if ( s == '0' || s == '' ) {
+			isNeedAlarm = true;
+			return ;
+		}
+    }
+}
+
+$(document).ready( function() {
+    tabber1 = new Yetii({
+      id: 'demo'
+    });
+	var wh=$(window).height();
+	var ww=$(window).width();
+	$('#tabs').height(wh - 52);
+	//$('#tabs').width(ww - 475);
+	//$('#taskListTD').height(wh - 445);
+	$('#time_freDiv').css({"left":(ww-520)+"px","top":"5px"});
+    getRuleList();
+	setTimer();
+	
+	myLayout = $('body').layout({
+			closable:					true	// pane can open & close
+		,	resizable:					true	// when open, pane can be resized 
+		,	slidable:					true	// when closed, pane can 'slide' open over other panes - closes on mouse-out
+		,	livePaneResizing:			true
+		,	north__initClosed:	true
+		,	north__slidable:			false	// OVERRIDE the pane-default of 'slidable=true'
+		,	north__togglerLength_closed: '100%'	// toggle-button is full-width of resizer-bar
+		,   north__spacing_open:        0
+		,	north__spacing_closed:		0		// big resizer-bar when open (zero height)
+		,	south__initClosed:	true
+		,	south__resizable:			false	// OVERRIDE the pane-default of 'resizable=true'
+		,	south__spacing_open:		0		// no resizer-bar when open (zero height)
+		,	south__spacing_closed:		0		// big resizer-bar when open (zero height)
+		,	east__initClosed:	true
+		,	east__size:					0
+		,	east__resizable:			false
+		,	east__spacing_open:		    0
+		,	east__spacing_closed:		0
+		,	east__minSize:				0
+		,	east__maxSize:				.5 // 50% of layout width
+		,	center__minWidth:			100
+		,	west__size:					360
+		,	west__minSize:				200
+		,	west__maxSize:				500 
+		,	west__animatePaneSizing:	false
+		,	west__fxSpeed_size:			"fast"	// 'fast' animation when resizing west-pane
+		,	west__fxSpeed_open:			1000	// 1-second animation when opening west-pane
+		,	west__fxSettings_open:		{ easing: "easeOutBounce" } // 'bounce' effect when opening
+		,	west__fxName_close:			"none"	// NO animation when closing west-pane
+		,	west__showOverflowOnHover:	true
+		,	stateManagement__enabled:	false // automatic cookie load & save enabled by default
+		,	showDebugMessages:			false // log and/or display messages from debugging & testing code
+		});
+	
+});
+
+ function setTimer(){
+    try{
+     clearInterval( interGetResult );
+	 interGetResult = setInterval("getRuleList()", $("#time_fre").val() );
+	}catch(e){}
+ }
+ 
+ function getRuleList(){
+    top.sendAjaxRequest("/actions/ProSystem.action?getRuleList",[],getRuleListCallback);
+ }
+ 
+ function getRuleListCallback(obj){
+    try{
+      ruleList = obj.body;
+	  getResult();
+	}catch(e){
+	  //alert(e.message);
+	}
+ }
+ 
+ function getResult(){
+    top.sendAjaxRequest("/actions/ProSystem.action?getResult",[],optCallback);
+ }
+ 
+ function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+		  currentAlertObjs = [];
+		  clearInterval( interPlayAlert );
+		  serverResponse = obj.body;
+		  initMenuTree();
+		  var server="IBM";
+		  imgStatus="empty.gif";
+	      data_Dbbfile = obj.body.IBM.Dbbfile;
+		  data_Device = obj.body.IBM.Device;
+		  data_Factors = obj.body.IBM.Factors;
+		  data_Keyprocess = obj.body.IBM.Keyprocess;
+		  data_Suspendfiles = obj.body.IBM.Suspendfiles;
+		  data_Grib = obj.body.IBM.Grib;
+		  data_Statistics = obj.body.IBM.Statistics;
+		  data_Timelimit = obj.body.IBM.Timelimit;
+		  data_Dbspace = obj.body.IBM.Dbspace;
+		  
+		  ibmServerType="DBServer";
+		  $("#"+server+"_Dbspace_DBServer_img").attr( "src","../../img/"+checkList(data_Dbspace) );
+		  $("#"+server+"_Dbbfile_DBServer_img").attr( "src","../../img/"+checkList(data_Dbbfile) );
+		  $("#"+server+"_Keyprocess_DBServer_img").attr( "src","../../img/"+checkList(data_Keyprocess) );
+		  $("#"+server+"_Suspendfiles_DBServer_img").attr( "src","../../img/"+checkList(data_Suspendfiles) );
+		  
+		  ibmServerType="AppServer";
+		  $("#"+server+"_Dbbfile_AppServer_img").attr( "src","../../img/"+checkList(data_Dbbfile) );
+		  $("#"+server+"_Keyprocess_AppServer_img").attr( "src","../../img/"+checkList(data_Keyprocess) );
+		  $("#"+server+"_Suspendfiles_AppServer_img").attr( "src","../../img/"+checkList(data_Suspendfiles) );
+		  
+		  initTimelimit(server);
+		  initStatistics(server);
+		  initGrib(server);
+		  
+		  server="HP";
+		  imgStatus="empty.gif";
+	      data_Dbbfile = obj.body.HP.Dbbfile;
+		  data_Device = obj.body.HP.Device;
+		  data_Factors = obj.body.HP.Factors;
+		  data_Keyprocess = obj.body.HP.Keyprocess;
+		  data_Suspendfiles = obj.body.HP.Suspendfiles;
+		  data_Grib = obj.body.HP.Grib;
+		  data_Statistics = obj.body.HP.Statistics;
+		  data_Timelimit = obj.body.HP.Timelimit;
+		  data_Dbspace = obj.body.HP.Dbspace;
+		  
+		  ibmServerType="";
+		  $("#"+server+"_Dbspace_img").attr( "src","../../img/"+checkList(data_Dbspace) );
+		  $("#"+server+"_Dbbfile_img").attr( "src","../../img/"+checkList(data_Dbbfile) );
+		  $("#"+server+"_Keyprocess_img").attr( "src","../../img/"+checkList(data_Keyprocess) );
+		  $("#"+server+"_Suspendfiles_img").attr( "src","../../img/"+checkList(data_Suspendfiles) );
+		  
+		  initTimelimit(server);
+		  initStatistics(server);
+		  initGrib(server);
+		  
+		  server="SYB";
+		  imgStatus="empty.gif";
+	      data_Dbbfile = obj.body.SYB.Dbbfile;
+		  data_Device = obj.body.SYB.Device;
+		  data_Keyprocess = obj.body.SYB.Keyprocess;
+		  data_Suspendfiles = obj.body.SYB.Suspendfiles;
+		  data_Grib = obj.body.SYB.Grib;
+		  data_Timelimit = obj.body.SYB.Timelimit;
+		  data_Insert = obj.body.SYB.Insert;
+		  data_Clear = obj.body.SYB.Clear;
+		  
+		  $("#"+server+"_Dbbfile_img").attr( "src","../../img/"+checkList(data_Dbbfile) );
+		  $("#"+server+"_Keyprocess_img").attr( "src","../../img/"+checkList(data_Keyprocess) );
+		  $("#"+server+"_Suspendfiles_img").attr( "src","../../img/"+checkList(data_Suspendfiles) );
+		  $("#"+server+"_Suspendfiles_img").attr( "src","../../img/"+checkList(data_Suspendfiles) );
+		  $("#"+server+"_Insert_img").attr( "src","../../img/"+checkList(data_Insert) );
+		  $("#"+server+"_Clear_img").attr( "src","../../img/"+checkList(data_Clear) );
+		  
+		  initTimelimitSYB();
+		  initGribSYB();
+		  
+		  $("#refreshTime").html( "今天"+top.getCurrentClientTime().substring(10) );
+		  refreshAlertMap();
+		  checkNeedAlert();
+		  if ( isNeedAlarm ) {
+		    interPlayAlert = setInterval("playAlert()", 4000 );
+		  }
+		  
+		  $('#taskList_table').html( "" );
+	    }
+	   }catch(e){
+		  //top.showInfoWin("处理异常:"+e.message);
+	   }
+ }
+ 
+ function hasIBM_Keyprocess_DBServer(){
+    try{
+       for (var i=0;i<serverResponse.IBM.Keyprocess.length;i++){
+	      if ( serverResponse.IBM.Keyprocess[i].machine == 'DBServer' ) return true;
+	   }
+    }catch(e){
+	}
+	return false;
+ }
+ 
+ function hasIBM_Dbbfile_DBServer(){
+    try{
+       for (var i=0;i<serverResponse.IBM.Dbbfile.length;i++){
+	      if ( serverResponse.IBM.Dbbfile[i].machine == 'DBServer' ) return true;
+	   }
+    }catch(e){
+	}
+	return false;
+ }
+ 
+ function hasIBM_Suspendfiles_DBServer(){
+    try{
+       for (var i=0;i<serverResponse.IBM.Suspendfiles.length;i++){
+	      if ( serverResponse.IBM.Suspendfiles[i].machine == 'DBServer' ) return true;
+	   }
+    }catch(e){
+	}
+	return false;
+ }
+ 
+ // 初始化菜单树
+ function initMenuTree(){
+           d=new dTree('d');
+           d.config.useSelection = true;
+           d.config.folderLinks = true;
+           d.config.useStatusText = false;
+           d.config.useLines = false;
+          // d.add( 0, -1, "实时库" );
+		   d.add( 1, -1, "RDB_IBM" );
+		   d.add( 2, -1, "RDB_HP" );
+		   d.add( 3, -1, "RDB_SYB" );
+		   d.add( 11, 1, "数据库服务器(10.20.20.23)" );
+		   d.add( 12, 1, "应用服务器(10.20.20.24)" );
+		   if ( hasIBM_Keyprocess_DBServer() ) d.add( "IBM_Keyprocess_DBServer", 11, "<img id='IBM_Keyprocess_DBServer_img' width='16px' height='16px' src='../../img/icon_success.png'  />进程" );
+		   if ( hasIBM_Dbbfile_DBServer() ) d.add( "IBM_Dbbfile_DBServer", 11, "<img id='IBM_Dbbfile_DBServer_img' width='16px' height='16px' src='../../img/icon_success.png'  />bfile文件监控信息" );
+		   if ( hasIBM_Suspendfiles_DBServer() ) d.add( "IBM_Suspendfiles_DBServer", 11, "<img id='IBM_Suspendfiles_DBServer_img' width='16px' height='16px' src='../../img/icon_success.png'  />未处理文件数" );
+		   d.add( "IBM_Dbspace_DBServer", 11, "<img id='IBM_Dbspace_DBServer_img' width='16px' height='16px' src='../../img/icon_success.png'  />数据表空间监控" );
+		   d.add( "IBM_Device_DBServer", 11, "<img id='IBM_Device_DBServer_img' width='16px' height='16px' src='../../img/icon_success.png'  />关键设备" );
+		   //d.add( "IBM_Factors_DBServer", 11, "<img id='IBM_Factors_DBServer_img' width='16px' height='16px' src='../../img/icon_success.png'  />要素错误监控" );
+		   
+		   d.add( "IBM_Keyprocess_AppServer", 12, "<img id='IBM_Keyprocess_AppServer_img' width='16px' height='16px' src='../../img/icon_success.png'  />进程" );
+		   d.add( "IBM_Dbbfile_AppServer", 12, "<img id='IBM_Dbbfile_AppServer_img' width='16px' height='16px' src='../../img/icon_success.png'  />bfile文件监控信息" );
+		   d.add( "IBM_Suspendfiles_AppServer", 12, "<img id='IBM_Suspendfiles_AppServer_img' width='16px' height='16px' src='../../img/icon_success.png'  />未处理文件数" );
+		   d.add( "IBM_Device_AppServer", 12, "<img id='IBM_Device_AppServer_img' width='16px' height='16px' src='../../img/icon_success.png'  />关键设备" );
+		   //d.add( "IBM_Factors_AppServer", 12, "<img id='IBM_Factors_AppServer_img' width='16px' height='16px' src='../../img/icon_success.png'  />要素错误监控" );
+
+		   d.add( "HP_Keyprocess", 2, "<img id='HP_Keyprocess_img' width='16px' height='16px' src='../../img/icon_success.png'  />进程" );
+		   d.add( "HP_Dbbfile", 2, "<img id='HP_Dbbfile_img' width='16px' height='16px' src='../../img/icon_success.png'  />bfile文件监控信息" );
+		   d.add( "HP_Suspendfiles", 2, "<img id='HP_Suspendfiles_img' width='16px' height='16px' src='../../img/icon_success.png'  />未处理文件数" );
+		   d.add( "HP_Dbspace", 2, "<img id='HP_Dbspace_img' width='16px' height='16px' src='../../img/icon_success.png'  />数据表空间监控" );
+		   d.add( "HP_Device", 2, "<img id='HP_Device_img' width='16px' height='16px' src='../../img/icon_success.png'  />关键设备" );
+		   //d.add( "HP_Factors", 2, "<img id='HP_Factors_img' width='16px' height='16px' src='../../img/icon_success.png'  />要素错误监控" );
+		   
+		   d.add( "SYB_Keyprocess", 3, "<img id='SYB_Keyprocess_img' width='16px' height='16px' src='../../img/icon_success.png'  />进程" );
+		   d.add( "SYB_Device", 3, "<img id='SYB_Device_img' width='16px' height='16px' src='../../img/icon_success.png'  />服务器状态" );
+		   d.add( "SYB_Dbbfile", 3, "<img id='SYB_Dbbfile_img' width='16px' height='16px' src='../../img/icon_success.png'  />文件系统空闲空间" );
+		   d.add( "SYB_Suspendfiles", 3, "<img id='SYB_Suspendfiles_img' width='16px' height='16px' src='../../img/icon_success.png'  />未处理的文件数" );
+		   d.add( "SYB_Insert", 3, "<img id='SYB_Insert_img' width='16px' height='16px' src='../../img/icon_success.png'  />格点资料入库情况" );
+		   d.add( "SYB_Clear", 3, "<img id='SYB_Clear_img' width='16px' height='16px' src='../../img/icon_success.png'  />数据库清除情况" );
+
+           $("#menuTree").html( d.toString() );
+           treeObj = new JSDragDropTree();
+		   treeObj.imageFolder = '../../img/';
+           treeObj.setTreeId('dhtmlgoodies_tree2');
+           treeObj.setMaximumDepth(10);
+           treeObj.setMessageMaximumDepthReached('已到达最大的层次'); 
+           treeObj.setRenameAllowed(false);
+           treeObj.setDeleteAllowed(false);
+           treeObj.initTree();
+           treeObj.expandAll();
+       }
+       // 选中部门节点后触发函数
+ function onSelectedNode(nid){
+       try{
+            var ids=nid.split("_");
+			var j=0;
+			ibmServerType="";
+			data_Dbbfile=null;
+			data_Device=null;
+			data_Factors=null;
+			data_Keyprocess=null;
+			data_Suspendfiles=null;
+			data_Dbspace=null;
+			data_Clear=null;
+			data_Insert=null;
+			var ht='';
+			var name="";
+			var node = d.getNodeById(nid);
+			if ( node ) {
+			 name = node.name;
+			 name = name.substring(name.indexOf("/>")+2,name.length)+"列表";
+			}
+			$('#taskListName').html('>>&nbsp;'+name);
+			server=ids[0];
+			if ( ids[2] ) ibmServerType=ids[2];
+            if ( server == "IBM" ) {	
+				if ( ids[1] == "Dbbfile" ) data_Dbbfile = serverResponse.IBM.Dbbfile;
+				if ( ids[1] == "Device" ) data_Device = serverResponse.IBM.Device;
+				if ( ids[1] == "Factors" ) data_Factors = serverResponse.IBM.Factors;
+				if ( ids[1] == "Keyprocess" ) data_Keyprocess = serverResponse.IBM.Keyprocess;
+				if ( ids[1] == "Suspendfiles" ) data_Suspendfiles = serverResponse.IBM.Suspendfiles;
+				if ( ids[1] == "Dbspace" ) data_Dbspace = serverResponse.IBM.Dbspace;
+				ht += getTaskListHtml(server);
+			} else if (server =="HP") {
+				if ( ids[1] == "Dbbfile" ) data_Dbbfile = serverResponse.HP.Dbbfile;
+				if ( ids[1] == "Device" ) data_Device = serverResponse.HP.Device;
+				if ( ids[1] == "Factors" ) data_Factors = serverResponse.HP.Factors;
+				if ( ids[1] == "Keyprocess" ) data_Keyprocess = serverResponse.HP.Keyprocess;
+				if ( ids[1] == "Suspendfiles" ) data_Suspendfiles = serverResponse.HP.Suspendfiles;
+				if ( ids[1] == "Dbspace" ) data_Dbspace = serverResponse.HP.Dbspace;
+				ht += getTaskListHtml(server);
+			} else if (server == "SYB") {
+				if ( ids[1] == "Dbbfile" ) data_Dbbfile = serverResponse.SYB.Dbbfile;
+				if ( ids[1] == "Device" ) data_Device = serverResponse.SYB.Device;
+				if ( ids[1] == "Insert" ) data_Insert = serverResponse.SYB.Insert;
+				if ( ids[1] == "Keyprocess" ) data_Keyprocess = serverResponse.SYB.Keyprocess;
+				if ( ids[1] == "Suspendfiles" ) data_Suspendfiles = serverResponse.SYB.Suspendfiles;
+				if ( ids[1] == "Clear" ) data_Clear = serverResponse.SYB.Clear;
+				ht += getTaskListHtml(server);
+			}
+			$('#taskList_table').html( ht );
+	 }catch(e){
+	 }		
+ }
+ 
+ function checkList(list){
+     if ( !list ) return "icon_success.png";
+	 var ret = "icon_success.png";
+	 try{
+		 for (var i=0;i<list.length;i++) {
+		    if ( list[i].machine != '' && ibmServerType != "" && list[i].machine && ibmServerType != list[i].machine ) continue;
+		    if ( list[i].status == 'error' ) {
+			  //isNeedAlarm = true;
+			  if ( !list[i].code ) {
+			    addAlertObj(list[i].name);
+				currentAlertObjs[currentAlertObjs.length] = list[i].name.replace(new RegExp(" ","gm"), "");
+			  } else {
+			    addAlertObj(list[i].code);
+				currentAlertObjs[currentAlertObjs.length] = list[i].code;
+			  }
+			  ret = "alerting.gif";
+			}
+			if ( list[i].status == 'warn' &&  ret == "icon_success.png" ) ret = "icon_alert.png";
+		 }
+	 }catch(e){
+	 }
+	 return ret;
+ }
+ 
+ function getTR(status,name,critical,warning,value,time,category,ruleName,serv,code){
+    var ht = "";
+	var imgName="icon_success.png";
+	var color="";
+	if ( status == 'error' ) {
+	 imgName="alerting.gif";
+	 color="#FFEEBB";
+	 //isNeedAlarm = true;
+	} else if ( status == 'warn' ) {
+	 imgName="icon_alert.png";
+	 color="#FFEEBB";
+	} else {
+	  rowNum++;
+	  if ( rowNum % 2 == 0 ) {
+	    color="#ffffff";
+	  } else color="#F0FFF0";
+	}
+    try{
+	var js='showDetail(event,0,\''+critical+'\',\''+warning+'\'';
+		js+=',\''+value+'\',\''+status+'\'';
+		js+=',\''+time+'\',\''+category+'\',\''+ruleName+'\',\''+server+'\',\''+code+'\')';
+	
+	if ( !critical && !value && status == 'error' ) {
+	   var nt = name.replace(new RegExp(" ","gm"), "");
+	   if ( checkAlertObj( nt ) ) {
+	     name += "&nbsp;&nbsp;<span id='btn"+nt+"'><input type='button' onclick=\"cancelAlertObj('"+name+"','btn"+name+"')\" value='取消报警'></input></span>";
+	   }
+	}
+    ht='<tr bgcolor="'+color+'">';
+	ht+='<td align="left"><img onclick="'+js+'" style="cursor:pointer" width="16px" height="16px" src="../../img/'+ imgName +'"  />'+name+'</td>';
+	ht+='</tr>';
+    }catch(e){
+	  //alert(e.message);
+	}
+	return ht;
+ }
+ 
+ function getTaskListHtml(server){
+    rowNum = 0;
+    var errorHt="";
+	var warnHt="";
+    var ht="";
+	var name="";
+	var status = "";
+
+	try{
+     if ( data_Dbbfile ) {
+			for ( var i=0;i<data_Dbbfile.length;i++ ) {
+			    if ( server != 'SYB' ) {
+			      if ( data_Dbbfile[i].machine != '' && ibmServerType != data_Dbbfile[i].machine ) continue;
+				  name = data_Dbbfile[i].BaseDir;
+				} else name = data_Dbbfile[i].name;
+				
+				status = data_Dbbfile[i].status;
+
+				if (status == 'ok') {
+				   ht+= getTR( status, name,data_Dbbfile[i].critical, data_Dbbfile[i].warning, data_Dbbfile[i].value, data_Dbbfile[i].time, data_Dbbfile[i].category, data_Dbbfile[i].rule, server );
+				} else if (status == 'warn') {
+				   warnHt+= getTR( status, name,data_Dbbfile[i].critical, data_Dbbfile[i].warning, data_Dbbfile[i].value, data_Dbbfile[i].time, data_Dbbfile[i].category, data_Dbbfile[i].rule, server );
+				} else if (status == 'error') {
+				   errorHt+= getTR(status, name,data_Dbbfile[i].critical, data_Dbbfile[i].warning, data_Dbbfile[i].value, data_Dbbfile[i].time, data_Dbbfile[i].category, data_Dbbfile[i].rule, server, data_Dbbfile[i].code );
+				}
+			}
+     }
+
+	 if ( data_Device ) {
+	        var name="";
+			for ( var i=0;i<data_Device.length;i++ ) {
+			    if ( server != 'SYB' ) {
+			      if ( ibmServerType != data_Device[i].machine ) continue;
+				}
+				if ( server == 'SYB' ) {
+				   name=data_Device[i].name;
+				} else if ( data_Device[i].usageType == 'Disk' ) {
+				   name="Disk:"+data_Device[i].path+ "(" +data_Device[i].value+"%)";
+				} else {
+				   name=data_Device[i].usageType+ "(" +data_Device[i].value+"%)";
+				}
+				
+				status = data_Device[i].status;
+				
+				if (status == 'ok') {
+				   ht+= getTR( status, name,data_Device[i].critical, data_Device[i].warning, data_Device[i].value, data_Device[i].time, data_Device[i].category, data_Device[i].rule, server );
+				} else if (status == 'warn') {
+				   warnHt+= getTR( status, name,data_Device[i].critical, data_Device[i].warning, data_Device[i].value, data_Device[i].time, data_Device[i].category, data_Device[i].rule, server );
+				} else if (status == 'error') {
+				   errorHt+= getTR(status, name,data_Device[i].critical, data_Device[i].warning, data_Device[i].value, data_Device[i].time, data_Device[i].category, data_Device[i].rule, server, data_Device[i].code );
+				}
+			}
+     }
+	 if ( data_Keyprocess ) {
+			for ( var i=0;i<data_Keyprocess.length;i++ ) {
+			    if ( server != 'SYB' ) {
+			      if ( ibmServerType != data_Keyprocess[i].machine ) continue;
+				}
+				status = data_Keyprocess[i].status;
+				name = data_Keyprocess[i].name + "("+data_Keyprocess[i].value+")";
+				
+				if (status == 'ok') {
+				   ht+= getTR( status, name,"0", "-1", data_Keyprocess[i].value, data_Keyprocess[i].time, data_Keyprocess[i].category, data_Keyprocess[i].rule, server );
+				} else if (status == 'warn') {
+				   warnHt+= getTR( status, name,"0", "-1", data_Keyprocess[i].value, data_Keyprocess[i].time, data_Keyprocess[i].category, data_Keyprocess[i].rule, server );
+				} else if (status == 'error') {
+				   errorHt+= getTR(status, name,"0", "-1", data_Keyprocess[i].value, data_Keyprocess[i].time, data_Keyprocess[i].category, data_Keyprocess[i].rule, server, data_Keyprocess[i].code );
+				}
+			}
+     }
+	 if ( data_Dbspace ) {
+			for ( var i=0;i<data_Dbspace.length;i++ ) {
+			    if ( server != 'SYB' ) {
+			     if ( ibmServerType != data_Dbspace[i].machine ) continue;
+				}
+				status = data_Dbspace[i].status;
+				name = data_Dbspace[i].name+"(" +data_Dbspace[i].value+"%)";
+				
+				if (status == 'ok') {
+				   ht+= getTR( status, name,data_Dbspace[i].critical, data_Dbspace[i].warning, data_Dbspace[i].value, data_Dbspace[i].time, data_Dbspace[i].category, data_Dbspace[i].rule, server );
+				} else if (status == 'warn') {
+				   warnHt+= getTR( status, name,data_Dbspace[i].critical, data_Dbspace[i].warning, data_Dbspace[i].value, data_Dbspace[i].time, data_Dbspace[i].category, data_Dbspace[i].rule, server );
+				} else if (status == 'error') {
+				   errorHt+= getTR(status, name,data_Dbspace[i].critical, data_Dbspace[i].warning, data_Dbspace[i].value, data_Dbspace[i].time, data_Dbspace[i].category, data_Dbspace[i].rule, server, data_Dbspace[i].code );
+				}
+			}
+     }
+	 if ( data_Suspendfiles ) {
+			for ( var i=0;i<data_Suspendfiles.length;i++ ) {
+			    if ( server != 'SYB' ) {
+			     if ( ibmServerType != data_Suspendfiles[i].machine ) continue;
+				}
+				
+				if ( server != 'SYB' ) { 
+				  name=data_Suspendfiles[i].path+ "(" +data_Suspendfiles[i].value+")";
+				} else name=data_Suspendfiles[i].name;
+				
+				status = data_Suspendfiles[i].status;
+				
+				if (status == 'ok') {
+				   ht+= getTR( status, name,data_Suspendfiles[i].critical, data_Suspendfiles[i].warning, data_Suspendfiles[i].value, data_Suspendfiles[i].time, data_Suspendfiles[i].category, data_Suspendfiles[i].path, server );
+				} else if (status == 'warn') {
+				   warnHt+= getTR( status, name,data_Suspendfiles[i].critical, data_Suspendfiles[i].warning, data_Suspendfiles[i].value, data_Suspendfiles[i].time, data_Suspendfiles[i].category, data_Suspendfiles[i].path, server );
+				} else if (status == 'error') {
+				   errorHt+= getTR(status, name,data_Suspendfiles[i].critical, data_Suspendfiles[i].warning, data_Suspendfiles[i].value, data_Suspendfiles[i].time, data_Suspendfiles[i].category, data_Suspendfiles[i].path, server, data_Suspendfiles[i].code );
+				}
+			}
+     }
+	 
+	 if ( data_Insert ) {
+			for ( var i=0;i<data_Insert.length;i++ ) {
+			    if ( server != 'SYB' ) {
+			     if ( ibmServerType != data_Insert[i].machine ) continue;
+				}
+				status = data_Insert[i].status;
+				name = data_Insert[i].name;
+				
+				if (status == 'ok') {
+				   ht+= getTR( status, name);
+				} else if (status == 'warn') {
+				   warnHt+= getTR( status, name);
+				} else if (status == 'error') {
+				   errorHt+= getTR(status, name);
+				}
+			}
+     }
+	 
+	 if ( data_Clear ) {
+			for ( var i=0;i<data_Clear.length;i++ ) {
+			    if ( server != 'SYB' ) {
+			     if ( ibmServerType != data_Clear[i].machine ) continue;
+				}
+				status = data_Clear[i].status;
+				name = data_Clear[i].name;
+				
+				if (status == 'ok') {
+				   ht+= getTR( status, name);
+				} else if (status == 'warn') {
+				   warnHt+= getTR( status, name);
+				} else if (status == 'error') {
+				   errorHt+= getTR(status, name);
+				}
+			}
+     }
+	 ht = errorHt + warnHt + ht;
+	}catch(e){
+	}
+	return ht; 
+ }
+ 
+ function initTimelimit(server){
+   if ( !data_Timelimit ) return ;
+   var ht='<tr bgcolor="#C8D2DF">';
+    ht+='<td align="center"><strong><font color="blue">报类</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">00</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">01</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">02</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">03</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">04</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">05</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">06</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">07</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">08</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">09</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">10</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">11</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">12</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">13</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">14</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">15</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">16</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">17</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">18</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">19</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">20</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">21</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">22</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">23</font></strong></td>';
+    ht+='</tr>';
+	var j=0;
+	var imgName = "empty.gif";
+    if ( data_Timelimit.length > 0 ) {
+	 for ( var i=0;i<data_Timelimit.length;i++ ) {
+	    if ( i % 2 == 0 ) {
+		  ht+='<tr bgcolor="#ffffff">';
+		} else ht+='<tr bgcolor="#F0FFF0">';
+		ht+='<td align="center">'+data_Timelimit[i].name+'</td>';
+		for (j=0;j<24;j++) {
+		  if (data_Timelimit[i].subs[j].status == 'ok') {
+		   imgName="icon_success.png";
+		   if ( imgStatus == 'empty.gif' ) imgStatus="icon_success.png";
+		  } else if (data_Timelimit[i].subs[j].status == 'warn') {
+		   imgName="icon_alert.png";
+		   if ( imgStatus!='alerting.gif' ) imgStatus="icon_alert.png";
+		  } else if (data_Timelimit[i].subs[j].status == 'error') {
+		   imgName="alerting.gif";
+		   imgStatus="alerting.gif";
+		   //isNeedAlarm = true;
+		  } else imgName="empty.gif";
+		  
+		  if ( imgName =="empty.gif" ) {
+		   ht+='<td align="center" ><img width="16px" height="16px" src="../../img/'+ imgName +'"  /></td>';
+		  } else {
+		   ht+='<td align="center"><img onclick="showDetail(event,'+j+',\''+data_Timelimit[i].subs[j].critical+'\',\''+data_Timelimit[i].subs[j].warning+'\'';
+		   ht+=',\''+data_Timelimit[i].subs[j].value+'\',\''+data_Timelimit[i].subs[j].status+'\'';
+		   ht+=',\''+data_Timelimit[0].time+'\',\'timeLimit\',\''+data_Timelimit[i].rule+'\',\''+server+'\')"';
+		   ht+='style="cursor:pointer" width="16px" height="16px" src="../../img/'+ imgName +'"  /></td>';
+		  }
+		}
+	    ht+='</tr>';
+	  }
+	} else return ;
+	$('#timeLimit_table'+server).html( ht );
+	$('#timeLimit_time'+server).html( data_Timelimit[0].time );
+	$('#img_rdb_'+server).attr("src", "../../img/"+imgStatus);
+ }
+ 
+ function initTimelimitSYB(){
+   if ( !data_Timelimit ) return ;
+   var ht='<tr bgcolor="#C8D2DF">';
+    ht+='<td align="center"><strong><font color="blue">报类</font></strong></td>';
+	ht+='<td align="center"><strong><font color="blue">00</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">03</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">06</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">09</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">12</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">15</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">18</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">21</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">总数</font></strong></td>';
+    ht+='</tr>';
+	var j=0;
+	for ( var i=0;i<data_Timelimit.subs.length;i++ ) {
+	    if ( i % 2 == 0 ) {
+		  ht+='<tr bgcolor="#ffffff">';
+		} else ht+='<tr bgcolor="#F0FFF0">';
+		for ( j=0;j<data_Timelimit.subs[i].data.length;j++ ) {
+		  ht+='<td align="center">'+data_Timelimit.subs[i].data[j]+'</td>';
+		}
+	    ht+='</tr>';
+	}
+	$('#timeLimit_tableSYB').html( ht );
+	$('#timeLimit_timeSYB').html( data_Timelimit.time );
+ }
+
+ function initStatistics(server){
+   if ( !data_Statistics ) return ;
+   var j=0;
+   var ht='<tr bgcolor="#C8D2DF">';
+    ht+='<td align="center"><strong><font color="blue">报类</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">00</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">01</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">02</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">03</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">04</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">05</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">06</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">07</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">08</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">09</font></strong></td>';
+	for (j=10;j<data_Statistics[0].subs.length;j++) {
+	  ht+='<td align="center"><strong><font color="blue">'+j+'</font></strong></td>';
+	}
+    ht+='</tr>';
+	
+	var imgName = "empty.gif";
+    if ( data_Statistics.length > 0 ) {
+	 for ( var i=0;i<data_Statistics.length;i++ ) {
+	    if ( i % 2 == 0 ) {
+		  ht+='<tr bgcolor="#ffffff">';
+		} else ht+='<tr bgcolor="#F0FFF0">';
+		ht+='<td align="center">'+data_Statistics[i].name+'</td>';
+		for (j=0;j<data_Statistics[i].subs.length;j++) {
+		  if (data_Statistics[i].subs[j].status == 'ok') {
+		   imgName="icon_success.png";
+		   if ( imgStatus == 'empty.gif' ) imgStatus="icon_success.png";
+		  } else if (data_Statistics[i].subs[j].status == 'warn') {
+		   imgName="icon_alert.png";
+		   if ( imgStatus!='alerting.gif' ) imgStatus="icon_alert.png";
+		  } else if (data_Statistics[i].subs[j].status == 'error') {
+		   imgName="alerting.gif";
+		   imgStatus="alerting.gif";
+		   //isNeedAlarm = true;
+		  } else imgName="empty.gif";
+
+		  if ( imgName =="empty.gif" ) {
+		   ht+='<td align="center" ><img width="16px" height="16px" src="../../img/'+ imgName +'"  /></td>';
+		  } else {
+		    //ht+='<td align="center"><img onclick="showDetail(event)" style="cursor:pointer" width="16px" height="16px" src="../../img/'+ imgName +'"  /></td>';
+		   ht+='<td align="center"><img onclick="showDetail(event,'+j+',\''+data_Statistics[i].subs[j].critical+'\',\''+data_Statistics[i].subs[j].warning+'\'';
+		   ht+=',\''+data_Statistics[i].subs[j].value+'\',\''+data_Statistics[i].subs[j].status+'\'';
+		   ht+=',\''+data_Statistics[0].time+'\',\'statistics\',\''+data_Statistics[i].rule+'\',\''+server+'\')"';
+		   ht+='style="cursor:pointer" width="16px" height="16px" src="../../img/'+ imgName +'"  /></td>';
+		  }
+
+		}
+	    ht+='</tr>';
+	  }
+	} else return ;
+	$('#statistics_table'+server).html( ht );
+	$('#statistics_time'+server).html( data_Statistics[0].time );
+	$('#img_rdb_'+server).attr("src", "../../img/"+imgStatus);
+ }
+ 
+ function initGrib(server){
+   if ( !data_Grib ) return ;
+   var j=0;
+   var ht='<tr bgcolor="#C8D2DF">';
+    ht+='<td align="center"><strong><font color="blue">中心</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">昨00</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">昨12</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">今00</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">今12</font></strong></td>';
+    ht+='</tr>';
+	
+	var imgName = "empty.gif";
+    if ( data_Grib.length > 0 ) {
+	 for ( var i=0;i<data_Grib.length;i++ ) {
+	    if ( i % 2 == 0 ) {
+		  ht+='<tr bgcolor="#ffffff">';
+		} else ht+='<tr bgcolor="#F0FFF0">';
+		ht+='<td align="center">'+data_Grib[i].name+'</td>';
+		for (j=0;j<4;j++) {
+		  if (data_Grib[i].subs[j].status == 'ok') {
+		   imgName="icon_success.png";
+		   if ( imgStatus == 'empty.gif' ) imgStatus="icon_success.png";
+		  } else if (data_Grib[i].subs[j].status == 'warn') {
+		   imgName="icon_alert.png";
+		   if ( imgStatus!='alerting.gif' ) imgStatus="icon_alert.png";
+		  } else if (data_Grib[i].subs[j].status == 'error') {
+		   imgName="alerting.gif";
+		   imgStatus="alerting.gif";
+		   //isNeedAlarm = true;
+		  } else imgName="empty.gif";
+		  
+		  if ( imgName =="empty.gif" ) {
+		   ht+='<td align="center" ><img width="16px" height="16px" src="../../img/'+ imgName +'"  /></td>';
+		  } else {
+		   //ht+='<td align="center"><img onclick="showDetail(event)" style="cursor:pointer" width="16px" height="16px" src="../../img/'+ imgName +'"  /></td>';
+           ht+='<td align="center"><img onclick="showDetail(event,'+j+',\''+data_Grib[i].subs[j].critical+'\',\''+data_Grib[i].subs[j].warning+'\'';
+		   ht+=',\''+data_Grib[i].subs[j].value+'\',\''+data_Grib[i].subs[j].status+'\'';
+		   ht+=',\''+data_Grib[0].time+'\',\'grid\',\''+data_Grib[i].rule+'\',\''+server+'\')"';
+		   ht+='style="cursor:pointer" width="16px" height="16px" src="../../img/'+ imgName +'"  /></td>';
+		  }
+		}
+	    ht+='</tr>';
+	  }
+	} else return ;
+	$('#grib_table'+server).html( ht );
+	$('#grib_time'+server).html( data_Grib[0].time );
+	$('#img_rdb_'+server).attr("src", "../../img/"+imgStatus);
+ }
+ 
+ function initGribSYB(){
+   if ( !data_Grib ) return ;
+   var j=0;
+   var ht='<tr bgcolor="#C8D2DF">';
+    ht+='<td align="center"><strong><font color="blue">中心</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">昨00</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">昨12</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">今00</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">今12</font></strong></td>';
+    ht+='<td align="center"><strong><font color="blue">备注(00起始/截止/总量*12起始/截止/总量)</font></strong></td>';
+    ht+='</tr>';
+
+	var j=0;
+	for ( var i=0;i<data_Grib.subs.length;i++ ) {
+	    if ( i % 2 == 0 ) {
+		  ht+='<tr bgcolor="#ffffff">';
+		} else ht+='<tr bgcolor="#F0FFF0">';
+		for ( j=0;j<6;j++ ) {
+		  ht+='<td align="center">'+data_Grib.subs[i].data[j]+'</td>';
+		}
+	    ht+='</tr>';
+	}
+	$('#grib_tableSYB').html( ht );
+	$('#grib_timeSYB').html( data_Grib.time );
+ }
+ 
+ function playAlert(){
+	  try{
+	    if ( !isNeedAlarm ) return ;
+	    if ( document.getElementById("isPlayAlert").checked ) {
+		  Player.controls.play();
+		}
+	  }catch(e){}
+ }
+ 
+function showDetail(e,n,critical,warning,value,status,time,category,ruleName,serv,code){
+    if ( !value  || value == 'undefined') return ;
+    try{
+	  e = e || window.event;
+	  var ox= (e.x || e.pageX);//  e.pageX;
+	  var oy= (e.y || e.pageY);// e.pageY;
+      showToolTip(true,ox,oy,n,critical,warning,value,status,time,category,ruleName,serv,code);
+	}catch(e){
+	  //alert(e.message);
+	}
+}
+
+function showToolTip(isShow,ox,oy,n,critical,warning,value,status,time,category,ruleName,serv,code){
+   $('#mapTooltip_LB').hide();
+   $('#mapTooltip_LT').hide();
+   $('#mapTooltip_RB').hide();
+   $('#mapTooltip_RT').hide();
+   if ( !isShow ) {
+	  return ;
+   }
+   var isShowCancelBtn = checkAlertObj(code);
+   var d = "";
+   if ( ox > 600 ) {
+      d = "R";
+	  ox = ox - 630;
+   } else {
+      d = "L";
+	  ox = ox - 35;
+   }
+   if ( oy > 300 ) {
+      d += "B";
+	  oy = oy - 175;
+   } else {
+      d+="T";
+	  oy = oy + 80;
+   }
+   oy=oy-80;
+   var sta="";
+   if ( status == 'ok' ) {
+      sta = "正常";
+   } else if ( status == 'warn' ) {
+      sta = "警告";
+   } else if ( status == 'error' ) {
+      sta = "错误";
+   }
+   
+   var ruleType="";
+   var ruleDes="";
+   var problemDes="";
+   var advice="";
+   var rule = null;
+   if ( category == 'SuspendFiles' ) {
+    rule = getRuleByPath(serv,ruleName);
+   } else rule = getRule(serv,ruleName);
+   
+   if ( rule != null ) {
+	   problemDes = rule.problemDes;
+	   advice = rule.advice;
+   } 
+   //else alert( ruleName +" " + category );
+   //else return ;
+   //alert(serv+"  "+ruleName);
+   /*
+   /*
+   if ( category == 'timeLimit' ) {
+       ruleType="入库时效类";
+	   try{
+		 if ( rule != null ) {
+		   problemDes = rule.problemDes;
+		   advice = rule.advice;
+		   ruleDes= rule.subDes[ 0 ].name;
+		 }
+	   }catch(e){
+	     //alert( rule.subDes );
+	   }
+   } else if ( category == 'grid' ) {
+       ruleType="入库时效类";
+	   try{
+		 if ( rule != null ) {
+		   ruleDes= rule.subDes[ Number(n) ].name;
+		 }
+	   }catch(e){
+	     //alert( rule.subDes );
+	   }
+   }   **/
+   
+   if ( isShowCancelBtn ) {
+     sta += "&nbsp;&nbsp;<span id='cancelBtnSpan'><input type='button' onclick=\"cancelAlertObj('"+code+"')\" value='取消报警'></input></span>";
+   }
+   $('#mapTooltip_'+d).css({"left":ox+"px","top":oy+"px"});
+   $('#mapTooltip_'+d+"_value").html( value );
+   $('#mapTooltip_'+d+"_status").html( sta );
+   $('#mapTooltip_'+d+"_time").html( time );
+   //$('#mapTooltip_'+d+"_ruleType").html( ruleType );
+   //$('#mapTooltip_'+d+"_ruleDes").html( ruleDes );
+   $('#mapTooltip_'+d+"_critical").html( critical );
+   $('#mapTooltip_'+d+"_warning").html( warning );
+   $('#mapTooltip_'+d+"_problemDes").html( problemDes );
+   $('#mapTooltip_'+d+"_advice").html( advice );
+   $('#mapTooltip_'+d).show();
+}
+
+function getRuleByPath(s,p){
+   var rl=null;
+   try{
+	   if ( s == 'IBM' ) {
+		 rl = ruleList.IBM;
+	   } else rl= ruleList.HP;
+	   
+	   for ( var i=0;i<rl.length;i++ ) {
+	     if ( rl[i].category=="suspendFiles" && rl[i].path == p ) {
+		  return rl[i];
+		 }
+	   }
+   }catch(e){
+       //alert(e.message);
+   }
+   return null;
+}
+
+function getRule(s,n){
+   var rl=null;
+   try{
+	   if ( s == 'IBM' ) {
+		 rl = ruleList.IBM;
+	   } else rl= ruleList.HP;
+	   for ( var i=0;i<rl.length;i++ ) {
+	     if ( rl[i].name == n ) {
+		  return rl[i];
+		 }
+	   }
+   }catch(e){
+       //alert(e.message);
+   }
+   return null;
+}
+ 
+</script>
+</head>
+<body>
+
+<div class="ui-layout-north">
+
+</div>
+ 
+<div class="ui-layout-west">
+   <div style="height:100%;width:100%;overflow:auto;">
+    <table style="height:100%;width:100%;padding:0;spacing:0;background-color:#ffffff;">
+	    <tr><td id="menuTree" height="300px" valign="top" >
+		  <div class="dtree" id="deptTree" style="padding:3px;overflow:auto;"></div>
+		</td></tr>
+		<tr bgcolor="#C8D2DF"><td align="left" height="20px"><strong><font color="blue"><span id="taskListName"></span></font></strong></td></tr>
+		<tr><td width="100%" valign="top">
+		  <div id="taskListTD" style="width:100%;height:100%;overflow:auto;">
+		   <table id="taskList_table" width="100%" border="1" cellspacing="0" cellpadding="0"></table>
+		  </div>
+		</td></tr>
+	  </table>
+   </div>	  
+</div>
+
+<div class="ui-layout-south">
+</div>
+
+<div class="ui-layout-east">
+</div>
+
+<div class="ui-layout-center" style="padding:0px">
+      <div id="demo" class="demolayout">
+		<ul id="demo-nav" class="demolayout" style="height:28px;">
+		<li onclick="showToolTip(false,0,0)" class="activeli" ><a href="#tab1" class="active" ><img id="img_rdb_IBM" width="16px" height="16px" src="../../img/empty.gif"  />RDB_IBM</a></li>
+		<li onclick="showToolTip(false,0,0)"><a href="#tab2"><img id="img_rdb_HP" width="16px" height="16px" src="../../img/empty.gif"  />RDB_HP</a></li>
+		<li onclick="showToolTip(false,0,0)"><a href="#tab3"><img id="img_rdb_HP" width="8px" height="16px" src="../../img/empty.gif"  />RDB_SYB<img id="img_rdb_HP" width="8px" height="16px" src="../../img/empty.gif"  /></a></li>
+		</ul>
+		<div id="tabs" class="tabs-container" width="100%" >
+			<div class="tab" id="tab1">
+				<font color="#333333"><b>入库要素数据统计&nbsp;<span id="timeLimit_timeIBM"></span></b></font>
+				<table  id="timeLimit_tableIBM" width="100%" border="1" cellspacing="0" cellpadding="2"></table>
+				   <br>
+				<font color="#333333"><b>当月每日入库数据统计&nbsp;<span id="statistics_timeIBM"></span></b></font>
+				<table  id="statistics_tableIBM" width="100%" border="1" cellspacing="0" cellpadding="2"></table>
+				   <br>
+				<font color="#333333"><b>入库格点数据统计&nbsp;<span id="grib_timeIBM"></span></b></font>
+				<table  id="grib_tableIBM" width="500px" border="1" cellspacing="0" cellpadding="2"></table>
+				<br>
+			</div>
+			
+			<div class="tab" id="tab2" style="display: none; ">
+			    <font color="#333333"><b>入库要素数据统计&nbsp;<span id="timeLimit_timeHP"></span></b></font>
+				<table  id="timeLimit_tableHP" width="100%" border="1" cellspacing="0" cellpadding="2"></table>
+				   <br>
+				<font color="#333333"><b>当月每日入库数据统计&nbsp;<span id="statistics_timeHP"></span></b></font>
+				<table  id="statistics_tableHP" width="100%" border="1" cellspacing="0" cellpadding="2"></table>
+				   <br>
+				<font color="#333333"><b>入库格点数据统计&nbsp;<span id="grib_timeHP"></span></b></font>
+				<table  id="grib_tableHP" width="500px" border="1" cellspacing="0" cellpadding="2"></table>
+				<br>
+			</div>
+			
+			<div class="tab" id="tab3" style="display: none; ">
+			    <font color="#333333"><b>入库要素数据统计&nbsp;<span id="timeLimit_timeSYB"></span></b></font>
+				<table  id="timeLimit_tableSYB" width="100%" border="1" cellspacing="0" cellpadding="2"></table>
+				   <br>
+				<font color="#333333"><b>入库格点数据统计&nbsp;<span id="grib_timeSYB"></span></b></font>
+				<table  id="grib_tableSYB" width="100%" border="1" cellspacing="0" cellpadding="2"></table>
+				<br>
+			</div>
+		</div>
+	   </div>
+</div>
+	
+<div id="time_freDiv" style="top:100px;left:500px;position: absolute;">
+ <table width="500px">
+  <tr>
+   <td align="right">
+    <SCRIPT type="text/javascript">    
+		if(-1 != navigator.userAgent.indexOf("MSIE")) {    
+			document.write(' <OBJECT id="Player"');    
+			document.write(' classid="clsid:6BF52A52-394A-11d3-B153-00C04F79FAA6"');    
+			document.write(' width=0 height=0 > <param name="URL" value="res/ringin.wav" /> <param name="AutoStart" value="false" /> </OBJECT>');    
+		}
+	    else {
+			document.write(' <OBJECT id="Player"');    
+			document.write(' type="application/x-ms-wmp"');    
+			document.write(' autostart="false" src= "res/ringin.wav" width=0 height=0> </OBJECT>');    
+		}
+    </SCRIPT>    
+     <input type="checkbox" id="isPlayAlert" value="1" />鸣音报警&nbsp;
+     更新时间:<span id="refreshTime"></span>&nbsp;
+	 刷新间隔:<select id="time_fre" onchange="setTimer()">
+	   <option value="60000" selected>1</option>
+	   <option value="120000">2</option>
+	   <option value="180000">3</option>
+	   <option value="240000">4</option>
+	   <option value="300000">5</option>
+	   <option value="600000">10</option>
+	 </select>分钟
+   </td>
+  </tr>
+ </table>
+</div>
+
+<!-- 提示框 -->
+	<div id="mapTooltip_LB" class="map_inf1" style="display:none;position: absolute;z-index:999">
+	  <table width="100%" border="0" cellspacing="0" cellpadding="0" >
+		<tr>
+		  <td class="t1" valign="bottom">
+		    <img src="../../img/map_inf_bgtop1.png" style="vertical-align:bottom" valign="bottom" />
+		  </td>
+		  <td class="t2" >&nbsp;</td>
+		  <td width="29px" valign="bottom" class="t3">
+		    <img src="../../img/map_inf_bgtop3.png" style="vertical-align:bottom" width="29px" height="29px" valign="bottom"/>
+	      </td>
+		</tr>
+		<tr>
+		  <td valign="top" class="m1"><img src="../../img/map_inf_bgm1.png" width="29" height="150" /></td>
+		  <td align="left" valign="top" class="m2" bgcolor="#cccccc"><table width="600px" border="0" cellspacing="0" cellpadding="0" class="t_txt">
+			  <tr>
+				<td width="100px" align="right" valign="top">查询数值：</td>
+				<td width="500px" align="left" valign="top" id="mapTooltip_LB_value"></td>
+			  </tr>
+			  <tr>
+				<td align="right" valign="top">当前状态：</td>
+				<td align="left" valign="top" id="mapTooltip_LB_status"></td>
+			  </tr>
+			  <tr>
+				<td align="right" valign="top">执行时间：</td>
+				<td align="left" valign="top" id="mapTooltip_LB_time"></td>
+			  </tr>
+			  <!--tr>
+				<td align="right" valign="top">规则类别： </td>
+				<td align="left" valign="top" id="mapTooltip_LB_ruleType"></td>
+			  </tr>
+			  <tr>
+				<td align="right" valign="top">规则描述：</td>
+				<td align="left" valign="top" id="mapTooltip_LB_ruleDes"></td>
+			  </tr-->
+			  <tr>
+				<td align="right" valign="top">警告阈值：</td>
+				<td align="left" valign="top" id="mapTooltip_LB_warning"></td>
+			  </tr>
+			  <tr>
+				<td align="right" valign="top">错误阈值：</td>
+				<td align="left" valign="top" id="mapTooltip_LB_critical"></td>
+			  </tr>
+			  <tr>
+				<td align="right" valign="top">问题描述：</td>
+				<td align="left" valign="top" id="mapTooltip_LB_problemDes"></td>
+			  </tr>
+			  <tr>
+				<td align="right" valign="top">建议行为：</td>
+				<td align="left" valign="top" id="mapTooltip_LB_advice"></td>
+			  </tr>
+			  <tr>
+				<td height="24" align="left" valign="top">&nbsp;</td>
+				<td align="left" valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+					<tr>
+					  <td>&nbsp;</td>
+					  <td width="70"><span class="buttonTwo"><a href="javascript:showToolTip(false,0,0)">关闭</a></span></td>
+					</tr>
+				  </table></td>
+			  </tr>
+			</table></td>
+		  <td valign="top" class="m3"><img src="../../img/map_inf_bgm3.png" width="29" height="150" /></td>
+		</tr>
+		<tr>
+		  <td height="51" valign="top"><img src="../../img/map_inf_bgb1.png" width="29" height="29" /></td>
+		  <td align="left" valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+			  <tr>
+				<td width="66"><img src="../../img/map_inf_bgbleft.png" width="66" height="51" /></td>
+				<td class="b2_bbg">&nbsp;</td>
+			  </tr>
+			</table></td>
+		  <td valign="top"><img src="../../img/map_inf_bgb3.png" width="29" height="29" /></td>
+		</tr>
+	  </table>
+	</div>
+	
+	<div id="mapTooltip_RB" class="map_inf1" style="display:none;position: absolute;z-index:999">
+	  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+		<tr>
+		  <td width="29" height="29" class="t1"><img src="../../img/map_inf_bgtop1.png" style="vertical-align:bottom" width="29" height="29" valign="bottom"/></td>
+		  <td class="t2" valign="bottom">&nbsp;</td>
+		  <td width="29" class="t3"><img src="../../img/map_inf_bgtop3.png" style="vertical-align:bottom" width="29" height="29" valign="bottom"/></td>
+		</tr>
+		<tr>
+		  <td valign="top" class="m1"><img src="../../img/map_inf_bgm1.png" width="29" height="150" /></td>
+		  <td align="left" valign="top" class="m2" bgcolor="#cccccc"><table width="600px" border="0" cellspacing="0" cellpadding="0" class="t_txt">
+			  <tr>
+				<td width="100px" align="right" valign="top">查询数值：</td>
+				<td width="500px" align="left" valign="top" id="mapTooltip_RB_value"></td>
+			  </tr>
+			  <tr>
+				<td align="right" valign="top">当前状态：</td>
+				<td align="left" valign="top" id="mapTooltip_RB_status"></td>
+			  </tr>
+			  <tr>
+				<td align="right" valign="top">执行时间：</td>
+				<td align="left" valign="top" id="mapTooltip_RB_time"></td>
+			  </tr>
+			  <!--tr>
+				<td align="right" valign="top">规则类别： </td>
+				<td align="left" valign="top" id="mapTooltip_RB_ruleType"></td>
+			  </tr>
+			  <tr>
+				<td align="right" valign="top">规则描述：</td>
+				<td align="left" valign="top" id="mapTooltip_RB_ruleDes"></td>
+			  </tr-->
+			  <tr>
+				<td align="right" valign="top">警告阈值：</td>
+				<td align="left" valign="top" id="mapTooltip_RB_warning"></td>
+			  </tr>
+			  <tr>
+				<td align="right" valign="top">错误阈值：</td>
+				<td align="left" valign="top" id="mapTooltip_RB_critical"></td>
+			  </tr>
+			  <tr>
+				<td align="right" valign="top">问题描述：</td>
+				<td align="left" valign="top" id="mapTooltip_RB_problemDes"></td>
+			  </tr>
+			  <tr>
+				<td align="right" valign="top">建议行为：</td>
+				<td align="left" valign="top" id="mapTooltip_RB_advice"></td>
+			  </tr>
+			  <tr>
+				<td height="24" align="left" valign="top">&nbsp;</td>
+				<td align="left" valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+					<tr>
+					  <td>&nbsp;</td>
+					  <td width="70"><span class="buttonTwo"><a href="javascript:showToolTip(false,0,0)">关闭</a></span></td>
+					</tr>
+				  </table></td>
+			  </tr>
+			</table></td>
+		  <td valign="top" class="m3"><img src="../../img/map_inf_bgm3.png" width="29" height="150" /></td>
+		</tr>
+		<tr>
+		  <td height="51" valign="top"><img src="../../img/map_inf_bgb1.png" width="29" height="29" /></td>
+		  <td align="left" valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+			  <tr>
+				<td class="b2_bbg">&nbsp;</td>
+				<td width="66"><img src="../../img/map_inf_bgbright.png" width="66" height="51" /></td>
+			  </tr>
+			</table></td>
+		  <td valign="top"><img src="../../img/map_inf_bgb3.png" width="29" height="29" /></td>
+		</tr>
+	  </table>
+	</div>
+	
+	<div id="mapTooltip_LT" class="map_inf1" style="display:none;position: absolute;z-index:999">
+	  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+		<tr>
+		  <td width="29px" height="29px" border="0" cellspacing="0" cellpadding="0" 
+		    style="background-image: url(../../img/map_inf_bgtop1.png);background-position: bottom;background-repeat: no-repeat;"/>
+		  <td valign="bottom" style="padding: 10px 0px 0px 0px;margin: 20px 0px 0px 0px;"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+			  <tr>
+				<td width="66px" valign="bottom">
+				  <img src="../../img/map_inf_bgtleft.png" style="vertical-align:bottom" valign="bottom" width="66px" height="51px" />
+				</td>
+				<td class="t2_tbg">&nbsp;</td>
+			  </tr>
+			</table></td>
+		  <td width="29px" style="background-image: url(../../img/map_inf_bgtop3.png);background-position: bottom;background-repeat: no-repeat;"/>
+		</tr>
+
+		<tr>
+		  <td valign="top" class="m1"><img src="../../img/map_inf_bgm1.png" width="29" height="150" /></td>
+		  <td align="left" valign="top" class="m2" bgcolor="#cccccc"><table width="600" border="0" cellspacing="3px" cellpadding="5px" class="t_txt">
+			  <tr>
+				<td width="100px" align="right" valign="top">查询数值：</td>
+				<td width="500px" align="left" valign="top" id="mapTooltip_LT_value"></td>
+			  </tr>
+			  <tr>
+				<td align="right" valign="top">当前状态：</td>
+				<td align="left" valign="top" id="mapTooltip_LT_status"></td>
+			  </tr>
+			  <tr>
+				<td align="right" valign="top">执行时间：</td>
+				<td align="left" valign="top" id="mapTooltip_LT_time"></td>
+			  </tr>
+			  <!--tr>
+				<td align="right" valign="top">规则类别： </td>
+				<td align="left" valign="top" id="mapTooltip_LT_ruleType"></td>
+			  </tr>
+			  <tr>
+				<td align="right" valign="top">规则描述：</td>
+				<td align="left" valign="top" id="mapTooltip_LT_ruleDes"></td>
+			  </tr-->
+			  <tr>
+				<td align="right" valign="top">警告阈值：</td>
+				<td align="left" valign="top" id="mapTooltip_LT_warning"></td>
+			  </tr>
+			  <tr>
+				<td align="right" valign="top">错误阈值：</td>
+				<td align="left" valign="top" id="mapTooltip_LT_critical"></td>
+			  </tr>
+			  <tr>
+				<td align="right" valign="top">问题描述：</td>
+				<td align="left" valign="top" id="mapTooltip_LT_problemDes"></td>
+			  </tr>
+			  <tr>
+				<td align="right" valign="top">建议行为：</td>
+				<td align="left" valign="top" id="mapTooltip_LT_advice"></td>
+			  </tr>
+			  <tr>
+				<td height="24" align="left" valign="top">&nbsp;</td>
+				<td align="left" valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+					<tr>
+					  <td>&nbsp;</td>
+					  <td width="70"><span class="buttonTwo"><a href="javascript:showToolTip(false,0,0)">关闭</a></span></td>
+					</tr>
+				  </table></td>
+			  </tr>
+			</table></td>
+		  <td valign="top" class="m3"><img src="../../img/map_inf_bgm3.png" width="29" height="150" /></td>
+		</tr>
+		<tr>
+		  <td height="29" valign="top" class="b1"><img src="../../img/map_inf_bgb1.png" width="29" height="29" /></td>
+		  <td align="left" valign="top" class="b2">&nbsp;</td>
+		  <td valign="top" class="b3"><img src="../../img/map_inf_bgb3.png" width="29" height="29" /></td>
+		</tr>
+	  </table>
+	</div>
+	
+	<div id="mapTooltip_RT" class="map_inf1" style="display:none;position: absolute;z-index:999">
+	  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+		<tr>
+		  <td width="29" height="29" valign="bottom"><img src="../../img/map_inf_bgtop1.png" style="vertical-align:bottom" width="29" height="29" valign="bottom"/></td>
+		  <td><table width="100%" border="0" cellspacing="0" cellpadding="0">
+			  <tr>
+				<td class="t2_tbg">&nbsp;</td>
+				<td width="66"><img src="../../img/map_inf_bgtright.png" style="vertical-align:bottom" width="66" height="51" valign="bottom"/></td>
+			  </tr>
+			</table></td>
+		  <td width="29" valign="bottom"><img src="../../img/map_inf_bgtop3.png" style="vertical-align:bottom" width="29" height="29" valign="bottom"/></td>
+		</tr>
+		<tr>
+		  <td valign="top" class="m1"><img src="../../img/map_inf_bgm1.png" width="29" height="150" /></td>
+		  <td align="left" valign="top" class="m2" bgcolor="#cccccc"><table width="600" border="0" cellspacing="0" cellpadding="0" class="t_txt">
+			  <tr>
+				<td width="100px" align="right" valign="top">查询数值：</td>
+				<td width="500px" align="left" valign="top" id="mapTooltip_RT_value"></td>
+			  </tr>
+			  <tr>
+				<td align="right" valign="top">当前状态：</td>
+				<td align="left" valign="top" id="mapTooltip_RT_status"></td>
+			  </tr>
+			  <tr>
+				<td align="right" valign="top">执行时间：</td>
+				<td align="left" valign="top" id="mapTooltip_RT_time"></td>
+			  </tr>
+			  <!--tr>
+				<td align="right" valign="top">规则类别： </td>
+				<td align="left" valign="top" id="mapTooltip_RT_ruleType"></td>
+			  </tr>
+			  <tr>
+				<td align="right" valign="top">规则描述：</td>
+				<td align="left" valign="top" id="mapTooltip_RT_ruleDes"></td>
+			  </tr-->
+			  <tr>
+				<td align="right" valign="top">警告阈值：</td>
+				<td align="left" valign="top" id="mapTooltip_RT_warning"></td>
+			  </tr>
+			  <tr>
+				<td align="right" valign="top">错误阈值：</td>
+				<td align="left" valign="top" id="mapTooltip_RT_critical"></td>
+			  </tr>
+			  <tr>
+				<td align="right" valign="top">问题描述：</td>
+				<td align="left" valign="top" id="mapTooltip_RT_problemDes"></td>
+			  </tr>
+			  <tr>
+				<td align="right" valign="top">建议行为：</td>
+				<td align="left" valign="top" id="mapTooltip_RT_advice"></td>
+			  </tr>
+			  <tr>
+				<td height="24" align="left" valign="top">&nbsp;</td>
+				<td align="left" valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+					<tr>
+					  <td>&nbsp;</td>
+					  <td width="70"><span class="buttonTwo"><a href="javascript:showToolTip(false,0,0)">关闭</a></span></td>
+					</tr>
+				  </table></td>
+			  </tr>
+			</table></td>
+		  <td valign="top" class="m3"><img src="../../img/map_inf_bgm3.png" width="29" height="150" /></td>
+		</tr>
+		<tr>
+		  <td height="29" valign="top" class="b1"><img src="../../img/map_inf_bgb1.png" width="29" height="29" /></td>
+		  <td align="left" valign="top" class="b2">&nbsp;</td>
+		  <td valign="top" class="b3"><img src="../../img/map_inf_bgb3.png" width="29" height="29" /></td>
+		</tr>
+	  </table>
+	</div>
+
+
+
+</body>
+</html> 

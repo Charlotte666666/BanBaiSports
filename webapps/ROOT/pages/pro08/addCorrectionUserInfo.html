@@ -1,0 +1,287 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<link rel="stylesheet" type="text/css" href="../../css/fileuploader.css">
+<link rel="stylesheet" type="text/css" href="common.css">
+<script src="../../js/jquery-1.7.2.min.js"></script>
+<script src="../../js/ui/jquery.ui.core.js"></script>
+<script src="../../js/ui/jquery.ui.widget.js"></script>
+<script src="../../js/ui/jquery.ui.dialog.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+<script type="text/javascript" src="../../js/fileuploader.js"></script>
+<script type="text/javascript">
+   $(document).ready(function() {
+        $( "#tdsex" ).html( top.getCodeSelectHtml("SEX","sex",false,"1") );
+		$( "#tdhas_passport" ).html( top.getCodeSelectHtml("HAVE_NO","has_passport",false,"0") );
+		$( "#tdnation" ).html( top.getCodeSelectHtml("NATIONAL","nation",true) );
+		$( "#tdhas_reentry" ).html( top.getCodeSelectHtml("HAVE_NO","has_reentry",false,"0") );
+		$( "#tdhas_passhk" ).html( top.getCodeSelectHtml("HAVE_NO","has_passhk",false,"0") );
+		$( "#tdhas_infectious" ).html( top.getCodeSelectHtml("YES_NO","has_infectious",false,"0") );
+		$( "#tdhas_mental" ).html( top.getCodeSelectHtml("YES_NO","has_mental",false,"1") );
+		$( "#tdadult" ).html( top.getCodeSelectHtml("YES_NO","adult",false,"1") );
+		$( "#tdregistration_live" ).html( top.getCodeSelectHtml("YES_NO","registration_live",false,"1") );
+		$( "#tdpolitical_status" ).html( top.getCodeSelectHtml("POLITICAL_STATUS","political_status",false,"0") );
+		$( "#tdold_political_status" ).html( top.getCodeSelectHtml("POLITICAL_STATUS","old_political_status",false,"0") );
+		$( "#tdeducation" ).html( top.getCodeSelectHtml("EDUCATION","education",false,"0") );
+		$( "#tdmarital_status" ).html( top.getCodeSelectHtml("MARITAL_STATUS","marital_status",false,"0") );
+		$( "#tdregistration_nature" ).html( top.getCodeSelectHtml("REGISTRATION_NATURE","registration_nature",false,"0") );
+
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    	 };
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   
+   function doSubmit(){
+	 var aoData=[];
+	 var checkMsg = checkForm();
+	 var temp="";
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+
+		aoData.push( { "name": "info.user_code", "value": $("#user_code").val() } );
+		aoData.push( { "name": "info.user_name", "value": $("#user_name").val() } );
+		aoData.push( { "name": "info.before_name", "value": $("#before_name").val() } );
+		aoData.push( { "name": "info.photo", "value": $("#photo").val() } );
+		aoData.push( { "name": "info.id_card", "value": $("#id_card").val() } );
+		aoData.push( { "name": "info.passport_code", "value": $("#passport_code").val() } );
+		aoData.push( { "name": "info.reentry_code", "value": $("#reentry_code").val() } );
+		aoData.push( { "name": "info.credential_code", "value": $("#credential_code").val() } );
+		aoData.push( { "name": "info.passhk_code", "value": $("#passhk_code").val() } );
+		aoData.push( { "name": "info.health", "value": $("#health").val() } );
+		aoData.push( { "name": "info.health_condition", "value": $("#health_condition").val() } );
+		aoData.push( { "name": "info.infectious_disease", "value": $("#infectious_disease").val() } );
+		aoData.push( { "name": "info.mental_health", "value": $("#mental_health").val() } );
+		aoData.push( { "name": "info.agency", "value": $("#agency").val() } );
+		aoData.push( { "name": "info.physiological", "value": $("#physiological").val() } );
+		aoData.push( { "name": "info.education", "value": $("#education").val() } );
+		aoData.push( { "name": "info.marital_status", "value": $("#marital_status").val() } );
+		aoData.push( { "name": "info.job_status", "value": $("#job_status").val() } );
+		aoData.push( { "name": "info.tel", "value": $("#tel").val() } );
+		aoData.push( { "name": "info.job_unit", "value": $("#job_unit").val() } );
+		aoData.push( { "name": "info.unit_tel", "value": $("#unit_tel").val() } );
+		aoData.push( { "name": "info.registration_nature", "value": $("#registration_nature").val() } );
+		aoData.push( { "name": "info.registration_live", "value": $("#registration_live").val() } );
+		aoData.push( { "name": "info.receive_userlive_addr", "value": $("#receive_userlive_addr").val() } );
+		aoData.push( { "name": "info.registration_addr", "value": $("#registration_addr").val() } );
+		
+		
+		temp = $("#sex").val();
+	    if ( temp == '' ) temp = 0;
+		aoData.push( { "name": "info.sex", "value": temp } );
+		temp = $("#adult").val();
+	    if ( temp == '' ) temp = 0;
+		aoData.push( { "name": "info.adult", "value": temp } );
+		temp = $("#nation").val();
+	    if ( temp == '' ) temp = 0;
+		aoData.push( { "name": "info.nation", "value": temp } );
+		temp = $("#has_passport").val();
+	    if ( temp == '' ) temp = 0;
+		aoData.push( { "name": "info.has_passport", "value": temp } );
+		temp = $("#has_reentry").val();
+	    if ( temp == '' ) temp = 0;
+		aoData.push( { "name": "info.has_reentry", "value": temp } );
+		temp = $("#other_id").val();
+	    if ( temp == '' ) temp = 0;
+		aoData.push( { "name": "info.other_id", "value": temp } );
+		temp = $("#has_passhk").val();
+	    if ( temp == '' ) temp = 0;
+		aoData.push( { "name": "info.has_passhk", "value": temp } );
+		temp = $("#has_infectious").val();
+	    if ( temp == '' ) temp = 0;
+		aoData.push( { "name": "info.has_infectious", "value": temp } );
+		temp = $("#has_mental").val();
+	    if ( temp == '' ) temp = 0;
+		aoData.push( { "name": "info.has_mental", "value": temp } );
+		temp = $("#political_status").val();
+	    if ( temp == '' ) temp = 0;
+		aoData.push( { "name": "info.political_status", "value": temp } );
+		temp = $("#old_political_status").val();
+	    if ( temp == '' ) temp = 0;
+		aoData.push( { "name": "info.old_political_status", "value": temp } );
+		temp = $("#live_province").val();
+	    if ( temp == '' ) temp = 0;
+		aoData.push( { "name": "info.live_province", "value": temp } );
+		temp = $("#live_city").val();
+	    if ( temp == '' ) temp = 0;
+		aoData.push( { "name": "info.live_city", "value": temp } );
+		temp = $("#live_county").val();
+	    if ( temp == '' ) temp = 0;
+		aoData.push( { "name": "info.live_county", "value": temp } );
+		temp = $("#live_township").val();
+	    if ( temp == '' ) temp = 0;
+		aoData.push( { "name": "info.live_township", "value": temp } );
+		temp = $("#registration_province").val();
+	    if ( temp == '' ) temp = 0;
+		aoData.push( { "name": "info.registration_province", "value": temp } );
+		temp = $("#registration_city").val();
+	    if ( temp == '' ) temp = 0;
+		aoData.push( { "name": "info.registration_city", "value": temp } );
+		temp = $("#registration_county").val();
+	    if ( temp == '' ) temp = 0;
+		aoData.push( { "name": "info.registration_county", "value": temp } );
+		temp = $("#registration_township").val();
+	    if ( temp == '' ) temp = 0;
+		aoData.push( { "name": "info.registration_township", "value": temp } );
+		aoData.push( { "name": "info.correct_type", "value": 0 } );
+     
+	 top.sendAjaxRequest("/actions/ProCorrection.action?insertProCorrectionInfo",aoData,optCallback);
+   }
+   
+   function checkForm(){
+     var temp = "";
+	 temp += checkString($("#user_code").val(),true,20,"人员编号");
+	 temp += checkString($("#user_name").val(),true,20,"姓名");
+	 temp += checkIdcard($("#id_card").val());
+	 return temp;
+  }
+  
+  function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      isSaveOK = true;
+	      top.showInfoWinOK("操作成功");
+		  top.closeDialog();
+	    }else{
+	      isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+    function headButtonFun1(){
+	   doSubmit();
+	}
+   
+  </script> 
+<style type="text/css">
+	.td-t{
+	  width:200px;
+	  text-align:right;
+	}
+</style>
+</head>
+<body>
+<br/>
+		<table>
+			<tbody>
+				<tr>
+					<td class="td-t" width="20%">人员编号<font color="red">*</font></td><td width="20%"><input type="text" id="user_code" value="" /></td>
+					<td class="td-t" width="20%">是否成年</td><td width="20%" id="tdadult"></td>
+					<td class="td-t td-ph" width="20%" style="text-align:left">相片<font color="red">*</font></td>
+				</tr>
+				<tr>
+					<td class="td-t">姓名<font color="red">*</font></td><td><input type="text" id="user_name" value=""/></td>
+					<td class="td-t">曾用名</td><td><input type="text" class="text" id="before_name"></td>
+					<td class="file-wh" rowspan="6">
+			            <img class="pull-left" src="images/photos.png" />
+			            <input type="hidden" id="photo" />
+			            <div class="mask"><div id="changeface"></div></div>
+          			</td>
+				</tr>
+				<tr>
+					<td class="td-t">身份证号<font color="red">*</font></td><td><input type="text" id="id_card"></td>
+					<td class="td-t">出生日期</td><td><input type="text" id="birthday" value="" onclick="new Calendar().show(this);" /></td>
+				</tr>
+				<tr>
+					<td class="td-t">性别</td><td id="tdsex"></td>
+					<td class="td-t">民族</td><td id="tdnation"></td>
+				</tr>
+				<tr>
+					<td class="td-t">有无护照</td><td id="tdhas_passport"></td>
+					<td class="td-t">护照号码</td><td><input type="text" id="passport_code" value="" /></td>
+				</tr>
+				<tr>
+					<td class="td-t">有无回乡证</td><td id="tdhas_reentry"></td>
+					<td class="td-t">回乡证号码</td><td><input type="text" id="credential_code" value="" /></td>
+				</tr>
+				<tr>
+					<td class="td-t other-id">有无港澳台通行证</td><td id="tdhas_passhk"></td>
+					<td class="td-t other-id">港澳台通行证号码</td><td colspan="2"><input id="passhk_code" type="text"></td>
+				</tr>
+				<tr>
+					<td class="td-t">有无港澳台身份证</td><td colspan="3">
+					<select id="other_id" ><option value="0">无</option><option value="1">有</option></select>
+				    <label for="9" class="id-name"><input name="other_id" type="checkbox" class="gangtaizhengid" value="2" disabled="disabled" id ="9">香港身份证</label>
+					<label for="10" class="id-name"><input name="other_id" type="checkbox" class="gangtaizhengid" value="3" disabled="disabled" id ="10">澳门身份证</label>
+					<label for="11" class="id-name"><input name="other_id" type="checkbox" class="gangtaizhengid" value="4" disabled="disabled" id ="11">台胞证</label>
+					<span>证件号码</span><input id="reentry_code" size="20" type="text"></td>
+				</tr>
+				<tr>
+					<td class="td-t">健康状况</td><td><input type="text" id="health" value="" /></td>
+					<td class="td-t">具体健康状况</td><td colspan="2"><input type="text" id="health_condition" value="" /></td>
+				</tr>
+				<tr>
+					<td class="td-t">是否有传染病史</td><td id="tdhas_infectious"></td>
+					<td class="td-t">具体传染病史</td><td colspan="2"><input type="text" id="health_condition" value="" /></td>
+				</tr>
+				<tr>
+					<td class="td-t">是否心理健康</td><td  id="tdhas_mental"></td>
+					<td class="td-t">鉴定机构</td><td colspan="2"><input id="agency" type="text" ></td>
+				</tr>
+				<tr>
+					<td class="td-t">具体心理健康状况</td><td colspan="4"><textarea id="mental_health" cols="70" rows="3"></textarea></td>
+				</tr>
+				<tr>
+					<td class="td-t">政治面貌</td><td id="tdpolitical_status"></td>
+					<td class="td-t">原政治面貌</td><td colspan="2"id="tdold_political_status"></td>
+				</tr>
+				<tr>
+					<td class="td-t">户籍性质</td><td id="tdregistration_nature"></td>
+					<td class="td-t other-id">户籍是否与居住地相同</td><td colspan="2" id="tdregistration_live"></td>
+				</tr>
+				<tr>
+					<td class="td-t">居住地</td>
+					<td colspan="4">
+						<select id="s_province" name="s_province"></select>&nbsp;
+						<select id="s_city" name="s_city" ></select>&nbsp;
+						<select id="s_county" name="s_county"></select>
+						<input type="text" id="live_township" size="30" value="" />
+						
+					</td>
+				</tr>
+				<tr>
+					<td class="td-t">户籍地址</td>
+					<td colspan="4">
+						<select id="s_province2" name="s_province2"></select>&nbsp;
+						<select id="s_city2" name="s_city2" ></select>&nbsp;
+						<select id="s_county2" name="s_county2"></select>
+						<input type="text" id="registration_township" size="30" value="" />
+					</td>
+				</tr>
+				<tr>
+					<td class="td-t">文化程度</td><td id="tdeducation"></td>
+					<td class="td-t">婚姻状况</td><td colspan="2"id="tdmarital_status"></td>
+					</td>
+				</tr>
+				<tr>
+					<td class="td-t">就业就学情况</td><td><input type="text" id="job_status" value="" /></td>
+					<td class="td-t">联系电话</td><td colspan="2"><input type="text" id="tel"></td>
+				</tr>
+				<tr>
+					<td class="td-t">现工作单位</td><td><input type="text" id="job_unit" class="text"></td>
+					<td class="td-t">单位联系电话</td><td colspan="2"><input type="text" id="unit_tel" class="text colspan-text"></td>
+				</tr>
+			</tbody>
+		</table>
+		
+<script type="text/javascript" src="../../js/area.js" charset="gbk"></script>
+<script type="text/javascript">
+ _init_area();
+ _init_area2();
+</script>
+</body>
+</html>

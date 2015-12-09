@@ -1,0 +1,459 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+
+<script type="text/javascript">
+var nodesObjs=[];
+var interGetResult1=0;
+var interGetResult2=0;
+var interGetResult3=0;
+var currentUserCode="";
+
+$(document).ready( function() {
+   var ww=$(window).width();
+   var boxWidth=(ww-60)/2;
+   $('#box_checklist').css({"left":"30px","top":"20px","width":boxWidth+"px"});
+   $('#box_alertlist').css({"left":(boxWidth+50)+"px","top":"20px","width":boxWidth+"px"});
+   $('#box_noteslist').css({"left":(boxWidth+50)+"px","top":"230px","width":boxWidth+"px"});
+   $('#box_projectNewslist').css({"left":"30px","top":"230px","width":boxWidth+"px"});
+   getNotesList();
+   getCheckList();
+   getNewProProjectApprovalList();
+});
+
+function getNewProProjectApprovalList(){
+   $("#projectNewsTD").html("");
+   var aoData=[];
+   try{
+     top.sendAjaxRequest("/actions/ProMVTProject.action?getNewProProjectApprovalList",aoData,optGetProjectNewsCallback,true);
+     clearInterval( interGetResult3 );
+	 interGetResult3 = setInterval("getNewProProjectApprovalList()", 60000 );
+   }catch(e){}
+}
+
+function getCheckList(){
+   $("#checkTD").html("");
+   var currentUser=top.getCurrentUser();
+   if ( currentUser == null ) return ;
+   currentUserCode = currentUser.userCode;
+   var aoData=[];
+   try{
+     top.sendAjaxRequest("/actions/ProMVTProject.action?getProProjectApprovalFromMainList",aoData,optGetCheckCallback,true);
+     clearInterval( interGetResult1 );
+	 interGetResult1 = setInterval("getCheckList()", 70000 );
+   }catch(e){}
+}
+
+function getNotesList(){
+   nodesObjs=[];
+   $("#notesTD").html("");
+   var aoData=[];
+   aoData.push( { "name": "time4", "value": 'NOW' } );
+   aoData.push( { "name": "info.status", "value": 0 } );
+   try{
+     top.sendAjaxRequest("/actions/Notes.action?getNotesInfoList",aoData,optGetNotesCallback,true);
+     clearInterval( interGetResult2 );
+	 interGetResult2 = setInterval("getNotesList()", 80000 );
+   }catch(e){}
+}
+
+function optGetProjectNewsCallback(obj){
+   try{
+    var iobjs=obj.aaData;
+	if ( iobjs.length == 0 ) {
+	  $("#projectNewsTD").html( "没有项目最新动态" );
+	  return ;
+	}
+    var ht='<div style="overflow: auto;width:100%;height:200px" ><table width="100%" style="padding: 2px;" border="0">';
+	var selectedIndex=0;
+	for ( var i=0;i<iobjs.length;i++ ) {
+	  selectedIndex=0;
+	  if ( iobjs[i].type == '7' || iobjs[i].type == '6' || iobjs[i].type == '13' || iobjs[i].type == '10' ) {
+	    selectedIndex=3;
+	  } else if ( iobjs[i].type == '5' ) {
+	    selectedIndex=1;
+	  } else if ( iobjs[i].type == '11' || iobjs[i].type == '12' || iobjs[i].type == '14' ) {
+	    selectedIndex=4;
+	  } else if ( iobjs[i].type == '2' || iobjs[i].type == '3' || iobjs[i].type == '4' ) {
+	    selectedIndex=2;
+	  }
+	  ht+="<tr><td style='margin: 10px; padding: 10px;' colspan='2'>"+(i+1)+"、 ";
+	  ht+=top.getTimeStr( iobjs[i].shenpi_date )+"【"+ top.getCodeName( "APPROVAL_TYPE", iobjs[i].type ) +"：审核";
+	  ht+=top.getCodeName( "APPROVAL_RESULT", iobjs[i].status )+"】<a href=\'javascript:void(0)\' onclick=\"updateProject(\'"+iobjs[i].project_id+"\',\'"+iobjs[i].name+"\',"+selectedIndex+")\" >"+iobjs[i].name+"</a></td></tr>";
+	}
+	ht+='</table></div>';
+	$("#projectNewsTD").html( ht );
+   }catch(e){
+   }
+}
+
+function optGetCheckCallback(obj){
+   try{
+    var iobjs=obj.aaData;
+	$("#checkTD").html( "" );
+	if ( iobjs.length > 0 ) {
+		var ht='<div style="overflow: auto;width:100%;height:150px" ><table id="todoListTable" width="100%" style="padding: 2px;" border="0">';
+		var selectedIndex=0;
+		for ( var i=0;i<iobjs.length;i++ ) {
+		  selectedIndex=0;
+		  if ( iobjs[i].type == '7' || iobjs[i].type == '6' || iobjs[i].type == '13' || iobjs[i].type == '10' ) {
+			selectedIndex=3;
+		  } else if ( iobjs[i].type == '5' ) {
+			selectedIndex=1;
+		  } else if ( iobjs[i].type == '11' || iobjs[i].type == '12' ) {
+			selectedIndex=4;
+		  } else if ( iobjs[i].type == '2' || iobjs[i].type == '3' || iobjs[i].type == '4' ) {
+			selectedIndex=2;
+		  }
+		  ht+="<tr><td style='margin: 10px; padding: 10px;' colspan='2'>"+(i+1)+"、 【"+ top.getCodeName( "APPROVAL_TYPE", iobjs[i].type ) +"】<a href=\'javascript:void(0)\' onclick=\"updateProject(\'"+iobjs[i].project_id+"\',\'"+iobjs[i].name+"\',"+selectedIndex+")\" >"+iobjs[i].name+"</a></td></tr>";
+		}
+		ht+='</table></div>';
+		$("#checkTD").html( ht );
+	}
+   }catch(e){
+   }
+   
+   var aoData=[];
+   aoData.push( { "name": "time1", "value": "" } );
+   aoData.push( { "name": "time2", "value": "" } );
+   aoData.push( { "name": "time3", "value": "" } );
+   aoData.push( { "name": "time4", "value": "" } );
+   aoData.push( { "name": "info.project_name", "value": "" } );
+   aoData.push( { "name": "info.project_code", "value": "" } );
+   aoData.push( { "name": "info.project_manager_id", "value": currentUserCode } );
+   aoData.push( { "name": "info.senior_project_manager", "value": "" } );
+   aoData.push( { "name": "info.project_director", "value": "" } );
+   aoData.push( { "name": "info.funnel_id", "value": "" } );
+   aoData.push( { "name": "info.contract_type", "value": "" } );
+   aoData.push( { "name": "info.project_status", "value": 0 } );
+   aoData.push( { "name": "info.service_type_id", "value": -1 } );
+   aoData.push( { "name": "info.product_line_id", "value": -1 } );
+   aoData.push( { "name": "info.first_factory_id", "value": -1 } );
+   aoData.push( { "name": "info.customer_area_id", "value": -1 } );
+   aoData.push( { "name": "info.customer_type_id", "value": -1 } );
+   aoData.push( { "name": "info.plan_contact_money", "value": -1 } );
+   top.sendAjaxRequest("/actions/ProMVTProject.action?getProProjectInfoList",aoData,optGetNewProjectCallback);
+}
+
+function optGetNewProjectCallback(obj){
+   try{
+    var iobjs=obj.aaData;
+	if ( iobjs.length == 0 ) {
+ 	  return ;
+	}
+	var ht="";
+	for ( var i=0;i<iobjs.length;i++ ) {
+	  ht+="<tr><td style='margin: 10px; padding: 10px;' colspan='2'>&nbsp;&nbsp;&nbsp;&nbsp;【新建项目】<a href=\'javascript:void(0)\' onclick=\"updateProject(\'"+iobjs[i].id+"\',\'"+iobjs[i].project_name+"\',0)\" >"+iobjs[i].project_name+"</a>";
+	}
+	if ( $("#checkTD").html() == '' ) {
+	  ht='<div style="overflow: auto;width:100%;height:150px" ><table id="todoListTable" width="100%" style="padding: 2px;" border="0">'+ht+'</table></div>';
+      $("#checkTD").html( ht );
+	} else {
+	  $("#todoListTable").append( ht );
+	}
+   }catch(e){
+   }
+}
+
+function optGetAlertCallback(obj){
+   try{
+    var alertObjs=obj.aaData;
+	if ( alertObjs.length == 0 ) {
+	  $("#alertListTD").html( "您没有里程碑预警信息" );
+ 	  return ;
+	}
+    var ht='<div style="overflow: auto;width:100%;height:150px" ><table width="100%" style="padding: 2px;" border="0">';
+	var stoneName="";
+	for ( var i=0;i<alertObjs.length;i++ ) {
+	  if ( alertObjs[i].milestone_id  == -100 ) {
+	   stoneName="项目即将到期";
+	  } else {
+	   stoneName=top.getCodeName( "MILESTONE_NAME", alertObjs[i].milestone_id );
+	  }
+	  ht+="<tr><td style='margin: 10px; padding: 10px;'>"+(i+1)+"、 <a href='javascript:void(0)' onclick=\"updateProject(\'"+alertObjs[i].project_id+"\',\'"+alertObjs[i].project_name+"\')\" >"+alertObjs[i].project_name+"</a>&nbsp;["+stoneName+"]&nbsp;预计完成时间："+top.getTimeStr( alertObjs[i].milestone_estime, true );
+	  if ( alertObjs[i].type != '1' ) {
+	    ht+='&nbsp;<img src="../../img/delete.gif" style="cursor:pointer" onclick="cancelAlertInfo('+alertObjs[i].id+','+alertObjs[i].type+')" title="取消本条提醒信息"/>';
+	  }
+	  ht+="</td></tr>";
+	}
+	ht+='</table></div>';
+	$("#alertListTD").html( ht );
+   }catch(e){
+   }
+}
+
+function optGetNotesCallback(obj){
+   try{
+    nodesObjs=obj.aaData;
+	getAlertMilestoneList();
+	if ( nodesObjs.length == 0 ) {
+	  $("#notesTD").html( "您没有要提醒的备忘录信息" );
+ 	  return ;
+	}
+    var ht='<div style="overflow: auto;width:100%;height:150px" ><table width="100%" style="padding: 2px;" border="0">';
+	for ( var i=0;i<nodesObjs.length;i++ ) {
+	  ht+="<tr><td style='margin: 10px; padding: 10px;'>"+(i+1)+"、 <a href='javascript:void(0)' onclick=\"showNodesDetail("+nodesObjs[i].notes_id+")\" >"+nodesObjs[i].notes_desc+"</a></td></tr>";
+	}
+	ht+='</table></div>';
+	$("#notesTD").html( ht );
+   }catch(e){
+   }
+}
+
+function getAlertMilestoneList(){
+   top.sendAjaxRequest("/actions/ProMVTProject.action?getAlertMilestoneList",[],optGetAlertCallback);
+}
+
+function cancelAlertInfo(milestoneId, type){
+   var aoData=[];
+   aoData.push( { "name": "warning.milestone_id", "value": milestoneId } );
+   aoData.push( { "name": "warning.warn_type", "value": type } );
+   top.sendAjaxRequest("/actions/ProMVTProject.action?insertProProjectWarning",aoData,cancelAlertMilestonCallBack,true);
+}
+
+function cancelAlertMilestonCallBack(obj){
+	try{
+	  if ( obj.status == true ){
+	    getAlertMilestoneList();
+	  }
+	}catch(e){
+	}
+}
+
+function updateProject(projectId,project_name,selectedIndex){
+	var xurl="pages/pro04/projectInfo.html?opt=update&projectId="+projectId+"&selectedIndex="+selectedIndex;
+	top.openDialog("项目【"+project_name+"】详细信息",xurl,true,1100,620,checkProjectCallBack);
+}
+
+function showNodesDetail(code){
+	top.setTempValue( getObj(code) );
+	var xurl="pages/notes/notesInfo.html?opt=update&infoId="+code;
+	top.openDialog("备忘录信息",xurl,true,600,400,viewCallBack);
+}
+
+function getObj(infoId){
+   for ( var i=0;i<nodesObjs.length;i++ ) {
+     if ( nodesObjs[i].notes_id == infoId ) return nodesObjs[i];
+   }
+   return null;
+}
+
+function checkProjectCallBack(){
+	try{
+	  var obj = top.getTempValue();
+	  if ( obj.isSaveOK ) getCheckList();
+	}catch(e){
+	}
+}
+
+function viewCallBack(){
+	try{
+	  var obj = top.getTempValue();
+	  if ( obj.isSaveOK ) getNotesList();
+	}catch(e){
+	}
+}
+</script>
+
+<style type="text/css">
+* html .ui-autocomplete {
+	height: 100px;
+	width: 40px;
+}
+
+* {
+    font-family: Arial, "Free Sans";
+}
+#box {
+    margin-top: 45px;
+	margin-left: 12px;
+}
+.bt, .clicked {
+    height: 20px;
+    color: #666;
+    font-size: 13px;
+    padding: 4px 10px;
+    text-decoration: none;
+    background: #f9f9f9;
+}
+#box .bt {
+    background: -moz-linear-gradient(top,  #fff,  #f3f3f3);
+    background: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#f3f3f3));
+
+    /* For Internet Explorer 5.5 - 7 */
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#ffffff, endColorstr=#f3f3f3);
+    /* For Internet Explorer 8 */
+    -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#ffffff, endColorstr=#f3f3f3)";
+}
+#box .bt:hover {
+    background: #f3f3f3;
+    background: -moz-linear-gradient(top,  #fff,  #e9e9e9);
+    background: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#e9e9e9));
+
+    /* For Internet Explorer 5.5 - 7 */
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#ffffff, endColorstr=#e9e9e9);
+    /* For Internet Explorer 8 */
+    -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#ffffff, endColorstr=#e9e9e9)";
+}
+#box .bt:active, .clicked {
+    background: #e9e9e9;
+    background: -moz-linear-gradient(top,  #e9e9e9,  #fff);
+    background: -webkit-gradient(linear, left top, left bottom, from(#e9e9e9), to(#fff));
+
+    /* For Internet Explorer 5.5 - 7 */
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#e9e9e9, endColorstr=#ffffff);
+    /* For Internet Explorer 8 */
+    -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#e9e9e9, endColorstr=#ffffff)";
+}
+
+.tuxing {
+	width: 280px;
+	position: absolute; 
+}
+.tab_ty {
+}
+.tab_ty table .tab_t2 {
+	background-image: url(../../img/table_t2.png);
+	background-repeat: repeat-x;
+	padding-top: 6px;
+}
+.tab_ty table .tab_m1 {
+	background-image: url(../../img/table_m1.png);
+	background-repeat: repeat-y;
+}
+.tab_ty table .tab_m2 {
+	background-image: url(../../img/table_m2.png);
+	background-repeat: repeat;
+	font-size: 14px;
+	color: #151515;
+	font-weight:normal;
+}
+.tab_ty table .tab_m3 {
+	background-image: url(../../img/table_m3.png);
+	background-repeat: repeat-y;
+}
+.tab_ty table tr .tab_b2 {
+	background-image: url(../../img/table_b2.png);
+	background-repeat: repeat-x;
+}
+</style>
+
+</head>
+<body>
+
+ <div id="box_checklist" class="tuxing" style="width: 400px;height:200px">
+	  <div class="tab_ty">
+		<table width="100%" border="0" cellspacing="0" cellpadding="0">
+		  <tr id="box_checklist_top">
+			<td width="20" align="left" valign="top"><img src="../../img/table_t1.png" width="20" height="36" /></td>
+			<td align="left" valign="top" class="tab_t2"><table border="0" cellspacing="0" cellpadding="0">
+				<tr>
+				  <td width="34" height="24" align="left" valign="bottom"><img src="../../img/tab_icon7.png" width="20" height="20" /></td>
+				  <td align="left" valign="bottom"><font color="#0778C5">工作提醒</font></td>
+				</tr>
+			  </table></td>
+			<td width="15" align="left" valign="top"><img src="../../img/table_t3.png" width="15" height="36" /></td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top" class="tab_m1">&nbsp;</td>
+			<td align="left" valign="top" class="tab_m2" id="checkTD"></td>
+			<td align="left" valign="top" class="tab_m3">&nbsp;</td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top"><img src="../../img/table_b1.png" width="20" height="15" /></td>
+			<td align="left" valign="top" class="tab_b2">&nbsp;</td>
+			<td align="left" valign="top"><img src="../../img/table_b3.png" width="15" height="15" /></td>
+		  </tr>
+		</table>
+	  </div>
+ </div>
+ 
+   <div id="box_alertlist" class="tuxing" style="width: 400px;height:200px">
+	  <div class="tab_ty">
+		<table width="100%" border="0" cellspacing="0" cellpadding="0">
+		  <tr id="box_alertlist_top">
+			<td width="20" align="left" valign="top"><img src="../../img/table_t1.png" width="20" height="36" /></td>
+			<td align="left" valign="top" class="tab_t2"><table border="0" cellspacing="0" cellpadding="0">
+				<tr>
+				  <td width="34" height="24" align="left" valign="bottom"><img src="../../img/tab_icon5.png" width="20" height="20" /></td>
+				  <td align="left" valign="bottom"><font color="#0778C5">里程碑预警信息</font></td>
+				</tr>
+			  </table></td>
+			<td width="15" align="left" valign="top"><img src="../../img/table_t3.png" width="15" height="36" /></td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top" class="tab_m1">&nbsp;</td>
+			<td align="left" valign="top" class="tab_m2" id="alertListTD"></td>
+			<td align="left" valign="top" class="tab_m3">&nbsp;</td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top"><img src="../../img/table_b1.png" width="20" height="15" /></td>
+			<td align="left" valign="top" class="tab_b2">&nbsp;</td>
+			<td align="left" valign="top"><img src="../../img/table_b3.png" width="15" height="15" /></td>
+		  </tr>
+		</table>
+	  </div>
+ </div>
+ 
+ <div id="box_projectNewslist" class="tuxing" style="width: 400px;height:200px">
+	  <div class="tab_ty">
+		<table width="100%" border="0" cellspacing="0" cellpadding="0">
+		  <tr id="box_checklist_top">
+			<td width="20" align="left" valign="top"><img src="../../img/table_t1.png" width="20" height="36" /></td>
+			<td align="left" valign="top" class="tab_t2"><table border="0" cellspacing="0" cellpadding="0">
+				<tr>
+				  <td width="34" height="24" align="left" valign="bottom"><img src="../../img/tab_icon7.png" width="20" height="20" /></td>
+				  <td align="left" valign="bottom"><font color="#0778C5">我的项目最新动态</font></td>
+				</tr>
+			  </table></td>
+			<td width="15" align="left" valign="top"><img src="../../img/table_t3.png" width="15" height="36" /></td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top" class="tab_m1">&nbsp;</td>
+			<td align="left" valign="top" class="tab_m2" id="projectNewsTD"></td>
+			<td align="left" valign="top" class="tab_m3">&nbsp;</td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top"><img src="../../img/table_b1.png" width="20" height="15" /></td>
+			<td align="left" valign="top" class="tab_b2">&nbsp;</td>
+			<td align="left" valign="top"><img src="../../img/table_b3.png" width="15" height="15" /></td>
+		  </tr>
+		</table>
+	  </div>
+ </div>
+ 
+ <div id="box_noteslist" class="tuxing" style="width: 400px;height:200px">
+	  <div class="tab_ty">
+		<table width="100%" border="0" cellspacing="0" cellpadding="0">
+		  <tr id="box_noteslist_top">
+			<td width="20" align="left" valign="top"><img src="../../img/table_t1.png" width="20" height="36" /></td>
+			<td align="left" valign="top" class="tab_t2"><table border="0" cellspacing="0" cellpadding="0">
+				<tr>
+				  <td width="34" height="24" align="left" valign="bottom"><img src="../../img/tab_icon5.png" width="20" height="20" /></td>
+				  <td align="left" valign="bottom"><font color="#0778C5">备忘录提醒</font></td>
+				</tr>
+			  </table></td>
+			<td width="15" align="left" valign="top"><img src="../../img/table_t3.png" width="15" height="36" /></td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top" class="tab_m1">&nbsp;</td>
+			<td align="left" valign="top" class="tab_m2" id="notesTD"></td>
+			<td align="left" valign="top" class="tab_m3">&nbsp;</td>
+		  </tr>
+		  <tr>
+			<td align="left" valign="top"><img src="../../img/table_b1.png" width="20" height="15" /></td>
+			<td align="left" valign="top" class="tab_b2">&nbsp;</td>
+			<td align="left" valign="top"><img src="../../img/table_b3.png" width="15" height="15" /></td>
+		  </tr>
+		</table>
+	  </div>
+ </div>
+ 
+</body>
+</html> 

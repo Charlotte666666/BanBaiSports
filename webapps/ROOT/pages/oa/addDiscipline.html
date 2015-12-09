@@ -1,0 +1,294 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>addDiscipline.html</title>
+
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	
+	<script type="text/javascript" src="../../js/checkForm.js"></script>
+	<script type="text/javascript">
+	var nowUser=null;
+	var date="";
+	var optType="";
+	var dept="";
+	var info_id=0;
+	var currentApprovalStage="";
+	var currentApprovalStatus="0";
+	   
+	   	$(document).ready(function(){
+		   nowUser=top.getCurrentUser();
+		   date=new Date();
+		   optType=top.getUrlParam(document.URL,"optType");
+		   if(optType=="insert"){
+			   $("#approvalrecord").hide();
+		   }else if( optType=="update" || optType=="query" || optType=="approval"){
+		      var aoData=[];
+			  info_id=top.getUrlParam(document.URL,"id");
+			  aoData.push( { "name":"info.id","value":info_id } );
+		      top.sendAjaxRequest("/actions/Discipline.action?getDisciplineById",aoData,getDisciplineInfoCallback);
+		   }
+		
+		});
+		
+		function getDisciplineInfoCallback(obj){
+		   if(obj.status==true){
+		      if(obj.body){
+			    var o=obj.body;
+				$("#employee_code").val(o.employee_code);
+				$("#employee_name").hide();
+				$("#tdemployee_name").html(o.employee_name);
+				$("#tddept").html(top.getDeptPath(o.dept));
+				$("#dept").val(o.dept);
+				$("#tdjob_title").html(top.getCodeName("SYS_POSITION",o.job_title));
+				$("#job_title").val(o.job_title);
+				$("#status").val(o.status);
+				if(optType=="update"){
+				   $("#discipline_date").val(top.getTimeStr(o.discipline_date,true));
+				   $("#money").val(o.money);
+				   $("#discipline_memo").val(o.discipline_memo);
+				   $("#discipline_rule").val(o.discipline_rule);
+				}else{
+				   $("#tddiscipline_date").html(top.getTimeStr(o.discipline_date,true));
+				   $("#tdmoney").html(o.money+"元");
+				   $("#tddiscipline_memo").html(o.discipline_memo);
+				   $("#tddiscipline_rule").html(o.discipline_rule);
+				   $("#buttonTR").hide();
+				}
+			  }
+		   }else{
+		      top.showInfoWinError("操作失败！");
+		   }
+		   
+		   getApprovalInfo();
+		}
+		
+		function getApprovalInfo(){
+		   var aoData=[];
+		   aoData.push( { "name":"info.apply_id","value":info_id} );
+		   top.sendAjaxRequest("/actions/ApprovalRecord.action?getApprovalRecordListByApplyId",aoData,getApprovalInfoCallback);
+		}
+		
+		function getApprovalInfoCallback(obj){
+		   var ht='<tr class="tr_data" id="approvalhead"><td align="center" style="font-weight:bold;" width="20%">审核阶段</td><td align="center" style="font-weight:bold;" width="20%">审核状态</td><td align="center" width="20%" style="font-weight:bold;">审核意见</td><td align="center" style="font-weight:bold;" width="20%">审核人</td><td align="center" style="font-weight:bold;" width="20%">审核时间</td></tr>';
+		   if(obj.status==true){
+		     var o=obj.body;
+			 if(o.length>0){
+			    for(var i=0;i<o.length;i++){
+				   if(i==o.length-1){
+				      currentApprovalStage=o[i].approval_stage;
+					  currentApprovalStatus=o[i].approval_status;
+				      if(!(o[i].approval_stage=="1" && o[i].approval_status=="1") && optType=="approval" && $("#status").val()!="3"){
+					  switch(currentApprovalStage){
+						case "0":
+							if(top.g_isPermit("oa_dept_check")){
+							  ht+='<tr class="tr_data"><td><input id="id" type="hidden" value="'+o[i].id+'"/><input id="approval_stage" type="hidden" value="'+o[i].approval_stage+'"/>'+top.getCodeName("APPROVAL_STAGE",o[i].approval_stage)+'</td><td>'+top.getCodeSelectHtml("APPROVAL_STATUS","approval_status",false)+'</td><td><textarea id="approval_opinion" style="width:100%;" rows="2" cols="8"/></textarea></td><td><input id="approver" type="hidden" value="'+nowUser.userCode+'"/>'+nowUser.userName+'</td><td><input id="approval_time" type="hidden" value="'+date.getTime()+'"/>'+top.getTimeStr(date.getTime(),true)+'</td></tr>';
+							}else{
+							  ht+='<tr class="tr_data"><td><input id="id" type="hidden" value="'+o[i].id+'"/><input id="approval_stage" type="hidden" value="'+o[i].approval_stage+'"/>'+top.getCodeName("APPROVAL_STAGE",o[i].approval_stage)+'</td><td>'+top.getCodeName("APPROVAL_STATUS",o[i].approval_status)+'</td><td></td><td>'+nowUser.userName+'</td><td>'+top.getTimeStr(date.getTime(),true)+'</td></tr>';
+							}
+							break;
+						case "1":
+						   if(top.g_isPermit("oa_personal_admin_check")){
+							  ht+='<tr class="tr_data"><td><input id="id" type="hidden" value="'+o[i].id+'"/><input id="approval_stage" type="hidden" value="'+o[i].approval_stage+'"/>'+top.getCodeName("APPROVAL_STAGE",o[i].approval_stage)+'</td><td>'+top.getCodeSelectHtml("APPROVAL_STATUS","approval_status",false)+'</td><td><textarea id="approval_opinion" style="width:100%;" rows="2" cols="8"/></textarea></td><td><input id="approver" type="hidden" value="'+nowUser.userCode+'"/>'+nowUser.userName+'</td><td><input id="approval_time" type="hidden" value="'+date.getTime()+'"/>'+top.getTimeStr(date.getTime(),true)+'</td></tr>';
+							}else{
+							  ht+='<tr class="tr_data"><td><input id="id" type="hidden" value="'+o[i].id+'"/><input id="approval_stage" type="hidden" value="'+o[i].approval_stage+'"/>'+top.getCodeName("APPROVAL_STAGE",o[i].approval_stage)+'</td><td>'+top.getCodeName("APPROVAL_STATUS",o[i].approval_status)+'</td><td></td><td>'+nowUser.userName+'</td><td>'+top.getTimeStr(date.getTime(),true)+'</td></tr>';
+							}
+							break;
+						default: 
+						   ht+='<tr class="tr_data"><td><input id="id" type="hidden" value="'+o[i].id+'"/><input id="approval_stage" type="hidden" value="'+o[i].approval_stage+'"/>'+top.getCodeName("APPROVAL_STAGE",o[i].approval_stage)+'</td><td>'+top.getCodeName("APPROVAL_STATUS",o[i].approval_status)+'</td><td></td><td>'+nowUser.userName+'</td><td>'+top.getTimeStr(date.getTime(),true)+'</td></tr>';
+						   break;
+					   }
+					  }else{
+					    ht+='<tr class="tr_data"><td>'+top.getCodeName("APPROVAL_STAGE",o[i].approval_stage)+'</td><td>'+top.getCodeName("APPROVAL_STATUS",o[i].approval_status)+'</td><td>'+o[i].approval_opinion+'</td><td>'+top.getUserNameByCode(o[i].approver)+'</td><td>'+top.getTimeStr(o[i].approval_time,true)+'</td></tr>';
+					  }
+				   }else{
+				       ht+='<tr class="tr_data"><td>'+top.getCodeName("APPROVAL_STAGE",o[i].approval_stage)+'</td><td>'+top.getCodeName("APPROVAL_STATUS",o[i].approval_status)+'</td><td>'+o[i].approval_opinion+'</td><td>'+top.getUserNameByCode(o[i].approver)+'</td><td>'+top.getTimeStr(o[i].approval_time,true)+'</td></tr>';
+				   } 
+
+				}
+				ht+='<tr class="tr_data nowapproval" style="display:none;"><td colspan="5" align="center"><div class="buttonDivTwo"><a href="javascript:void(0)" onclick="saveApproval()">保存</a></div></td></tr>';
+			 }
+		   }else{
+		     top.showInfoWinError("操作失败！");
+		   }
+		   $("#approvalrecordTable").html(ht);
+		   if(optType=="approval"){
+		      switch(currentApprovalStage){
+				case "0":
+					if(top.g_isPermit("oa_dept_check")){
+					  $(".nowapproval").show();
+					}else{
+					  $(".nowapproval").hide();
+					}
+					break;
+				case "1":
+				   if(top.g_isPermit("oa_personal_admin_check")){
+					  $(".nowapproval").show();
+					}else{
+					  $(".nowapproval").hide();
+					}
+					break;
+				default: 
+				   $(".nowapproval").hide();
+				   break;
+			   }
+			  if(currentApprovalStage=="1" && currentApprovalStatus=="1"){
+			    $(".nowapproval").hide();
+			  }
+		   }
+		   if($("#status").val()=="3"){
+		      $(".nowapproval").hide();
+		   }
+		}
+		
+	   function checkMsg(){
+	     var message="";
+		 if($("#employee_code").val()==""){
+		    message+="请填写员工姓名！<br/>";
+		 }
+		 if($("#discipline_date").val()==""){
+		    message+="请填写违纪时间！<br/>";
+		 }
+		 if($("#money").val()==""){
+		    message+="请填写乐捐金额！<br/>";
+		 }
+		 if($("#money").val()!="" && !IsFloat($("#money").val())){
+		    message+="乐捐金额为数字类型！<br/>";
+		 }
+		 message+=checkString($("#discipline_memo").val(),true,256,"乐捐原因");
+		 message+=checkString($("#discipline_rule").val(),true,256,"违反公司条例");
+		 return message;
+	   }
+		
+	   function doSubmit(){
+	     var msg=checkMsg();
+		 if(msg!=""){
+		    top.showInfoWinWarn(msg);return;
+		 }
+		 var aoData=[];
+		 aoData.push( { "name":"info.employee_code","value":$("#employee_code").val() } );
+		 aoData.push( { "name":"info.employee_name","value":top.getUserNameByCode($("#employee_code").val()) } );
+		 aoData.push( { "name":"info.dept","value":$("#dept").val() } );
+		 aoData.push( { "name":"info.job_title","value":$("#job_title").val() } );
+		 aoData.push( { "name":"info.discipline_date","value":top.toTimestamp($("#discipline_date").val()) } );
+		 aoData.push( { "name":"info.money","value":$("#money").val() } );
+		 aoData.push( { "name":"info.discipline_memo","value":$("#discipline_memo").val() } );
+		 aoData.push( { "name":"info.discipline_rule","value":$("#discipline_rule").val() } );
+		 aoData.push( { "name":"info.status","value":"1" } ); 
+		 
+		 var xurl="/actions/Discipline.action?insertDiscipline";
+		 if(info_id!=0){
+		    xurl="/actions/Discipline.action?updateDiscipline";
+			aoData.push( { "name":"info.id","value":info_id } );
+		 }
+		 top.sendAjaxRequest(xurl,aoData,doSubmitCallback);
+	   }
+	   
+	   function doSubmitCallback(obj){
+	      if(obj.status==true){
+		    top.showInfoWinOK("操作成功！");
+			top.closeDialog();
+		  }else{
+		    top.showInfoWinError("操作失败！");
+		  }
+	   }
+	   
+	   function doBeforeClose(){
+	   }
+	   
+	   function cancle(){
+	      top.closeDialog();
+	   }
+	   
+		function selectUser(){
+			var xurl="pages/organization/selectOneUser.html";
+			top.openSelectDialog("选择用户",xurl,830,600,doSelectedUser);
+		}
+		
+		function doSelectedUser(){
+		 var userObj = top.getTempValue();
+			if ( !userObj ) return ;
+			try{
+			 $("#employee_code").val(userObj.userCode);
+			 $("#employee_name").val(userObj.userName);
+			 $("#dept").val(userObj.deptId);
+			 $("#tddept").html(top.getDeptPath(userObj.deptId));
+			 $("#tdjob_title").html(top.getCodeName("SYS_POSITION",userObj.job_title));
+			 $("#job_title").val(userObj.job_title);
+			}catch(e){
+			}
+		}
+		
+		//保存违纪申请审核信息
+		function saveApproval(){
+		   if($("#approver").val()==""){
+		     top.showInfoWinWarn("请填写审核人!");return;
+		   }
+		   if($("#approval_time").val()==""){
+		     top.showInfoWinWarn("请填写审核时间!");return;
+		   }
+		   var aoData=[];
+		   aoData.push( { "name":"info.id","value":$("#id").val() } );
+		   aoData.push( { "name":"info.apply_id","value":info_id } );
+		   aoData.push( { "name":"info.approval_stage","value":$("#approval_stage").val() } );
+		   aoData.push( { "name":"info.approval_status","value":$("#approval_status").val() } );
+		   aoData.push( { "name":"info.approval_opinion","value":$("#approval_opinion").val() } );
+		   aoData.push( { "name":"info.approver","value":$("#approver").val() } );
+		   aoData.push( { "name":"info.approval_time","value":$("#approval_time").val() } );
+		   aoData.push( { "name":"info.approval_type","value":"5" });
+		   
+		   if($("#approval_status").val()=="2"){
+		      $("#status").val("3");
+		   }
+		   
+		   top.sendAjaxRequest("/actions/ApprovalRecord.action?updateApprovalRecord",aoData,saveApprovalCallback);
+		} 
+		
+		function saveApprovalCallback(obj){
+		   if(obj.status==true){
+		     top.showInfoWinOK("操作成功！"); 
+			 getApprovalInfo();
+		   }else{
+		     top.showInfoWinError("操作失败！");
+		   }
+		}
+		
+
+	</script>
+  </head>
+  
+  <body>
+    <div style="margin:8px;">
+	   <input id="status" type="hidden"/>
+	   <table width="100%" border="1" cellpadding="3" cellspacing="1" style="background-color: #b9d8f3;">
+         <tr class="tr_data" height="30px">
+            <td align="right" style="font-weight:bold;">姓名</td><td align="left"><input id="employee_code" type="hidden"/><label id="tdemployee_name"></label><input id="employee_name" type="text" size="10" onclick="selectUser()"/></td>
+			<td align="right" style="font-weight:bold;">部门</td><td align="left"><label id="tddept"></label><input id="dept" type="hidden" /></td>
+         </tr>
+         <tr class="tr_data" height="30px">
+            <td align="right" style="font-weight:bold;">职务</td><td align="left"><label id="tdjob_title"></label><input id="job_title" type="hidden"/></td>
+            <td align="right" style="font-weight:bold;">时间</td><td align="left" id="tddiscipline_date"><input id="discipline_date" type="text" size="15" onclick="top.selectDate(this)"/></td>
+         </tr>
+		 <tr class="tr_data" height="30px">
+		    <td align="right" style="font-weight:bold;">乐捐金额</td><td colspan="3" align="left" id="tdmoney"><input id="money" type="text" size="10"/>元</td>
+		 </tr>
+		 <tr class="tr_data" height="30px">
+            <td align="right" style="font-weight:bold;">乐捐原因</td><td colspan="3" align="left" id="tddiscipline_memo"><textarea id="discipline_memo" cols="3" rowspan="5" type="text" style="width:100%;"></textarea></td>
+         </tr>
+		 <tr class="tr_data" height="30px">
+		    <td align="right" style="font-weight:bold;">违反公司条例</td><td colspan="3" align="left" id="tddiscipline_rule"><textarea id="discipline_rule" cols="3" rowspan="5" type="text" style="width:100%;"></textarea></td>
+		 </tr>
+		 <tr class="tr_data" height="50px"  id="approvalrecord">
+			<td colspan="4">
+				<table width="100%" id="approvalrecordTable"></table>
+			</td>
+		 </tr>
+		 <tr class="tr_data" height="30px" id="buttonTR">
+		    <td colspan="2" align="right"><div class="buttonDivTwo"><a href="javascript:void(0)" onclick="doSubmit()">提交</a></div></td>
+		    <td colspan="2" align="left"><div class="buttonDivTwo"><a href="javascript:void(0)" onclick="cancle()">取消</a></div></td>
+		 </tr>
+	   </table>
+	</div>
+  </body>
+</html>

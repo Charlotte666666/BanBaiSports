@@ -1,0 +1,193 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+ 
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var hasEditRight=false;
+			
+			$(document).ready(function() {
+			   $( "#code_status" ).html( top.getCodeSelectHtml("CUST_STATUS","status",true,'0') );
+			    if ( !top.g_isPermit("houseCust_rentAdd") ) {
+					$("#createBtn").hide();
+				}
+				if ( top.g_isPermit("houseCust_rentEdit") ) {
+					hasEditRight=true;
+				}
+				if ( !top.g_isPermit("houseCust_export") ) {
+				 $("#exportBtn").hide();
+			    }
+
+			   var iaoColumns= [
+			                   { "sTitle": "客户编号", "mDataProp": "id","sWidth": "8%", "sClass": "center",
+							       "fnRender": function ( oObj ) {
+								        if ( !hasEditRight ) return oObj.aData.id;
+                                        return '<a href=\'javascript:void(0)\' onclick="updateInfo(\''+oObj.aData.id+'\')" >'+oObj.aData.id+'</a>';
+                                   },
+								   "bUseRendered": false
+							   },	
+							   { "sTitle": "客户姓名", "mDataProp": "cust_name","sWidth": "8%","sClass": "center"},			   
+			                   { "sTitle": "状态", "mDataProp": "cust_status","sWidth": "8%" , "sClass": "center",
+                                   "fnRender": function ( oObj ) {
+                                        return top.getCodeName( "CUST_STATUS", oObj.aData.cust_status );
+                                   },
+                                   "bUseRendered": false 
+							   },
+							   { "sTitle": "联系电话", "mDataProp": "cust_tel","sWidth": "10%" },
+							   { "sTitle": "意向小区", "mDataProp": "belong_area", "sWidth": "10%","sClass": "center",
+                                      "fnRender": function ( oObj ) {
+                                           return top.getCodeName( "HOUSE_BELONG", oObj.aData.belong_area );
+                                      },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "预算下限", "mDataProp": "price1","sWidth": "10%" },
+							   { "sTitle": "预算上限", "mDataProp": "price2","sWidth": "10%",
+                                      "fnRender": function ( oObj ) {
+                                           if ( oObj.aData.price2 == 999999 ) return "";
+                                           return oObj.aData.price2;							   
+                                      },
+                                      "bUseRendered": false 							   },
+							   { "sTitle": "备注", "mDataProp": "memo","sWidth": "13%" },
+							   { "sTitle": "更新时间", "mDataProp": "update_time", "sWidth": "13%", "sClass": "center",
+                                   "fnRender": function ( oObj ) {
+                                        return top.getTimeStr( oObj.aData.update_time );
+                                   },
+                                   "bUseRendered": false  
+                               }
+               ];
+			   
+			   var surl=top.getUrlBase()+"/actions/HouseCust.action?getTblCustBuyList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+					aoData=getParamDate(aoData);
+				},
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+
+			function updateInfo(id){
+				var xurl="pages/house/custBuyInfo.html?optType=update&id="+id;
+				top.openDialog("买卖客户明细信息",xurl,true,600,550,saveCallBack);
+			}
+			
+			function addInfo(){
+				var xurl="pages/house/custBuyInfo.html?optType=insert";
+				top.openDialog("添加买卖信息",xurl,true,600,550,saveCallBack);
+			}
+			
+			function saveCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				}
+			}
+			
+			function getParamDate(aoData){
+			    aoData.push( { "name": "custBuy.cust_name", "value": $("#cust_name").val() } );
+				aoData.push( { "name": "custBuy.cust_tel", "value": $("#cust_tel").val() } );
+				aoData.push( { "name": "custBuy.cust_status", "value": $("#status").val() } );
+				aoData.push( { "name": "custBuy.id", "value": top.g_GetNumValue($("#cust_id").val(),-1) } );
+				return aoData;
+			}
+			
+		  function exportData(){
+		    var aoData=[];
+		    top.showLoadingInfo(true);
+            top.sendAjaxRequest("/actions/HouseCust.action?exportCustBuyList",getParamDate(aoData),callBackExportData);
+		  }
+		  
+		   function callBackExportData(obj){
+			 top.showLoadingInfo(false);
+			 try{
+				if ( obj.status == true ){
+				   var downUrl=top.getUrlBase()+"/download?filePath="+obj.msg+"&fileName=买卖客户数据.xls";
+				   document.location.href=downUrl;
+				}else{
+				   top.showInfoWinError("操作失败 "+obj.msg);
+				}
+			 }catch(e){
+				top.showInfoWinError("处理异常:"+e.message);
+			 }
+		   }
+		
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+	        <div style='border: 2px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="150px">&nbsp;买卖客户信息&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			     <tr class="tr_data">
+				  <td align="right">客户编号:</td><td align="left"><input type="text" id="cust_id" value="" onkeydown="if(event.keyCode==13) doQuery();"/></td>
+				  <td align="right">客户姓名:</td><td align="left"><input type="text" id="cust_name" value="" onkeydown="if(event.keyCode==13) doQuery();"/></td>
+				  <td align="right">客户状态:</td><td align="left" id="code_status"></td>
+				  <td align="right">客户电话:</td><td align="left"><input type="text" id="cust_tel" value="" onkeydown="if(event.keyCode==13) doQuery();" /></td>
+			     </tr>
+			 </table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				    <td>&nbsp;查询结果列表&nbsp;</td>
+					<td><div id="createBtn" class="buttonDivTwo"><a href="javascript:addInfo()">添加</a></div></td>
+					<td><div id="exportBtn" class="buttonDivTwo"><a href="javascript:exportData()">导出</a></div></td>
+					<td>&nbsp;</td>
+			       </tr></table></td>
+			  </tr>
+			</table>
+	        <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

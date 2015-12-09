@@ -1,0 +1,531 @@
+
+
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+<title>全国社区矫正信息管理系统</title>
+<script language="javascript" type="text/javascript">
+function showsubmenu(sid)
+{
+whichEl = eval("submenu" + sid);
+imgmenu = eval("imgmenu" + sid);
+if (whichEl.style.display == "none")
+{
+eval("submenu" + sid + ".style.display=\"\";");
+}else
+{
+eval("submenu" + sid + ".style.display=\"none\";");
+}
+}
+</script>
+<style type="text/css">
+<!--
+body {
+margin-left: 0px;
+margin-top: 0px;
+margin-right: 0px;
+margin-bottom: 0px;
+}
+.STYLE3 {
+font-size: 12px;
+color:#000000;
+}
+.STYLE3 a {
+font-size: 12px;
+color: #000000;
+text-decoration:none;
+}
+.STYLE3 a:hover {
+font-size: 12px;
+color: #0000FF;
+text-decoration:underline;
+}
+-->
+#top{margin-left: auto;margin-right: auto;width:1200px;height:40px;}
+#menu{display:inline;float:left;}
+.menu_title {
+font-weight: bold; color: #000000; position: relative; top: 2px; font-size:12px; text-indent:30px;
+}
+.menu_title2 {
+font-weight: bold; color: #FF0000; position: relative; top: 2px; font-size:12px; text-indent:30px;
+}
+.content{display:none;}
+
+</style>
+
+<script>
+var menu=0;
+  
+   $(document).ready(function() {
+	   $("#menu"+menu).show(); 
+      // parent.sendAjaxRequest("/numberManage!getAll400Rules.action",[],getInfoCallback);
+   } );
+   
+function selectMenu(n){
+		$("#menu"+menu).hide(); 
+		///$("#menu"+menu).addClass('ruleTypeBg'); 
+		//$("#menu"+menu).removeClass('ruleTypeBg2');
+		menu=n;
+		$("#menu"+menu).show();
+		//numQuery(keyNum);
+   }
+   
+</script>
+</head>
+
+<body>
+<div id="top">
+
+<div id="menu">
+<table width="184" border="0" cellpadding="0" cellspacing="0" style="table-layout:fixed">
+  <tr>
+<td height="28" background="images/tab_05.gif" align="center" style="font-size:13px; font-weight:bold; color:#000000;">
+档案目录
+</td>
+  </tr><tr valign="top">
+<td width="178">
+<table width="178" border="0" align="center" cellpadding="0" cellspacing="0">
+  <tr>
+<td height="23" background="left_menu_bg.jpg" id="imgmenu1" class="menu_title" onMouseOver="this.className='menu_title2';" onClick="showsubmenu(1)" onMouseOut="this.className='menu_title';" style="cursor:hand">
+接收执行</td>
+  </tr>
+  <tr>
+<td background="left_submenu_bg.jpg" id="submenu1" style="display:;">
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<td class="STYLE3" style="height:23px; text-indent:20px;">
+<img src="left.gif" width="10" height="10" />
+<a href="" onclick="selectMenu(0)">基本信息</a>
+</td>
+  </tr>
+<tr>
+<td class="STYLE3" style="height:23px; text-indent:20px;">
+<img src="images/left.gif" width="10" height="10" />
+<a href="" onclick="selectMenu(1)">法律文书</a>
+</td>
+  </tr>
+<tr>
+<td class="STYLE3" style="height:23px; text-indent:20px;">
+<img src="images/left.gif" width="10" height="10" />
+<a href="pri_doc.php?act=zhixing&type=xingfa&PID=811355" onclick="selectMenu(2)">刑罚执行</a>
+</td>
+  </tr>
+<tr>
+<td class="STYLE3" style="height:23px; text-indent:20px;">
+<img src="images/left.gif" width="10" height="10" />
+<a href="pri_doc.php?act=zhixing&type=yasong&PID=811355" onclick="selectMenu(3)">押送情况</a>
+</td>
+  </tr>
+<tr>
+<td class="STYLE3" style="height:23px; text-indent:20px;">
+<img src="images/left.gif" width="10" height="10" />
+<a href="pri_doc.php?act=zhixing&type=tuoguan&PID=811355" onclick="selectMenu(4)">矫正脱管</a>
+</td>
+  </tr>
+<tr>
+                    <td height="4"><img src="left_menu_bg.jpg" width="178" height="4" /></td>
+  </tr>
+</table>
+</td>
+  </tr>
+</table>
+</td>
+  </tr>
+<tr valign="top">
+<td width="178">
+<table width="178" border="0" align="center" cellpadding="0" cellspacing="5">
+  <tr>
+<td height="23" background="left_menu_bg.jpg" id="imgmenu2" class="menu_title" onMouseOver="this.className='menu_title2';" onClick="showsubmenu(2)" onMouseOut="this.className='menu_title';" style="cursor:hand">
+解除矫正</td>
+  </tr>
+  <tr>
+<td background="left_submenu_bg.jpg" id="submenu2" style="display:;">
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<td class="STYLE3" style="height:23px; text-indent:20px;">
+<img src="images/left.gif" width="10" height="10" />
+<a href="pri_doc.php?act=jiechu&type=jianding&PID=811355" onclick="selectMenu(6)">期满鉴定</a>
+</td>
+  </tr>
+<tr>
+<td class="STYLE3" style="height:23px; text-indent:20px;">
+<img src="images/left.gif" width="10" height="10" />
+<a href="pri_doc.php?act=jiechu&type=yuzui&PID=811355" onclick="selectMenu(7)">余罪或再罪有关情况</a>
+</td>
+  </tr>
+<tr>
+<td class="STYLE3" style="height:23px; text-indent:20px;">
+<img src="images/left.gif" width="10" height="10" />
+<a href="pri_doc.php?act=jiechu&type=biandong&PID=811355" onclick="selectMenu(8)">刑期变动情况</a>
+</td>
+  </tr>
+<tr>
+    <td height="4"><img src="left_menu_bg.jpg" width="178" height="4" /></td>
+  </tr>
+</table>
+</td>
+  </tr>
+</table>
+</td>
+  </tr>
+</table>
+</div>
+
+<div calss="content" id="menu0"> 
+	<div style="width:800px; margin:0px auto;">
+	<table width="100%" cellpadding="0" cellspacing="0" border="0">
+	<tr align="left">
+	<td class="thead_td" width="100" height="30">&nbsp;
+	<img src="images/tb.gif" width="15" height="15" border="0" />
+	基本信息
+	</td>
+	</tr>
+	</table>
+	<table width="99%" cellpadding="0" cellspacing="0" border="1" class="maintable" style="table-layout:fixed" align="center">
+	<tr>
+	<th class="tbody_td" width="120" height="28">是否成年</th>
+	<td class="tbody_td" align="left" width="180">&nbsp;&nbsp;</td>
+	<th class="tbody_td" width="100" height="28">人员编号</th>
+	<td class="tbody_td" align="left" width="180">&nbsp;
+	2311822014040010</td>
+	<th class="tbody_td" width="*" height="28">照片
+	</th>
+	</tr>
+	<tr>
+	<th class="tbody_td" height="28">姓名</th>
+	<td class="tbody_td" align="left">&nbsp;
+	马鹏飞</td>
+	<th class="tbody_td">曾用名</th>
+	<td class="tbody_td" align="left">&nbsp;
+	</td>
+	<th class="tbody_td" height="28" rowspan="6" valign="top">
+	</th>
+	</tr>
+	<tr>
+	<th class="tbody_td" height="28">身份证号</th>
+	<td class="tbody_td" align="left">&nbsp;
+	231182199206151213</td>
+	<th class="tbody_td">出生日期</th>
+	<td class="tbody_td" align="left">&nbsp;
+	1992-06-15</td>
+	</tr>
+	<tr>
+	<th class="tbody_td">性别</th>
+	<td class="tbody_td" align="left">&nbsp;
+	男
+	</td>
+	<th class="tbody_td" height="28">民族</th>
+	<td class="tbody_td" align="left">&nbsp;&nbsp;汉族</td>
+	</tr>
+	<tr>
+	<th class="tbody_td">有无护照</th>
+	<td class="tbody_td" align="left">&nbsp;
+	无
+	</td>
+	<th class="tbody_td" height="28">护照号码</th>
+	<td class="tbody_td" align="left">&nbsp;
+	</td>
+	</tr>
+	<tr>
+	<th class="tbody_td">有无回乡证</th>
+	<td class="tbody_td" align="left">&nbsp;
+	无
+	</td>
+	<th class="tbody_td" height="28">回乡证号码</th>
+	<td class="tbody_td" align="left">&nbsp;
+	</td>
+	</tr>
+	<tr>
+	<th class="tbody_td">有无港澳台身份证</th>
+	<td class="tbody_td" align="left">
+	<div style="float:left; width:95px; line-height:60px;">&nbsp;
+	无
+	</div>
+	</td>
+	<th class="tbody_td" height="28">证件号码</th>
+	<td class="tbody_td" align="left">&nbsp;
+	</td>
+	</tr>
+	<tr>
+	<th class="tbody_td">有无港澳<br />台通行证</th>
+	<td class="tbody_td" align="left">&nbsp;
+	无
+	</td>
+	<th class="tbody_td" height="28">港澳台通<br />行证号码</th>
+	<td class="tbody_td" align="left" colspan="2">&nbsp;
+	</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" height="28">健康状况</th>
+	<td class="tbody_td" align="left">&nbsp;&nbsp;良好</td>
+	<th class="tbody_td" height="28">具体健康状况</th>
+	<td class="tbody_td" align="left" colspan="2">&nbsp;
+	</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" height="28">是否有传染病史</th>
+	<td class="tbody_td" align="left">&nbsp;
+	无
+	</td>
+	<th class="tbody_td" height="28">具体传染病史</th>
+	<td class="tbody_td" align="left" colspan="2">&nbsp;&nbsp;</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" height="28">是否心理健康</th>
+	<td class="tbody_td" align="left">&nbsp;
+	是
+	</td>
+	<th class="tbody_td" height="28">鉴定机构</th>
+	<td class="tbody_td" align="left" colspan="2">&nbsp;
+	</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" height="28">具体心理健康状况</th>
+	<td class="tbody_td" align="left" colspan="4">&nbsp;
+	</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" height="28">政治面貌</th>
+	<td class="tbody_td" align="left">&nbsp;&nbsp;群众</td>
+	<th class="tbody_td">原政治面貌</th>
+	<td class="tbody_td" align="left" colspan="2">&nbsp;群众</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" height="28">文化程度</th>
+	<td class="tbody_td" align="left">&nbsp;&nbsp;初中</td>
+	<th class="tbody_td">婚姻状况</th>
+	<td class="tbody_td" align="left" colspan="2">&nbsp;&nbsp;已婚</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" height="28">就业就学情况</th>
+	<td class="tbody_td" align="left">&nbsp;&nbsp;务农</td>
+	<th class="tbody_td">联系电话</th>
+	<td class="tbody_td" align="left" colspan="2">&nbsp;
+	15945637722</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" height="28">现工作单位</th>
+	<td class="tbody_td" align="left">&nbsp;
+	</td>
+	<th class="tbody_td">单位联系电话</th>
+	<td class="tbody_td" align="left" colspan="2">&nbsp;
+	</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" height="28">户籍性质</th>
+	<td class="tbody_td" align="left">&nbsp;&nbsp;农村户籍</td>
+	<th class="tbody_td" colspan="2">户籍地是否与居住地相同</th>
+	<td class="tbody_td" align="left">&nbsp;
+	相同
+	</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" height="30">居住地</th>
+	<td class="tbody_td" align="left" colspan="4">&nbsp;&nbsp;黑龙江省黑河市五大连池市五大连池市朝阳乡边河村		</td>
+	</tr>
+	<tr id="hujidiv">
+	<th class="tbody_td" height="28">户籍地址</th>
+	<td class="tbody_td" align="left" colspan="4">&nbsp;&nbsp;黑龙江省黑河市五大连池市五大连池市朝阳乡边河村</td>
+	</tr>
+	</table>
+	<table width="100%" cellpadding="0" cellspacing="0" border="0">
+	<tr align="left">
+	<td class="thead_td" height="30">&nbsp;
+	<img src="images/tb.gif" width="15" height="15" border="0" />
+	个人简历
+	</td>
+	</tr>
+	</table>
+	<table width="99%" cellpadding="0" cellspacing="0" border="1" class="maintable" align="center">
+	<tr>
+	<th class="tbody_td" width="220" height="30">起止日期</th>
+	<th class="tbody_td" width="310">所在单位</th>
+	<th class="tbody_td" width="*">职务</th>
+	</tr>
+	<tr>
+	<td class="tbody_td" height="35">
+	2005-09&nbsp;至&nbsp;2008-07</td>
+	<td class="tbody_td">
+	五市一中</td>
+	<td class="tbody_td">
+	学生</td>
+	</tr>
+	<tr>
+	<td class="tbody_td" height="35">
+	2008-07&nbsp;至&nbsp;2009-07</td>
+	<td class="tbody_td">
+	五市三中</td>
+	<td class="tbody_td">
+	学生</td>
+	</tr>
+	<tr>
+	<td class="tbody_td" height="35">
+	2009-07&nbsp;至&nbsp;2012-09</td>
+	<td class="tbody_td">
+	朝阳乡</td>
+	<td class="tbody_td">
+	农民</td>
+	</tr>
+	<tr>
+	<td class="tbody_td" height="35">
+	2012-09&nbsp;至&nbsp;至今</td>
+	<td class="tbody_td">
+	朝阳乡</td>
+	<td class="tbody_td">
+	缓刑人员</td>
+	</tr>
+	</table>
+	<table width="100%" cellpadding="0" cellspacing="0" border="0">
+	<tr align="left">
+	<td class="thead_td" height="30">&nbsp;
+	<img src="images/tb.gif" width="15" height="15" border="0" />
+	家庭成员及主要社会关系
+	</td>
+	</tr>
+	</table>
+	<table width="99%" cellpadding="0" cellspacing="0" border="1" class="maintable" align="center">
+	<tr>
+	<th class="tbody_td" width="120" height="30">姓名</th>
+	<th class="tbody_td" width="120">关系</th>
+	<th class="tbody_td" width="*">工作单位或家庭住址</th>
+	<th class="tbody_td" width="190">联系电话</th>
+	</tr>
+	<tr>
+	<td class="tbody_td" height="35">
+	马占山</td>
+	<td class="tbody_td">
+	父亲</td>
+	<td class="tbody_td">
+	朝阳乡</td>
+	<td class="tbody_td">
+	13704566911</td>
+	</tr>
+	<tr>
+	<td class="tbody_td" height="35">
+	王桂琴</td>
+	<td class="tbody_td">
+	母亲</td>
+	<td class="tbody_td">
+	朝阳乡</td>
+	<td class="tbody_td">
+	无</td>
+	</tr>
+	<tr>
+	<td class="tbody_td" height="35">
+	谢佳明</td>
+	<td class="tbody_td">
+	妻子</td>
+	<td class="tbody_td">
+	青山街道</td>
+	<td class="tbody_td">
+	15134687262</td>
+	</tr>
+	</table>
+	<input type="button" id="print" value=" 打印 " onclick="jsPrint()" />
+	</div>
+
+</div>
+
+<div calss="content" id="menu1">
+	<table width="99%" cellpadding="0" cellspacing="0" border="0">
+	<tr align="left">
+	<td class="thead_td" height="30">&nbsp;
+	<img src="images/tb.gif" width="15" height="15" border="0" />
+	违法犯罪
+	[<a href="javascript:;" onclick="jsPrintThisPage()">打印预览</a>]
+	</td>
+	</tr>
+	</table>
+	<table width="99%" cellpadding="0" cellspacing="0" border="1" class="maintable" align="center">
+	<tr>
+	<th class="tbody_td" width="100" height="35">侦查机关</th>
+	<td class="tbody_td" align="left" width="150" >&nbsp;
+	五大连池市公安局</td>
+	<th class="tbody_td" width="100">拘留日期</th>
+	<td class="tbody_td" align="left" width="150" >&nbsp;
+	</td>
+	<th class="tbody_td" width="100">立案日期</th>
+	<td class="tbody_td" align="left">&nbsp;
+	</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" width="100" height="35">决定/批准<br />逮捕机关</th>
+	<td class="tbody_td" align="left">&nbsp;
+	</td>
+	<th class="tbody_td" width="100">逮捕日期</th>
+	<td class="tbody_td" align="left">&nbsp;
+	</td>
+	<th class="tbody_td" width="100">侦结日期</th>
+	<td class="tbody_td" align="left">&nbsp;
+	</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" width="100" height="35">公诉机关<br />(自诉人)</th>
+	<td class="tbody_td" align="left">&nbsp;
+	黑河市人民检察院</td>
+	<th class="tbody_td" width="100">提起起诉日期</th>
+	<td class="tbody_td" align="left">&nbsp;
+	2012-06-11</td>
+	<th class="tbody_td" width="100">起诉书编号</th>
+	<td class="tbody_td" align="left">&nbsp;
+	黑检刑诉（2012）23号</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" width="100" height="30">审判机关名称</th>
+	<td class="tbody_td" align="left">&nbsp;
+	黑河市中级人民法院</td>
+	<th class="tbody_td" width="100">判决书编号</th>
+	<td class="tbody_td" align="left">&nbsp;
+	（2012）黑中刑一初字第27号</td>
+	<th class="tbody_td" width="100">判决日期</th>
+	<td class="tbody_td" align="left">&nbsp;
+	2012-08-28</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" width="100" height="35">执行通知书<br />文号及日期</th>
+	<td class="tbody_td" align="left">&nbsp;
+	（2012）黑中刑一有缓执字第9号  2012.9.25</td>
+	<th class="tbody_td" width="100">原羁押场所</th>
+	<td class="tbody_td" align="left">&nbsp;
+	</td>
+	<th class="tbody_td" width="100">交付执行日期</th>
+	<td class="tbody_td" align="left">&nbsp;
+	</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" width="100" height="35">社区矫正<br />决定机关</th>
+	<td class="tbody_td" align="left">&nbsp;
+	黑河市中级人民法院</td>
+	<th class="tbody_td" width="100">文书类型</th>
+	<td class="tbody_td" align="left">&nbsp;刑事判决书</td>
+	<th class="tbody_td" width="100">文书编号</th>
+	<td class="tbody_td" align="left">&nbsp;
+	（2012）黑中刑一初字第27号</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" width="100"  height="100">文书生效<br />日期</th>
+	<td class="tbody_td" align="left">&nbsp;
+	2012-09-09</td>
+	<th class="tbody_td" width="100">主要犯罪事实</th>
+	<td class="tbody_td" align="left" colspan="3">&nbsp;
+	2011年11月13日，马鹏飞伙同刘红凤、牛洪田、刘金成、宋春波、苑安、牛树田、宋青山在五市青山街道殴打被害人张辉，致张辉死亡。</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" width="100" rowspan="2">本次犯罪前的<br />违法犯罪记录</th>
+	<th class="tbody_td" height="30">行政处罚/处分</th>
+	<td class="tbody_td" align="left" colspan="4">&nbsp;
+	无</td>
+	</tr>
+	<tr>
+	<th class="tbody_td" height="30">刑事处罚<br />违法犯罪记录</th>
+	<td class="tbody_td" align="left" colspan="4">&nbsp;
+	无</td>
+	</tr>
+	</table>
+
+</menu>
+
+</div>
+</body>
+</html>

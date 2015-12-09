@@ -1,0 +1,139 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css"
+			href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+			var queryCtlMark=0;//控制查询条件显示收缩的标志
+			
+			$(document).ready(function() {
+			   $( "#tdstyle" ).html( top.getCodeSelectHtml("PRODESIGN_STYLE","style",true));
+			   $( "#tdbuilding_name" ).html( top.getCodeSelectHtml("DISTRICT","building_name",true));
+			   var aoData=[];
+			   top.sendAjaxRequest("/actions/DesignPlan.action?getDesignCaseList",aoData,getDesignCaseListCallback);
+			} );
+			
+			function getDesignCaseListCallback(obj){
+			   var ht="";
+			   if(obj.aaData){
+			     var o=obj.aaData;
+			     for(var i=0;i<o.length;i++){
+				    if(i%4==0){
+					  if(i>0){
+					    ht+="</tr>";
+					  }
+					  ht+="<tr>";
+					}
+					ht+="<td align='right' width='50px'><img onclick='showImg(\""+o[i].id+"\")' src='"+(o[i].main_show_picture!=""?top.getUrlBase()+"/download?filePath="+o[i].main_show_picture:"/img/no_picture1.jpg")+"' height='100px' width='140px'/></br><span style='margin-right:50px;'>图片<a href='javascript:void(0)'>"+o[i].img_count+"</a>张</span></td>";
+					ht+="<td align='left' width='80px'>小区名称:"+top.getCodeName("DISTRICT",o[i].building_name)+"</br>风格:"+top.getCodeName("PRODESIGN_STYLE",o[i].style)+"<br/>户型:"+o[i].room_count+"室"+o[i].hall_count+"厅"+o[i].bath_count+"卫</br>设计师:"+top.getUserNameByCode(o[i].designer)+"<br/>工程造价:"+o[i].project_cost+"万元</td>"
+				 }
+				if(i%4!=0){
+				   for(var j=0;j<4-i%4;j++){
+				    ht+="<td width='50px'></td>"; 
+				   }
+				   ht+="</tr>";
+				}
+			   
+			   }
+			   $("#designCaseTable").html(ht);
+			}
+			
+			function showImg(case_id){
+			   top.openSelectDialog("案例欣赏","pages/pro09/showDesignCaseImg.html?case_id="+case_id,1000,500,null);
+			}
+			
+			
+         //查询条件的展开与收缩
+		 function dwOup(){
+		   if(queryCtlMark==0){//展开
+			 $("#queryCtlIcon").attr("src","../../img/icons/arrow-up.gif"); 
+			 $("#queryTab").slideToggle();
+			 queryCtlMark=1;
+		   }else{//收缩
+			 $("#queryCtlIcon").attr("src","../../img/icons/arrow-down.gif"); 
+			 $("#queryTab").slideToggle();
+			 queryCtlMark=0;
+		   }
+		 }
+		 
+		 //查询
+		 function doQuery(){
+		    var aoData=[];
+			aoData.push( {"name":"designCase.building_name","value":$("#building_name").val()} );
+			aoData.push( {"name":"designCase.style","value":$("#style").val()} );
+			top.sendAjaxRequest("/actions/DesignPlan.action?getDesignCaseList",aoData,getDesignCaseListCallback);
+		 }
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+			<div style='border: 1px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="150px">
+							&nbsp;设计案例查询&nbsp;
+						</td>
+						<td>&nbsp;</td>
+						<td align="right" width="50px">
+							<span><image id="queryCtlIcon" src="../../img/icons/arrow-down.gif" alt="展开" onclick="javascript:dwOup();"/></span>
+						</td>
+						<td width="2px">
+							&nbsp;
+						</td>
+					</tr>
+				</table>
+				<table width="100%" align="center" cellpadding="1px" id="queryTab" style="display:none"
+					cellspacing="1px" border="0">
+					<tr class="tr_data">
+						<td align="right">
+						  小区名称
+						</td>
+						<td align="left" >
+							<span id="tdbuilding_name" style="margin-right:3px"></span>
+						</td>
+						<td align="right">
+						  设计风格
+						</td>
+						<td align="left" >
+							<span id="tdstyle" style="margin-right:3px"></span>
+						</td>
+						<td align="left">
+							<div class="buttonDivTwo">
+								<a href="javascript:doQuery()">查询</a>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0"
+				border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									&nbsp;查询结果列表&nbsp;
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<table cellpadding="1" width="100%" cellspacing="3" border="1"  id="designCaseTable"></table>
+		</div>
+	</body>
+</html>

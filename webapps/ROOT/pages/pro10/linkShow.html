@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			$(document).ready(function() {
+			   var iaoColumns= [
+			                    { "sTitle": "发布日期","mDataProp": "publish_date","sWidth": "15%", "sClass": "center",
+									  "fnRender": function ( oObj ) {
+										   return top.getTimeStr( oObj.aData.publish_date, true );
+									  },
+									  "bUseRendered": false 
+								},
+								{ "sTitle": "标题", "mDataProp": "link_title", "sWidth": "85%","sClass": "left", "bSortable":false,
+									  "fnRender": function ( oObj ) {
+											   return '<a target="_blank" href="'+oObj.aData.xurl+'" >'+oObj.aData.link_title+"</a>";
+									  },
+									  "bUseRendered": false
+							    }
+               ];
+
+			   var surl=top.getUrlBase()+"/actions/CmaTable.action?getUrlLinkList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"aaSorting": [[ 0, "desc" ]],
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+							aoData.push( { "name": "link.status", "value": "0" } );
+					},
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+			} );
+		
+			function doQuery(){
+				oTable.fnDraw();
+			}
+		</script>
+	</head>
+	<body>
+		<div width="100%"><br/>
+		    &nbsp;实时历史一体化公告信息<br/><br/>
+	        <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

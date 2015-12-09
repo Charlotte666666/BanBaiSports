@@ -1,0 +1,437 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.helpyouworkeasy.persistence.CompetitionResultMapper">
+     
+  <insert id="insertCompetitionResult" parameterType="CompetitionResult">
+    INSERT INTO tbl_competition_result (status,phases,id,schedule_id,team_1,team_2,win_team,opt_time,group_id,score_1,score_2,round,is_deleted,pre_name_1,pre_name_2,area_code,start_time)
+    VALUES (#{status}, #{phases}, #{id}, #{schedule_id}, #{team_1}, #{team_2}, #{win_team}, #{opt_time}, #{group_id}, #{score_1}, #{score_2}, #{round},0, #{pre_name_1},#{pre_name_2},#{area_code},#{start_time})
+  </insert>
+
+  <update id="updateCompetitionResult" parameterType="CompetitionResult">
+    update tbl_competition_result set 
+    status=#{status},phases=#{phases},schedule_id=#{schedule_id},team_1=#{team_1},team_2=#{team_2},win_team=#{win_team},opt_time=#{opt_time}
+    ,group_id=#{group_id},round=#{round},pre_name_1=#{pre_name_1},pre_name_2=#{pre_name_2},area_code=#{area_code},start_time=#{start_time}
+    where id=#{id}
+  </update>
+  
+  <update id="updateCompetitionResultAndScore" parameterType="CompetitionResult">
+    update tbl_competition_result set 
+    status=#{status},phases=#{phases},schedule_id=#{schedule_id},team_1=#{team_1},team_2=#{team_2},win_team=#{win_team},opt_time=#{opt_time},
+    group_id=#{group_id},round=#{round},pre_name_1=#{pre_name_1},pre_name_2=#{pre_name_2},score_1=#{score_1},score_2=#{score_2},
+    area_code=#{area_code},start_time=#{start_time} 
+    where id=#{id}
+  </update>
+  
+  <update id="updateCompetitionResultStatus" parameterType="map">
+    update tbl_competition_result set 
+     status=#{status} 
+    where id=#{id}
+  </update>
+  
+  <delete id="deleteCompetitionResult" parameterType="map">
+    delete from tbl_competition_result where id=#{id}
+  </delete>
+
+  <select id="getCompetitionResultListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_competition_result where is_deleted=0 
+    <if test="o.status != '' and o.status != null" >
+      and status=#{o.status}
+    </if>
+    <if test="o.phases != '' and o.phases != null" >
+      and phases=#{o.phases}
+    </if>
+    <if test="o.schedule_id != -1" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+    <if test="o.team_1 != -1" >
+      and (team_1=#{o.team_1} or team_2=#{o.team_1})
+    </if>
+    <if test="o.win_team != -1" >
+      and win_team=#{o.win_team}
+    </if>
+    <if test="o.group_id != -1" >
+      and group_id=#{o.group_id}
+    </if>
+    <if test="o.round != -1" >
+      and round=#{o.round}
+    </if>
+    <if test="time1 != -1" >
+      and opt_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=opt_time
+    </if>
+  </select>
+
+  <select id="getCompetitionResultPageList" parameterType="map" resultType="CompetitionResult">
+    select 
+    status,phases,id,schedule_id,team_1,team_2,win_team,opt_time,group_id,score_1,score_2,round,pre_name_1,pre_name_2,area_code,start_time
+    from tbl_competition_result where is_deleted=0 
+    <if test="o.status != '' and o.status != null" >
+      and status=#{o.status}
+    </if>
+    <if test="o.phases != '' and o.phases != null" >
+      and phases=#{o.phases}
+    </if>
+    <if test="o.schedule_id != -1" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+    <if test="o.team_1 != -1" >
+      and (team_1=#{o.team_1} or team_2=#{o.team_1})
+    </if>
+    <if test="o.win_team != -1" >
+      and win_team=#{o.win_team}
+    </if>
+    <if test="o.group_id != -1" >
+      and group_id=#{o.group_id}
+    </if>
+    <if test="o.round != -1" >
+      and round=#{o.round}
+    </if>
+    <if test="time1 != -1" >
+      and opt_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=opt_time
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+  
+  <select id="getCompetitionResultListByTeamId" parameterType="map" resultType="CompetitionResult">
+    select 
+    status,phases,id,schedule_id,team_1,team_2,win_team,opt_time,group_id,score_1,score_2,round,pre_name_1,pre_name_2,area_code,start_time
+    from tbl_competition_result 
+    where is_deleted=0 and (team_1=#{team_id} or team_2=#{team_id}) and schedule_id=#{schedule_id} order by round asc
+  </select>
+  
+  <select id="getCurrentCompetitionResultBySchedule" parameterType="map" resultType="CompetitionResult">
+    select 
+    status,phases,id,schedule_id,team_1,team_2,win_team,opt_time,group_id,score_1,score_2,round,pre_name_1,pre_name_2,area_code,start_time
+    from tbl_competition_result 
+    where is_deleted=0 and status='1' and schedule_id=#{schedule_id} order by area_code asc
+  </select>
+  
+  <select id="getCompetitionResultById" parameterType="map" resultType="CompetitionResult">
+    select 
+    status,phases,id,schedule_id,team_1,team_2,win_team,opt_time,group_id,score_1,score_2,round,pre_name_1,pre_name_2,area_code,start_time
+    from tbl_competition_result 
+    where id=#{id}
+  </select>
+
+<!-- 根据赛局id统计具体比赛中的比分 -->
+  <update id="updateCompetitionResultScore" parameterType="map">
+    update tbl_competition_result set score_1=#{score_1},score_2=#{score_2},status=#{status} where id=#{result_id}
+  </update>
+  
+  <select id="getCompetitionResultListForScore" parameterType="CompetitionResult" resultType="CompetitionResult">
+    select *
+    from tbl_competition_result
+    where is_deleted=0
+    <if test="schedule_id != -1">
+      and schedule_id=#{schedule_id}
+    </if>
+    <if test="phases !='' and phases != null">
+      and phases=#{phases}
+    </if>
+  </select>
+  
+  <!-- 单项 场比分  -->
+  <insert id="insertCompetitionMatch" parameterType="CompetitionMatch">
+    INSERT INTO tbl_competition_match (competition_type,area_code,status,id,result_id,team_1_a,team_1_b,team1_submited,team2_submited,
+    team_2_a,team_2_b,schedule_id,start_time,end_time,score_1,score_2,judge_code,judge_name,team_1,team_2,match_class)
+    VALUES (#{competition_type}, #{area_code}, #{status}, #{id}, #{result_id}, #{team_1_a}, #{team_1_b}, #{team1_submited}, #{team2_submited},
+    #{team_2_a}, #{team_2_b}, #{schedule_id}, #{start_time}, #{end_time}, #{score_1}, #{score_2},#{judge_code},#{judge_name},#{team_1},#{team_2},#{match_class})
+  </insert>
+
+  <update id="updateCompetitionMatch" parameterType="CompetitionMatch">
+    update tbl_competition_match set 
+    competition_type=#{competition_type},area_code=#{area_code},status=#{status},result_id=#{result_id},team_1_a=#{team_1_a},team_1_b=#{team_1_b},team_2_a=#{team_2_a},team_2_b=#{team_2_b},
+    schedule_id=#{schedule_id},start_time=#{start_time},end_time=#{end_time},judge_code=#{judge_code},judge_name=#{judge_name},team_1=#{team_1},team_2=#{team_2}
+    where id=#{id}
+  </update>
+  
+  <delete id="deleteCompetitionMatchByResultId" parameterType="map">
+    delete from tbl_competition_match where result_id=#{result_id}
+  </delete>
+  
+  <update id="submitCompetitionMatchMember1" parameterType="CompetitionMatch">
+    update tbl_competition_match set 
+     team_1_a=#{team_a},team_1_b=#{team_b},team1_submited=#{submited}
+    where id=#{id}
+  </update>
+  
+  <update id="submitCompetitionMatchMember2" parameterType="CompetitionMatch">
+    update tbl_competition_match set 
+      team_2_a=#{team_a},team_2_b=#{team_b},team2_submited=#{submited}
+    where id=#{id}
+  </update>
+  
+  <update id="updateCompetitionMatchScore" parameterType="CompetitionMatch">
+    update tbl_competition_match set 
+      score_1=#{score_1},score_2=#{score_2},status=#{status}
+    where id=#{id}
+  </update>
+  
+  <update id="updateCompetitionMatchJudge" parameterType="map" >
+    update tbl_competition_match set judge_code=#{judge_code} where id=#{id}
+  </update>
+  
+  <update id="updateCompetitionMatchStatus" parameterType="map" >
+    update tbl_competition_match set status=#{status} where id=#{id}
+  </update>
+
+  <select id="getCompetitionMatchListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_competition_match where 1=1 
+    <if test="o.competition_type != '' and o.competition_type != null" >
+      and competition_type=#{o.competition_type}
+    </if>
+    <if test="o.status != '' and o.status != null" >
+      and status=#{o.status}
+    </if>
+    <if test="o.result_id != -1" >
+      and result_id=#{o.result_id}
+    </if>
+    <if test="o.schedule_id != -1" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+    <if test="o.judge_code != '' " >
+      and judge_code=#{o.judge_code}
+    </if>
+  </select>
+
+  <select id="getCompetitionMatchPageList" parameterType="map" resultType="CompetitionMatch">
+    select 
+    competition_type,area_code,status,id,result_id,team_1_a,team_1_b,team_2_a,team_2_b,schedule_id,start_time,end_time,
+    score_1,score_2,judge_code,judge_name,team_1,team_2,match_class,team1_submited,team2_submited 
+    from tbl_competition_match where 1=1 
+    <if test="o.competition_type != '' and o.competition_type != null" >
+      and competition_type=#{o.competition_type}
+    </if>
+    <if test="o.status != '' and o.status != null" >
+      and status=#{o.status}
+    </if>
+    <if test="o.result_id != -1" >
+      and result_id=#{o.result_id}
+    </if>
+    <if test="o.schedule_id != -1" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+    <if test="o.judge_code != '' " >
+      and judge_code=#{o.judge_code}
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+  
+  <select id="getCompetitionMatchListByTeamId" parameterType="map" resultType="CompetitionMatch">
+    select 
+    competition_type,area_code,status,id,result_id,team_1_a,team_1_b,team_2_a,team_2_b,schedule_id,start_time,end_time,
+    score_1,score_2,judge_code,judge_name,team_1,team_2,match_class,team1_submited,team2_submited 
+    from tbl_competition_match where (team_1=#{team_id} or team_2=#{team_id}) 
+      and schedule_id=#{schedule_id}
+    order by result_id,competition_type asc
+  </select>
+  
+  <select id="getCompetitionMatchListBySchedule" parameterType="map" resultType="CompetitionMatch">
+    select competition_type,area_code,status,id,result_id,team_1_a,team_1_b,team_2_a,team_2_b,score_1,score_2,
+    schedule_id,judge_code,judge_name,team_1,team_2,match_class,team1_submited,team2_submited 
+    from tbl_competition_match where schedule_id=#{schedule_id} order by id
+  </select>
+  
+  <select id="getCompetitionCurrentMatchListBySchedule" parameterType="map" resultType="CompetitionMatch">
+    select competition_type,area_code,status,id,result_id,team_1_a,team_1_b,team_2_a,team_2_b,score_1,score_2,
+    schedule_id,judge_code,judge_name,team_1,team_2,match_class,team1_submited,team2_submited 
+    from tbl_competition_match where status='1' and schedule_id=#{schedule_id}
+  </select>
+  
+  <select id="getCompetitionMatchListByJudge" parameterType="map" resultType="CompetitionMatch">
+    select competition_type,area_code,status,id,result_id,team_1_a,team_1_b,team_2_a,team_2_b,score_1,
+    score_2,schedule_id,judge_code,judge_name,team_1,team_2,match_class,team1_submited,team2_submited 
+    from tbl_competition_match where schedule_id=#{schedule_id} and judge_code=#{judge_code}
+  </select>
+
+  <select id="getCompetitionMatchListByResultId" parameterType="map" resultType="CompetitionMatch">
+     select competition_type,area_code,status,id,result_id,team_1_a,team_1_b,team_2_a,team_2_b,score_1,
+     score_2,schedule_id,judge_code,judge_name,team_1,team_2,match_class,team1_submited,team2_submited 
+     from  tbl_competition_match where result_id=#{result_id}
+  </select>
+  
+  <select id="getCompetitionMatchById" parameterType="map" resultType="CompetitionMatch">
+     select competition_type,area_code,status,id,result_id,team_1_a,team_1_b,team_2_a,team_2_b,score_1,
+     score_2,schedule_id,judge_code,judge_name,team_1,team_2,match_class,team1_submited,team2_submited 
+     from  tbl_competition_match where id=#{id}
+  </select>
+  
+  <!-- 比赛轨迹 -->
+  <insert id="insertCompetitionMatchPath" parameterType="CompetitionMatchPath">
+    INSERT INTO tbl_competition_match_path (p3,next_serve_position,id,win_team_id,p1,p0,p2,inning_id,team1_score,team2_score)
+    VALUES (#{p3}, #{next_serve_position}, #{id}, #{win_team_id}, #{p1}, #{p0}, #{p2}, #{inning_id}, #{team1_score}, #{team2_score})
+  </insert>
+
+  <update id="updateCompetitionMatchPath" parameterType="CompetitionMatchPath">
+    update tbl_competition_match_path set 
+    p3=#{p3},next_serve_position=#{next_serve_position},win_team_id=#{win_team_id},p1=#{p1},p0=#{p0},p2=#{p2},inning_id=#{inning_id},
+    team1_score=#{team1_score},team2_score=#{team2_score}
+    where id=#{id}
+  </update>
+  
+  <delete id="deleteCompetitionMatchPath" parameterType="CompetitionMatchPath">
+    delete from tbl_competition_match_path where id=#{id}
+  </delete>
+
+  <select id="getCompetitionMatchPathList" parameterType="map" resultType="CompetitionMatchPath">
+    select 
+    p3,next_serve_position,id,win_team_id,p1,p0,p2,inning_id,team1_score,team2_score
+    from tbl_competition_match_path where inning_id=#{inning_id}
+    order by id asc
+  </select>
+
+  <!-- 单项局比分信息 -->
+  
+  <insert id="insertCompetitionMatchRecd" parameterType="CompetitionMatchRecd">
+    INSERT INTO tbl_competition_match_recd (status,start_serve,id,schedule_id,match_id,start_time,end_time,result_id,score_1,score_2)
+    VALUES (#{status}, #{start_serve}, #{id}, #{schedule_id}, #{match_id}, #{start_time}, #{end_time}, #{result_id}, #{score_1}, #{score_2})
+  </insert>
+
+  <update id="updateCompetitionMatchRecd" parameterType="CompetitionMatchRecd">
+    update tbl_competition_match_recd set 
+    status=#{status},start_serve=#{start_serve},schedule_id=#{schedule_id},match_id=#{match_id},start_time=#{start_time},end_time=#{end_time},result_id=#{result_id},score_1=#{score_1},score_2=#{score_2}
+    where id=#{id}
+  </update>
+  
+  <delete id="deleteCompetitionRecdByResultId" parameterType="map">
+    delete from tbl_competition_match_recd where result_id=#{result_id}
+  </delete>
+  
+  <update id="updateSmallScheduleInningCount" parameterType="map">
+    update tbl_competition_small_schedule set 
+      inning_count=#{inning_count}
+    where id=#{schedule_id}
+  </update>
+  
+  <update id="updateCompetitionMatchRecdScore" parameterType="CompetitionMatchRecd">
+    update tbl_competition_match_recd set 
+    status=#{status},score_1=#{score_1},score_2=#{score_2}
+    where id=#{id}
+  </update>
+
+  <select id="getCompetitionMatchRecdCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_competition_match_recd where match_id=#{match_id}
+  </select>
+
+  <select id="getCompetitionMatchRecdPageList" parameterType="map" resultType="CompetitionMatchRecd">
+    select 
+    status,start_serve,id,schedule_id,match_id,start_time,end_time,result_id,score_1,score_2
+    from tbl_competition_match_recd where 1=1 
+    <if test="o.status != '' and o.status != null" >
+      and status=#{o.status}
+    </if>
+    <if test="o.schedule_id != -1" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+    <if test="o.match_id != -1" >
+      and match_id=#{o.match_id}
+    </if>
+    <if test="o.result_id != -1" >
+      and result_id=#{o.result_id}
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+
+  
+  <select id="getCompetitionMatchRecdListByScheduleId" parameterType="map" resultType="CompetitionMatchRecd">
+    select 
+    status,start_serve,id,schedule_id,match_id,start_time,end_time,result_id,score_1,score_2
+    from tbl_competition_match_recd where schedule_id=#{schedule_id}
+  </select>
+  
+  <select id="getCompetitionCurrentMatchRecdListByScheduleId" parameterType="map" resultType="CompetitionMatchRecd">
+    select 
+    status,start_serve,id,schedule_id,match_id,start_time,end_time,result_id,score_1,score_2
+    from tbl_competition_match_recd where status = '1' and schedule_id=#{schedule_id} 
+  </select>
+  
+  <select id="getCompetitionMatchRecdListByResultId" parameterType="map" resultType="CompetitionMatchRecd">
+    select 
+    status,start_serve,id,schedule_id,match_id,start_time,end_time,result_id,score_1,score_2
+    from tbl_competition_match_recd where result_id=#{result_id}
+  </select>
+  
+  <select id="getCompetitionMatchRecdListByMatchId" parameterType="map" resultType="CompetitionMatchRecd">
+    select 
+    status,start_serve,id,schedule_id,match_id,start_time,end_time,result_id,score_1,score_2
+    from tbl_competition_match_recd where match_id=#{match_id}
+  </select>
+  
+  <select id="getCompetitionMatchRecdById" parameterType="map" resultType="CompetitionMatchRecd">
+    select 
+    status,start_serve,id,schedule_id,match_id,start_time,end_time,result_id,score_1,score_2
+    from tbl_competition_match_recd where id=#{id}
+  </select>
+
+  <!-- 比赛名次 -->
+  <insert id="insertCompetitionRank" parameterType="CompetitionRank">
+    INSERT INTO tbl_competition_rank (rank_type,team_name,rank_name,id,team_id,schedule_id,rank_order,integration,integration_rank,win_num,fail_num)
+    VALUES (#{rank_type}, #{team_name}, #{rank_name}, #{id}, #{team_id}, #{schedule_id}, #{rank_order}, #{integration}, #{integration_rank}, #{win_num}, #{fail_num})
+  </insert>
+
+  <update id="updateCompetitionRank" parameterType="CompetitionRank">
+    update tbl_competition_rank set 
+    rank_type=#{rank_type},team_name=#{team_name},rank_name=#{rank_name},team_id=#{team_id},schedule_id=#{schedule_id},rank_order=#{rank_order},integration=#{integration},integration_rank=#{integration_rank},win_num=#{win_num},fail_num=#{fail_num}
+    where id=#{id}
+  </update>
+
+  <select id="getCompetitionRankListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_competition_rank where 1=1 
+    <if test="o.rank_type != '' and o.rank_type != null" >
+      and rank_type=#{o.rank_type}
+    </if>
+    <if test="o.team_id != -1" >
+      and team_id=#{o.team_id}
+    </if>
+    <if test="o.schedule_id != -1" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+  </select>
+
+  <select id="getCompetitionRankPageList" parameterType="map" resultType="CompetitionRank">
+    select 
+    rank_type,team_name,rank_name,id,team_id,schedule_id,rank_order,integration,integration_rank,win_num,fail_num
+    from tbl_competition_rank where 1=1 
+    <if test="o.rank_type != '' and o.rank_type != null" >
+      and rank_type=#{o.rank_type}
+    </if>
+    <if test="o.team_id != -1" >
+      and team_id=#{o.team_id}
+    </if>
+    <if test="o.schedule_id != -1" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+
+  <select id="getCompetitionRankListBySchedule" parameterType="map" resultType="CompetitionRank">
+    select 
+    rank_type,team_name,rank_name,id,team_id,schedule_id,rank_order,integration,integration_rank,win_num,fail_num
+    from tbl_competition_rank where schedule_id=#{schedule_id}
+    order by rank_type,rank_order asc
+  </select>
+  
+
+</mapper>

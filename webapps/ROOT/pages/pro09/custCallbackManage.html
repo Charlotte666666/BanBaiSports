@@ -1,0 +1,555 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"	src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var i=0;
+			var query_status="";//查询条件废单
+			var mouthBeginTime=0;
+			var todayStartTime=0;
+			var beforMouthTime=0;
+			var today=null;
+			$(document).ready(function() {
+			    //$( "#tdHouseType" ).html( top.getCodeSelectHtml("HOUST_TYPES","house_types",true) );
+			today=new Date();
+			initDateValue();
+			$( "#tdfrom_type" ).html( top.getCodeSelectHtml("CUST_FROM_TYPE","from_type",true,'','','','156px'));
+			$( "#handhouse_type" ).html( top.getCodeSelectHtml("ISYESORNO","house_type",true,'','','','156px'));
+			$("#tdcust_manager").html(top.getUserListByRole('custManager','cust_manager',true,'156px'));
+			$("#td_require_manager").html(top.getAllDesignerSelect("designer_code",'','156px') );
+			if (!top.g_isPermit('cust_add') ) {
+				// 将相关字段隐藏或变成不可用 ， 保存按钮、提交按钮隐藏
+				$('#createBtn').hide();
+				$('#exportBtn').hide();
+			}
+			
+			$("#span_district").html( top.getCodeSelectHtml("DISTRICT","district",true,'','','','156px') );
+			$( "#tdCust_status" ).html( top.getCodeSelectHtml("CUST_STATUS","cust_status",true) );
+			
+			var iaoColumns= [
+			                   { "sTitle": "回访数", "mDataProp": "callback_num", "sWidth": "6%","sClass": "center","bUseRendered": false,"bSortable": false},
+							   { "sTitle": "回访时间", "mDataProp": "come_time", "sWidth": "8%","sClass": "center","bSortable": false,
+							        "fnRender": function ( oObj ) {
+                                        return top.getTimeStr(oObj.aData.come_time,true);
+									},
+								   "bUseRendered": false
+							   },{ "sTitle": "最后回访结果", "mDataProp": "result_status", "sWidth": "8%","sClass": "center","bSortable": false,
+							        "fnRender": function ( oObj ) {
+                                        return top.getCodeName("RESULT_STATUS",oObj.aData.result_status);
+									},
+								   "bUseRendered": false
+							   },
+			                  { "sTitle": "客户姓名", "mDataProp": "cust_name", "sWidth": "8%","sClass": "center","bUseRendered": false },
+			                  { "sTitle": "客户电话", "mDataProp": "cust_mobile", "sWidth": "8%","sClass": "center","bUseRendered": false },
+			                  { "sTitle": "小区", "mDataProp": "district", "sWidth": "8%","sClass": "center",
+							  "fnRender": function ( oObj ) {
+                                        return top.getCodeName("DISTRICT",oObj.aData.district);
+									},
+							  "bUseRendered": false },
+							  { "sTitle": "房屋类型", "mDataProp": "room_type", "sWidth": "8%","sClass": "center",
+							        "fnRender": function ( oObj ) {
+                                        return top.getCodeName("ROOM_TYPE",oObj.aData.room_type);
+									},
+								   "bUseRendered": false
+							   },
+			                  { "sTitle": "面积", "mDataProp": "struct_area", "sWidth": "8%","sClass": "center","bUseRendered": false },
+			                 // { "sTitle": "客户需求", "mDataProp": "require_style", "sWidth": "13%","sClass": "center","bUseRendered": false },
+							  { "sTitle": "期房或现房", "mDataProp": "completed_date", "sWidth": "8%","sClass": "center",
+							        "fnRender": function ( oObj ) {
+										if(oObj.aData.completed_date==0){
+											return "现房";
+										}else{
+											return "期房";
+										}
+									},
+								   "bUseRendered": false
+							   },
+							    { "sTitle": "设计师", "mDataProp": "require_manager", "sWidth": "8%","sClass": "center",
+							   "fnRender": function ( oObj ) {
+                                          return top.getUserNameByCode(oObj.aData.require_manager);
+                                     },
+							  "bUseRendered": false},
+							    { "sTitle": "操作", "mDataProp": "code", "sWidth": "8%","sClass": "center","bSortable": false,
+							        "fnRender": function ( oObj ) {
+                                        return '<a href=\'javascript:void(0)\' onclick="updateInfo(\''+oObj.aData.code+'\')" >查看详情</a>';
+										
+                                   },
+								   "bUseRendered": false
+							   }
+               ];
+			   var surl=top.getUrlBase()+"/actions/CustInfo.action?getMyDeptCustCallBackInfoList";
+			   oTable = $('#dataTable').dataTable( {
+					"aaSorting": [[3,"desc"]],
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWin("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData=getParamDate(aoData);
+			    },
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+			function addInfo(){
+				top.openCustDetailPage('','0-0',"insert",'客户详细信息');
+			}
+			
+			function updateInfo(id){
+				top.openCustDetailPage(id,"1-0","query","客户详细信息");
+			}
+
+			function saveCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				}
+			}
+
+		    function getParamDate(aoData){
+			        var ht;
+			       /* if($("#house_type").val().length>1){//若户型没有选择则查询全部户型，否则查询相应的户型
+			          ht=$("#house_type").val().split(",");
+					  aoData.push( { "name": "custRequire.room_count","value":ht[0]} );
+					  aoData.push( { "name": "custRequire.hall_count","value":ht[1]} );
+					  aoData.push( { "name": "custRequire.bath_count","value":ht[2]} );
+					}*/
+			     	aoData.push( { "name": "custInfo.code", "value":$("#cust_code").val() } );
+					aoData.push( { "name": "custInfo.cust_name", "value":$("#cust_name").val() } );
+					aoData.push( { "name": "custInfo.cust_type", "value": top.getAllCheckedValue( document.getElementsByName("cust_type")) } );
+					aoData.push( { "name": "custRequire.cust_status", "value": query_status } );
+					aoData.push( { "name": "custRequire.district", "value": $("#district").val() } );
+					//aoData.push( { "name": "custRequire.project_addr","value":$("#project_addr").val()});
+					//客户登记时间
+					aoData.push( { "name": "time1","value": $("#kssj").val()} );
+					aoData.push( { "name": "time2","value": $("#jssj").val()} );
+					//签订工程合同时间
+					aoData.push( { "name": "contract_time1","value": $("#contract_time1").val()} );
+					aoData.push( { "name": "contract_time2","value": $("#contract_time2").val()} );
+					//工程完工时间
+					if(top.getRadioValue( document.getElementsByName("isFinishProject"))=='yes'){
+						aoData.push( { "name": "finish_project_time1","value":beforMouthTime} );
+						aoData.push( { "name": "finish_project_time2","value": today.getTime()} );
+					}
+					
+					//aoData.push( { "name": "custRequire.building_name","value": $("#building_name").val()} );
+					
+					aoData.push( { "name": "custInfo.cust_mobile","value": $("#cust_mobile").val()} );
+					aoData.push( { "name": "custRequire.building_name","value": $("#building_name").val()} );
+					aoData.push( { "name": "custRequire.building_name","value": $("#building_name").val()} );//是否期房
+					
+					aoData.push( { "name": "custRequire.require_manager","value": $("#designer_code").val()} );
+					aoData.push( { "name": "custInfo.cust_manager","value": $("#cust_manager").val()} );
+					//if($("#house_type").val()==0){
+						aoData.push( { "name": "custRequire.completed_date","value": $("#house_type").val()} );
+					//}
+					aoData.push( { "name": "custRequire.from_type","value": $("#from_type").val()} );
+				return aoData;
+			}
+			
+			
+			function changeRegistDate(){
+			    var now=new Date().getTime();
+				var checkValue=top.getAllCheckedValue( document.getElementsByName("isNewCust"));
+				if(checkValue.indexOf('1')!=-1){
+					$("#kssj").val(top.getTimeStr(mouthBeginTime,true));
+					$("#jssj").val(top.getTimeStr(now,true));		
+				}else if(checkValue.indexOf('0')!=-1){
+					$("#kssj").val(top.getTimeStr(todayBeginTime,true));
+					$("#jssj").val(top.getTimeStr(now,true));
+				}
+				doQuery();
+			}
+			
+			function initDateValue(){
+			    //js 一天的开始从8点开始
+				todayBeginTime=today.getTime()-today.getTime()%(1000*60*60*24)-8*60*60*1000;
+				beforMouthTime=todayBeginTime-1000*60*60*24*29;
+				today.setDate(1);
+				mouthBeginTime=today.getTime()-today.getTime()%(1000*60*60*24)-8*60*60*1000;
+			}
+			function exportData(){
+			
+				var aoData=[];
+				aoData.push( { "name": "custInfo.code", "value":$("#cust_code").val() } );
+					aoData.push( { "name": "custInfo.cust_name", "value":$("#cust_name").val() } );
+					aoData.push( { "name": "custInfo.cust_type", "value": top.getAllCheckedValue( document.getElementsByName("cust_type")) } );
+					aoData.push( { "name": "custRequire.cust_status", "value": query_status } );
+					aoData.push( { "name": "custRequire.district", "value": $("#district").val() } );
+					//aoData.push( { "name": "custRequire.project_addr","value":$("#project_addr").val()});
+					//客户登记时间
+					if(top.getRadioValue( document.getElementsByName("isNewCust"))=='0'){
+						aoData.push( { "name": "time1","value": todayBeginTime} );
+						aoData.push( { "name": "time2","value": today.getTime()} );
+					}else if(top.getRadioValue( document.getElementsByName("isNewCust"))=='1'){
+						aoData.push( { "name": "time1","value":  mouthBeginTime} );
+						aoData.push( { "name": "time2","value": today.getTime()} );
+					}else{
+						aoData.push( { "name": "time1","value": $("#kssj").val()} );
+						aoData.push( { "name": "time2","value": $("#jssj").val()} );
+					}
+					//签订工程合同时间
+					aoData.push( { "name": "contract_time1","value": $("#contract_time1").val()} );
+					aoData.push( { "name": "contract_time2","value": $("#contract_time2").val()} );
+					//工程完工时间
+					if(top.getRadioValue( document.getElementsByName("isFinishProject"))=='yes'){
+						aoData.push( { "name": "finish_project_time1","value":beforMouthTime} );
+						aoData.push( { "name": "finish_project_time2","value": today.getTime()} );
+					}
+					
+					aoData.push( { "name": "custRequire.cust_building_name","value": $("#building_name").val()} );
+					
+					aoData.push( { "name": "custInfo.cust_mobile","value": $("#cust_mobile").val()} );
+					//aoData.push( { "name": "custRequire.building_name","value": $("#building_name").val()} );
+					//aoData.push( { "name": "custRequire.building_name","value": $("#building_name").val()} );//是否期房
+					
+					aoData.push( { "name": "custRequire.require_manager","value": $("#designer_code").val()} );
+					aoData.push( { "name": "custInfo.cust_manager","value": $("#cust_manager").val()} );
+					aoData.push( { "name": "custRequire.completed_date","value": $("#house_type").val()} );
+					aoData.push( { "name": "custRequire.from_type","value": $("#from_type").val()} );
+					/*
+					aoData.push( { "name": "custInfo.code", "value":$("#cust_code").val() } );
+					aoData.push( { "name": "custInfo.cust_name", "value":$("#cust_name").val() } );
+					aoData.push( { "name": "custInfo.cust_type", "value":top.getAllCheckedValue( document.getElementsByName("cust_type")) } );
+					aoData.push( { "name": "custRequire.cust_status", "value": $("#cust_status").val() } );
+					*/top.showLoadingInfo(true);
+					top.sendAjaxRequest("/actions/CustInfo.action?exportCustInfo",aoData,callBackExportData);
+			}
+	
+	 function callBackExportData(obj){
+		 top.showLoadingInfo(false);
+		 try{
+			if ( obj.status == true ){
+			   var downUrl=top.getUrlBase()+"/download?filePath="+obj.msg+"&fileName=客户信息列表.xls";
+			   document.location.href=downUrl;
+			}else{
+			   top.showInfoWinError("操作失败 "+obj.msg);
+			}
+		 }catch(e){
+			top.showInfoWinError("处理异常:"+e.message);
+		 }
+     }
+     //客户查询条件的展开与收缩
+     function dwOup(){
+	   if(i==0){//展开
+	     $("#img").attr("src","../../img/icons/arrow-up.gif"); 
+		 $("#custTab").slideToggle();
+		 i=1;
+	   }else{//收缩
+	     $("#img").attr("src","../../img/icons/arrow-down.gif"); 
+		 $("#custTab").slideToggle();
+	     i=0;
+	   }
+	 }
+	 function filtCust(status_code){
+		$("#query_status_"+query_status).removeClass("querying_css");
+		$("#query_status_"+query_status).addClass("query_css");
+		query_status=status_code;
+		$("#query_status_"+query_status).removeClass("query_css");
+		$("#query_status_"+query_status).addClass("querying_css");
+		doQuery();
+	 }
+	 // 保存基本信息
+    function baseDoSubmit(){
+	  // 检查
+		var checkMsg = baseCheckFormDoSubmit();
+			if ( checkMsg != '' ) {
+			   top.showInfoWinWarn(checkMsg);
+			   return;
+			}
+		var aoData=[];
+		 aoData.push( { "name": "custInfo.code", "value": $("#cust_code").val()  } );
+		// aoData.push( { "name": "custInfo.code", "value": cust_base_info_id } );
+		 aoData.push( { "name": "custInfo.cust_name", "value": $("#cust_name").val() } );
+		// aoData.push( { "name": "custInfo.cust_manager", "value": $("#cust_manager").val() } );
+		 aoData.push( { "name": "custInfo.register_date", "value": top.toTimestamp($("#register_date").val()) });
+		 aoData.push( { "name": "custInfo.from_type", "value": $("#from_type").val() } );
+		 if($("#from_type").val()=="05"){
+			aoData.push( { "name": "custInfo.other_from_type", "value": $("#other_from_type").val() } );
+		 }
+		 aoData.push( { "name": "custInfo.cust_sex", "value": $("#cust_sex").val() } );
+		 aoData.push( { "name": "custInfo.cust_type", "value": $("#cust_type").val() } );
+		 aoData.push( { "name": "custInfo.cust_level", "value": $("#cust_level").val() } );
+		 aoData.push( { "name": "custInfo.cust_phone", "value": $("#cust_phone").val() } );
+		 aoData.push( { "name": "custInfo.cust_mobile", "value": $("#cust_mobile").val() } );
+		 aoData.push( { "name": "custInfo.cust_job", "value": $("#cust_job").val() } );	
+		 aoData.push( { "name": "custInfo.cust_job_else", "value": $("#cust_job_else").val() } );
+		aoData.push( { "name": "custRequire.room_count", "value": top.g_GetNumValue($("#room_count").val()) } );
+		aoData.push( { "name": "custRequire.hall_count", "value": top.g_GetNumValue($("#hall_count").val() )} );
+		aoData.push( { "name": "custRequire.bath_count", "value": top.g_GetNumValue($("#bath_count").val() )} );
+		
+		//aoData.push( { "name": "custRequire.require_manager", "value": $("#designer_code").val() } );
+		
+
+		aoData.push( { "name": "custRequire.cust_code", "value": cust_base_info_id } );
+		aoData.push( { "name": "custRequire.district", "value": $("#district").val() } );
+		//aoData.push( { "name": "custRequire.project_addr", "value": $("#project_addr").val() } );
+		aoData.push( { "name": "custRequire.room_type", "value": $("#room_type").val() } );
+		aoData.push( { "name": "custRequire.other_room_type", "value": $("#room_type_else").val() } );
+		aoData.push( { "name": "custRequire.planinvest_money", "value": $("#planinvest_money").val() } );
+		aoData.push( { "name": "custRequire.major_material", "value": $("#major_material").val() } );
+		aoData.push( { "name": "custInfo.path_way", "value": top.getAllCheckedValue( document.getElementsByName("path_way") ) } );
+		aoData.push( { "name": "custInfo.other_way", "value": $("#other_way").val() } );
+		aoData.push( { "name": "custRequire.focus", "value": top.getAllCheckedValue( document.getElementsByName("focus") ) } );
+		aoData.push( { "name": "custRequire.other_focus", "value": $("#other_focus").val() } );
+		aoData.push( { "name": "custRequire.other_require_style", "value": $("#other_require_style").val() } );
+		aoData.push( { "name": "custRequire.require_style", "value": top.getAllCheckedValue( document.getElementsByName("require_style") ) } );
+		aoData.push( { "name": "custRequire.function_require", "value": $("#function_require").val() } );
+		aoData.push( { "name": "custRequire.design_key", "value": $("#design_key").val() } ); 
+		aoData.push( { "name": "custRequire.struct_area", "value": top.g_GetNumValue($("#struct_area").val()) } );
+		aoData.push( { "name": "custRequire.completed_date", "value": top.toTimestamp($("#completed_date").val()) } );
+		aoData.push( { "name": "custRequire.usable_area", "value": top.g_GetNumValue($("#usable_area").val()) } );
+		aoData.push( { "name": "custRequire.planfitment_date", "value": top.toTimestamp($("#planfitment_date").val()) });
+		aoData.push( { "name": "custRequire.cust_status", "value": cust_status } );
+		aoData.push( { "name": "custRequire.cust_city", "value": $("#cust_city").val() } );
+		aoData.push( { "name": "custRequire.cust_building_name", "value": $("#cust_building_name").val() } );
+		aoData.push( { "name": "custRequire.cust_receiver", "value": $("#cust_receiver").val() } );
+		aoData.push( { "name": "custRequire.cust_description", "value": $("#cust_description").val() } );
+		aoData.push( { "name": "custRequire.intention_evaluate", "value": $("#intention_evaluate").val() } );
+		aoData.push( { "name": "custRequire.is_measure_house", "value": top.getRadioValue( document.getElementsByName("is_measure_house") ) } );
+		aoData.push( { "name": "custRequire.is_visit_model_house", "value": top.getRadioValue( document.getElementsByName("is_visit_model_house") ) } );
+
+		aoData.push( { "name": "custRequire.callback_service_begin_date", "value": top.toTimestamp($("#callback_service_begin_date").val()) });
+		aoData.push( { "name": "custRequire.callback_service_cust_manage_interval", "value": $("#callback_service_cust_manage_interval").val() } );
+		aoData.push( { "name": "custRequire.callback_service_designer_interval", "value": $("#callback_service_designer_interval").val() } );
+		aoData.push( { "name": "custRequire.callback_service_project_dept_interval", "value": $("#callback_service_project_dept_interval").val() } );
+		
+		aoData.push( { "name": "interpose.cust_code", "value": cust_base_info_id } );
+		if(optType=='interpose_update'){
+			aoData.push( { "name": "interpose.id", "value": $("#interpose_id").val()} );
+			aoData.push( { "name": "interpose.deal_user", "value": $("#view_edit_designer_code").val()} );
+			aoData.push( { "name": "interpose.interpose_type", "value": $("#view_edit_interpose_type").val() } );
+			aoData.push( { "name": "interpose.memo", "value": $("#view_edit_interpose_memo").val() } );
+			aoData.push( { "name": "custRequire.require_manager", "value": $("#view_edit_designer_code").val() } );
+		}else{
+			aoData.push( { "name": "interpose.id", "value": $("#interpose_id").val()} );
+			aoData.push( { "name": "interpose.deal_user", "value": $("#designer_code").val()} );
+			aoData.push( { "name": "interpose.interpose_type", "value": $("#interpose_type").val() } );
+			aoData.push( { "name": "interpose.memo", "value": $("#interpose_memo").val() } );
+			aoData.push( { "name": "interpose.require_id", "value": require_id } );
+			aoData.push( { "name": "custRequire.require_manager", "value": $("#designer_code").val() } );
+		}
+		var xurl="/actions/CustInfo.action?updateFitmentCustInfo";
+		if((is_send==false||optType=='interpose_update')&& ($("#designer_code").val()!=''||$("#view_edit_designer_code").val()!='')&&($("#designer_code").val()!=$("#view_edit_designer_code").val())){
+		   is_send=true;
+		}
+		else{
+		   is_send=false;
+		}
+		 aoData.push( { "name": "is_send", "value": is_send } );
+		 if ( cust_base_info_id == 0 ) {
+			 if(optType=='interpose_insert'||optType=="interpose_update"){
+			  aoData.push( { "name": "is_interpose", "value": true } );
+			 }
+			 else{
+			   aoData.push( { "name": "is_interpose", "value": false } );
+			 }
+			xurl="/actions/CustInfo.action?insertFitmentCustInfo";
+		 }
+		//店面经理修改客户经理 
+		if(top.g_isPermit('09_alter_cust_manager')&&!top.g_isPermit('cust_edit')){
+			aoData.push( { "name": "custInfo.cust_manager", "value": $("#view_cust_manager_val").val() } );
+		//店面经理修改设计师
+		}else{
+			aoData.push( { "name": "custInfo.cust_manager", "value": $("#cust_manager").val() } );
+		}
+		 top.sendAjaxRequest(xurl,aoData,baseOptCallback);
+   }
+    //校验客户基本信息
+	function baseCheckFormDoSubmit(){	
+	    var mobile="";
+		var phone="";
+		mobile=$("#cust_mobile").val();
+		var msg="";
+		msg += checkString($("#cust_code").val(),true,20,"客户编号");
+		msg += checkString($("#cust_name").val(),true,32,"客户姓名");
+		msg += checkString($("#from_type").val(),true,10,"客户来源");
+		//msg += checkString($("#project_addr").val(),true,128,"工程地址");
+		if ( mobile != '' && !checkPhone(mobile) ) {msg += "移动号码格式不正确<br>";};
+		return msg;
+   }
+		</script>
+		<style>
+		.query_css{font-family:Microsoft YaHei;font-weight:normal;}
+		.querying_css{font-weight:bold;}
+		</style>
+	</head>
+	<body>
+		<div width="100%">
+			<div style='border: 1px solid #89A1B9;'>
+				<table  width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="150px">
+							&nbsp;客户查询&nbsp;
+						</td>
+						<td align="right">
+						    <span><image id="img" src="../../img/icons/arrow-down.gif" alt="展开" onclick="javascript:dwOup();"/></span>
+						</td>
+						<td width="2px">
+							&nbsp;
+						</td>
+					</tr>
+				</table>
+				<table id="custTab" style="display:none;" width="100%" align="center" cellpadding="1px"
+					cellspacing="1px" border="0">
+					<tr class="tr_data">
+						<!--<td  class="table_property_title">城市</td><td><input type="text" id="city"></input></td>
+						<td  class="table_property_title">区域</td><td><input type="text" id="city"></input></td>!-->
+						<td  class="table_property_title">客户来源</td>
+						<td id="tdfrom_type" align="left"></td>
+						<td  class="table_property_title">是否期房</td>
+						<td id="handhouse_type" align="left"></td>
+						<td class="table_property_title">小区</td>
+					   <td colspan="3" align="left">
+					     <span id='span_district'></span>&nbsp;&nbsp;&nbsp;&nbsp;
+						 <!--<input id="project_addr" style="width:155px;"
+								onkeydown="if(event.keyCode==13) doQuery();" />！-->
+					   </td>
+					</tr>
+					<tr class="tr_data">
+						<td  class="table_property_title">楼盘名称</td>
+						<td align="left">
+						<input type="text" id="building_name" style="width:155px;"
+								onkeydown="if(event.keyCode==13) doQuery();"></input>
+						</td>
+						<td  class="table_property_title">客户经理</td>
+						<td id="tdcust_manager" align="left"></td>
+						<td  class="table_property_title">登记日期</td>
+						<td colspan="3"  align="left">
+						 <input id="kssj" onclick="new Calendar().show(this);" style="width:155px;"
+								onkeydown="if(event.keyCode==13) doQuery();" readonly="true"/> 至 <input id="jssj" style="width:155px;"
+								onkeydown="if(event.keyCode==13) doQuery();" onclick="new Calendar().show(this);" readonly="true"/>
+						</td>
+					</tr>
+					<tr class="tr_data">
+						<td  class="table_property_title">设计部门</td>
+						<td  align="left">
+							<input type="text" id="design_dept" value="" style="width:155px;"
+								onkeydown="if(event.keyCode==13) doQuery();" />
+						</td>
+						<td  class="table_property_title">设计师</td>
+						<td id="td_require_manager"  align="left">
+						</td>
+						<td  class="table_property_title">合同日期</td>
+						<td colspan="3"  align="left">	
+							<input id="contract_time1"  onclick="new Calendar().show(this);" style="width:155px;"
+								onkeydown="if(event.keyCode==13) doQuery();" readonly="true"/> 至 <input id="contract_time2" style="width:155px;"
+								onkeydown="if(event.keyCode==13) doQuery();" onclick="new Calendar().show(this);" readonly="true"/>
+						</td>
+					</tr>
+					<tr class="tr_data">
+					    <td class="table_property_title">客户编号</td>
+						<td align="left">
+							<input  id="cust_code"  type="text" value="" style="width:155px;"
+								onkeydown="if(event.keyCode==13) doQuery();" />
+						</td>
+						<td class="table_property_title">客户姓名</td>
+						<td  align="left">
+							<input type="text" id="cust_name" value="" style="width:155px;"
+								onkeydown="if(event.keyCode==13) doQuery();" />
+						</td>
+						<td class="table_property_title">客户电话</td>
+						<td align="left">
+						<input type="text" id="cust_mobile" value="" style="width:155px;"
+								onkeydown="if(event.keyCode==13) doQuery();"/>
+						</td>
+						<td align="left">
+						</td>
+						<td align="left">
+						 <div style="margin-left:30px;" class="buttonDivTwo">
+								<a href="javascript:doQuery()">查询</a>
+							</div>
+						</td>
+						</tr>
+					<tr class="tr_data">
+						<td align="table_property_title">客户类型</td>
+						<td align="left">
+							&nbsp;<input type="checkbox"  id="a_class" name="cust_type" value="A" checked="checked"/>A类
+							&nbsp;<input type="checkbox"  id="b_class" name="cust_type"  value="B" checked="checked"/>B类
+							&nbsp;<input type="checkbox"  id="c_class" name="cust_type"  value="C"  checked="checked"/>C类
+							&nbsp;<input type="checkbox"  id="d_class" name="cust_type"  value="D"  checked="checked"/>D类 
+						</td>
+						<td><input type="checkBox" name="isNewCust" value='1' onclick="changeRegistDate()">本月新增</input></td>
+						<td><input type="checkBox" name="isNewCust" value='0' onclick="changeRegistDate()">本日新增</input></td>
+						<td><input type="checkBox" name="isFinishProject" value="yes">30天内交房</input></td>
+						<td colspan="3"></td>
+					</tr>
+					
+					<tr class="tr_data">
+						<td style="font-weight:bold">统计：</td>
+						<td colspan="7" align="left">
+							<span style="query_css" id="query_status_0" onclick="filtCust('0')">未派单</span>|
+							<span style="query_css" id="query_status_1" onclick="filtCust('1')">已派单</span>|
+							<span style="query_css" id="query_status_2" onclick="filtCust('2')">已交定金</span>|
+							<span style="query_css" id="query_status_3" onclick="filtCust('3')">完成量房</span>|
+							<span style="query_css" id="query_status_4" onclick="filtCust('4')">设计方案通过</span>|
+							<span style="query_css" id="query_status_5" onclick="filtCust('5')">工程报价</span>|
+							<span style="query_css" id="query_status_6" onclick="filtCust('6')">签订合同</span>|
+							<span style="query_css" id="query_status_7" onclick="filtCust('7')">工程执行</span>|
+							<span style="query_css" id="query_status_8" onclick="filtCust('8')">综合验收</span>|
+							<span style="query_css" id="query_status_9" onclick="filtCust('9')">工程完成</span>|
+							<span style="query_css" id="query_status_9" onclick="filtCust('99')">废单</span>|
+							<span style="querying_css" id="query_status_" onclick="filtCust('')">全部</span>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0"
+				border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									&nbsp;查询结果列表&nbsp;
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<table cellpadding="0" width="100%" cellspacing="0" border="0"	class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

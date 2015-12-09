@@ -1,0 +1,156 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		  var oTable=null;
+		  var stationIds="";
+		  var time="";
+		  var q_v04001="";
+		  var q_v04002="";
+		  var q_v04003="";
+		  var q_v04004="";
+		  
+			$(document).ready(function() {
+			    top.showLoadingInfo(true);
+			   stationIds = top.getUrlParam(document.URL,"stationIds");
+			   time = decodeURI( top.getUrlParam(document.URL,"time") );
+			   if ( time != '' ) {
+					    q_v04001 = time.substring(0,4);
+					    q_v04002 = time.substring(5,7);
+					    q_v04003 = time.substring(8,10);
+					    q_v04004 = time.substring(11,13);
+				 }
+			   var iaoColumns = [
+                               { "sTitle": "观测时间", "mDataProp": "time", "sWidth": "10%","bSortable":false,
+                                  "fnRender": function ( oObj ) {
+                                       return oObj.aData.time.substring(0,13);
+                                  },
+                                  "bUseRendered": false
+                               },
+                               { "sTitle": "降水量(mm)", "mDataProp": "VA", "sWidth": "10%","sClass": "center","bSortable":false,
+							      "fnRender": function ( oObj ) {
+								       if ( oObj.aData.V0 == '0' ) return "";
+                                       return oObj.aData.VA;
+                                  },
+								  "bUseRendered": false
+							   },
+                               { "sTitle": "最新质控", "mDataProp": "F1", "sWidth": "10%","sClass": "center","bSortable":true,
+                                  "fnRender": function ( oObj ) {
+								       if ( oObj.aData.V0 == '0' ) return "";
+									   if ( oObj.aData.F1 == '7' || oObj.aData.F1 == '9' ) return "未质控";
+                                       return top.getCodeName( "CMA_QC_STATUS", oObj.aData.F1 );
+                                  },
+                                  "bUseRendered": false
+                               },
+                               { "sTitle": "反馈情况", "mDataProp": "F2", "sWidth": "10%","bSortable":false,
+                                  "fnRender": function ( oObj ) {
+								       if ( oObj.aData.V0 == '0' ) return "";
+                                  	   if ( oObj.aData.F1 == '1' || oObj.aData.F1 == '2' ) {
+									     if ( oObj.aData.CS == '0' || oObj.aData.CS == '1' ) {
+                                  	       return "未反馈";
+										 } else if ( oObj.aData.CS == '2' ) {
+										   return top.getCodeName( "CMA_CONFIRM_RESULT",oObj.aData.rf1+"-"+oObj.aData.F2,"未反馈");
+										 } else return "未反馈";
+									   } else if ( oObj.aData.CS == '2' ) {
+										   return top.getCodeName( "CMA_CONFIRM_RESULT",oObj.aData.rf1+"-"+oObj.aData.F2,"未反馈");
+									   }
+									   return "无";
+                                  },
+                                  "bUseRendered": false
+                               },
+                               { "sTitle": "人工质疑", "mDataProp": "F1", "sWidth": "10%", "sClass": "center","bSortable":false,
+                            	  "fnRender": function ( oObj ) {
+								       if ( oObj.aData.V0 == '0' ) return "";
+                                       return '&nbsp;<a href="javascript:void(0)" onclick="isRight(\''+oObj.aData.V0+'\',\''+oObj.aData.time+'\',\''+oObj.aData.F1+'\',\''+oObj.aData.VA+'\')" >质疑</a>';
+                                  },
+                                  "bUseRendered": false
+                               }
+               ];
+               
+         	  var sUrl=top.getUrlBase()+"/actions/ProCma.action?getStationRAWPDDetail";
+			      oTable = $('#dataTable').dataTable( {
+							"bProcessing": false,
+							"bServerSide": true,
+							"bJQueryUI": true,
+							"bFilter": false,
+							"bDestroy": true,
+							"bLengthChange": false,
+							"iDisplayLength":24,
+							"sAjaxSource": sUrl,
+							"oLanguage": {
+								"sUrl": top.getUrlBase()+"/lang_zh.txt"
+						   },
+						   "fnInitComplete": function(oSettings, json) {
+							  top.showLoadingInfo(false);
+						   },
+						  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+								$.ajax( {
+									"url":  sUrl,
+									"data": aoData,
+									"success": function (json) {
+										fnCallback( json );
+									},
+									"dataType": "json",
+									"cache": false,
+									"type": "POST",
+									"error": function (xhr, error, thrown) {
+										top.showInfoWinError("发生异常:"+error);
+									}
+								} );
+							},
+							"fnServerParams": function ( aoData ) {
+								  aoData.push( { "name": "stationIds", "value": stationIds } );
+								  aoData.push( { "name": "v04001", "value": q_v04001 } );
+								  aoData.push( { "name": "v04002", "value": q_v04002 } );
+									aoData.push( { "name": "v04003", "value": q_v04003 } );
+									aoData.push( { "name": "v04004", "value": q_v04004 } );
+					    },
+					    "sDom": "frt",
+						  "sPaginationType": "full_numbers",
+							"aoColumns": iaoColumns
+						} );
+			} );
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+			function isRight(station,time,f1,v_VALUE){
+					  var aoData=[];
+					  aoData.push( { "name": "rawsr.v01000", "value": station } );
+					  aoData.push( { "name": "rawsr.c_CODE", "value": "V13019" } );
+					  aoData.push( { "name": "rawsr.v_VALUE", "value": v_VALUE } );
+					  aoData.push( { "name": "rawsr.v04001", "value": time.substring(0,4) } );
+					  aoData.push( { "name": "rawsr.v04002", "value": time.substring(5,7) } );
+					  aoData.push( { "name": "rawsr.v04003", "value": time.substring(8,10) } );
+					  aoData.push( { "name": "rawsr.v04004", "value": time.substring(11,13) } );
+					  aoData.push( { "name": "rawsr.v04005", "value": time.substring(14,16) } );
+					  aoData.push( { "name": "rawsr.v04006", "value": time.substring(17,19) } );
+				    top.sendAjaxRequest("/actions/ProCma.action?doubt",aoData,optCallback);
+			}
+			
+		 function optCallback(obj){
+	     try{
+		    if ( obj.status == true ){
+		     top.showInfoWinOK("质疑操作成功");
+		    }else{
+		      top.showInfoWinError("操作失败 "+obj.msg);
+		    }
+		   }catch(e){
+			  top.showInfoWinError("处理异常:"+e.message);
+		   }
+	   }
+		</script>
+	</head>
+	<body>
+	    <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+	</body>
+</html>

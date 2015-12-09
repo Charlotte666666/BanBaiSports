@@ -1,0 +1,147 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css"
+			href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+         <script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			$(document).ready(function() {
+		
+			} );
+			
+			
+			function checkKeyValue(){
+			var msg="";
+			msg+=checkString($("#key_word").val(),true,1024,"搜索关键字");
+			return msg;
+			}
+			
+			function doQuery(){
+			 var msg = checkKeyValue();
+            if(msg!=''){
+	          top.showInfoWinWarn(msg);
+	         return;
+	        }
+			var aoData=[];
+	        aoData.push( { "name": "key_word", "value": $("#key_word").val() } );
+			var xurl="/actions/ToolBook.action?getToolBookListByKeyWordFromClient";
+	        top.sendAjaxRequest(xurl,aoData,toolBookCallback);
+			}
+			
+			function toolBookCallback(obj){
+			var o =  obj.aaData;
+			var len = o.length;
+			var ht="";
+			if(len>0){
+			for(var i=0;i<len;i++){
+			ht+='<tr class="tr_data"  height="30px">';
+			ht+='<td width="100%" align="left">';
+			 ht+='&nbsp;<a href="javascript:checkBookInfo(\''+o[i].id+'\')">'+o[i].book_title+'</a>';
+			ht+='</td>';
+			ht+='</tr>';
+			ht+='<tr class="tr_data"  height="40px">';
+			ht+='<td  align="left">&nbsp;';
+			ht+=o[i].book_context+'</td></tr>';
+			}
+		    }else{
+			ht+='<tr  class="tr_data"  height="30px"><td align="center">没有符合条件的数据</td></tr>';
+			}
+			$("#result_table").html(ht);
+			}
+			
+			function checkBookInfo(id){
+			 var xurl="pages/oa/checkBookInfo.html?opt=checkToolBook&id="+id;
+			 top.openDialog("修改信息",xurl,true,700,580,null);
+			}
+			function saveCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				}
+			}
+			function optCallback(obj){
+			       try{
+			        if ( obj.status == true ){
+			          top.showInfoWin("操作成功");
+			          doQuery();
+			        }else{
+			          top.showInfoWin("操作失败 "+obj.msg);
+			        }
+			       }catch(e){
+			          top.showInfoWin("处理异常:"+e.message);
+			       }
+		  }
+
+		 function getParamDate(aoData){
+	      aoData.push( { "name": "myPlan.status", "value":$("#plan_status").val() } );
+	      aoData.push( { "name": "time1", "value": $("#q_time1").val()} );
+		  aoData.push( { "name": "time2", "value": $("#q_time2").val() } );
+			return aoData;
+		}
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+		<div style='border: 1px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left">
+							&nbsp;知识库查询&nbsp;
+						</td>
+						
+						<td width="2px">
+							&nbsp;
+						</td>
+					</tr>
+				</table>
+				<table width="100%" align="center" cellpadding="1px"
+					cellspacing="1px" border="0">
+					<tr class="tr_data">
+						<td width="20%" height="40px" align="right">
+						 <b> 输入关键字:</b>
+						</td>
+						<td  width="55%" align="center" >
+						 <input type="text" id="key_word" size="80" onkeydown="if(event.keyCode==13) doQuery();"/>
+						</td>
+						<td align="left">
+							<div class="buttonDivTwo">
+								<a href="javascript:doQuery()">搜索</a>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td height="20px">
+									&nbsp;查询结果列表&nbsp;
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<table style="width:100%;height:100%;padding:20px;spacing:0;" id="result_table" >
+			</table>
+		</div>
+	</body>
+</html>

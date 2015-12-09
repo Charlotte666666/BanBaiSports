@@ -1,0 +1,244 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"	src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+			
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var currentOptFlowId="";
+			var isEnabled=true;
+			var g_flowStr="";
+			
+			$(document).ready(function() {
+			   $( "#tdflow_status" ).html( top.getCodeSelectHtml("FLOW_STATUS","flow_status",true) );
+			  optType=top.getUrlParam(document.URL,"optType");
+			  
+			  $("#tdFlowDesigner").html( '<iframe id="flowDesigner" src="../flowDesigner.html" width="100%" height="'+($(window).height()-10)+'px" style="background-color:#cccccc" height="100%" frameborder="0"></iframe>' );
+			   
+			  var isCanEditFlow=true;
+			  
+			  var iaoColumns= [
+                              { "sTitle": "名称", "mDataProp": "flow_id", "sWidth": "10%",
+                                      "fnRender": function ( oObj ) {
+									       if ( isCanEditFlow ) {
+										     return '&nbsp;<input type="text" id="flow_name_'+oObj.aData.flow_id+'" value="'+oObj.aData.flow_name+'" />';
+										   } else {
+                                             return '&nbsp;'+oObj.aData.flow_name;
+										   }
+                                      },
+                                      "bUseRendered": false
+                               },
+                               { "sTitle": "状态", "mDataProp": "flow_status", "sWidth": "8%", "sClass": "center",
+                                   "fnRender": function ( oObj ) {
+                                        return top.getCodeName( "FLOW_STATUS", oObj.aData.flow_status  );
+                                   },
+                                   "bUseRendered": false  
+                               },
+							    { "sTitle": "操作", "mDataProp": "flow_status", "sWidth": "8%", "sClass": "center",
+                                   "fnRender": function ( oObj ) {
+								   if(oObj.aData.flow_status==0){
+                                        return  '<a href=\'javascript:void(0)\' onclick="updateStatus(\''+oObj.aData.flow_id+'\',\'1\')" >启用</a>';
+									}
+								   else if(oObj.aData.flow_status==1){
+								         return  '<a href=\'javascript:void(0)\' onclick="updateStatus(\''+oObj.aData.flow_id+'\',\'0\')" >停用</a>';
+										}
+                                   },
+                                   "bUseRendered": false  
+                               }
+							   
+               ];
+
+			   var surl=top.getUrlBase()+"/actions/WorkOrder.action?getWOFlowList";
+			  
+
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+								var aTrs = oTable.fnGetNodes();
+								$(aTrs[0]).addClass("row_selected");
+								$(aTrs[0]).trigger("click");
+								showFlow();
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+						aoData.push( { "name": "woFlow.flow_name", "value":$("#flow_name").val() } );
+						if($("#flow_status").val()!=null&&$("#flow_status").val()!=''){
+							aoData.push( { "name": "woFlow.flow_status", "value":$("#flow_status").val() } );
+						}else{
+							aoData.push( { "name": "woFlow.flow_status", "value":'-1'} );
+						}
+					},
+			    "sDom": "frtip",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+				
+				$('#dataTable tbody').click(function (e) {
+					$(oTable.fnSettings().aoData).each(function () {
+						$(this.nTr).removeClass("row_selected");
+                    });
+                    $(e.target.parentNode).addClass("row_selected");
+					showFlow();
+                });
+			 } );
+			
+			function updateStatus(id,status){
+		         var aoData=[];
+				  aoData.push( { "name": "woFlow.flow_status", "value":status } );
+				  aoData.push( { "name": "woFlow.flow_id", "value":id } );
+				  top.sendAjaxRequest("/actions/WorkOrder.action?updateWOFlowStatus",aoData,optCallback);
+			}
+			function showFlow(){
+			  var sel = fnGetSelected(oTable);
+			  if(sel!=null&&sel.length>0){
+				  currentOptFlowId = oTable.fnGetData(sel[0]).flow_id;
+				  var aoData=[];
+				  aoData.push( { "name": "woFlow.flow_id", "value":currentOptFlowId } );
+				  top.sendAjaxRequest("/actions/WorkOrder.action?getWOFlowById",aoData,getFlowContentCallback);
+			   }
+		    }
+			
+			function getFlowContentCallback(obj){
+				   try{
+					 if ( obj.status == true ){
+					    g_flowStr=toHtmlCode(obj.body.flow_content);
+					    var flowFrame = document.getElementById("flowDesigner");
+						try{
+						  if ( flowFrame ) {
+						    flowFrame.contentWindow.doDrawFlow( g_flowStr );
+							g_flowStr="";
+					      }
+						}catch(e){
+						}
+					 }
+				   }catch(e){
+					  top.showInfoWinError("处理异常:"+e.message);
+				   }
+			}
+			
+			function toHtmlCode(str){
+			    str = str.replace(new RegExp("&lt;","gm"), "<");
+				str = str.replace(new RegExp("&gt;","gm"), ">");
+				str = str.replace(new RegExp("&quot;","gm"), "'");
+			    return str;
+			}
+			
+			function getFlowStr(){
+			   return g_flowStr;
+			}
+			
+			function fnGetSelected(oTable) {
+				var aReturn = new Array();
+				var aTrs = oTable.fnGetNodes();
+				
+				for (var i = 0; i < aTrs.length; i++) {
+					if ($(aTrs[i]).hasClass('row_selected')) {
+						aReturn.push(aTrs[i]);
+					}
+				}
+				return aReturn;
+			}
+			function doQuery(){
+				oTable.fnDraw();
+			}
+
+			function createFlow(){
+				top.showInputDialog("创建流程", "请输入流程名称", doCreateFlow);
+			}
+			function doCreateFlow(name){
+				   if ( name == '' ) {
+					 top.showInputDialog("请输入流程名称");
+					 return ;
+				   }
+				   var aoData=[];
+				   aoData.push( { "name": "woFlow.flow_name", "value":name } );
+				   aoData.push( { "name": "woFlow.flow_status", "value":0 } );
+				   top.showLoadingInfo(true);
+				   top.sendAjaxRequest("/actions/WorkOrder.action?insertWOFlow",aoData,optCallback);
+			   }
+
+			   function optCallback(obj){
+				   top.showLoadingInfo(false);
+				   try{
+					if ( obj.status == true ){
+					  top.showInfoWinOK("操作成功");
+					  oTable.fnDraw();
+					 }else{
+					 if(obj.msg!=''){
+					 top.showInfoWinOK("操作失败:"+msg);
+					 }else{
+					  top.showInfoWinOK("操作失败");
+					  }
+					}
+				   }catch(e){
+					  top.showInfoWinError("处理异常:"+e.message);
+				   }
+			   }
+		</script>
+	</head>
+	<body>
+		<table style="margin:5 auto;" width="100%" height="100%">
+			<tr><td width="45%" valign="top">
+				<div id="left">
+					 <div  id="queryArea" style='border: 2px solid #89A1B9;'>
+					 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+					 <tr bgcolor="#C6DEFF">
+						  <td align="left" width="90px">&nbsp;流程列表&nbsp;</td>
+						  <td align="left">
+							 <div class="buttonDivTwo"><a href="javascript:createFlow()">创建</a></div>
+						  </td>
+						  <td align="right">
+							 <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+						  </td>
+						  <td width="2px">&nbsp;</td>
+					  </tr>
+					 </table>
+					</div>
+					<table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0">
+						 <tr class="tr_data">
+						 <td width="20%" align="right">名称：</td><td align="left" width="30%"><input type="text" id="flow_name"/></td>
+						 <td width="20%" align="right">状态：</td><td align="left" width="30%" id="tdflow_status"></td>
+						 </tr>
+					</table>
+					<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+				</div>
+			</td>
+			<td width="55%" valign="top" id="tdFlowDesigner">
+			</td>
+			</tr>
+			</table>
+			
+	</body>
+</html>

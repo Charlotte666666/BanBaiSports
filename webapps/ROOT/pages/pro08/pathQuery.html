@@ -1,0 +1,146 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			$(document).ready(function() {
+			   $( "#tdstatus" ).html( top.getCodeSelectHtml("PATH_STATUS","status", true,null,null,"全部") );
+			   
+			    var today=new Date();
+				var year = today.getFullYear();
+				var month = today.getMonth() + 1;
+				var day = today.getDate();
+				if ( month < 10 ) month = "0" + month;
+				if ( day < 10 ) day = "0" + day;
+				$('#q_time1').val(year+"-"+month+"-"+day);
+				$('#spanHour1').html( top.get24HourSelectHtml("hour1",false,9) );
+				$('#spanHour2').html( top.get24HourSelectHtml("hour2",false,18) );
+			   
+			   var iaoColumns= [
+			                   { "sTitle": "时间","mDataProp": "report_time","sWidth": "15%", "sClass": "center",
+                            	  "fnRender": function ( oObj ) {
+                                       return top.getTimeStr( oObj.aData.report_time, false );
+                                  },
+                                  "bUseRendered": false 
+                               },
+                               { "sTitle": "人员编号", "mDataProp": "criminal_id", "sWidth": "20%","sClass": "left", 
+							      "fnRender": function ( oObj ) {
+                                           return '<a href=\'javascript:void(0)\' onclick="updateInfo(\''+oObj.aData.criminal_id+'\')" >'+oObj.aData.criminal_id+"</a>";
+                                  },
+							      "bUseRendered": false},
+							   { "sTitle": "设备ID", "mDataProp": "device_id", "sWidth": "20%", "bUseRendered": false  }, 
+							   { "sTitle": "经度", "mDataProp": "lon", "sWidth": "15%", "bUseRendered": false  }, 
+							   { "sTitle": "纬度", "mDataProp": "lat", "sWidth": "15%", "bUseRendered": false },
+							   { "sTitle": "状态", "mDataProp": "status", "sWidth": "15%", 
+							      "fnRender": function ( oObj ) {
+                                        return top.getCodeName( "PATH_STATUS", oObj.aData.status );
+                                   },
+							      "bUseRendered": false 
+							   }
+               ];
+
+			   var surl=top.getUrlBase()+"/actions/Pro08Path.action?getPathList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"aaSorting": [[ 6, "desc" ]],
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     var temp="";
+					     aoData.push( { "name": "time1", "value": $("#q_time1").val() } );
+						 aoData.push( { "name": "hour1", "value": $("#hour1").val() } );
+						 aoData.push( { "name": "hour2", "value": $("#hour2").val() } );
+						 aoData.push( { "name": "path.criminal_id", "value": $("#qCriminalId").val() } );
+						 temp = $("#status").val();
+						 if ( temp == '' ) temp = -1;
+						 aoData.push( { "name": "path.status", "value": temp } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+			} );
+		
+			function doQuery(){
+			     if($("#qCriminalId").val()==""){
+				  top.showInfoWinWarn("填写服刑人员编号！");
+				  return;
+				 }
+				oTable.fnDraw();
+			}
+			
+			function updateInfo(infoId){
+				var xurl="pages/pro08/CorrectionUserInfo.html?optType=update&infoId="+infoId;
+				//top.openDialog("服刑人员信息"+top.getDialogButtonHtml("保存",1,'img/save.bmp'),xurl,true,1100,620,null);
+				top.toSysTab('服刑人员详细信息',xurl,'21');
+			}
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+		    <div style='border: 2px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="110px">&nbsp;轨迹记录查询&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+			      <td align="right" width="20%">服刑人员编号:</td><td align="left" width="20%"><input type="text" id="qCriminalId" />&nbsp;<font color="red">(必填)</font></td>
+			      <td align="right" width="10%">时间:</td><td align="left" width="20%"><input type="text" id="q_time1" value="" onclick="new Calendar().show(this);" size="8" />
+					&nbsp;<span id="spanHour1"></span>时</span>~<span id="spanHour2"></span>时</span></td>
+				  <td align="right" width="15%">轨迹状态:</td><td align="left" width="15%" id="tdstatus"></td>
+			     </tr>
+			 </table>
+			</div>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				    <td>&nbsp;查询结果列表&nbsp;</td>
+					<td>&nbsp;</td>
+			       </tr></table></td>
+			  </tr>
+			</table>
+	        <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,812 @@
+<html>
+  <head>
+    <title>设计管理</title>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css"/>
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css"/>
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css" media="print, projection, screen"/>
+		<!--[if lte IE 7]>
+        <link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+        <![endif]-->
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" src="../../js/SimpleMap.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="js/designInfo.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="js/custOtherInfo.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+				<script type="text/javascript" src="../../js/fileuploader.js"></script>
+		<script type="text/javascript">
+		   var require_id;
+		   var cust_code;
+		   var cust_name;
+		   var designer_code;
+		   var typeList=[];
+		   var water_heater_type;
+		   var is_fault;
+		   var heater_is_change;
+		   var gas_is_change;
+		   var partition_is_remove;
+		   var is_need_airconditioning;
+		   var is_buy;
+		   var is_bearing_wall;
+		   var has_airconditioning;
+		   var measurehouseid='';
+		   var designplanid="";
+		   var remind_id="";
+		   var project_order_id="";
+		   var file_name="";
+		   var file_path="";
+		   var upload_time="";
+		   var all_total="";
+		   var isChangeCustStatus=false;
+		   var currentDeleteId='';
+		   var roomInfoIndex=0;
+		   var curRoomInfoIndex=0;
+		   var final_mark_html='<img style="width:20px" src="image/icon_success.png">';
+		   var initTab='';
+		   var designAgr_check=false;
+		   $(document).ready(function(){
+		     cust_code=top.getUrlParam(document.URL,"cust_code");
+		     $("#cust_other_tabs ul").tabs();
+			 initTab=top.getUrlParam(document.URL,"initTab");//初始显示tab
+			if(initTab!=""){
+				$("#cust_other_tabs ul li:eq("+initTab+") a").trigger("click");
+			}else{
+			    $("#other_li_designPlan a").trigger("click");
+			}
+			 $("#deal_code").val(cust_code);
+			 $("#d_c").html(cust_code);
+			 //设置量房时间默认值当前日期
+			 showCheckedMark(false);
+			 initData();
+			 //initTab();
+			 var today=new Date();
+			 
+			 var nowStr=top.getTimeStr(today.getTime(),true);
+			  $("#deal_time").val(nowStr);
+			  $("#d_t").html(nowStr);
+			  $("#measure_date").val(nowStr);
+			  $("#many_members").keyup(function(){
+			    if($(this).val()!=""){
+				  $("#many_members_text").show();
+				  $("#view_many_members_text").show();
+				}else{
+				  $("#many_members_text").hide();
+				  $("#view_many_members_text").hide();
+				}
+			  })
+		   });
+		   function initTab(){
+			var tab='';//量房
+			if(!top.g_isPermit("09_query_measure_house")){
+			   $("#other_li_measureHouse").hide();
+			}else{
+				tab='other_li_measureHouse';
+			}//设计协议
+			if(!top.g_isPermit("09_query_design_protocol")){
+			 $("#other_li_designProtocol").hide();
+			}else if(tab==''){
+				tab='other_li_designProtocol';
+			}//设计方案
+			if(!top.g_isPermit("09_query_design_paper")){
+			 $("#other_li_designPaper").hide();
+			}else if(tab==''){
+				tab='other_li_designPaper';
+			}
+			if(tab==''){
+				tab='other_li_designPlan';
+			}
+			 $("#"+tab+" a").trigger("click");
+		   }
+		</script>
+		
+		<style>
+			#designAgreementList td input{
+	            width:100px;
+	            display:none;
+	        }
+			#anti_design_date td input{
+			   width:100px;
+			   display:none;
+			}
+			#anti_design_date td span{
+			   display:block;
+			}
+			$("#load a").attr("href","javascript:void(0);");
+		</style>
+
+  </head>
+  
+  <body>
+    <div height="500px">
+			<div id="cust_other_tabs" height="500px">
+					<ul>
+					    <li id="other_li_designPlan">
+							<a onclick="changBtBind('designPlan')" href="#cust_other_tabs-5" ><span>工作计划</span>
+							</a>
+						</li>
+						<li id="other_li_measureHouse">
+							<a onclick="changBtBind('measureHouse')" href="#cust_other_tabs-0" ><span>量房信息</span>
+							</a>
+						</li>
+						<li  id="other_li_designProtocol">
+							<a onclick="changBtBind('designProtocol')" href="#cust_other_tabs-1" ><span>设计协议</span>
+							</a>
+						</li>
+						<li id="other_li_designPaper">
+							<a onclick="changBtBind('designPaper')" href="#cust_other_tabs-2" ><span>设计方案</span>
+							</a>
+						</li>
+						<li id="other_li_projectQuote">
+							<a onclick="changBtBind('projectQuote')" href="#cust_other_tabs-3" ><span>工程预算</span>
+							</a>
+						</li>
+						<li id="other_li_construcitonDrawing">
+							<a onclick="changBtBind('constructionDrawing')" href="#cust_other_tabs-4"><span>施工图</span>
+							</a>
+						</li>					
+						<img src="image/save.png" onclick="saveMeasureHouse()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:0px;right:0px;float:right;display:none;" id="otherSaveBt" />
+						<img src="image/return.png" onclick="doCancelMeasureHouse()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:-5px;right:0px;float:right;display:none;" id="otherReturnBt" />
+						<img src="image/edit.gif" onclick="editMeasureHouse()" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:0px;right:0px;float:right;" id="otherEditBt" />
+						<img src="image/printer.png" onclick="" style="margin-right:10px;float:right;cursor:pointer;display:inline-block;position:relative;top:0px;right:0px;float:right;display:none;" id="otherPrinterBt" />
+					</ul>
+				</div>
+			<div id="cust_other_tabs-5">
+			   <table width="30%" style="margin: 10px;">
+					<tr>
+						<td  align="left">
+							<div id="saveDesignPlanStatusBtn" style="display:none" class="buttonDivTwo">
+								<a href="javascript:void(0)" onclick="addDesignPlanInfo()">新增</a>
+							</div>
+						</td>
+						<td  align="left">
+							<div  class="buttonDivTwo" id="draw_mode">
+								<a href="javascript:void(0)" onclick="checkDesignPlanDraw()">图形</a>
+							</div>
+						</td>
+						<td  align="left">
+							<div class="buttonDivTwo" id="tbl_mode"  style="display:none">
+								<a href="javascript:void(0)" onclick="checkDesignPlanTable()">表格</a>
+							</div>
+						</td>
+						<td></td>
+					</tr>
+				</table>
+				<table border="1" cellpadding="1" cellspacing="1" width="95%" align="center" style="display:none;background-color: #b9d8f3;" id="DesignPlanTitle">
+					<tr class="tr_data" height="25px">
+						<td align="center" width="25%">设计计划</td>
+						<td align="left" width="25%" id="txt_start_date"></td>
+						<td align="center" width="25%" id="txt_mid_date"></td>
+						<td align="right" width="25%" id="txt_end_date"></td>
+					</tr>
+				</table>
+				<table  border="1" cellpadding="1" cellspacing="1" width="95%" align="center" style="display:none;background-color: #b9d8f3;" id="DesignPlanDraw">
+				</table>
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;" id="DesignPlanTable">
+				</table>
+			</div>
+			<div id="cust_other_tabs-0">
+				<div id="edit_cust_other_tabs-0" style="display:none">
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">			                              
+					<tr class="tr_data" height="25px">
+							<td class="table_property_title" width="15%">量房日期</td>
+							<td align="left" width="35%">
+								<input type="text" id="measure_date" onclick="new Calendar().show(this)" readonly="true" /></td>
+							<td class="table_property_title" width="15%">制表人</td>
+							<td align="left" width="35%"><label id="make_table_man"></label></td>
+						</tr>
+						<!--<tr class="tr_data" height="25px" id="hidetr1">
+							<td class="table_property_title" width="15%" id="hideDesigner">设计师</td>
+							<td align="left" width="35%"><input type="hidden" id="measure_designer"  /><label id="lab_measure_designer"></label></td>
+							<td class="table_property_title">客户姓名</td>
+							<td align="left"><input type="hidden" id="measure_cust_name"  /><label id="lab_measure_cust_name"></label>&nbsp;<input type="hidden" id="measure_cust_sex" /><label id="lab_measure_cust_sex"></label></td>
+						</tr>
+						<tr class="tr_data" height="25px" id="hidetr2">
+							<td class="table_property_title">电话</td>
+							<td align="left"><input type="hidden" id="measure_cust_mobile"  /><label id="lab_measure_cust_mobile"></label></td>
+							<td class="table_property_title">地址</td>
+							<td align="left" ><input type="hidden" id="measure_district" /><label id="lab_measure_district"></label>&nbsp;<input type="hidden" id="measure_project_addr" /><label id="lab_measure_project_addr"></label></td>
+						</tr>
+						<tr class="tr_data" height="25px" id="hidetr3">
+							<td width="15%" class="table_property_title">
+								建筑面积
+							</td>
+							<td align="left" align="left">
+								<input type="hidden" id="measure_struct_area" ><label id="lab_measure_struct_area"></label>
+								M²
+							</td>
+							<td width="15%" class="table_property_title">
+								套内面积
+							</td>
+							<td align="left" align="left">
+								<input type="hidden" id="measure_usable_area"><label id="lab_measure_usable_area"></label>
+								M²
+							</td>
+						</tr>
+						<tr class="tr_data" height="25px" id="hidetr4">
+							<td width="15%" class="table_property_title">户型</td>
+							<td align="left" width="30%" colspan="3">
+								<input type="hidden" id="measure_room_count"><label id="lab_measure_room_count"></label>
+								室
+								<input type="hidden" id="measure_hall_count"><label id="lab_measure_hall_count"></label>
+								厅
+								<input type="hidden" id="measure_bath_count"><label id="lab_measure_bath_count"></label>
+								卫
+							</td>
+						</tr>
+						<tr class="tr_data" height="25px" id="hidetr5">
+							<td width="15%" class="table_property_title">
+								预投资金
+							</td>
+							<td align="left">
+								<input type="hidden" id="measure_planinvest_money" /><label id="lab_measure_planinvest_money"></label>
+								万元
+							</td>
+							<td width="15%" class="table_property_title">
+								主材资金
+							</td>
+							<td align="left">
+								<input type="hidden" id="measure_major_material" /><label id="lab_measure_major_material"></label>
+								万元
+							</td>
+						</tr>
+						<tr class="tr_data" height="25px" id="hidetr6">
+							<td class="table_property_title">风 格</td>
+							<td align="left" colspan="3"><input type="hidden" id="measure_require_style"/><label id="lab_measure_require_style"></label></td>
+						</tr>
+						<tr class="tr_data" height="25px" style="display:none">
+							<td class="table_property_title">量房工具</td>
+							<td align="left" colspan="3"><textarea style="width:100%" rows="2" id="measure_tool"></textarea></td>
+						</tr>!-->
+				</table>
+				<br/>
+				<B>观察内容</B><br/>
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">			                              
+						<tr class="tr_data" height="25px">
+							<td class="table_property_title" width="15%">房屋原结构</td>
+							<td align="left" width="35%"><textarea style="width:100%" rows="2" id="old_structure"></textarea></td>
+							<td class="table_property_title" width="15%">房屋原结构附件<input id="old_structure_fj_name" type="hidden"/><input id="old_structure_fj_path"  type="hidden"/></td><td align="left" width="35%"><a  class="buttonDivTwo" style="text-decoration:none;" href="javascript:void(0)" onclick="uploadOldStructureFj();">上传</a>&nbsp;&nbsp;<span id="download_old_structure_fj" style="width:200px;"></span></td>
+						</tr>
+						<tr class="tr_data" height="35px">
+							<td class="table_property_title">是否有缺陷</td>
+							<td align="left" colspan="3"><span id="span_is_fault"></span>
+								<input type="text" id="fault_condition" style="display:none;" />
+							</td>
+						</tr>
+						<tr class="tr_data" height="35px">
+							<td class="table_property_title">暖气是否改动</td>
+							<td align="left" colspan="3"><span id="span_heater_is_change"></span>
+								<input type="text" id="heater_suggest" style="display:none;" />
+							</td>
+						</tr>
+						<tr class="tr_data" height="35px">
+							<td class="table_property_title">煤气是否改动</td>
+							<td align="left" colspan="3"><span id="span_gas_is_change"></span>
+								<input type="text" id="gas_suggest" style="display:none;" />
+							</td>
+						</tr>
+				</table>
+				<br/>
+				<B>房间详细信息记录</B><br/>
+				<table id="edit_measure_room_list" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;border-top: 0;border-bottom: 0;">
+					<tr class='tr_data'>
+						<td>房间类型</td>
+						<td>房间编号</td>
+						<td>房间名称</td>
+						<td>地面积</td>
+						<td>墙面积</td>
+						<td>层高</td>
+						<td>操作</td>
+					</tr>
+					<tr class='tr_data' id="addRooomRow">
+						<td colspan='6'></td><td><img src='../../img/add.gif'  style='cursor:pointer' title='添加' onclick='addRoomInfoRow()'></td>
+					</tr>
+				</table>
+				<br/>
+				<B>图纸必须注明的地方</B><br/>
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">			                              
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">是否是承重墙</td>
+						<td align="left"><span id="span_is_bearing_wall"></span></td>
+						<td class="table_property_title" width="15%">墙的尺寸</td>
+						<td align="left"><input type="text" id="wall_size"/></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">梁的位置</td>
+						<td align="left"><input type="text" id="beam_position"/></td>
+						<td class="table_property_title" width="15%">梁高</td>
+						<td align="left"><input type="text" id="beam_height"/></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">门洞高</td>
+						<td align="left"><input type="text" id="door_height"/></td>
+						<td class="table_property_title" width="15%">窗洞高</td>
+						<td align="left"><input type="text" id="window_height"/></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">是否有中央空调</td>
+						<td align="left" colspan="3"><span id="span_has_airconditioning"></span>
+						<span id="air_height_text" style="display:none;">&nbsp;高度</span><input type="text" id="airconditioning_height" style="display:none;" /></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">卫生间坐便孔距</td>
+						<td align="left"><input type="text" id="water_closet"/></td>
+						<td class="table_property_title" width="15%">煤气管位置</td>
+						<td align="left"><input type="text" id="gas_pipe_position"/></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">烟道位置</td>
+						<td align="left"><input type="text" id="flue_pipe_position"/></td>
+						<td class="table_property_title" width="15%">暖气位置</td>
+						<td align="left"><input type="text" id="heater_position"/></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">开关位置及电路位置</td>
+						<td align="left" colspan="3"><input type="text" id="switch_position"/></td>
+					</tr>
+				</table>
+				<br/>
+				<B>与客户沟通结果</B><br/>
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">			                              
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">隔墙是否需拆除</td>
+						<td align="left">
+						    <span id="span_partition_is_remove"></span>
+						</td>
+						<td class="table_property_title" width="15%">隔墙位置</td>
+						<td align="left"><input type="text" id="partition_position" style="width:150px;"/></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">是否需要做中央空调</td>
+						<td align="left" width="35%"><span id="span_is_need_airconditioning"></span></td>
+						<td class="table_property_title" width="15%">热水器类型</td>
+						<td align="left" width="35%"><span id="span_water_heater_type"></span></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title">家住几口人</td>
+						<td align="left" colspan="3"><input type="text" id="many_members" style="width:120px;"/>人&nbsp;
+							<span style="margin-left:5%;display:none;" id="many_members_text">人口描述<input type="text" id="members_desc" style="width:150px;"/></span>
+						</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title">客户是否已购家具&nbsp;</td>
+						<td align="left" colspan="3"><span id="span_is_buy"></span></td>
+						
+					</tr>
+					<tr class="tr_data" id="trJjTypeDetail" style="display:none" height="25px">
+						<td class="table_property_title">家具类型及尺寸描述</td>
+						<td align="left" colspan="3"><textarea style="width:100%" rows="2" id="analyse"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title">主要木做材质</td>
+						<td align="left" colspan="3"><textarea style="width:100%" rows="2" id="major_wood_material"></textarea></td>
+					</tr>
+				</table>
+				</br/>
+				<B>客户要求</B><br/>
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">			                              
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">客厅</td>
+						<td align="left" colspan="3"><textarea style="width:100%" rows="2" id="living_room"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">餐厅</td>
+						<td align="left" colspan="3"><textarea style="width:100%" rows="2" id="dining_room"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">厨房</td>
+						<td align="left" colspan="3"><textarea style="width:100%" rows="2" id="kitchen"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">客卫</td>
+						<td align="left" colspan="3"><textarea style="width:100%" rows="2" id="guest_bathroom"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">主卫</td>
+						<td align="left" colspan="3"><textarea style="width:100%" rows="2" id="main_bathroom"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">客卧1</td>
+						<td align="left" colspan="3"><textarea style="width:100%" rows="2" id="guest_bedroom1"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">客卧2</td>
+						<td align="left" colspan="3"><textarea style="width:100%" rows="2" id="guest_bedroom2"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">主卧</td>
+						<td align="left" colspan="3"><textarea style="width:100%" rows="2" id="main_bedroom"></textarea></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">其它</td>
+						<td align="left" colspan="3"><textarea style="width:100%" rows="2" id="measure_other"></textarea></td>
+					</tr>
+				</table>
+				</div>
+				<div id="view_cust_other_tabs-0">
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">			                              
+					<tr class="tr_data" height="25px">
+							<td class="table_property_title" width="15%">量房日期</td>
+							<td align="left" width="35%" id="view_measure_date" ></td>
+							<td class="table_property_title" width="15%">制表人</td>
+							<td align="left" width="35%" id="view_make_table_man" ></td>
+						</tr>
+						<!--<tr class="tr_data" height="25px" id="view_hidetr1">
+							<td class="table_property_title" width="15%" id="view_hideDesigner">设计师</td>
+							<td align="left" width="35%"id="view_measure_designer"></td>
+							<td class="table_property_title">客户姓名</td>
+							<td align="left" ><label id="view_measure_cust_name"></label>&nbsp;&nbsp;<label id="view_measure_cust_sex"></label></td>
+						</tr>
+						<tr class="tr_data" height="25px" id="view_hidetr2">
+							<td class="table_property_title">电话</td>
+							<td align="left" id="view_measure_cust_mobile"></td>
+							<td class="table_property_title">地址</td>
+							<td align="left" ><label id="view_measure_district"></label>&nbsp;<label id="view_measure_project_addr"></label></td>
+						</tr>
+						<tr class="tr_data" height="25px" id="view_hidetr3">
+							<td width="15%" class="table_property_title">
+								建筑面积
+							</td>
+							<td align="left" align="left">
+								<label id="view_measure_struct_area"></label>
+								M²
+							</td>
+							<td width="15%" class="table_property_title">
+								套内面积
+							</td>
+							<td align="left" align="left">
+								<label id="view_measure_usable_area"></label>
+								M²
+							</td>
+						</tr>
+						<tr class="tr_data" height="25px" id="view_hidetr4">
+							<td width="15%" class="table_property_title">户型</td>
+							<td align="left" width="30%" colspan="3">
+								<label id="view_measure_room_count"></label>
+								室
+								<label id="view_measure_hall_count"></label>
+								厅
+								<label id="view_measure_bath_count"></label>
+								卫
+							</td>
+						</tr>
+						<tr class="tr_data" height="25px" id="view_hidetr5">
+							<td width="15%" class="table_property_title">
+								预投资金
+							</td>
+							<td align="left">
+								<label id="view__measure_planinvest_money"></label>
+								万元
+							</td>
+							<td width="15%" class="table_property_title">
+								主材资金
+							</td>
+							<td align="left">
+								<label id="view_measure_major_material"></label>
+								万元
+							</td>
+						</tr>
+						<tr class="tr_data" height="25px" id="hidetr6">
+							<td class="table_property_title">风 格</td>
+							<td align="left" colspan="3"><label id="view_measure_require_style"></label></td>
+						</tr>
+						<tr class="tr_data" height="25px" style="display:none">
+							<td class="table_property_title">量房工具</td>
+							<td align="left" colspan="3" id="view_measure_tool" style="word-wrap:break-word;word-break:break-all;"></td>
+						</tr>!-->
+				</table>
+				<br/>
+				<B>观察内容</B><br/>
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">			                              
+						<tr class="tr_data" height="25px">
+							<td class="table_property_title" width="15%">房屋原结构</td>
+							<td align="left" id="view_old_structure" width="35%" style="word-wrap:break-word;word-break:break-all;"></td>
+							<td class="table_property_title" width="15%">房屋原结构附件</td><td align="left" width="35%" id="view_old_structure_fj"></td>
+						</tr>
+						<tr class="tr_data" height="35px">
+							<td class="table_property_title">是否有缺陷</td>
+							<td align="left" colspan="3"><span id="view_is_fault"></span>
+								<label  id="view_fault_condition" ></label>
+							</td>
+						</tr>
+						<tr class="tr_data" height="35px">
+							<td class="table_property_title">暖气是否改动</td>
+							<td align="left" colspan="3"><span id="view_heater_is_change"></span>
+								<label id="view_heater_suggest" ></label>
+							</td>
+						</tr>
+						<tr class="tr_data" height="35px">
+							<td class="table_property_title">煤气是否改动</td>
+							<td align="left" colspan="3"><span id="view_gas_is_change"></span>
+								<label id="view_gas_suggest" ></label>
+							</td>
+						</tr>
+				</table>
+				
+				<br/>
+				<B>房间详细信息记录</B><br/>
+				<table id="view_measure_room_list" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;border-top: 0;border-bottom: 0;">
+					<tr class='tr_data'>
+						<td width="21%">房间类型</td>
+						<td width="20%">房间编号</td>
+						<td width="20%">房间名称</td>
+						<td width="13%">地面积</td>
+						<td width="13%">墙面积</td>
+						<td width="13%">层高</td>
+					</tr>
+				</table>
+				<br/>
+				<B>图纸必须注明的地方</B><br/>
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">			                              
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">是否是承重墙</td>
+						<td align="left"><span id="view_is_bearing_wall"></span></td>
+						<td class="table_property_title" width="15%">墙的尺寸</td>
+						<td align="left"><label id="view_wall_size"></label></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">梁的位置</td>
+						<td align="left"><label id="view_beam_position"></label></td>
+						<td class="table_property_title" width="15%">梁高</td>
+						<td align="left"><label id="view_beam_height"></label></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">门洞高</td>
+						<td align="left"><label id="view_door_height"></label></td>
+						<td class="table_property_title" width="15%">窗洞高</td>
+						<td align="left"><label id="view_window_height"></label></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">是否有中央空调</td>
+						<td align="left" colspan="3"><span id="view_has_airconditioning"></span>
+						<span id="view_air_height_text" style="display:none;">&nbsp;高度</span><label id="view_airconditioning_height" ></label></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">卫生间坐便孔距</td>
+						<td align="left"><label id="view_water_closet"></label></td>
+						<td class="table_property_title" width="15%">煤气管位置</td>
+						<td align="left"><label id="view_gas_pipe_position"></label></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">烟道位置</td>
+						<td align="left"><label id="view_flue_pipe_position"></label></td>
+						<td class="table_property_title" width="15%">暖气位置</td>
+						<td align="left"><label id="view_heater_position"></label></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">开关位置及电路位置</td>
+						<td align="left" colspan="3"><label id="view_switch_position"></label></td>
+					</tr>
+				</table>
+				<br/>
+				<B>与客户沟通结果</B><br/>
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">			                              
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">隔墙是否需拆除</td>
+						<td align="left">
+						   <span id="view_partition_is_remove"></span>
+						</td>
+						<td class="table_property_title" width="15%">隔墙位置</td>
+						<td align="left"><label id="view_partition_position"></label></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">是否需要做中央空调</td>
+						<td align="left" width="35%"><span id="view_is_need_airconditioning"></span></td>
+						<td class="table_property_title" width="15%">热水器类型</td>
+						<td align="left" width="35%"><span id="view_water_heater_type"></span></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title">家住几口人</td>
+						<td align="left" colspan="3"><label id="view_many_members"></label>&nbsp;
+							<span id="view_many_members_text">人口描述:<label id="view_members_desc"></label></span>
+						</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title">客户是否已购家具&nbsp;</td>
+						<td colspan="3" align="left"><span id="view_is_buy"></span></td>
+					</tr>
+					<tr class="tr_data" id="view_trJjTypeDetail" style="display:none"  height="25px">
+						<td class="table_property_title">家具类型及尺寸描述</td>
+						<td colspan="3" align="left" colspan="3" id="view_analyse" style="word-wrap:break-word;word-break:break-all;"></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title">主要木做材质</td>
+						<td align="left" colspan="3" id="view_major_wood_material" style="word-wrap:break-word;word-break:break-all;"></td>
+					</tr>
+				</table>
+				</br/>
+				<B>客户要求</B><br/>
+				<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">			                              
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">客厅</td>
+						<td align="left" colspan="3" id="view_living_room" style="word-wrap:break-word;word-break:break-all;"></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">餐厅</td>
+						<td align="left" colspan="3" id="view_dining_room" style="word-wrap:break-word;word-break:break-all;"></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">厨房</td>
+						<td align="left" colspan="3" id="view_kitchen" style="word-wrap:break-word;word-break:break-all;"></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">客卫</td>
+						<td align="left" colspan="3" id="view_guest_bathroom" style="word-wrap:break-word;word-break:break-all;"></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">主卫</td>
+						<td align="left" colspan="3" id="view_main_bathroom" style="word-wrap:break-word;word-break:break-all;"></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">客卧1</td>
+						<td align="left" colspan="3" id="view_guest_bedroom1" style="word-wrap:break-word;word-break:break-all;"></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">客卧2</td>
+						<td align="left" colspan="3" id="view_guest_bedroom2" style="word-wrap:break-word;word-break:break-all;"></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">主卧</td>
+						<td align="left" colspan="3" id="view_main_bedroom" style="word-wrap:break-word;word-break:break-all;"></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title" width="15%">其它</td>
+						<td align="left" colspan="3" id="view_measure_other" style="word-wrap:break-word;word-break:break-all;"></td>
+					</tr>
+				</table>
+				<br/>
+				
+				
+				</div>
+		</div>
+			<div id="cust_other_tabs-1">
+		     <b>协议信息</b><br/><input id="contract_id" type="hidden"/>
+		     <table id="designAgreementList" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+							<tr class="tr_data" height="25px">
+								<td   class="table_property_title">协议编号</td>
+								<td align="left" colspan="4" id="tddeal_code"><span id="d_c" style="width:120px;"></span><input id="deal_code" style="width:120px;" /></td>
+								<td  class="table_property_title" colspan="2">协议日期</td>
+								<td  align="left" colspan="3" id="tddeal_time"><span id="d_t" style="width:120px;"></span><input id="deal_time" style="width:120px;" onclick="new Calendar().show(this);" readonly="true"/></td>
+							</tr>
+							<tr class="tr_data" height="25px">
+							    <td align="center" colspan="3">协议报价</td>
+								<td align="center" colspan="5">付款说明</td>
+								<td align="center">财务确认</td>
+								<td align="center">财务操作人</td>
+							</tr>
+							<tr class="tr_data" height="25px">
+							   <td class="table_property_title">设计单价</td><td align="left" id="tdprice" style="width:100px;"><span id="pri"></span><input id="price" onblur="changeAreaType()"/></td><td width="5%" align="left">元/m2</td>
+							   <td class="table_property_title">定金</td><td id="tdpayment" style="width:100px;" align="left"><span id="pay"></span><input id="payment" onblur="changeAreaType()"/></td><td align="left">元</td>
+							   <td class="table_property_title">交款日期</td><td id="tdpayment_time" style="width:100px;" align="left"><span id="p_t"></span></td>
+							   <td id="tdfinancial_confirm"><span id="f_c" style="width:100px;"></span></td>
+							   <td id="tdfinancial_operator"><span id="f_o" style="width:100px;"></span></td>
+							</tr>
+							<tr class="tr_data" height="25px">
+							   <td class="table_property_title">
+								<img  id="mark_0" style="width:20px;" src='image/icon_success.png'/>建筑面积<input  style="width:30px" type="radio" name="ext16" onclick="changeAreaType()" checked="true"  value="0"></input></td>
+								<td align="left" id="tdarea" style="width:100px;"><span id="are"></span><input id="area"  onblur="changeAreaType()"/></td><td width="5%" align="left">m2</td>
+								<td class="table_property_title" rowspan="3">设计尾款</td><td rowspan="3" id="tdfinal_payment" style="width:100px;" align="left"><!--<span id="f_p"></span>!--><label id="final_payment"></label></td><td rowspan="3" align="left">元</td>
+							   <td class="table_property_title" rowspan="3">交款日期</td><td rowspan="3" id="tdanti_payment_time" style="width:100px;" align="left"><span id="a_p_t"></span></td>
+							   <td id="tdfinancial_confirm1" rowspan="3"><span id="f_c1" style="width:100px;"></span></td>
+							   <td id="tdfinancial_operator1" rowspan="3"><span id="f_o1" style="width:100px;"></span></td>
+							</tr>
+							<tr class="tr_data" height="25px">
+							   <td class="table_property_title"><img id="mark_1" style="width:20px;" src='image/icon_success.png'/>不含公摊外墙面积<input type="radio" style="width:30px" name="ext16" onclick="changeAreaType()" value="1" ></input>
+							   </td><td align="left" id="tdext17" style="width:100px;"><span id="span_ext17"></span><input id="ext17"  onblur="changeAreaType()"/></td><td width="5%" align="left">m2</td>
+							</tr>
+							<tr class="tr_data" height="25px">
+							   <td class="table_property_title"><img id="mark_2" style="width:20px;" src='image/icon_success.png'/>套内使用面积<input style="width:30px" type="radio" name="ext16" onclick="changeAreaType()" value="2"></input></td>
+							   <td align="left" id="tdext18" style="width:100px;"><span id="span_ext18"></span><input id="ext18" onblur="changeAreaType()" /></td><td width="5%" align="left">m2</td>
+							</tr>
+							<tr class="tr_data" height="25px">
+							   <td class="table_property_title">设计总额</td><td align="left" id="designsum" style="width:100px;"></td><td width="5%" align="left">元</td>
+							   <td class="table_property_title">付款总额</td><td align="left" id="paysum" style="width:100px;"></td><td align="left">元</td>
+							   <td colspan="4"></td>
+							</tr>
+						</table>
+						<br/>
+						<table id="anti_design_date">
+						    <tr tr class="tr_data" height="25px">
+							  <td class="table_property_title" style="font-weight:bold">设计期预计</td><td><span id="d_da" style="width:100px;">7</span><input id="design_days" value="7"/></td><td style="font-weight:bold" align="left">工作日</td>
+							</tr>
+						</table>
+					    <br/>
+						<b>协议扫描件</b><br/>
+						<table id="upDeAg" border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+						</table>
+		</div>
+			<div id="cust_other_tabs-2">
+		         <b>设计方案</b></br/>
+				  <table border="1"  id = "designSchemeList" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				
+				  </table>
+				  </br>
+				  <div id="design_scheme_uploadFile" class="buttonDivTwo">
+								<a href="javascript:uploadDesignScheme()">上传</a>
+				 </div>
+				 <div  style="display:none;" id="design_scheme_dialog"  title="设计方案审核">
+				     <table style="width:98%;margin:0px auto">
+					    <tr><td align="left" style="font-weight:bold;color:blue;">请填写审核意见：</td></tr>
+					    <tr>
+						   <td><textarea style="width:99%;height:70px;" colspan="7" rowspan="5" id="design_bz"></textarea></td>
+						</tr>
+					 </table>
+				 </div>
+			</div>
+			<div id="cust_other_tabs-3">
+				<table>
+				<tr>
+					<td>
+						<div id='alterBudgetBT' style="display:none" class="buttonDivTwo">
+							<a href="javascript:openBudgetInfo()">编辑</a>
+						</div>
+					</td>
+					<td>
+						<div class="buttonDivTwo">
+							<a href="javascript:getBudgetInfo()">刷新</a>
+						</div>
+					</td>
+					<td>
+						<div class="buttonDivTwo">
+							<a href="javascript:printBudget()">打印</a>
+						</div>
+					</td>
+				</tr>
+				</table>
+				<table border="1" cellpadding="3" cellspacing="1" width="98%" align="center" style="background-color: #b9d8f3;">
+					<tr class="tr_data" height="25px">
+						<td colspan="8">预算信息</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title">预算时间：</td>
+						<td align="left" id="view_budget_time"></td>
+						<td class="table_property_title">模板：</td>
+						<td align="left" id="view_budget_type"></td>
+						<td class="table_property_title">预算人：</td>
+						<td align="left" colspan="3" id="view_budget_person"></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="10%"class="table_property_title">管理费类型：</td>
+						<td width="15%"align="left" id="view_manager_fee_type"></td>
+						<td width="10%"class="table_property_title">管理费：</td>
+						<td width="15%" align="left" id="view_manager_fee">元</td>
+						<td width="10%" class="table_property_title">税金比例：</td>
+						<td width="15%" align="left"><span id="view_taxes_scale"></span>%</td>
+						<td width="10%" class="table_property_title">是否上报</td>
+						<td width="15%" align="left" id="view_is_report"></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title">优惠信息：</td>
+						<td align="left" colspan="4" id="view_prefer_info"></td>
+						<td colspan="2" class="table_property_title">优惠金额（合同后）：</td>
+						<td align="left" id="view_prefer_money"></td>
+					</tr>
+				</table>
+				<br>
+				<B>房间部位</B>
+				<table id="view_budget_head_list" border="1" cellpadding="3" cellspacing="1" width="98%" align="center" style="background-color: #b9d8f3;border-top: 0;border-bottom: 0;"></table>
+				<br>
+				<B>预算清单</B>
+				<table border="1" cellpadding="3" cellspacing="1" width="98%" align="center" style="background-color: #b9d8f3;">
+					<tr class="tr_data">
+						<td width="120px">房间部位：</td><td  width="120px" id="view_td_room_names"></td>
+						<td></td>
+					</tr>
+				</table>
+				<table id='viewItemList' border="1" cellpadding="3" cellspacing="1" width="98%" align="center" style="background-color: #b9d8f3;"></table>
+			</div>
+			
+		
+			<div id="cust_other_tabs-4"> 
+					<div id="optConDrawingBtn" class="buttonDivTwo" style="display:none;">
+						<a href="javascript:uploadConstructionDrawing();">上传</a>
+					</div>
+					<table border="1" cellpadding="3" cellspacing="1" width="98%" align="center" style="background-color: #b9d8f3;" id="constructionDrawingList">
+					</table>
+			</div>
+		</div>
+</html>

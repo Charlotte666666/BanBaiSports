@@ -1,0 +1,269 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css"
+			href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+       <script type="text/javascript" src="../../js/echart/echarts.js"></script>
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			var d=new Date();
+			var month=d.getMonth();
+			var year = d.getYear();
+			var designNum=[];
+			var projectNum=[];
+			var dgNum=[];
+			var zyNum=[];
+			var queryCtlMark=0;//查询条件显示收缩标志变量
+			require.config({
+            paths: {
+                echarts: '../../js/echart'
+            }
+        });
+			$(document).ready(function() {
+			if(month!=0){
+			  $( "#td_year" ).html( top.get5YearSelectHtml("year",false,year+1900) );
+			  $( "#td_month" ).html(top.get12MonthSelectHtml("month",false,month) );
+			  }
+			  else{
+			  $( "#td_year" ).html( top.get5YearSelectHtml("year",false,(year-1+1900)) );
+			  $( "#td_month" ).html(top.get12MonthSelectHtml("month",false,12) );
+			  }
+			  doQuery();
+			} );
+			
+			function doQuery(){
+				//oTable.fnDraw();
+				var xurl="/actions/Finance.action?getMonthReportList";
+				var aoData=[];
+				aoData.push( { "name": "month_report.year", "value":$("#year").val() } );
+				aoData.push( { "name": "month_report.month", "value":$("#month").val() } );
+				 top.sendAjaxRequest(xurl,aoData,doQueryCallBack);	
+			}
+			function doQueryCallBack(obj){
+			    if(obj){
+				 var o = obj.aaData;
+				 var html="";
+				 if(o.length>0){
+				   html+='<tr class="tr_data" height="30px"><td colspan="2" align="center">项目</td><td align="center">数目</td></tr>';
+	                 html+='<tr class="tr_data" height="30px"><td rowspan="4" align="center" width="20%" >收入</td><td align="center" width="20%">设计</td><td align="center" width="20%">'+o[0].income_design+'</td></tr>';
+	                 html+='<tr class="tr_data" height="30px"><td align="center" width="20%">工程</td><td align="center" width="20%">'+o[0].income_project+'</td></tr>';
+	                html+=' <tr class="tr_data" height="30px"><td align="center" width="20%">代购</td><td align="center" width="20%">'+o[0].income_dg_product+'</td></tr>';
+	                html+=' <tr class="tr_data"  height="30px"><td align="center" width="20%">自营产品</td><td align="center" width="20%">'+o[0].income_zy_product+'</td></tr>';
+	                html+=' <tr class="tr_data" height="30px"><td rowspan="4" align="center" width="20%" >成本</td><td align="center" width="20%">设计</td><td align="center" width="20%">'+o[0].cost_design+'</td></tr>';
+	                html+=' <tr class="tr_data" height="30px"><td align="center" width="20%">工程</td><td align="center" width="20%">'+o[0].cost_project+'</td></tr>';
+	                 html+='<tr  class="tr_data"height="30px"><td align="center" width="20%">代购</td><td align="center" width="20%">'+o[0].cost_dg_product+'</td></tr>';
+	                 html+=' <tr class="tr_data"  height="30px"><td align="center" width="20%">自营产品</td><td align="center" width="20%">'+o[0].cost_zy_product+'</td></tr>';
+	                 html+='<tr class="tr_data"  height="30px"><td rowspan="4" align="center" width="20%" >毛利</td><td align="center" width="20%">设计</td><td align="center" width="20%">'+o[0].profit_design+'</td></tr>';
+	                html+=' <tr class="tr_data" height="30px"><td align="center" width="20%">工程</td><td align="center" width="20%">'+o[0].profit_project+'</td></tr>';
+	                html+=' <tr class="tr_data"  height="30px"><td align="center" width="20%">代购</td><td align="center" width="20%">'+o[0].profit_dg_product+'</td></tr>';
+	                 html+='<tr class="tr_data"  height="30px"><td align="center" width="20%">自营产品</td><td align="center" width="20%">'+o[0].profit_zy_product+'</td></tr>';
+					 designNum = [parseFloat(o[0].income_design),parseFloat(o[0].cost_design),parseFloat(o[0].profit_design)];
+					 projectNum=[parseFloat(o[0].income_project),parseFloat(o[0].cost_project),parseFloat(o[0].profit_project)];
+					 dgNum=[parseFloat(o[0].income_dg_product),parseFloat(o[0].cost_dg_product),parseFloat(o[0].profit_dg_product)];
+					 zyNum=[parseFloat(o[0].income_zy_product),parseFloat(o[0].cost_zy_product),parseFloat(o[0].profit_zy_product)];
+					 
+				 }
+				 else{
+				    designNum = [0,0,0];
+					 projectNum= [0,0,0];
+					 dgNum= [0,0,0];
+					 zyNum= [0,0,0];
+				    html+='<tr class="tr_data"  height="40px" ><td>暂时没有该月份报表数据</td></tr>';
+				 }
+				  drawChart();
+				 $("#span_year").html($("#year").val());
+				  $("#span_month").html($("#month").val());
+				 $("#report_table").html(html);
+				}
+			}
+			function saveCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				}
+			}
+			
+			function optCallback(obj){
+			       try{
+			        if ( obj.status == true ){
+			          top.showInfoWin("操作成功");
+			          doQuery();
+			        }else{
+			          top.showInfoWin("操作失败 "+obj.msg);
+			        }
+			       }catch(e){
+			          top.showInfoWin("处理异常:"+e.message);
+			       }
+		  }
+
+		    function getParamDate(aoData){
+			     	aoData.push( { "name": "month_report.year", "value":$("#year").val() } );
+					aoData.push( { "name": "month_report.month", "value":$("#month").val() } );
+				return aoData;
+			}
+	function drawChart(){
+		require(
+            [
+                'echarts',
+                'echarts/chart/bar',
+				'echarts/chart/line',
+            ],
+     function (ec) {
+           var myChart = ec.init(document.getElementById('chartDiv'));
+	option = {
+    title : {
+        text: '产值',
+        subtext: '(单位/元)'
+    },
+    tooltip : {
+        trigger: 'axis'
+    },
+    legend: {
+        data:['设计','工程','代购产品','自营产品']
+    },
+    toolbox: {
+        show : true,
+        feature : {
+            mark : {show: true},
+            dataView : {show: true, readOnly: false},
+            magicType : {show: true, type: ['line', 'bar']},
+            restore : {show: true},
+            saveAsImage : {show: true}
+        }
+    },
+    calculable : true,
+    xAxis : [
+        {
+            type : 'category',
+            data : ['收入','成本','毛利']
+        }
+    ],
+    yAxis : [
+        {
+            type : 'value'
+        }
+    ],
+    series : [
+        {
+            name:'设计',
+            type:'bar',
+            data:designNum
+        },
+        {
+            name:'工程',
+            type:'bar',
+            data:projectNum
+        },
+		 {
+            name:'代购产品',
+            type:'bar',
+            data:dgNum
+        },
+		 {
+            name:'自营产品',
+            type:'bar',
+            data:zyNum
+        },
+   ]
+    };
+				 myChart.setOption(option, true);
+            }
+        );
+   }
+   function checkChart(){
+    $("#report_table").hide();
+	$("#chartDiv").show();
+	$("#check_chart").hide();
+	$("#check_table").show();
+   }
+   function checkTable(){
+    $("#report_table").show();
+	$("#chartDiv").hide();
+	$("#check_chart").show();
+	$("#check_table").hide();
+   }
+   //查询条件的展开与收缩
+	function dwOup(){
+		if(queryCtlMark==0){//展开
+			$("#queryCtlIcon").attr("src","../../img/icons/arrow-up.gif"); 
+			$("#queryTab").slideToggle();
+			queryCtlMark=1;
+		}else{//收缩
+			$("#queryCtlIcon").attr("src","../../img/icons/arrow-down.gif"); 
+			$("#queryTab").slideToggle();
+			queryCtlMark=0;
+		}
+	}
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+			<div style='border: 1px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0"
+					border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="150px">
+							&nbsp;财务报表查询&nbsp;
+						</td>
+						<td align="right" width="10%">年份</td>
+						<td align="left" width="5%" id="td_year"></td>
+						<td align="right" width="5%">月份</td>
+						<td align="left" id="td_month" width="10%"></td>
+						<td align="left">
+							<div class="buttonDivTwo">
+								<a href="javascript:doQuery()">查询</a>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
+	<div align="center">	
+	<table width="60%">
+	<tr><td width="60%" align="right">
+    <h2><span id="span_year"></span>年度<span id="span_month"></span>月份预决算报表</h2></td>
+	<td align="right">
+	<div id="check_chart" class="buttonDivFour">
+	<a href="javascript:checkChart()">查看柱状图</a>
+	</div>
+	<div id="check_table" class="buttonDivFour" style="display:none">
+	<a href="javascript:checkTable()">查看表格</a>
+	</div>
+	</td></tr>
+	</table>
+	<table  id="report_table" border="1"   cellspacing="1" cellpadding="1" width="60%" style="background-color: #b9d8f3;">
+     <tr class='tr_data' height="30px"><td colspan="2" align="center">项目</td><td align="center">金额</td></tr> 
+	 <tr class='tr_data'height="30px"><td rowspan="4" align="center" width="20%" >收入</td><td align="center" width="20%">设计</td><td align="center" width="20%"></td></tr>
+	 <tr class='tr_data' height="30px"><td align="center" width="20%">工程</td><td align="center" width="20%"></td></tr>
+	 <tr  class='tr_data'height="30px"><td align="center" width="20%">代购</td><td align="center" width="20%"></td></tr>
+	 <tr class='tr_data'  height="30px"><td align="center" width="20%">自营产品</td><td align="center" width="20%"></td></tr>
+	 <tr class='tr_data'height="30px"><td rowspan="4" align="center" width="20%" >成本</td><td align="center" width="20%">设计</td><td align="center" width="20%"></td></tr>
+	 <tr class='tr_data' height="30px"><td align="center" width="20%">工程</td><td align="center" width="20%"></td></tr>
+	 <tr  class='tr_data'height="30px"><td align="center" width="20%">代购</td><td align="center" width="20%"></td></tr>
+	 <tr class='tr_data'  height="30px"><td align="center" width="20%">自营产品</td><td align="center" width="20%"></td></tr>
+	 <tr class='tr_data'height="30px"><td rowspan="4" align="center" width="20%" >毛利</td><td align="center" width="20%">设计</td><td align="center" width="20%"></td></tr>
+	 <tr class='tr_data' height="30px"><td align="center" width="20%">工程</td><td align="center" width="20%"></td></tr>
+	 <tr  class='tr_data'height="30px"><td align="center" width="20%">代购</td><td align="center" width="20%"></td></tr>
+	 <tr class='tr_data'  height="30px"><td align="center" width="20%">自营产品</td><td align="center" width="20%"></td></tr>
+    </table>
+	<br>
+	<div id="chartDiv" style="height:400px;width:1050px;display:none">
+	</div>
+	
+	</div>
+		</div>
+		<br>
+	</body>
+</html>

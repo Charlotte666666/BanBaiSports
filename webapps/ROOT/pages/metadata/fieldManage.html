@@ -1,0 +1,212 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+		    var optType="";
+			var opt="";
+			var objs=[];
+			
+			$(document).ready(function() {
+			   $( "#tdBelong1" ).html( top.getCodeSelectHtml("FIELD_BELONG1","q_belong1",true,null,"changeQueryBelong2()","全部") );
+			   $( "#tdBelong2" ).html( top.getCodeSelectHtml("FIELD_BELONGA1","q_belong2",true,null,null,"全部") );
+			   $( "#tdType" ).html( top.getCodeSelectHtml("FIELD_TYPE","q_type",true,null,null,"全部") );
+ 
+			   optType=top.getUrlParam(document.URL,"opt");
+			   var iaoColumns= [
+                               { "sTitle": "标题", "mDataProp": "title", "sWidth": "16%","sClass": "center",
+                            	   "fnRender": function ( oObj ) {
+								     objs[objs.length]=oObj.aData;
+								       return '<input type="text" id="title_'+oObj.aData.id+'" size="20" value="'+oObj.aData.title+'" />';
+                                   },
+                                   "bUseRendered": false
+                               },
+							   { "sTitle": "所属模块", "mDataProp": "belong1", "sWidth": "10%","sClass": "left",
+                                      "fnRender": function ( oObj ) {
+                                         return top.getCodeSelectHtml("FIELD_BELONG1","belong1_"+oObj.aData.id,true,oObj.aData.belong1,"changeBelong2("+oObj.aData.id+")");
+                                      },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "所属栏目", "mDataProp": "belong2", "sWidth": "10%","sClass": "center","bSortable":false,
+                                      "fnRender": function ( oObj ) {
+                                         return "<span id='belong2Span_"+oObj.aData.id+"'>"+top.getCodeSelectHtml("FIELD_BELONG2"+oObj.aData.belong1,"belong2_"+oObj.aData.id,true,oObj.aData.belong2)+"</span>";
+                                      },
+                                      "bUseRendered": false 
+                               },
+                               { "sTitle": "字段类型", "mDataProp": "type", "sWidth": "10%", "sClass": "center",
+                                   "fnRender": function ( oObj ) {
+								      return top.getCodeSelectHtml("FIELD_TYPE","type_"+oObj.aData.id,true,oObj.aData.type);
+                                   },
+                                   "bUseRendered": false  
+                               },
+							   { "sTitle": "表名", "mDataProp": "table_name", "sWidth": "10%","sClass": "left",
+                                      "fnRender": function ( oObj ) {
+                                        return '<input type="text" id="table_name_'+oObj.aData.id+'" size="10" value="'+oObj.aData.table_name+'" />';
+                                      },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "字段名", "mDataProp": "col_name", "sWidth": "10%","sClass": "left",
+                                      "fnRender": function ( oObj ) {
+                                        return '<input type="text" id="col_name_'+oObj.aData.id+'" size="10" value="'+oObj.aData.col_name+'" />';
+                                      },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "字典类型", "mDataProp": "dic_type", "sWidth": "10%","sClass": "center",
+                                      "fnRender": function ( oObj ) {
+                                           return '<input type="text" id="dic_type_'+oObj.aData.id+'" size="10" value="'+oObj.aData.dic_type+'" />';
+                                      },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "字段长度", "mDataProp": "field_size", "sWidth": "8%","sClass": "center",
+                                      "fnRender": function ( oObj ) {
+                                           return '<input type="text" id="field_size_'+oObj.aData.id+'" size="6" value="'+oObj.aData.field_size+'" />';
+                                      },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "字段排序", "mDataProp": "sort_order", "sWidth": "8%","sClass": "center",
+                                      "fnRender": function ( oObj ) {
+                                           return '<input type="text" id="sort_order_'+oObj.aData.id+'" size="6" value="'+oObj.aData.sort_order+'" />';
+                                      },
+                                      "bUseRendered": false 
+                               },
+							   { "sTitle": "操作", "mDataProp": "id", "sWidth": "8%","sClass": "center","bSortable":false,
+                                      "fnRender": function ( oObj ) {
+                                          return '<a href=\'javascript:void(0)\' onclick="saveInfo(\''+oObj.aData.id+'\','+(oObj.aData.title==''?"true":"false")+')" >保存</a>';
+                                      },
+                                      "bUseRendered": false 
+                               }
+                 ];
+			   
+
+			   var surl=top.getUrlBase()+"/actions/Metadata.action?getConfigFieldList";
+
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"aaSorting": [[ 8, "asc" ]],
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     aoData.push( { "name": "configField.title", "value": $("#q_title").val() } );
+						 aoData.push( { "name": "configField.belong1", "value": $("#q_belong1").val() } );
+						 aoData.push( { "name": "configField.belong2", "value": $("#q_belong2").val() } );
+						 aoData.push( { "name": "configField.type", "value": $("#q_type").val() } );
+						 aoData.push( { "name": "opt", "value": opt } );
+						 opt="";
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+					"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+			    objs=[];
+				oTable.fnDraw();
+			}
+			
+			function addInfo(){
+				opt="addRow";
+				doQuery();
+			}
+			
+			function saveInfo(infoId,isCreate){
+				var aoData=[];
+				aoData.push( { "name": "configField.id", "value": infoId } );
+				aoData.push( { "name": "configField.title", "value": $("#title_"+infoId).val() } );
+				aoData.push( { "name": "configField.belong1", "value": $("#belong1_"+infoId).val() } );
+				aoData.push( { "name": "configField.belong2", "value": $("#belong2_"+infoId).val() } );
+				aoData.push( { "name": "configField.table_name", "value": $("#table_name_"+infoId).val() } );
+				aoData.push( { "name": "configField.col_name", "value": $("#col_name_"+infoId).val() } );
+				aoData.push( { "name": "configField.type", "value": $("#type_"+infoId).val() } );
+				aoData.push( { "name": "configField.dic_type", "value": $("#dic_type_"+infoId).val() } );
+				aoData.push( { "name": "configField.sort_order", "value": $("#sort_order_"+infoId).val() } );
+				aoData.push( { "name": "configField.field_size", "value": $("#field_size_"+infoId).val() } );
+				top.sendAjaxRequest("/actions/Metadata.action?"+(isCreate?"insertConfigField":"updateConfigField"),aoData,optCallback);
+			}
+			
+			function saveCallBack(o){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				  
+				}
+			}
+			
+			function optCallback(obj){
+			       try{
+			        if ( obj.status == true ){
+			          top.showInfoWinOK("操作成功");
+					  doQuery();
+			        }else{
+			          top.showInfoWinError("操作失败 "+obj.msg);
+			        }
+			       }catch(e){
+			          top.showInfoWinError("处理异常:"+e.message);
+			       }
+		    }
+			
+			function changeQueryBelong2(){
+			    $( "#tdBelong2" ).html( top.getCodeSelectHtml("FIELD_BELONG2"+$("#q_belong1").val(),"q_belong2",true,null,null,"全部") );
+			}
+			
+			function changeBelong2(id,v){
+			    $( "#belong2Span_"+id ).html( top.getCodeSelectHtml("FIELD_BELONG2"+$("#belong1_"+id).val(),"belong2_"+id,true,null,v,"全部") );
+			}
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			     <tr>
+			      <td align="right" width="10%">标题:</td><td align="left" width="10%"><input type="text" id="q_title" value="" size="13" onkeydown="if(event.keyCode==13) doQuery();"/></td>
+			      <td align="right" width="10%">所属模块:</td><td align="left" width="10%" id="tdBelong1"></td>
+			      <td align="right" width="10%">所属栏目:</td><td align="left" width="10%" id="tdBelong2"></td>
+				  <td align="right" width="10%">类型:</td><td align="left" width="10%" id="tdType"></td>
+				  <td align="center" width="20%"><span class="buttonTwo"><a href="javascript:doQuery()">查询</a></span></td>
+				</tr>
+			    <tr bgcolor="#C6DEFF">
+			      <td colspan="9">
+				   <table align="left" cellpadding="1px" cellspacing="0" border="0"><tr>
+				    <td><div id="createBtn" class="buttonDivTwo"><a href="javascript:addInfo()">创建</a></div></td>
+				   </tr></table></td>
+			   </tr>
+			</table>
+	        <table align="center" cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

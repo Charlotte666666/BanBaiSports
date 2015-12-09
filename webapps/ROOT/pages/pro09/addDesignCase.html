@@ -1,0 +1,449 @@
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css" />
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css" />
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css"/>
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css"	media="print, projection, screen"/>
+<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+	    <script type="text/javascript" src="../../js/SimpleMap.js"></script>
+		<script src="../../js/area.js" type="text/javascript" charset="gb2312"></script>
+		<script type="text/javascript">
+		
+    var isSaveOK=false;
+    var optType="";
+	var case_id="";
+	var case_img_id="";
+	var main_show="";
+	
+	$(document).ready(function(){
+	  
+	  optType=top.getUrlParam(document.URL,"optType");
+	  _init_area();
+	  if(optType=="insert"){//新增
+	    $("#tddistrict").html(top.getCodeSelectHtml("DISTRICT","building_name",true));
+	    $("#tddesigner").html(top.getAllDesignerSelect("designer"));
+	    $("#tdtype").html(top.getCodeSelectHtml("PRODESIGN_STYLE","style",true));
+	  }else{//修改
+	    case_id=top.getUrlParam(document.URL,"case_id");
+		var aoData=[];
+		aoData.push( {"name":"designCase.id","value":case_id} );
+		top.sendAjaxRequest("/actions/DesignPlan.action?getDesignCaseById",aoData,getDesignCaseByIdCallback);
+	  }
+	});
+	
+	function getDesignCaseByIdCallback(obj){
+	   if(obj.status==true){
+	      var o=obj.body;
+		  $("#tddistrict").html(top.getCodeSelectHtml("DISTRICT","building_name",true,o.building_name));
+	      $("#tddesigner").html(top.getAllDesignerSelect("designer"));
+		  $("#designer").val(o.designer);
+	      $("#tdtype").html(top.getCodeSelectHtml("PRODESIGN_STYLE","style",true,o.style));
+		  $("#pro_addr").val(o.pro_addr);
+		  $("#project_cost").val(o.project_cost);
+		  $("#room_count").val(o.room_count);
+		  $("#hall_count").val(o.hall_count);
+		  $("#bath_count").val(o.bath_count);
+		  $("#case_introduction").val(o.case_introduction);
+		  $("#main_material_memo").val(o.main_material_memo);
+		  $("#sub_material_memo").val(o.sub_material_memo);
+		  $("#s_province").val(o.addr_province);
+		  $("#s_province").trigger("change");
+		  $("#s_city").val(o.addr_city);
+		  $("#s_city").trigger("change");
+		  $("#s_county").val(o.addr_area);
+		  $("#addr_building").val(o.addr_building);
+		  $("#addr_unit").val(o.addr_unit);
+		  $("#addr_floor").val(o.addr_floor);
+		  $("#addr_door_num").val(o.addr_door_num);
+		  $("#main_show_picture").val(o.main_show_picture);
+		  $("#uploadCaseImg").show();
+		  getCaseImgList();
+	   }else{
+	     top.showInfoWinError("操作失败！");
+	   }
+	}
+	//获取该设计案例的图片
+	function getCaseImgList(){
+	    var aoData=[];
+		aoData.push( {"name":"caseImage.case_id","value":case_id} );
+		top.sendAjaxRequest("/actions/DesignPlan.action?getCaseImgList",aoData,getCaseImgListCallback);
+	}
+	//获取该设计案例图片回调函数
+	function getCaseImgListCallback(obj){
+	    var ht="";
+	    if(obj.status==true){
+		   if(obj.body.length>0){
+			   var o=obj.body;
+			   for(var i=0;i<o.length;i++){
+				  if(i%3==0){
+					if(i>0){
+					  ht+="</tr>";
+					}
+					ht+="<tr>";
+				  }
+				  ht+="<td align='center' valign='top'><img src='"+top.getUrlBase()+"/download?filePath="+o[i].img_path+"' height='100px' width='120px' title='"+o[i].img_memo+"' onclick='previewFile(\""+o[i].img_path+"\")'/><br/><input type='radio' onclick='updateMainShow(\""+o[i].case_id+"\",\""+o[i].img_id+"\",\""+o[i].img_path+"\")' name='main_show' "+(o[i].is_main_show=="1"?"checked":"")+" /><label style='font-size:10px;' >作为封面</label>&nbsp;<a style='cursor:pointer;text-decoration:none;font-size:10px;' href='javascript:void(0)' onclick='deleteCaseImg(\""+o[i].img_id+"\")'>删除</a>&nbsp;<a href='javascript:void(0)' style='font-size:10px;cursor:pointer;text-decoration:none;' onclick='updateCaseImg(\""+o[i].img_id+"\",\""+o[i].case_id+"\",\""+o[i].img_memo+"\",\""+o[i].img_path+"\",\""+o[i].is_main_show+"\")'>修改</a></td>";
+			   }
+			   if(i%3!=0){
+				   for(var j=0;j<(3-i%3);j++){
+					  ht+="<td></td>";
+				   }
+				  ht+="</tr>";
+			   }
+		   }else{
+		       ht+="<tr><td><input type='image' src='/img/no_picture1.jpg' height='120px' /></td><td><input type='image' src='/img/no_picture1.jpg' height='120px'/></td><td><input type='image' src='/img/no_picture1.jpg' height='120px'/></td></</</tr>";
+		   }
+		}else{
+		  ht+="<tr><td><input type='image' src='/img/no_picture1.jpg' height='120px' /></td><td><input type='image' src='/img/no_picture1.jpg' height='120px'/></td><td><input type='image' src='/img/no_picture1.jpg' height='120px'/></td></</</tr>";
+		}
+		
+		$("#caseImgTable").html(ht);
+	}
+	
+	//删除设计案例图片
+	function deleteCaseImg(img_id){
+	   case_img_id=img_id;
+	   top.showConfirm("确定要删除该图片吗?",doDeleteCaseImg);
+	}
+	//执行删除设计案例图片
+	function doDeleteCaseImg(){
+	   var aoData=[];
+	   aoData.push( {"name":"caseImage.img_id","value":case_img_id} );
+	   top.sendAjaxRequest("/actions/DesignPlan.action?deleteCaseImg",aoData,doDeleteCaseImgCallback);
+	}
+	
+	function doDeleteCaseImgCallback(obj){
+	   if(obj.status==true){
+	      top.showInfoWinOK("操作成功！");
+		  getCaseImgList();
+	   }else{
+	      top.showInfoWinError("操作失败！");
+	   }
+	}
+	
+	//预览
+	function previewFile(filePath){
+		var xurl="pages/openFile.html?filePath="+filePath+"&fileName="+filePath;
+		top.openDialog("文件预览",xurl,true,700,650,null);
+	}
+	
+	//保存
+	function saveInfo(){
+	  var message="";
+	  if($("#building_name").val()==""){
+	    message+="小区名称不能为空！<br/>";
+	  }
+	  if($("#s_province").val()=="省份"){
+	    message+="请选择省份！<br/>";
+	  }
+	  if($("#s_city").val()=="地级市"){
+	    message+="请选择地级市！<br/>";
+	  }
+	  if($("#s_county").val()=="市、县级市"){
+	    message+="请选择市、县级市！<br/>";
+	  }
+	  if($("#addr_building").val()!="" && !IsNumber($("#addr_building").val())){
+	    message+="楼为数字类型！<br/>";
+	  }
+	  if($("#addr_unit").val()!="" && !IsNumber($("#addr_unit").val())){
+	    message+="单元为数字类型！<br/>";
+	  }
+	  if($("#addr_floor").val()!="" && !IsNumber($("#addr_floor").val())){
+	    message+="层为数字类型！<br/>";
+	  }
+	  message+=checkString($("#pro_addr").val(),false,128,"地址");
+	  if($("#project_cost").val()!="" && !IsFloat($("#project_cost").val())){
+	    message+="工程造价应为数字类型<br/>";
+	  }
+	  message+=checkString($("#case_introduction").val(),false,1024,"案例介绍");
+	  message+=checkString($("#main_material_memo").val(),false,1024,"主材说明");
+	  message+=checkString($("#sub_material_memo").val(),false,1024,"辅材说明");
+	  if(message!=""){
+	    top.showInfoWinWarn(message);return;
+	  }
+	  var aoData=[];
+	  aoData.push( {"name":"designCase.building_name","value":$("#building_name").val()} );
+	  aoData.push( {"name":"designCase.pro_addr","value":$("#pro_addr").val()} );
+	  aoData.push( {"name":"designCase.addr_province","value":$("#s_province").val()} );
+	  aoData.push( {"name":"designCase.addr_city","value":$("#s_city").val()} );
+	  aoData.push( {"name":"designCase.addr_area","value":$("#s_county").val()} );
+	  aoData.push( {"name":"designCase.addr_building","value":$("#addr_building").val()} );
+	  aoData.push( {"name":"designCase.addr_unit","value":$("#addr_unit").val()} );
+	  aoData.push( {"name":"designCase.addr_floor","value":$("#addr_floor").val()} );
+	  aoData.push( {"name":"designCase.addr_door_num","value":$("#addr_door_num").val()} );
+	  aoData.push( {"name":"designCase.designer","value":$("#designer").val()} );
+	  aoData.push( {"name":"designCase.room_count","value":$("#room_count").val()} );
+	  aoData.push( {"name":"designCase.hall_count","value":$("#hall_count").val()} );
+	  aoData.push( {"name":"designCase.bath_count","value":$("#bath_count").val()} );
+	  aoData.push( {"name":"designCase.style","value":$("#style").val()} );
+	  aoData.push( {"name":"designCase.project_cost","value":$("#project_cost").val()} );
+	  aoData.push( {"name":"designCase.case_introduction","value":$("#case_introduction").val()} );
+	  aoData.push( {"name":"designCase.main_material_memo","value":$("#main_material_memo").val()} );
+	  aoData.push( {"name":"designCase.sub_material_memo","value":$("#sub_material_memo").val()} );
+	  aoData.push( {"name":"designCase.main_show_picture","value":$("#main_show_picture").val()} );
+	  
+	  var xurl="/actions/DesignPlan.action?insertDesignCase";
+	  if(case_id!=""){
+	    aoData.push( {"name":"designCase.id","value":case_id} );
+		xurl="/actions/DesignPlan.action?updateDesignCase";
+	  }
+	  top.sendAjaxRequest(xurl,aoData,saveInfoCallback);
+	}
+	
+	function saveInfoCallback(obj){
+	   if(obj.status==true){
+	      top.showInfoWinOK("操作成功！");
+		  case_id=obj.msg;
+		  $("#uploadCaseImg").show();
+	   }else{
+	      top.showInfoWinOK("操作失败--》"+obj.msg);
+	   }
+	}
+	
+	//取消
+	function cancle(){
+	   parent.closeSelectDialog();
+	}
+	
+	// 关闭当前页面前，页面框架自动调用的函数
+	function doBeforeClose(){
+     var obj={
+              "isSaveOK":isSaveOK
+            };
+	 
+     top.setTempValue(obj);
+   }
+    
+   //打开上传案例图片div	
+   function uploadCaseImg(){
+       case_img_id="";
+       $("#upload").hide();
+	   $("#imgTr").hide();
+       $("#uploadCaseImgDialog").show();
+   }
+   
+   //上传案例图片
+   function upImg(){
+     top.openDialog("上传设计案例照片","pages/uploadFile.html?belong_id="+case_id+"&belong_id0="+case_id,true,500,180,upImgCallback);
+   }
+   
+   //上传设计案例图片回调函数
+   function upImgCallback(obj){
+      try{
+			var obj=top.getTempValue();
+			if ( obj.isSaveOK ) {
+				$("#case_img").attr("src",top.getUrlBase()+"/download?filePath="+obj.filePath);
+				$("#img_path").val(obj.filePath);
+			}
+	  }catch(e){}
+   }
+   
+   //保存设计案例图片
+   function saveCaseImg(){
+      var message="";
+	    message+=checkString($("#img_memo").val(),false,512,"图片说明");
+	  if($("#img_path").val()==""){
+	    message+="请选择要上传的图片！<br/>";
+	  }
+	  if(message!=""){
+	    top.showInfoWinWarn(message);return;
+	  }
+	  
+	  var aoData=[];
+	  aoData.push( {"name":"caseImage.case_id","value":case_id} );
+	  aoData.push( {"name":"caseImage.img_memo","value":$("#img_memo").val()} );
+	  aoData.push( {"name":"caseImage.img_path","value":$("#img_path").val()} );
+	  var is_main_show="0";
+	  if(document.getElementById("is_main_show").checked){
+	     is_main_show="1";
+	  }
+	  aoData.push( {"name":"caseImage.is_main_show","value":is_main_show} );
+	  if(case_img_id!=""){
+	    aoData.push( {"name":"caseImage.img_id","value":case_img_id} );
+	  }
+	  top.sendAjaxRequest("/actions/DesignPlan.action?saveCaseImg",aoData,saveCaseImgCallback);
+   }
+   
+   //保存设计案例图片回调函数
+   function saveCaseImgCallback(obj){
+      if(obj.status==true){
+	     top.showInfoWinOK("操作成功！");
+		 cancleCaseImg();
+		 getCaseImgList();
+	  }
+   }
+   
+   //取消
+   function cancleCaseImg(){
+      $("#img_memo").val("");
+	  $("#img_path").val("");
+	  $("#case_img").attr("src","/img/no_picture1.jpg");
+	  $("#is_main_show").removeAttr("checked");
+	  $("#uploadCaseImgDialog").hide();
+	  $("#upload").show();
+	  $("#imgTr").show();
+   }
+   
+   //修改设计案例图片信息
+   function updateCaseImg(img_id,maing_id,img_memo,img_path,main_show){
+      case_img_id=img_id;
+      $("#upload").hide();
+	  $("#imgTr").hide();
+	  $("#uploadCaseImgDialog").show();
+      $("#img_memo").val(img_memo);
+	  $("#img_path").val(img_path);
+	  $("#case_img").attr("src",top.getUrlBase()+"/download?filePath="+img_path);
+	  $("#case_img").attr("title",img_memo);
+	  if(main_show=="1"){
+	    $("#is_main_show").attr("checked","checked");
+	  }
+   }
+   
+   //修改设计案例封面显示图片
+   function updateMainShow(main_id,img_id,path){
+      var aoData=[];
+	  aoData.push( {"name":"caseImage.case_id","value":main_id} );
+	  aoData.push( {"name":"caseImage.img_id","value":img_id} );
+	  aoData.push( {"name":"caseImage.img_path","value":path} );
+	  main_show=path;
+	  top.sendAjaxRequest("/actions/DesignPlan.action?updateCaseImgIsShow",aoData,updateMainShowCallback);
+   }
+   //修改设计案例封面显示图片回调函数
+   function updateMainShowCallback(obj){
+      if(obj.status==true){
+	    top.showInfoWinOK("操作成功！");
+		$("#main_show_picture").val(main_show);
+		getCaseImgList();
+	  }else{
+	    top.showInfoWinError("操作失败！");
+	  }
+   }
+	</script>
+	</head>
+	<body width="97%">
+		<div id="tabs-0" style="margin-top:7px;" align="center">
+		        <input id="main_show_picture" type="hidden"/>
+				<table border="1" cellpadding="3" cellspacing="1" width="98%" align="center" style="background-color: #b9d8f3;">
+				    <tr class="tr_data">
+					    <td class="table_property_title" width="8%">小区名称</td>
+						<td align="left" id="tddistrict" width="6%"></td>
+						<td class="table_property_title" width="6%">地址</td>
+						<td align="left" width="30%"><select id="s_province"></select><select id="s_city"></select><select id="s_county"></select><span id="span_district"></span><input type="text" id="addr_building" size="3"/>楼<input type="text" id="addr_unit" size="3"/>单元<input type="text" id="addr_floor" size="3"/>层<input type="text" id="addr_door_num" size="3"/>号房<input id="pro_addr" type="text" size="10"/></td>
+						<td width="50%" rowspan="7" id="uploadCaseImg" style="display:none;" valign="top">
+						  <table id="caseImgList" border="1" cellpadding="1" cellspacing="1" width="100%">
+						    <tr>
+							    <td>
+							       <div class="buttonDivTwo" id="upload"><a href="javascript:void(0)" onclick="uploadCaseImg()" style="font-size:13px;">上传</a></div>
+								   <div id="uploadCaseImgDialog" title="上传设计案例图片" align="center" style="display:none;">
+									 <table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+										<tr class="tr_data">
+										   <td class="table_property_title" width="30%">图片说明</td>
+										   <td align="left"><textarea rows="3" style="width:100%" id="img_memo"></textarea></td>
+										</tr>
+										<tr class="tr_data">
+										   <td class="table_property_title">选择图片</td>
+										   <td align="left" height="150px">
+											   <input id="case_img" type='image' title='暂无图片信息' src='/img/no_picture1.jpg' height='120px' width="100px"/>
+											   <input id="img_path" type="hidden"/>
+											   <div class="buttonDivTwo"><a href="javascript:void(0)" onclick="upImg()">上传</a></div>
+										   </td>
+										</tr>
+										<tr class="tr_data">
+										   <td class="table_property_title">是否作为封面</td>
+										   <td align="left"><input type="checkbox" id="is_main_show" />是</td>
+										</tr>
+										<tr class="tr_data" height="30px">
+										   <td align="center" colspan="2">
+											   <a class="buttonDivTwo" href="javascript:void(0)" onclick="saveCaseImg()" style="text-decoration:none;">保存</a>
+											   <a class="buttonDivTwo" href="javascript:void(0)" onclick="cancleCaseImg()" style="text-decoration:none;">取消</a>
+										   </td>
+										</tr>
+									 </table>
+		                           </div>
+							    </td>
+							</tr>
+							<tr height="495px" id="imgTr">
+							   <td valign="top">
+							      <table id="caseImgTable"></table>
+							   </td>
+							</tr>
+						  </table>
+						</td>
+					</tr>
+					<tr class="tr_data">
+					    <td class="table_property_title" width="6%">设计师</td>
+						<td align="left" id="tddesigner" width="10%"></td>
+						<td class="table_property_title">户型</td>
+						<td align="left">
+						  <select id="room_count" width="10px">
+						    <option value="1">1</option>
+						    <option value="2">2</option>
+						    <option value="3">3</option>
+						    <option value="4">4</option>
+						    <option value="5">5</option>
+						    <option value="6">6</option>
+						    <option value="7">7</option>
+						    <option value="8">8</option>
+						    <option value="9">9</option>
+						  </select>室
+						  <select id="hall_count" width="10px">
+						    <option value="1">1</option>
+						    <option value="2">2</option>
+						    <option value="3">3</option>
+						    <option value="4">4</option>
+						    <option value="5">5</option>
+						    <option value="6">6</option>
+						    <option value="7">7</option>
+						    <option value="8">8</option>
+						    <option value="9">9</option>
+						  </select>厅
+						  <select id="bath_count" width="10px">
+						    <option value="1">1</option>
+						    <option value="2">2</option>
+						    <option value="3">3</option>
+						    <option value="4">4</option>
+						    <option value="5">5</option>
+						    <option value="6">6</option>
+						    <option value="7">7</option>
+						    <option value="8">8</option>
+						    <option value="9">9</option>
+						  </select>卫
+						</td>
+					</tr>
+					<tr class="tr_data">
+						<td class="table_property_title" width="8%">风格</td>
+						<td align="left" id="tdtype"></td>
+						<td class="table_property_title">工程造价</td>
+						<td align="left"><input type="text" id="project_cost" size="8"/>万元</td>
+					</tr>
+					<tr class="tr_data">
+					    <td class="table_property_title" width="8%">案例介绍</td>
+						<td colspan="3"><textarea id="case_introduction"  rows="8" style="width:100%;"></textarea></td>
+					</tr>
+					<tr class="tr_data">
+					    <td class="table_property_title" width="8%">主材说明</td>
+						<td colspan="3"><textarea id="main_material_memo"   rows="8" style="width:100%;"></textarea></td>
+					</tr>
+					<tr class="tr_data">
+					    <td class="table_property_title" width="8%">辅材说明</td>
+						<td colspan="3"><textarea id="sub_material_memo"  rows="8" style="width:100%;"></textarea></td>
+					</tr>
+					<tr class="tr_data">
+					    <td colspan="4" align="center" height="30px">
+						    <a href="javascript:void(0)" class="buttonDivTwo" style="text-decoration:none;" onclick="saveInfo()">保存</a>
+						    <a href="javascript:void(0)" class="buttonDivTwo" style="text-decoration:none;" onclick="cancle()">关闭</a>
+					    </td>
+					</tr>
+				</table>
+		</div>
+		
+	</body>
+</html>

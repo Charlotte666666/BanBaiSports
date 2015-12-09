@@ -1,0 +1,236 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+ 
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+		    var aSelected = [];
+		    var tempStr="";
+		    var optType="";
+		    var qTypeId="";
+		    var qTypeName="";
+			var dialogLevel="1";
+			var isHasEditRight=false;
+			
+			$(document).ready(function() {
+			
+			   if ( top.g_isPermit("09_product_info_edit") ) {
+			     $("#createBtn").show();
+				 $("#delBtn").show();
+				 $("#importBtn").show();
+				 $("#exportBtn").show();
+				 isHasEditRight=true;
+			   } else {
+			     $("#createBtn").hide();
+				 $("#delBtn").hide();
+				 $("#importBtn").hide();
+				 $("#selAll").hide();
+				 $("#exportBtn").hide();
+			   }
+			
+			   var iaoColumns= [
+                               { "sTitle": "项目名称", "mDataProp": "product_name", "sWidth": "48%",
+                                      "fnRender": function ( oObj ) {
+                                           var ht='';
+										   if ( isHasEditRight ) ht+='<input type=\'checkbox\' name=\'checkId\' value=\''+oObj.aData.product_id+'\' />&nbsp;';
+										   ht+='<a href=\'javascript:void(0)\' onclick="updateInfo(\''+oObj.aData.product_id+'\')" >'+oObj.aData.product_name+'</a>';
+										   return ht;
+                                      },
+                                      "bUseRendered": false
+                               },
+							   { "sTitle": "产品编号", "mDataProp": "product_id","sWidth": "12%","sClass": "center","bUseRendered": false  },
+							   { "sTitle": "经营类型", "mDataProp": "product_name", "sWidth": "12%",
+                                      "fnRender": function ( oObj ) {
+                                           return top.getCodeName("SALE_MODE",oObj.aData.sale_mode);
+                                      },
+                                      "bUseRendered": false
+                               },
+							   { "sTitle": "单位","mDataProp": "unit","sWidth": "8%", "sClass": "center",
+								    "fnRender": function ( oObj ) {
+                                           return top.getCodeName( "UNIT", oObj.aData.unit );
+                                      },
+							        "bUseRendered": false },
+							   { "sTitle": "价格(元)", "mDataProp": "price","sWidth": "10%","sClass": "center","bUseRendered": false  },
+                               { "sTitle": "品牌", "mDataProp": "product_brand", "sWidth": "10%","sClass": "center",
+									    "fnRender": function ( oObj ) {
+                                           return top.getSupplierNameById( oObj.aData.product_brand );
+                                      },
+							         "bUseRendered": false }
+               ];
+			   
+			  var surl=top.getUrlBase()+"/actions/ProductInfo.action?getProductInfoList";
+
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": surl,
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+							aoData.push( { "name": "product.type_id", "value":$("#type_id").val() } );
+							aoData.push( { "name": "product.product_id", "value":$("#product_id").val() } );
+							aoData.push( { "name": "product.product_name", "value":$("#product_name").val() } );
+					},
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			});
+
+			function queryBySelectedPro(nid,name){
+				 qTypeId = nid;
+				 qTypeName = name;
+				if(qTypeId=='')
+				{
+					qTypeId=-1;
+				}
+				document.getElementById("type_id").value = qTypeId;
+				doQuery();
+			}
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			//添加施工项目
+			function addproduct(){
+				var xurl="pages/pro09/productInfo.html?opt=insertproduct&typeName="+qTypeName+"&typeId="+qTypeId;
+				top.openSelectDialog2("添加产品信息",xurl,850,450,saveProductCallBack);
+			}
+			function updateInfo(product_id){
+				var xurl="pages/pro09/productInfo.html?opt=updateproduct&id="+product_id;
+				top.openSelectDialog2("修改产品信息",xurl,850,450,saveProductCallBack);
+			}
+			//选中要删除的施工项目
+			function deleteProduct(){
+				var ids=top.getAllCheckedValue( document.getElementsByName('checkId') );
+				if (ids.length > 0) {
+					top.showConfirm("您确定要删除选中产品信息吗？", doDeleteProduct);
+				}else{
+					top.showInfoWinWarn("请选择要删除的产品信息");
+				}
+			}
+			//执行删除施工项目的方法
+		function doDeleteProduct(){
+				var ids=top.getAllCheckedValue( document.getElementsByName('checkId') )+",";
+				if ( ids == ',' ) {
+				  top.showInfoWinWarn("请选择要删除的产品信息");
+				  return ;	
+				}
+				var aoData=[];
+				aoData.push( { "name": "productId", "value": ids} );
+				top.sendAjaxRequest("/actions/ProductInfo.action?deleteProductById",aoData,optCallback);
+			}
+			// 新建、删除或修改操作回调函数
+    function optCallback(obj){
+       try{
+			if ( obj.status == true ){
+				isSaveOK = true;
+				top.showInfoWinOK("操作成功");
+				doQuery();
+			}else{
+				isSaveOK = false;
+				top.showInfoWinError("操作失败 "+obj.msg);
+			}
+		   }catch(e){
+			  top.showInfoWinError("处理异常:"+e.message);
+		   }
+	   }
+			function saveProductCallBack(){
+				try{
+				  var obj = top.getTempValue();
+				  if(obj.isSaveOK) doQuery();
+				}catch(e){
+				  
+				}
+			}
+			
+     function importProduct(){
+	    if ( qTypeId == '' ) {
+		  top.showInfoWinWarn("请在左侧选择数据的分类");
+		  return ;
+		}
+	    var xurl="pages/pro09/importProductInfo.html?typeName="+qTypeName+"&typeId="+qTypeId;
+		top.openDialog("导入产品信息",xurl,true,500,200,doQuery);
+	 }
+	 
+	 function exportData(){
+		top.showLoadingInfo(true);
+	    top.sendAjaxRequest("/actions/ProductInfo.action?exportProductInfo",[],callBackExportData);
+     }
+	 
+	 function callBackExportData(obj){
+		 top.showLoadingInfo(false);
+		 try{
+			if ( obj.status == true ){
+			   var downUrl=top.getUrlBase()+"/download?filePath="+obj.msg+"&fileName=产品信息列表.xls";
+			   document.location.href=downUrl;
+			}else{
+			   top.showInfoWinError("操作失败 "+obj.msg);
+			}
+		 }catch(e){
+			top.showInfoWinError("处理异常:"+e.message);
+		 }
+     }
+	 
+	</script>
+	</head>
+	<body>
+		<input type="hidden" id="type_id" value="-1" />
+		<div width="100%;">
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+				    <td>&nbsp;<input type="checkbox" id="selAll" onclick="top.checkAll(this.checked,document.getElementsByName('checkId'))"/>全选</td>
+				    <td><div id="createBtn" class="buttonDivTwo" style="dispaly:none"><a href="javascript:addproduct()">新增</a></div></td>
+					<td><div id="delBtn" class="buttonDivTwo" style="dispaly:none"><a href="javascript:deleteProduct()">删除</a></div></td>
+					<td><div id="importBtn" class="buttonDivTwo" style="dispaly:none"><a href="javascript:importProduct()">导入</a></div></td>
+					<td><div id="exportBtn" class="buttonDivTwo" style="dispaly:none"><a href="javascript:exportData()">导出</a></div></td>
+					<td align="right" width="50%">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				    </td>
+			  </tr>
+			</table>
+			<table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+				<tr class="tr_data">
+				  <td align="right" width="20%">产品编号:</td>
+				  <td align="left" width="30%">
+				     <input type="text" id="product_id" value="" ></input>
+				  </td>
+				  <td align="right" width="20%">产品名称:</td>
+				  <td align="left" width="30%">
+				     <input type="text" id="product_name" value="" ></input>
+				  </td>
+			     </tr>
+			 </table>
+	        <table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

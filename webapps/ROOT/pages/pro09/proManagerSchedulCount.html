@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<title>监理排班统计</title>
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		   var stage=null;
+		   var stageValue=null;
+		   var engineer=null;
+		   var engineerCode=null;
+		   var aoData=[];
+		   $(document).ready(function(){
+		      $("#spancurrent_construction_stage").html(top.getProcesInfoSelectHtml("construction_stage","","120px"));
+			  $("#spanengineer_supervisor").html(top.getUserListByRole('engineer_manager','engineer_manager',false));
+			  getStageAndEngineer();
+		      initData();
+		   });
+		   
+		   function getStageAndEngineer(){
+		      var value="";
+			  var val="";
+			  var total=$("#construction_stage option").length;
+			  stageValue=new Array();
+			  stage=new Array();
+			  
+			  for(var i=0;i<total;i++){
+	            stage[i]=$("#construction_stage option").eq(i).text(); 
+                stageValue[i]=new Array(2);
+                stageValue[i][0]=$("#construction_stage option").eq(i).val();
+                stageValue[i][1]=0;				
+  			  }
+			  total=$("#engineer_manager option").length;
+			  engineer=new Array();
+			  engineerCode=new Array();
+			  for(var i=0;i<total;i++){
+			     if(i>0){
+					val+=",";
+				 }
+			       engineer[i]=$("#engineer_manager option").eq(i).text();
+				   engineerCode[i]=$("#engineer_manager option").eq(i).val();
+			       val+=$("#engineer_manager option").eq(i).val();
+			  }
+			  aoData.push({ "name":"projectOrder.engineer_manager","value":val});
+		   }
+		   function initData(){
+		     top.sendAjaxRequest("/actions/ProjectOrder.action?getEngineerScheduleCount",aoData,initDataCallBack);
+		   }
+		   
+		   function initDataCallBack(obj){
+		     if(obj.status==true){ 
+			    var list=obj.body.orderList;
+				var engineerImgList=obj.body.engineerImgList;
+				var ht="";
+				if(list){	
+					 for(var i=0;i<engineerImgList.length;i++){
+					     for(var j=0;j<list.length;j++){
+						     if(list[j].engineer_manager==engineerImgList[i].engineer){
+							    for(var z=0;z<stage.length;z++){
+							      if(list[j].current_construction_stage!="" && list[j].current_construction_stage==stageValue[z][0]){
+								     stageValue[z][1]+=1;
+								  }
+							    }
+							 }
+						 }
+						 ht+="<table width='47%' style='margin-left:25px;margin-top:10px;float:left;'><tr class='tr_data' style='background-color:#b9d8f3' height='30px'><td colspan='"+stage.length+2+"' align='left'><B>"+engineer[i]+"</B></td></tr>";
+						 for(var a=0;a<stage.length;a++){
+						    ht+="<tr class='tr_data'>";
+							if(a==0){
+						       ht+="<td rowspan='"+stage.length+"' width='10%'><img src='";
+							   if(!engineerImgList[i].pic_path){
+							      ht+=top.getUrlBase()+"/img/photos.png";
+							   }else{
+							      ht+=top.getUrlBase()+"/download?filePath="+engineerImgList[i].pic_path;
+							   }
+							   ht+="'  height='180px' /></td>";
+							}
+							ht+="<td width='10%'>"+stage[a]+"</td>";
+							ht+="<td width='10%'><span ";
+							if(stageValue[a][1]>0){
+							  ht+=" style='color:blue;font-weight:bold;'";
+							}
+							ht+=">"+stageValue[a][1]+"</span>&nbsp;&nbsp;套</td>";
+							ht+="</tr>";
+							stageValue[a][1]=0;
+						 }
+						 ht+="</table>";
+					 }
+					
+				}else{
+				    for(var i=0;i<engineerImgList.length;i++){
+						 ht+="<table width='47%' style='margin-left:25px;margin-top:10px;float:left;'><tr class='tr_data' style='background-color:#b9d8f3' height='30px'><td colspan='"+stage.length+2+"' align='left'><B>"+engineer[i]+"</B></td></tr>";
+						 for(var a=0;a<stage.length;a++){
+						    ht+="<tr class='tr_data'>";
+							if(a==0){
+						       ht+="<td rowspan='"+stage.length+"' width='15%'><img src='"
+							   if(!engineerImgList[i].pic_path){
+							      ht+=top.getUrlBase()+"/img/photos.png";
+							   }else{
+							      ht+=top.getUrlBase()+"/download?filePath="+engineerImgList[i].pic_path;
+							   }
+							   ht+="' height='180px'/></td>";
+							}
+							ht+="<td width='10%'>"+stage[a]+"</td>";
+							ht+="<td width='10%'>"+stageValue[a][1]+"套</td>";
+							ht+="</tr>";
+							stageValue[a][1]=0;
+						 }
+						 ht+="</table>";
+					 }
+				}
+				$("#engineerList").html(ht);
+			 }
+		   }
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+		    <span id="spancurrent_construction_stage" style="display:none;"></span>
+			<span id="spanengineer_supervisor" style="display:none;"></span>
+		    <center>
+			<div id="engineerList">
+			</div>
+		    </center>
+		</div>
+	</body>
+</html>

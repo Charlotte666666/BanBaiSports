@@ -1,0 +1,226 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"	src="../../js/Calendar3.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+  <script type="text/javascript" charset="utf-8">
+		var require_id='';
+		var info_id='';
+		var optType='';
+		var require_id='';
+		var file_path='';
+		
+		$(document).ready(function() {
+				///order_id=top.getUrlParam(document.URL,"order_id");
+				optType=top.getUrlParam(document.URL,"optType");
+				require_id=top.getUrlParam(document.URL,"require_id");
+				initPage();
+		});
+		
+		function initPage(){
+			if(optType=='insert'){
+				var now= new Date();
+				info_id=now.getTime();
+				$("#tr_plan_cycle").hide();
+				$("#tr_fact_cycle").hide();
+				$("#tr_status").hide();
+				$("#tdplaln_name").html(top.getCodeSelectHtml("DESIGN_PLAN_STATUS","plan_name","0"));
+			}if(optType=='update'||optType=='queryDelay'){
+				info_id=top.getUrlParam(document.URL,"id");
+				getInfoByid();
+			}
+		}
+		
+		function getInfoByid(){
+			var aoData=[];
+			aoData.push( { "name": "designPlanInfo.id", "value":info_id} );
+			var xurl="/actions/DesignPlan.action?getDesignPlanInfoList";
+			top.sendAjaxRequest(xurl,aoData,getInfoByidCallback);
+		}
+		
+		function getInfoByidCallback(obj){
+			if(obj.aaData){
+				if(obj.aaData.length>0){
+					var o=obj.aaData[0];
+				}
+				//var o=obj.body;
+				if(optType=='queryDelay'){
+					$("#main_div").hide();
+					return;
+				}
+				require_id=o.require_id;
+				$("#plan_begin_date").val(top.getTimeStr(o.plan_begin_date,true));
+				$("#plan_end_date").val(top.getTimeStr(o.plan_end_date,true));
+				$("#tdplaln_name").html(top.getCodeName("DESIGN_PLAN_STATUS",o.plan_name));
+				$("#plan_begin_date").attr("disabled",true);
+				$("#plan_end_date").attr("disabled",true);
+				
+				$("#fact_begin_date").val(top.getTimeStr(o.fact_begin_date,true));
+				$("#fact_end_date").val(top.getTimeStr(o.fact_end_date,true));
+				
+				if ( o.status == 2 ) {
+				  $("#fact_begin_date").attr("disabled",true);
+				  $("#fact_end_date").attr("disabled",true);
+				}
+				$("#tdstatus").html(top.getCodeName("CONSTRUCTIONSTATUS_STATUS",o.status));
+				$("#fact_cycle").val(o.fact_cycle);
+				$("#plan_cycle").val(o.plan_cycle);
+				$("#pro_long_demo").val(o.pro_long_demo);
+			}
+		}
+	  function saveDesignPlanInfo(){
+		var aoData=[];
+		var msg =null;
+		msg=checkForm();
+		if(msg!=''){
+			top.showInfoWinWarn(msg);
+			return;
+		}
+		var xurl="";
+		var status="0";
+		var is_delay=0;
+		
+		if ( $("#fact_begin_date").val() != '' ) {
+		   status="1";
+		   if ( $("#fact_end_date").val() != '' ) {
+		     status="2";
+		     if ( $("#plan_end_date").val() > $("#fact_end_date").val() ) {
+			   is_delay=1;
+			 }
+		   }
+		}
+		
+		if(optType=='insert'){
+			aoData.push( { "name": "designPlanInfo.id", "value":info_id} );
+			aoData.push( { "name": "designPlanInfo.require_id", "value":require_id} );
+			aoData.push( { "name": "designPlanInfo.is_delay", "value":is_delay} );
+			aoData.push( { "name": "designPlanInfo.plan_name", "value":$("#plan_name").val()} );
+			aoData.push( { "name": "designPlanInfo.plan_begin_date", "value":top.toTimestamp( $("#plan_begin_date").val() )} );
+			aoData.push( { "name": "designPlanInfo.plan_end_date", "value":top.toTimestamp( $("#plan_end_date").val() )} );
+			aoData.push( { "name": "designPlanInfo.fact_begin_date", "value":top.toTimestamp( $("#fact_begin_date").val() )} );
+			aoData.push( { "name": "designPlanInfo.fact_end_date", "value":top.toTimestamp( $("#fact_end_date").val() )} );
+			aoData.push( { "name": "designPlanInfo.apply_delay_date", "value":top.toTimestamp( $("#apply_delay_date").val() )} );
+			aoData.push( { "name": "designPlanInfo.plan_cycle", "value": $("#plan_cycle").val() } );
+			aoData.push( { "name": "designPlanInfo.fact_cycle", "value": $("#fact_cycle").val() } );
+			aoData.push( { "name": "designPlanInfo.pro_long_demo", "value": $("#pro_long_demo").val() } );
+			aoData.push( { "name": "designPlanInfo.status", "value": status } );
+			xurl="/actions/DesignPlan.action?insertDesignPlanInfo";
+		}else{
+			aoData.push( { "name": "designPlanInfo.id", "value":info_id} );
+			//aoData.push( { "name": "designPlanInfo.require_id", "value":require_id} );
+			//aoData.push( { "name": "designPlanInfo.plan_name", "value":$("#plan_name").val()} );
+			//aoData.push( { "name": "designPlanInfo.plan_begin_date", "value":top.toTimestamp( $("#plan_begin_date").val() )} );
+			//aoData.push( { "name": "designPlanInfo.plan_end_date", "value":top.toTimestamp( $("#plan_end_date").val() )} );
+			aoData.push( { "name": "designPlanInfo.fact_begin_date", "value":top.toTimestamp( $("#fact_begin_date").val() )} );
+			aoData.push( { "name": "designPlanInfo.fact_end_date", "value":top.toTimestamp( $("#fact_end_date").val() )} );
+			aoData.push( { "name": "designPlanInfo.apply_delay_date", "value":top.toTimestamp( $("#apply_delay_date").val() )} );
+			//aoData.push( { "name": "designPlanInfo.plan_cycle", "value": $("#plan_cycle").val() } );
+			aoData.push( { "name": "designPlanInfo.fact_cycle", "value": $("#fact_cycle").val() } );
+			aoData.push( { "name": "designPlanInfo.pro_long_demo", "value": $("#pro_long_demo").val() } );
+			aoData.push( { "name": "designPlanInfo.status", "value": status } );
+			xurl="/actions/DesignPlan.action?updateDesignPlanInfo";
+		}
+		top.sendAjaxRequest(xurl,aoData,saveDesignPlanCallback);
+   }
+   
+   function checkForm(){
+       var msg="";
+	   msg+=checkString($("#plan_begin_date").val(),true,20,"计划开始日期");
+	   msg+=checkString($("#plan_end_date").val(),true,20,"计划结束日期");
+	   if( msg == '' ){
+	      if ( $("#plan_begin_date").val() > $("#plan_end_date").val() )
+		  msg+="计划开始时间应小于计划结束时间<br/>";
+	   }
+	   if(optType=='insert'){
+	     msg+=checkString($("#plan_name").val(),true,20,"工程阶段");
+	   }
+	   return msg;
+   }
+   
+   //调用回调函数---添加项目施工进度
+	function saveDesignPlanCallback(obj){
+       try{
+		 var ht='';
+         if ( obj.status==true){
+             isSaveOK = true;
+             top.showInfoWinOK("操作成功");
+			 top.closeSelectDialog();
+		  }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+         }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+	    function doBeforeClose(){
+			var obj={
+				  "isSaveOK":isSaveOK
+				};
+			top.setTempValue(obj);
+	   }
+	   
+	   function countDistance(start,end,dis){
+	       if ( $("#"+start).val() == '' ) { $("#"+dis).val("0"); return ;}
+		   if ( $("#"+end).val() == '' ) { $("#"+dis).val("0"); return ;}
+		   var startNum=top.toTimestamp( $("#"+start).val() );
+		   var endNum=top.toTimestamp( $("#"+end).val() );
+		   var d=endNum-startNum;
+		   $("#"+dis).val( d/(24*60*60000) + 1 );
+	   }
+	</script>
+	</head>
+	<body style="margin-top:15px;">
+				<table id="main_div" border="1" cellpadding="3" cellspacing="1" width="90%" align="center" style="margin:0 auto;background-color: #b9d8f3;">
+					<tr class="tr_data" height="30px">
+						<td align="right">计划名称</td><td align="left" id="tdplaln_name"></td>
+					</tr>
+					<tr id="tr_status" class="tr_data" height="30px">
+						<td align="right">计划状态</td><td align="left" id="tdstatus"></td>
+					</tr>
+					<tr class="tr_data" height="30px">
+						<td align="right">计划开始日期</td>
+						<td align="left">
+							<input type="text" id="plan_begin_date" onchange="countDistance('plan_begin_date','plan_end_date','plan_cycle')" size="10" onclick="top.selectDate(this)" readonly="true"/>
+						</td>
+					</tr>
+					<tr class="tr_data" height="30px">
+						<td align="right">计划完工日期</td><td align="left"><input type="text" id="plan_end_date" onchange="countDistance('plan_begin_date','plan_end_date','plan_cycle')" size="10" onclick="top.selectDate(this)" readonly="true"/></td>
+					</tr>
+					<tr id="tr_plan_cycle" class="tr_data" height="30px">
+						<td align="right">计划工期</td><td align="left"><input disabled="true" type="text" id="plan_cycle" size="5"/>天</td>
+					</tr>
+					<tr class="tr_data" height="30px">
+						<td align="right">实际开始日期</td><td align="left"><input type="text" id="fact_begin_date" onchange="countDistance('fact_begin_date','fact_end_date','fact_cycle')" size="10" onclick="top.selectDate(this)" readonly="true"/></td>
+					</tr>
+					<tr class="tr_data" rowspan="3" height="30px">
+						<td align="right">实际完工日期</td><td align="left"><input type="text" id="fact_end_date" onchange="countDistance('fact_begin_date','fact_end_date','fact_cycle')" size="10" onclick="top.selectDate(this)" readonly="true"/></td>
+					</tr>
+					<tr id="tr_fact_cycle" class="tr_data" height="30px">
+						<td align="right">实际工期</td><td align="left"><input disabled="true" type="text" id="fact_cycle" size="5"/>天</td>
+					</tr>
+					<tr class="tr_data" rowspan="3" height="30px">
+						<td align="right">说明</td>
+						<td align="left">
+							<textarea style="width:90%;height:50px" id="pro_long_demo"></textarea>
+						</td>
+					</tr>
+					<tr class="tr_data" height="30px" >
+						<td colspan="2" align="center">
+							<div class="buttonDivTwo">
+								<a href="javascript:saveDesignPlanInfo()">保存</a>
+							</div>
+						</td>
+					</tr>
+				</table>
+	</body>
+</html>

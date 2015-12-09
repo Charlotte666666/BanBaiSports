@@ -1,0 +1,144 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+		<script type="text/javascript" charset="utf-8">
+		    var oTable=null;
+			
+			$(document).ready(function() {
+			    $("#s_instance_status").html(top.getCodeSelectHtml("FLOW_INSTANCE_STATUS","instance_status",true));
+				$("#s_flow_id").html(top.getAllFlowsSelect("flow_id","",true));
+			   var iaoColumns= [
+			        { "sTitle": "流程名称", "mDataProp": "flow_id", "sWidth": "15%", "sClass": "center",
+						"fnRender": function ( oObj ) {
+                            return top.getFlowNameById(oObj.aData.flow_id);
+                         },
+						"bUseRendered": false},
+			        { "sTitle": "当前任务名称", "mDataProp": "task_name", "sWidth": "15%", "sClass": "center","bUseRendered": false},
+					{ "sTitle": "创建时间", "mDataProp": "create_time", "sWidth": "20%", "sClass": "center",
+						"fnRender": function ( oObj ) {
+                            return top.getTimeStr(oObj.aData.create_time);
+                         },
+						"bUseRendered": false},
+				    { "sTitle": "创建人", "mDataProp": "create_name", "sWidth": "15%","sClass": "center", "bUseRendered": false },
+					{ "sTitle": "完成时间", "mDataProp": "done_time", "sWidth": "20%", "sClass": "center",
+						"fnRender": function ( oObj ) {
+                            return top.getTimeStr(oObj.aData.done_time);
+                         },
+						"bUseRendered": false},
+				    { "sTitle": "操作", "mDataProp": "instance_id", "sWidth": "15%","sClass": "center",
+                        "fnRender": function ( oObj ) {
+                            return '<a href=\'javascript:void(0)\' onclick="showFlowInstance(\''+oObj.aData.instance_id+'\')">查看</a>';
+                         },					
+					"bUseRendered": false }
+               ];
+			   
+			   var surl=top.getUrlBase()+"/actions/WorkOrder.action?getWOFlowInstanceList";
+			   oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"aaSorting": [[ 2, "desc" ]],
+					"sAjaxSource": surl,
+					"oLanguage": {
+					"sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+				"fnServerParams": function ( aoData ) {
+				    aoData=getParamDate(aoData);
+			    },
+			    "sDom": "frtlip",
+				"sPaginationType": "full_numbers",
+				"aoColumns": iaoColumns
+				} );
+			} );
+			
+			function doQuery(){
+				oTable.fnDraw();
+			}
+			
+            function showFlowInstance(id){
+				var xurl="pages/oa/showFlowInstance.html?instance_id="+id;
+				top.openDialog("流程实例信息",xurl,true,800,500,saveCallBack);
+			}
+			function saveCallBack(){
+				doQuery();
+			}
+
+		 function getParamDate(aoData){
+		    aoData.push( { "name": "time1", "value": $("#q_time1").val() } );
+			aoData.push( { "name": "time2", "value": $("#q_time2").val() } );
+			aoData.push( { "name": "woInstance.node_id", "value": $("#instance_status").val() } );
+			aoData.push( { "name": "woInstance.create_name", "value": $("#create_name").val() } );
+			aoData.push( { "name": "woInstance.flow_id", "value": $("#flow_id").val()} );
+			return aoData;
+		}
+		</script>
+	</head>
+	<body>
+		<div width="100%">
+		   <div style='border: 1px solid #89A1B9;'>
+			<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="110px">&nbsp;流程实例查询&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+			<table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+				  <td align="right" width="10%">流程名称:</td><td align="left" ><span id="s_flow_id"></span></td>
+				   <td align="right" width="10%">实例状态:</td><td align="left"><span id="s_instance_status"></span></td>
+			      <td align="right" width="10%">创建人:</td><td align="left" ><input type="text" id="create_name" onkeydown="if(event.keyCode==13) doQuery();" style="width:120px" /></td>
+				  <td align="right">创建时间:</td><td align="left" ><input type="text" id="q_time1" value="" onclick="new Calendar().show(this);" style="width:120px" size="15" />
+				     至 <input type="text" id="q_time2" value="" onclick="new Calendar().show(this);" style="width:120px" size="15" /></td>
+			     </tr>
+			 </table>
+			 </div>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+				<tr bgcolor="#C6DEFF">
+					<td align="left">
+						<table align="left" cellpadding="1px" cellspacing="0" border="0">
+							<tr>
+								<td>
+									&nbsp;查询结果列表&nbsp;
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+		</div>
+	</body>
+</html>

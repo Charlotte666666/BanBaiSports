@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery.dataTables.min.js"></script>
+
+<script type="text/javascript">
+var oTable = null;
+
+$(document).ready( function() {
+   loadList();
+});
+ 
+ function loadList(){
+    var iaoColumns= [
+               { "sTitle": "手机号", "mDataProp": "cell_phone", "sWidth": "10%", 
+			       "fnRender": function ( oObj ) {
+				     return '<a href=\'javascript:void(0)\' onclick="updateInfo(\''+oObj.aData.id+'\')" >'+oObj.aData.cell_phone+"</a>" ;
+                   },
+                   "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "姓名", "mDataProp": "real_name", "sWidth": "10%", "bUseRendered": false , "bSortable":false},
+               { "sTitle": "性别", "mDataProp": "sex", "sWidth": "10%",
+                   "fnRender": function ( oObj ) {
+				      return top.getCodeName("SEX",oObj.aData.sex);
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "出生年份", "mDataProp": "birth_year", "sWidth": "10%","bUseRendered": false},
+			   { "sTitle": "学历", "mDataProp": "education", "sWidth": "10%",
+                   "fnRender": function ( oObj ) {
+				      return top.getCodeName("EDUCATION",oObj.aData.education);
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "职业", "mDataProp": "job", "sWidth": "10%","bUseRendered": false},
+			   { "sTitle": "状态", "mDataProp": "status", "sWidth": "10%",
+                   "fnRender": function ( oObj ) {
+				      return top.getCodeName( "MEMBER_STATUS", oObj.aData.status );
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "操作", "mDataProp": "id", "sWidth": "10%","bSortable":false,
+                    "fnRender": function ( oObj ) {
+                       return '';
+                    },
+                    "bUseRendered": false
+               }
+        ];
+ 	
+		oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": top.getUrlBase()+"/actions/Member.action?getMemberList",
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     aoData.push( { "name": "member.cell_phone", "value": $("#cell_phone").val() } );
+						 aoData.push( { "name": "member.real_name", "value": $("#real_name").val() } );
+						 aoData.push( { "name": "member.birth_year", "value": -1 } );
+						 aoData.push( { "name": "member.sex", "value": -1 } );
+						 aoData.push( { "name": "member.status", "value": -1 } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumns
+	   } );
+ }
+ 
+ function doQuery(){
+	oTable.fnDraw();
+ }
+ 
+ function addInfo(){
+	var xurl="pages/pro06/memberInfo.html?opt=insert";
+	top.openDialog("创建用户",xurl,true,520,400,doQuery);
+ }
+ 
+ function updateInfo(uid){
+	var xurl="pages/pro06/memberInfo.html?opt=update&infoId="+uid;
+	top.openDialog("用户信息",xurl,true,520,400,doQuery);
+ }
+
+</script>
+</head>
+<body>
+            <div style='border: 1px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="110px">&nbsp;用户信息查询&nbsp;</td>
+				  <td align="left">&nbsp;<!--div id="createBtn" class="buttonDivTwo"><a href="javascript:addInfo()">创建</a></div--></td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+			      <td align="right" width="20%">手机号:</td>
+				  <td align="left" width="30%"><input type="text" id="cell_phone" size="15" /></td>
+                  <td align="right" width="20%">姓名:</td>
+				  <td align="left" width="30%"><input type="text" id="real_name" size="15" /></td>					  
+			     </tr>
+			 </table>
+			</div>
+<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+</body>
+</html> 

@@ -1,0 +1,336 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title></title>
+<link href="../../css/comm.css" rel="stylesheet" type="text/css" />
+<link href="../../css/commBg.css" rel="stylesheet" type="text/css" />
+<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+<script src="../../js/ui/jquery.ui.widget.js"></script>
+<script src="../../js/ui/jquery.ui.mouse.js"></script>
+<script src="../../js/ui/jquery.ui.selectable.js"></script>
+<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+<script type="text/javascript">
+var pros=[];
+var currentPro=1100;
+var currentProName="北京";
+var dataStr="";
+var typeInfo=null;
+var proStaArr=[];
+var sType="NWST";
+var area="NAT";
+var typeHour=0;
+var changeTimeType="hour";
+
+
+function selectType(code){
+   sType=code;
+   typeInfo=top.getTypeByCode( sType );
+   area=typeInfo.AREA;
+   $("#spanType"+code).css("background-color","yellow");
+   drawHourSpan();
+   var today=new Date();
+   if ( sType == 'AWSD' || sType == 'AWSS' || sType == 'CAWN_AR' ) {
+     today.setTime( today.getTime() - 24*60*60000 );
+   }
+   
+    var y = today.getFullYear();
+    var m = today.getMonth() + 1;
+    var d = today.getDate();
+	var h = today.getHours();
+	today.setMinutes(0);
+    today.setSeconds(0);
+	today.setMilliseconds(0);
+	$("#q_date").val( y+"-"+top.getTwoNumberStr(m)+"-"+top.getTwoNumberStr(d) );
+   
+   doQuery();
+}
+
+jQuery(document).ready(function() {
+	pros=top.getnationalList();
+	if ( pros != null ) {
+	  var pht='';
+	  for ( var i=0;i<pros.length;i++ ) {
+	    pht+='<li class="ui-state-default ';
+		if ( i == 0 ) pht+='ui-selected';
+		pht+='" onclick="selectProvince(\''+pros[i].province_code+'\',\''+parent.toSimpleProName(pros[i].province_name)+'\')">'+parent.toSimpleProName(pros[i].province_name)+'</li>';
+	  }
+	  $('#selectable').html( pht );
+	}
+	
+	$( "#selectable" ).selectable();
+
+    var today=new Date();
+    var y = today.getFullYear();
+    var m = today.getMonth() + 1;
+    var d = today.getDate();
+	var h = today.getHours();
+	if ( today.getMinutes() < 40 ) {
+	    h=h-1;
+	}
+	
+	today.setMinutes(0);
+    today.setSeconds(0);
+	today.setMilliseconds(0);
+	
+	$("#q_date").val( y+"-"+top.getTwoNumberStr(m)+"-"+top.getTwoNumberStr(d) );
+	
+	
+	doQuery();
+ });
+ 
+  function selectProvince(pcode,pname){
+    currentPro=pcode;
+	currentProName=pname;
+	doQuery();
+ }
+
+function toDate(ad){
+  var str=$("#q_date").val();
+  var d=new Date();
+  d.setFullYear( Number(str.substring(0,4)) );
+  d.setMonth( Number(str.substring(5,7)) - 1 );
+  d.setDate( Number(str.substring(8,10)) );
+  d.setHours( Number( $("#q_hour").val() ) );
+  d.setMinutes(0);
+  d.setSeconds(0);
+  d.setMilliseconds(0);
+  d.setTime( d.getTime() + Number(ad)*24*60*60000 );
+  
+  var y = d.getFullYear();
+  var m = d.getMonth() + 1;
+  var day = d.getDate();
+  var h = d.getHours();
+  $("#q_date").val( y+"-"+top.getTwoNumberStr(m)+"-"+top.getTwoNumberStr(day) );
+  doQuery();
+}
+
+function doQuery(){
+    if ( $("#q_date").val() == '' ) {
+	  return ;
+	}
+    try{
+	  $(".tdVal").html("");
+	  var dateStr=$("#q_date").val();
+	  var year= Number(dateStr.substring(0,4));
+	  var month= Number(dateStr.substring(5,7));
+	  var day= Number(dateStr.substring(8,10));
+	  var aoData=[];
+	  aoData.push( { "name": "detail.v04001", "value": year } );
+	  aoData.push( { "name": "detail.v04002", "value": month } );
+	  aoData.push( { "name": "detail.v04003", "value": day } );
+	  aoData.push( { "name": "detail.province_code", "value": currentPro } );
+	  top.sendAjaxRequest("/actions/CmaTable.action?getStatTranRealListByProvince",aoData,callbackGetTableList);
+	}catch(e){}
+ }
+ 
+ function callbackGetTableList(obj){
+    try{
+	  for ( var i=0;i<obj.aaData.length;i++ ) {
+		$("#"+obj.aaData[i].type+"_recv").html( "<b>"+to2fix(obj.aaData[i].sta_num)+"</b>" );
+	    $("#"+obj.aaData[i].type+"_"+obj.aaData[i].v04004).html( "<b>"+to2fix(obj.aaData[i].val)+"</b>" );
+		$("#"+obj.aaData[i].type+"_"+obj.aaData[i].v04004+"_recv").html( "<b>"+to2fix(obj.aaData[i].sta_num)+"</b>" );
+	  }
+	}catch(e){
+	}
+ }
+ 
+ function to1fix(num){
+	return Math.round(num*10)/10;
+ }
+ 
+ function to2fix(num){
+	return Math.round(num*100)/100;
+ }
+ 
+ function onDateSelectChanged(o){
+    try{
+	   doQuery();
+	}catch(e){}
+ }
+</script>
+<style>
+	#selectable .ui-selecting { background: #FECA40; }
+	#selectable .ui-selected { background: #F39814; color: white; }
+	#selectable { list-style-type: none; margin: 0; padding: 0; }
+	#selectable li { margin: 3px; padding: 2px; float: left; width: 70px; height: 20px; font-size: 13px; text-align: center; }
+	.tdVal{}
+</style>
+</head>
+
+<body style="width:99%">
+<center>
+<table cellpadding="0px" width="100%" cellspacing="0px" border="0">
+ <tr bgcolor="#E1F2EC">
+   <td width="100%" align="left" colspan="5" style="padding:10px">
+    <ol id="selectable">
+    </ol>
+   </td>
+ </tr>
+ <tr bgcolor="#E1F2EC">
+  <td width="30%" height="30px" align="left">
+   日期：<input type="text" id="q_date" value="" onchange="doQuery()" onclick="new Calendar().show(this);" style="width:80px" size="15" />
+   &nbsp;（注：以下所有时次都是北京时）
+  </td>
+ </tr>
+</table>
+</center>
+<table cellpadding="1px" width="100%" cellspacing="1px" border="1" >
+ <tr>
+   <td>&nbsp;</td><td align="center">应收站点</td>
+   <td align="center">0:00</td><td align="center">1:00</td><td align="center">2:00</td><td align="center">3:00</td>
+   <td align="center">4:00</td><td align="center">5:00</td><td align="center">6:00</td><td align="center">7:00</td>
+   <td align="center">8:00</td><td align="center">9:00</td><td align="center">10:00</td><td align="center">11:00</td>
+   <td align="center">12:00</td><td align="center">13:00</td><td align="center">14:00</td><td align="center">15:00</td>
+   <td align="center">16:00</td><td align="center">17:00</td><td align="center">18:00</td><td align="center">19:00</td>
+   <td align="center">20:00</td><td align="center">21:00</td><td align="center">22:00</td><td align="center">23:00</td>
+ </tr>
+ <tr bgcolor="#E1F2EC">
+   <td>国家站</td><td align="center" id="NWST_recv">&nbsp;</td>
+   <td align="center" id="NWST_16" class="tdVal">&nbsp;</td><td align="center" id="NWST_17" class="tdVal">&nbsp;</td><td align="center" id="NWST_18" class="tdVal">&nbsp;</td><td align="center" id="NWST_19" class="tdVal">&nbsp;</td>
+   <td align="center" id="NWST_20" class="tdVal">&nbsp;</td><td align="center" id="NWST_21" class="tdVal">&nbsp;</td><td align="center" id="NWST_22" class="tdVal">&nbsp;</td><td align="center" id="NWST_23" class="tdVal">&nbsp;</td>
+   <td align="center" id="NWST_0" class="tdVal">&nbsp;</td><td align="center" id="NWST_1" class="tdVal">&nbsp;</td><td align="center" id="NWST_2" class="tdVal">&nbsp;</td><td align="center" id="NWST_3" class="tdVal">&nbsp;</td>
+   <td align="center" id="NWST_4" class="tdVal">&nbsp;</td><td align="center" id="NWST_5" class="tdVal">&nbsp;</td><td align="center" id="NWST_6" class="tdVal">&nbsp;</td><td align="center" id="NWST_7" class="tdVal">&nbsp;</td>
+   <td align="center" id="NWST_8" class="tdVal">&nbsp;</td><td align="center" id="NWST_9" class="tdVal">&nbsp;</td><td align="center" id="NWST_10" class="tdVal">&nbsp;</td><td align="center" id="NWST_11" class="tdVal">&nbsp;</td>
+   <td align="center" id="NWST_12" class="tdVal">&nbsp;</td><td align="center" id="NWST_13" class="tdVal">&nbsp;</td><td align="center" id="NWST_14" class="tdVal">&nbsp;</td><td align="center" id="NWST_15" class="tdVal">&nbsp;</td>
+ </tr>
+ <tr>
+   <td>自动土壤水分</td><td align="center" id="AGME_ASM_recv">&nbsp;</td>
+   <td align="center" id="AGME_ASM_16" class="tdVal">&nbsp;</td><td align="center" id="AGME_ASM_17" class="tdVal">&nbsp;</td><td align="center" id="AGME_ASM_18" class="tdVal">&nbsp;</td><td align="center" id="AGME_ASM_19" class="tdVal">&nbsp;</td>
+   <td align="center" id="AGME_ASM_20" class="tdVal">&nbsp;</td><td align="center" id="AGME_ASM_21" class="tdVal">&nbsp;</td><td align="center" id="AGME_ASM_22" class="tdVal">&nbsp;</td><td align="center" id="AGME_ASM_23" class="tdVal">&nbsp;</td>
+   <td align="center" id="AGME_ASM_0" class="tdVal">&nbsp;</td><td align="center" id="AGME_ASM_1" class="tdVal">&nbsp;</td><td align="center" id="AGME_ASM_2" class="tdVal">&nbsp;</td><td align="center" id="AGME_ASM_3" class="tdVal">&nbsp;</td>
+   <td align="center" id="AGME_ASM_4" class="tdVal">&nbsp;</td><td align="center" id="AGME_ASM_5" class="tdVal">&nbsp;</td><td align="center" id="AGME_ASM_6" class="tdVal">&nbsp;</td><td align="center" id="AGME_ASM_7" class="tdVal">&nbsp;</td>
+   <td align="center" id="AGME_ASM_8" class="tdVal">&nbsp;</td><td align="center" id="AGME_ASM_9" class="tdVal">&nbsp;</td><td align="center" id="AGME_ASM_10" class="tdVal">&nbsp;</td><td align="center" id="AGME_ASM_11" class="tdVal">&nbsp;</td>
+   <td align="center" id="AGME_ASM_12" class="tdVal">&nbsp;</td><td align="center" id="AGME_ASM_13" class="tdVal">&nbsp;</td><td align="center" id="AGME_ASM_14" class="tdVal">&nbsp;</td><td align="center" id="AGME_ASM_15" class="tdVal">&nbsp;</td>
+ </tr>
+ <tr bgcolor="#E1F2EC">
+   <td>区域站</td><td align="center" id="RWST_recv">&nbsp;</td>
+   <td align="center" id="RWST_16" class="tdVal">&nbsp;</td><td align="center" id="RWST_17" class="tdVal">&nbsp;</td><td align="center" id="RWST_18" class="tdVal">&nbsp;</td><td align="center" id="RWST_19" class="tdVal">&nbsp;</td>
+   <td align="center" id="RWST_20" class="tdVal">&nbsp;</td><td align="center" id="RWST_21" class="tdVal">&nbsp;</td><td align="center" id="RWST_22" class="tdVal">&nbsp;</td><td align="center" id="RWST_23" class="tdVal">&nbsp;</td>
+   <td align="center" id="RWST_0" class="tdVal">&nbsp;</td><td align="center" id="RWST_1" class="tdVal">&nbsp;</td><td align="center" id="RWST_2" class="tdVal">&nbsp;</td><td align="center" id="RWST_3" class="tdVal">&nbsp;</td>
+   <td align="center" id="RWST_4" class="tdVal">&nbsp;</td><td align="center" id="RWST_5" class="tdVal">&nbsp;</td><td align="center" id="RWST_6" class="tdVal">&nbsp;</td><td align="center" id="RWST_7" class="tdVal">&nbsp;</td>
+   <td align="center" id="RWST_8" class="tdVal">&nbsp;</td><td align="center" id="RWST_9" class="tdVal">&nbsp;</td><td align="center" id="RWST_10" class="tdVal">&nbsp;</td><td align="center" id="RWST_11" class="tdVal">&nbsp;</td>
+   <td align="center" id="RWST_12" class="tdVal">&nbsp;</td><td align="center" id="RWST_13" class="tdVal">&nbsp;</td><td align="center" id="RWST_14" class="tdVal">&nbsp;</td><td align="center" id="RWST_15" class="tdVal">&nbsp;</td>
+ </tr>
+ <tr>
+   <td>GNSS/MET站</td><td align="center" id="UPAR_GPS_recv">&nbsp;</td>
+   <td align="center" id="UPAR_GPS_16" class="tdVal">&nbsp;</td><td align="center" id="UPAR_GPS_17" class="tdVal">&nbsp;</td><td align="center" id="UPAR_GPS_18" class="tdVal">&nbsp;</td><td align="center" id="UPAR_GPS_19" class="tdVal">&nbsp;</td>
+   <td align="center" id="UPAR_GPS_20" class="tdVal">&nbsp;</td><td align="center" id="UPAR_GPS_21" class="tdVal">&nbsp;</td><td align="center" id="UPAR_GPS_22" class="tdVal">&nbsp;</td><td align="center" id="UPAR_GPS_23" class="tdVal">&nbsp;</td>
+   <td align="center" id="UPAR_GPS_0" class="tdVal">&nbsp;</td><td align="center" id="UPAR_GPS_1" class="tdVal">&nbsp;</td><td align="center" id="UPAR_GPS_2" class="tdVal">&nbsp;</td><td align="center" id="UPAR_GPS_3" class="tdVal">&nbsp;</td>
+   <td align="center" id="UPAR_GPS_4" class="tdVal">&nbsp;</td><td align="center" id="UPAR_GPS_5" class="tdVal">&nbsp;</td><td align="center" id="UPAR_GPS_6" class="tdVal">&nbsp;</td><td align="center" id="UPAR_GPS_7" class="tdVal">&nbsp;</td>
+   <td align="center" id="UPAR_GPS_8" class="tdVal">&nbsp;</td><td align="center" id="UPAR_GPS_9" class="tdVal">&nbsp;</td><td align="center" id="UPAR_GPS_10" class="tdVal">&nbsp;</td><td align="center" id="UPAR_GPS_11" class="tdVal">&nbsp;</td>
+   <td align="center" id="UPAR_GPS_12" class="tdVal">&nbsp;</td><td align="center" id="UPAR_GPS_13" class="tdVal">&nbsp;</td><td align="center" id="UPAR_GPS_14" class="tdVal">&nbsp;</td><td align="center" id="UPAR_GPS_15" class="tdVal">&nbsp;</td>
+ </tr>
+ <tr bgcolor="#E1F2EC">
+   <td>新一代天气雷达</td><td align="center" id="RADA_RAW_recv">&nbsp;</td>
+   <td align="center" id="RADA_RAW_16" class="tdVal">&nbsp;</td><td align="center" id="RADA_RAW_17" class="tdVal">&nbsp;</td><td align="center" id="RADA_RAW_18" class="tdVal">&nbsp;</td><td align="center" id="RADA_RAW_19" class="tdVal">&nbsp;</td>
+   <td align="center" id="RADA_RAW_20" class="tdVal">&nbsp;</td><td align="center" id="RADA_RAW_21" class="tdVal">&nbsp;</td><td align="center" id="RADA_RAW_22" class="tdVal">&nbsp;</td><td align="center" id="RADA_RAW_23" class="tdVal">&nbsp;</td>
+   <td align="center" id="RADA_RAW_0" class="tdVal">&nbsp;</td><td align="center" id="RADA_RAW_1" class="tdVal">&nbsp;</td><td align="center" id="RADA_RAW_2" class="tdVal">&nbsp;</td><td align="center" id="RADA_RAW_3" class="tdVal">&nbsp;</td>
+   <td align="center" id="RADA_RAW_4" class="tdVal">&nbsp;</td><td align="center" id="RADA_RAW_5" class="tdVal">&nbsp;</td><td align="center" id="RADA_RAW_6" class="tdVal">&nbsp;</td><td align="center" id="RADA_RAW_7" class="tdVal">&nbsp;</td>
+   <td align="center" id="RADA_RAW_8" class="tdVal">&nbsp;</td><td align="center" id="RADA_RAW_9" class="tdVal">&nbsp;</td><td align="center" id="RADA_RAW_10" class="tdVal">&nbsp;</td><td align="center" id="RADA_RAW_11" class="tdVal">&nbsp;</td>
+   <td align="center" id="RADA_RAW_12" class="tdVal">&nbsp;</td><td align="center" id="RADA_RAW_13" class="tdVal">&nbsp;</td><td align="center" id="RADA_RAW_14" class="tdVal">&nbsp;</td><td align="center" id="RADA_RAW_15" class="tdVal">&nbsp;</td>
+ </tr>
+</table>
+<br/>
+<table cellpadding="1px" width="50%" cellspacing="1px" border="1" style="border-color:#E1F2EC;border-style:solid;">
+ <tr>
+   <td>&nbsp;</td><td>&nbsp;</td><td align="center">应收站点</td><td align="center">到报率</td>
+ </tr>
+ <tr bgcolor="#E1F2EC">
+   <td rowspan="2">高空探测A部</td>
+   <td align="center">08:00</td>
+   <td align="center" id="UPAR_US_0_recv" class="tdVal">&nbsp;</td>
+   <td align="center" id="UPAR_US_0" class="tdVal">&nbsp;</td>
+ </tr>
+ <tr bgcolor="#E1F2EC">
+   <td align="center">20:00</td>
+   <td align="center" id="UPAR_US_12_recv" class="tdVal">&nbsp;</td>
+   <td align="center" id="UPAR_US_12" class="tdVal">&nbsp;</td>
+ </tr>
+ 
+ <tr >
+   <td rowspan="2">高空探测B部</td>
+   <td align="center" style="border-color:#E1F2EC;border-style:none none solid solid;">08:00</td>
+   <td align="center" id="UPAR_UK_0_recv" style="border-color:#E1F2EC;border-style:none none solid none;" class="tdVal">&nbsp;</td>
+   <td align="center" id="UPAR_UK_0" style="border-color:#E1F2EC;border-style:none none solid none;" class="tdVal">&nbsp;</td>
+ </tr>
+ <tr >
+   <td align="center" style="border-color:#E1F2EC;border-style:none none none solid;">20:00</td>
+   <td align="center" id="UPAR_UK_12_recv" class="tdVal">&nbsp;</td>
+   <td align="center" id="UPAR_UK_12" class="tdVal">&nbsp;</td>
+ </tr>
+ 
+ <tr bgcolor="#E1F2EC">
+   <td rowspan="2">高空测风B部</td>
+   <td align="center">08:00</td>
+   <td align="center" id="UPAR_UG_0_recv" class="tdVal">&nbsp;</td>
+   <td align="center" id="UPAR_UG_0" class="tdVal">&nbsp;</td>
+ </tr>
+ <tr bgcolor="#E1F2EC">
+   <td align="center">20:00</td>
+   <td align="center" id="UPAR_UG_12_recv" class="tdVal">&nbsp;</td>
+   <td align="center" id="UPAR_UG_12" class="tdVal">&nbsp;</td>
+ </tr>
+ 
+ <tr >
+   <td rowspan="4">精细化城镇预报</td>
+   <td align="center" style="border-color:#E1F2EC;border-style:none none solid solid;">06:45</td>
+   <td align="center" id="SEVP_RFFC_22_recv" style="border-color:#E1F2EC;border-style:none none solid none;" class="tdVal">&nbsp;</td>
+   <td align="center" id="SEVP_RFFC_22" style="border-color:#E1F2EC;border-style:none none solid none;" class="tdVal">&nbsp;</td>
+ </tr>
+ <tr >
+   <td align="center" style="border-color:#E1F2EC;border-style:none none solid solid;">10:30</td>
+   <td align="center" id="SEVP_RFFC_2_recv" style="border-color:#E1F2EC;border-style:none none solid none;" class="tdVal">&nbsp;</td>
+   <td align="center" id="SEVP_RFFC_2" style="border-color:#E1F2EC;border-style:none none solid none;" class="tdVal">&nbsp;</td>
+ </tr>
+ <tr >
+   <td align="center" style="border-color:#E1F2EC;border-style:none none solid solid;">15:30</td>
+   <td align="center" id="SEVP_RFFC_7_recv" style="border-color:#E1F2EC;border-style:none none solid none;" class="tdVal">&nbsp;</td>
+   <td align="center" id="SEVP_RFFC_7" style="border-color:#E1F2EC;border-style:none none solid none;" class="tdVal">&nbsp;</td>
+ </tr>
+ <tr >
+   <td align="center" style="border-color:#E1F2EC;border-style:none none none solid;">16:30</td>
+   <td align="center" id="SEVP_RFFC_8_recv" class="tdVal">&nbsp;</td>
+   <td align="center" id="SEVP_RFFC_8" class="tdVal">&nbsp;</td>
+ </tr>
+ 
+ <tr bgcolor="#E1F2EC">
+   <td >酸雨资料</td>
+   <td align="center">08:00</td>
+   <td align="center" id="CAWN_AR_0_recv" class="tdVal">&nbsp;</td>
+   <td align="center" id="CAWN_AR_0" class="tdVal">&nbsp;</td>
+ </tr>
+ 
+ <tr >
+   <td rowspan="2">紫外线资料</td>
+   <td align="center" style="border-color:#E1F2EC;border-style:none none solid solid;">10:00</td>
+   <td align="center" id="RADI_URP_2_recv" style="border-color:#E1F2EC;border-style:none none solid none;" class="tdVal">&nbsp;</td>
+   <td align="center" id="RADI_URP_2" style="border-color:#E1F2EC;border-style:none none solid none;" class="tdVal">&nbsp;</td>
+ </tr>
+ <tr >
+   <td align="center" style="border-color:#E1F2EC;border-style:none none none solid;">16:00</td>
+   <td align="center" id="RADI_URP_8_recv" class="tdVal">&nbsp;</td>
+   <td align="center" id="RADI_URP_8" class="tdVal">&nbsp;</td>
+ </tr>
+ 
+ <tr bgcolor="#E1F2EC">
+   <td >国家站日数据</td>
+   <td align="center">20:00</td>
+   <td align="center" id="AWSD_0_recv" class="tdVal">&nbsp;</td>
+   <td align="center" id="AWSD_0" class="tdVal">&nbsp;</td>
+ </tr>
+ 
+  <tr >
+   <td >国家站日照日数据</td>
+   <td align="center">20:00</td>
+   <td align="center" id="AWSS_0_recv" class="tdVal">&nbsp;</td>
+   <td align="center" id="AWSS_0" class="tdVal">&nbsp;</td>
+ </tr>
+ 
+</table>
+
+</body>
+</html>

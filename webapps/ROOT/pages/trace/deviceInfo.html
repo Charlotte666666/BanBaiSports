@@ -1,0 +1,112 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var infoId=0;
+   
+   $(document).ready(function() {
+     initData();
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   function doSubmit(){
+     var aoData=[];
+	 var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+     aoData.push( { "name": "device.device_id", "value": $("#q_device_id").val() } );
+     aoData.push( { "name": "device.status", "value":$("#q_device_status").val() } );
+    // aoData.push( { "name": "cust.cust_password", "value": $("#q_cust_password").val() } );
+     //aoData.push( { "name": "cust.tel", "value": $("#q_cust_tel").val() } );
+	// aoData.push( { "name": "cust.status", "value": $("#q_cust_status").val() } );
+	 if(optType=='insert'){
+	 top.sendAjaxRequest("/actions/Device.action?insertDeviceInfo",aoData,optCallback);
+	 }
+	 else if(optType=='update'){
+	  top.sendAjaxRequest("/actions/Device.action?updateDeviceInfo",aoData,optCallback);
+	 }
+   }
+   
+   function checkForm(){
+     var msg = "";
+	 msg += checkString($("#q_device_id").val(),true,40,"设备编号");
+	 msg += checkString($("#q_device_status").val(),true,20,"状态");
+     return msg;
+   }
+   
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	     isSaveOK = true;
+	     top.showInfoWinOK("操作成功！");
+		 top.closeDialog();
+	    }else{
+	     isSaveOK = false;
+	     top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		 top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   function initData(){
+	   try{
+		   optType=top.getUrlParam(document.URL,"opt");
+  	       infoId=top.getUrlParam(document.URL,"infoId");
+		   if ( optType == 'insert' ) {
+			 $("#statusSpan").html(top.getCodeSelectHtml("DEVICE_STATUS","q_device_status",false));
+		   }
+		   else if( optType == 'update'){
+		   var aoData=[];
+		   aoData.push( { "name": "device.device_id", "value": infoId } );
+		   top.sendAjaxRequest("/actions/Device.action?getDeviceInfoById",aoData,getInfoCallback);
+		   }
+	   }catch(e){
+		   top.showInfoWinError(e.message);
+	   }
+   }
+   function getInfoCallback(obj){
+    $("#q_device_id").attr("disabled",true)
+     $("#q_device_id").val(obj.body.DeviceInfo.device_id);
+	 $("#statusSpan").html(top.getCodeSelectHtml("DEVICE_STATUS","q_device_status",false,obj.body.DeviceInfo.status));
+   }
+  </script> 
+</head>
+<body>
+<br>
+<table width="100%" border="0" padding="0" spacing="0">
+				<tr class="tr_data" height="40">
+					<td width="50%" align="right"><b>设备编号:</b></td>
+					<td width="50%" align="left"><input type="text" id="q_device_id" value=""  size="20" /></td>
+				</tr>
+				<tr class="tr_data" height="40">
+					<td width="50%" align="right"><b>状态:</b></td>
+					<td width="50%" align="left"><span id="statusSpan"></span></td>
+				</tr>
+</table>
+<br>
+<p align="center">
+   <table><tr>
+		    <td><span id="submitBtn" class="buttonTwo"><a href="javascript:doSubmit()">保存</a></span></td>
+		    <td><span id="closeBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+   </tr></table>
+</p>
+</body>
+</html>

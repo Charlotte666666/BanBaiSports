@@ -1,0 +1,98 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<link rel="stylesheet" type="text/css" href="common.css">
+<script src="../../js/jquery-1.7.2.min.js"></script>
+<script src="../../js/ui/jquery.ui.core.js"></script>
+<script src="../../js/ui/jquery.ui.widget.js"></script>
+<script src="../../js/ui/jquery.ui.dialog.js"></script>
+<script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+<script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+<script type="text/javascript">
+   var userCode="";
+   
+   $(document).ready(function() {
+	   $( "#tdholiday_type" ).html( top.getCodeSelectHtml("HOLIDAY_TYPE","holiday_type",false) );
+	   userCode=top.getUrlParam(document.URL,"userCode");
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    	 };
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   parent.closeDialog();
+   }
+   
+   function doSubmit(){
+	 var aoData=[];
+	 var checkMsg = checkForm();
+	 var temp="";
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+        aoData.push( { "name": "holiday.user_code", "value": userCode } );
+		aoData.push( { "name": "holiday.holiday_type", "value": $("#holiday_type").val() } );
+		aoData.push( { "name": "holiday.memo", "value": $("#memo").val() } );
+		aoData.push( { "name": "holiday.start_date", "value": top.toTimestamp($("#start_date").val()) } );
+		aoData.push( { "name": "holiday.end_date", "value": top.toTimestamp($("#end_date").val()) } );
+		var xurl="/actions/ProCorrection.action?insertProHoliday";
+	    top.sendAjaxRequest(xurl,aoData,optCallback);
+   }
+   
+   function checkForm(){
+     var temp = "";
+	 temp += checkString($("#start_date").val(),true,10,"请假开始日期");
+	 temp += checkString($("#end_date").val(),true,10,"请假结束日期");
+	 temp += checkString($("#memo").val(),true,10,"请假原因");
+	 return temp;
+  }
+  
+  function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      isSaveOK = true;
+	      top.showInfoWinOK("操作成功");
+		  parent.closeDialog();
+	    }else{
+	      isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+  </script> 
+</head>
+<body>
+<br/>
+		<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+				<tr class="tr_data">
+					<td>请假开始日期</td><td align="left"><input type="text" id="start_date" value="" onclick="new Calendar().show(this);" /></td>
+				</tr>
+				<tr class="tr_data">
+					<td>请假结束日期</td><td align="left"><input type="text" id="end_date" value="" onclick="new Calendar().show(this);" /></td>
+				</tr>
+				<tr class="tr_data">
+					<td>请假类型</td><td align="left" id="tdholiday_type"></td>
+				</tr>
+				<tr class="tr_data">
+					<td>请假原因</td>
+					<td align='left'><textarea id="memo" cols="30" rows="5"></textarea></td>
+				</tr>
+		</table>
+<br/>
+<p align="center">
+   <table><tr>
+		    <td><span id="okBtn" class="buttonTwo"><a href="javascript:doSubmit()">提交</a></span></td>
+		    <td><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+   </tr></table>
+</p>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css"/>
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+  <script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var house_id=0;
+   var user_code="";
+   
+   $(document).ready(function() {
+     initData();
+   } );
+   
+   function doBeforeClose(){
+     var obj={
+              "isSaveOK":isSaveOK
+            };
+     top.setTempValue(obj);
+   }
+   function doSubmit(){
+     var aoData=[];
+     var checkMsg = checkForm();
+     if ( checkMsg != '' ) {
+         top.showInfoWinWarn(checkMsg);
+         return ;
+     }
+     aoData.push( { "name": "follow.house_id", "value": house_id } );
+     aoData.push( { "name": "follow.follow_desc", "value": $("#follow_desc").val() } );
+     top.sendAjaxRequest("/actions/HouseMain.action?insertTblHouseFollow",aoData,optCallback);
+   }
+   
+   function checkForm(){
+     var msg = "";
+     var temp = "";
+      temp = $("#follow_desc").val();
+     if ( temp == '' ) {
+       msg += "跟进内容不能为空<br>";
+     } 
+     return msg;
+   }
+   
+   function optCallback(obj){
+       try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+            top.showInfoWinOK("操作成功");
+			parent.closeSubDialog();
+        }else{
+            isSaveOK = false;
+          top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+   
+   function initData(){
+           optType=top.getUrlParam(document.URL,"opt");
+           house_id=top.getUrlParam(document.URL,"house_id");
+    }
+  </script> 
+</head>
+<body>
+<input type="hidden" id="deptId" value="" />
+<br>
+<table width="100%" border="0" padding="0" spacing="0">
+    <tr>
+    <td align="right">跟进内容：</td>
+    <td align="left"><textarea id="follow_desc" cols ="40" rows = "10"></textarea></td>
+    </tr>
+</table>
+<br/>
+<p align="center">
+   <table><tr>
+            <td><span class="buttonTwo"><a href="javascript:doSubmit()">提交</a></span></td>
+   </tr></table>
+</p>
+</body>
+</html>

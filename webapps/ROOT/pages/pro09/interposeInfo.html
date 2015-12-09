@@ -1,0 +1,141 @@
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/fileuploader.css">
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css"/>
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css"
+			media="print, projection, screen">
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+		<script type="text/javascript" src="../../js/fileuploader.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+		<script type="text/javascript">
+		
+     var userCode="";
+	 var receiveTime=0;
+	 var is_SaveOK = true;
+	 var pre_cust_code='';
+   $(document).ready(function() {
+		initData();
+		//初始化客户编号前缀
+		initPreCustCode();
+	});
+	function initData(){
+		receiveTime=top.getUrlParam(document.URL,"receive_time");
+		userCode = top.getUrlParam(document.URL,"user_code");
+		$("#spanuserCode").html(top.getUserNameByCode(userCode));//显示设计师
+		$("#span_interpose_type").html(top.getCodeSelectHtml("INTERPOSE_TYPE","interpose_type",false));
+	}
+	
+	function initPreCustCode(){
+		var today=new Date();
+		var year=today.getFullYear();
+		var mouth=today.getMonth()+1;
+		var day=today.getDate();
+		if(mouth<10){
+			pre_cust_code=year+'0'+mouth;
+		}else{
+			pre_cust_code=year+mouth+'';
+		}
+		if(day<10){
+			pre_cust_code=pre_cust_code+'0'+day;
+		}else{
+			pre_cust_code=pre_cust_code+day+'';
+		}
+		$("#pre_cust_code").html(pre_cust_code);	
+	}
+	
+	function closeDialog(){
+		$( "#dialog" ).dialog( "close" );
+	}
+	
+	
+	// 保存人工干预信息
+    function saveInterposeInfo(){
+       if($("#current_num").val()==""){
+			 top.showInfoWinWarn("当前单号不能为空！");
+			 return ;
+		}else if($("#current_num").val().length!=3||isNaN($("#current_num").val())){
+			top.showInfoWinWarn("当前单号应该是长度为3的数字！");
+			return ;
+		}
+		var aoData=[];
+		aoData.push( { "name": "interpose.cust_code", "value": pre_cust_code+$("#current_num").val() } );
+	    aoData.push( { "name": "interpose.interpose_type", "value": $("#interpose_type").val() } );
+        aoData.push( { "name": "interpose.memo", "value": $("#interpose_memo").val() } );
+		aoData.push( { "name": "designer.current_num", "value":pre_cust_code+$("#current_num").val() } );
+		aoData.push( { "name": "designer.receive_order_time", "value":receiveTime } );
+		aoData.push( { "name": "designer.user_code", "value":userCode } );
+		var xurl="/actions/DesignPlan.action?insertInterpose";
+		top.sendAjaxRequest(xurl,aoData,interposeInfoCallback);
+		
+   }
+   // 操作回调函数--提交申请信息
+		function interposeInfoCallback(obj){
+			try{
+				if ( obj.status == true ){
+					isSaveOK = true;
+					top.showInfoWinOK("操作成功");
+					top.closeDialog();
+			}else{
+				isSaveOK = false;
+				top.showInfoWinError("操作失败 "+obj.msg);
+			}
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+      function doBeforeClose(){
+     var obj={
+              "isSaveOK":isSaveOK
+            };
+     top.setTempValue(obj);
+   }
+	</script>
+	</head>
+	<body><br/><center>
+				<table border="1" cellpadding="3" cellspacing="1" width="90%" align="center" style="background-color: #b9d8f3;">
+				<tr class="tr_data"  height="35px">
+				<td class="table_property_title" width="20%">
+							客户编号
+				</td>
+				<td align="left" style="width:280px;">
+				  <span id="pre_cust_code"></span><input type="text" id ="current_num" />
+				</td>
+				<td class="table_property_title" style="width:100px;">
+				 设计师
+				</td>
+				<td align="left">
+				   <span id="spanuserCode"></span>
+				</td>
+				</tr>
+				<tr class="tr_data"  height="35px">
+						<td class="table_property_title" width="20%">
+							人工干预原因
+						</td>
+						<td align="left" colspan="3"><span id="span_interpose_type"></span></td>
+				</tr>
+				<tr class="tr_data"   height="35px">
+						<td width="20%" class="table_property_title">
+						人工干预备注
+						</td>
+						<td align="left" colspan="3">
+							<textarea id="interpose_memo" rows="5" cols="80"></textarea>
+						</td>
+				</tr>
+			
+			<tr class="tr_data" height="35px">
+				<td colspan="4" align="center" >
+					<div id="saveBtn" class="buttonDivTwo">
+					<a href="javascript:void(0)" onclick="saveInterposeInfo()">提交</a>
+					</div>
+				</td>
+			</tr>
+		</table>
+	  </center>
+	</body>
+</html>

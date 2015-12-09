@@ -1,0 +1,533 @@
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet"
+			type="text/css">
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css"
+			media="print, projection, screen">
+		<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+		<script type="text/javascript">
+   var oTable=null;
+   var isSaveOK=false;
+   var optType="";
+   var info_id=0;
+   var requireId=0;
+   var sati_id=0;
+   var interInt=0;
+   var ischecked=false;
+   var status="0";
+   var consultInfo_id=0;
+
+   $(document).ready(function() {
+     initData();
+   });
+   
+   function infoSpan(){
+   
+   }
+	function doQuery(){
+		oTable.fnDraw();
+	}
+	//检验
+	function check(){
+	   var msg="";
+	   
+	   msg+=checkString($("#building_name").val(),true,64,"楼盘名称");
+	   msg+=checkString($("#short_name").val(),false,64,"楼盘简称");
+	   if($("#house_num").val()!='' && !IsNumber($("#house_num").val())){
+	     msg+="开发户数应为数字类型<br/>";
+	   }
+	   msg+=checkString($("#building_addr").val(),false,64,"楼盘地址");
+	   msg+=checkString($("#building_addr").val(),false,64,"楼盘地址");
+	   if($("#avg_price").val()!='' && !IsFloat($("#avg_price").val())){
+	     msg+="楼盘均价应为数字类型<br/>";
+	   }
+	   if($("#hand_total").val()!='' && !IsNumber($("#hand_total").val())){
+	     msg+="应交房合计应为数字类型<br/>";
+	   }
+	   msg+=checkString($("#develop_company").val(),false,32,"开发公司名称");
+	   msg+=checkString($("#sales_company").val(),false,32,"销售公司名称");
+	   msg+=checkString($("#building_company").val(),false,32,"建筑公司名称");
+	   msg+=checkString($("#property_company").val(),false,32,"物业公司名称");
+	   msg+=checkString($("#dc_linkman").val(),false,10,"开发公司联系人");
+	   msg+=checkString($("#sc_linkman").val(),false,10,"销售公司联系人");
+	   msg+=checkString($("#bc_linkman").val(),false,10,"建筑公司联系人");
+	   msg+=checkString($("#pc_linkman").val(),false,10,"物业公司联系人");
+	   if($("#dc_tel").val()!="" && !checkPhone($("#dc_tel").val())){
+	      msg+="开发公司联系人联系方式存在非法字符<br/>";
+	   }
+	   msg+=checkString($("#dc_tel").val(),false,20,"开发公司联系人联系方式");
+	   if($("#sc_tel").val()!="" && !checkPhone($("#sc_tel").val())){
+	      msg+="销售公司联系人联系方式存在非法字符<br/>";
+	   }
+	   msg+=checkString($("#sc_tel").val(),false,20,"销售公司联系人联系方式");
+	   if($("#bc_tel").val()!="" && !checkPhone($("#bc_tel").val())){
+	      msg+="建筑公司联系人联系方式存在非法字符<br/>";
+	   }
+	   msg+=checkString($("#bc_tel").val(),false,20,"建筑公司联系人联系方式");
+	   if($("#pc_tel").val()!="" && !checkPhone($("#pc_tel").val())){
+	      msg+="物业公司联系人联系方式存在非法字符<br/>";
+	   }
+	   msg+=checkString($("#pc_tel").val(),false,20,"物业公司联系人联系方式");
+	    if($("#dc_work_tel").val()!="" && !checkPhone($("#dc_work_tel").val())){
+	      msg+="开发公司联系人办公电话存在非法字符<br/>";
+	   }
+	   msg+=checkString($("#dc_work_tel").val(),false,20,"开发公司联系人办公电话");
+	   if($("#sc_work_tel").val()!="" && !checkPhone($("#sc_work_tel").val())){
+	      msg+="销售公司联系人办公电话存在非法字符<br/>";
+	   }
+	   msg+=checkString($("#sc_work_tel").val(),false,20,"销售公司联系人办公电话");
+	   if($("#bc_work_tel").val()!="" && !checkPhone($("#bc_work_tel").val())){
+	      msg+="建筑公司联系人办公电话存在非法字符<br/>";
+	   }
+	   msg+=checkString($("#bc_work_tel").val(),false,20,"建筑公司联系人办公电话");
+	   if($("#pc_work_tel").val()!="" && !checkPhone($("#pc_work_tel").val())){
+	      msg+="物业公司联系人办公电话存在非法字符<br/>";
+	   }
+	   msg+=checkString($("#pc_work_tel").val(),false,20,"物业公司联系人办公电话");
+	   msg+=checkString($("#fill_user").val(),false,10,"填报人");
+	   msg+=checkString($("#memo").val(),false,256,"备注");
+	   
+	   return msg;
+	} 
+	
+	// 根据按钮上的文字进行相应的操作
+    function doSubmit(){
+        if($("#saveBtn a").text()==("编辑")){//编辑,将信息显示为编辑状态,span标签隐藏
+	    $("#saveBtn a").text("保存");
+		
+	    $("span").attr("style","display:none");
+		$("#cancleBtn").show();
+		$("#saveBtn").show();
+	    $("input").show();
+	    $("textarea").show();
+	    $("#tdhand_house_status").html( top.getCodeSelectHtml("HAND_HOUSE_STATUS","hand_house_status",true,o.hand_house_status) );
+	    $("#tdbuilding_type").html( top.getCodeSelectHtml("BUILDING_TYPE","building_type",true,o.building_type) );
+	    $("#tdbuilding_area").html( top.getCodeSelectHtml("BUILDING_AREA","building_area",true,o.building_area) );
+	    $("#tdhouse_type").html( top.getCodeSelectHtml("HOUSE_TYPE","house_type",true,o.house_type) );
+		$("#tdclassics_type").html( top.getCodeSelectHtml("CLASSICS_TYPE","classics_type",true,o.classics_type) );
+		$("#tdfitment_degree").html( top.getCodeSelectHtml("FITMENT_DEGREE","fitment_degree",true,o.fitment_degree) );
+		   
+		$("#building_name").val(o.building_name);
+		$("#short_name").val(o.short_name);
+		$("#building_addr").val(o.building_addr);
+		$("#memo").val(o.memo);
+		$("#develop_company").val(o.develop_company);
+		$("#dc_linkman").val(o.dc_linkman);
+		$("#dc_tel").val(o.dc_tel);
+		$("#dc_work_tel").val(o.dc_work_tel);
+		$("#sales_company").val(o.sales_company);
+		$("#sc_linkman").val(o.sc_linkman);
+		$("#sc_tel").val(o.sc_tel);
+		$("#sc_work_tel").val(o.sc_work_tel);
+		$("#building_company").val(o.building_company);
+		$("#bc_linkman").val(o.bc_linkman);
+		$("#bc_tel").val(o.bc_tel);
+		$("#bc_work_tel").val(o.bc_work_tel);
+		$("#property_company").val(o.property_company);
+		$("#pc_linkman").val(o.pc_linkman);
+		$("#pc_tel").val(o.pc_tel);
+		$("#pc_work_tel").val(o.pc_work_tel);
+		$("#fill_user").val(o.fill_user);
+
+		$("#avg_price").val( o.avg_price);
+		$("#house_num").val( o.house_num);
+		$("#hand_total").val( o.hand_total);
+		$("#id").val( top.getTimeStr( o.id, true ) );
+		$("#hand_house_date").val( top.getTimeStr( o.hand_house_date, true ) );
+		}else{//保存
+		//检验
+		var checkMsg=check();
+		if(checkMsg!=''){
+		   top.showInfoWinWarn(checkMsg);
+		   return;
+		}
+		
+		var aoData=[];
+		aoData.push( { "name": "building.building_name", "value": $("#building_name").val() } );
+		aoData.push( { "name": "building.short_name", "value": $("#short_name").val() } );
+		aoData.push( { "name": "building.building_area", "value": $("#building_area").val() } );
+		aoData.push( { "name": "building.building_addr", "value": $("#building_addr").val() } );
+		aoData.push( { "name": "building.house_type", "value": $("#house_type").val() } );
+		aoData.push( { "name": "building.hand_house_status", "value": $("#hand_house_status").val() } );
+		aoData.push( { "name": "building.building_type", "value": $("#building_type").val() } );
+		aoData.push( { "name": "building.classics_type", "value": $("#classics_type").val() } );
+		aoData.push( { "name": "building.fitment_degree", "value": $("#fitment_degree").val() } );
+		aoData.push( { "name": "building.memo", "value": $("#memo").val() } );
+		aoData.push( { "name": "building.develop_company", "value": $("#develop_company").val() } );
+		aoData.push( { "name": "building.dc_linkman", "value": $("#dc_linkman").val() } );
+		aoData.push( { "name": "building.dc_tel", "value": $("#dc_tel").val() } );
+		aoData.push( { "name": "building.dc_work_tel", "value": $("#dc_work_tel").val() } );
+		aoData.push( { "name": "building.sales_company", "value": $("#sales_company").val() } );
+		aoData.push( { "name": "building.sc_linkman", "value": $("#sc_linkman").val() } );
+		aoData.push( { "name": "building.sc_tel", "value": $("#sc_tel").val() } );
+		aoData.push( { "name": "building.sc_work_tel", "value": $("#sc_work_tel").val() } );
+		aoData.push( { "name": "building.building_company", "value": $("#building_company").val() } );
+		aoData.push( { "name": "building.bc_linkman", "value": $("#bc_linkman").val() } );
+		aoData.push( { "name": "building.bc_tel", "value": $("#bc_tel").val() } );
+		aoData.push( { "name": "building.bc_work_tel", "value": $("#bc_work_tel").val() } );
+		aoData.push( { "name": "building.property_company", "value": $("#property_company").val() } );
+		aoData.push( { "name": "building.pc_linkman", "value": $("#pc_linkman").val() } );
+		aoData.push( { "name": "building.pc_tel", "value": $("#pc_tel").val() } );
+		aoData.push( { "name": "building.pc_work_tel", "value": $("#pc_work_tel").val() } );
+		aoData.push( { "name": "building.fill_user", "value": $("#fill_user").val() } );
+		aoData.push( { "name": "building.id", "value": info_id } );
+		
+		aoData.push( { "name": "building.hand_house_date", "value":top.toTimestamp( $("#hand_house_date").val() )} );
+		aoData.push( { "name": "building.avg_price", "value": top.g_GetNumValue($("#avg_price").val()) } );
+		aoData.push( { "name": "building.house_num", "value": top.g_GetNumValue($("#house_num").val()) } );
+		aoData.push( { "name": "building.hand_total", "value": top.g_GetNumValue($("#hand_total").val()) } );
+
+		xurl="/actions/Market.action?updateBuildingInfo";
+		if ( info_id == 0 ) {
+			xurl="/actions/Market.action?insertBuildingInfo";
+		}
+	   
+		top.sendAjaxRequest(xurl,aoData,optCallback);
+		}
+	
+   }
+
+   // 关闭当前页面前，页面框架自动调用的函数
+   function doBeforeClose(){
+     var obj={
+              "isSaveOK":isSaveOK
+            };
+     top.setTempValue(obj);
+   }
+
+    function optCallback(obj){
+       try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+			if(o!=null){//编辑后保存显示最新的信息
+			  
+			   var aoData=[];
+			   aoData.push( { "name": "building.id", "value": o.id } );
+			   top.sendAjaxRequest("/actions/Market.action?getBuildingInfo",aoData,infoCallback);
+			   $("a").text("编辑");
+			}else{//若是新增则在添加成功后给出提示信息
+			   top.showInfoWin("操作成功");
+			   top.getAllBuilding();
+			   top.closeDialog();
+			}
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+   
+    function initData(){
+		optType=top.getUrlParam(document.URL,"optType");
+	    if ( optType=='update' ){//若不是添加，则显示信息明细，并可对信息进行编辑
+			info_id=top.getUrlParam(document.URL,"id");
+			var aoData=[];
+			aoData.push( { "name": "building.id", "value": info_id } );
+			top.sendAjaxRequest("/actions/Market.action?getBuildingInfo",aoData,infoCallback);
+		} else {//添加
+		    $("span").attr("style","display:none;");
+			$("#saveBtn").show();
+			$("#saveBtn a").text("保存");
+			$("#tdhand_house_status").html( top.getCodeSelectHtml("HAND_HOUSE_STATUS","hand_house_status",true) );
+			$("#tdbuilding_type").html( top.getCodeSelectHtml("BUILDING_TYPE","building_type",true) );
+			$("#tdbuilding_area").html( top.getCodeSelectHtml("BUILDING_AREA","building_area",true) );
+			$("#tdhouse_type").html( top.getCodeSelectHtml("HOUSE_TYPE","house_type",true) );
+			$("#tdclassics_type").html( top.getCodeSelectHtml("CLASSICS_TYPE","classics_type",true) );
+			$("#tdfitment_degree").html( top.getCodeSelectHtml("FITMENT_DEGREE","fitment_degree",true) );
+		}
+	
+    }
+	var o;
+	function infoCallback(obj){
+	   try{
+        if ( obj.status == true ){
+		    o=obj.body;
+			
+			$("input").attr("style","display:none");
+	        $("textarea").attr("style","display:none");
+			$("select").hide();
+			$("span").show();
+			$("#saveBtn a").text("编辑");
+			$("#cancleBtn").hide();
+            $("#tdbuilding_area").append("<span id='t_a'></span>");
+			$("#tdhand_house_status").append("<span id='t_h_s'></span>");
+			$("#tdbuilding_type").append("<span id='tdb_t'></span>");
+			$("#tdhouse_type").append("<span id='t_t'></span>");
+			$("#tdclassics_type").append("<span id='tdc_t'></span>");
+			$("#tdfitment_degree").append("<span id='t_d'></span>");
+			$("#tdfitment_degree").append("<span id='t_d'></span>");	   
+			
+			
+		    $("#b_n").text(top.getCodeName("BUILDING_NAME",o.building_name));
+			$("#s_n").text(o.short_name);
+			$("#b_a").text(o.building_addr);
+			$("#me").text(o.memo);
+			$("#d_c").text(o.develop_company);
+			$("#d_l").text(o.dc_linkman);
+			$("#d_t").text(o.dc_tel);
+			$("#dc_w").text(o.dc_work_tel);
+			$("#s_c").text(o.sales_company);
+			$("#s_l").text(o.sc_linkman);
+			$("#s_t").text(o.sc_tel);
+			$("#s_w_t").text(o.sc_work_tel);
+			$("#b_co").text(o.building_company);
+			$("#bc_li").text(o.bc_linkman);
+			$("#bc_t").text(o.bc_tel);
+			$("#bc_w").text(o.bc_work_tel);
+			$("#p_c").text(o.property_company);
+			$("#p_li").text(o.pc_linkman);
+			$("#p_t").text(o.pc_tel);
+			$("#p_w").text(o.pc_work_tel);
+			$("#f_u").text(o.fill_user);
+			$("#a_p").text( o.avg_price);
+			$("#h_n").text( o.house_num);
+			$("#h_t").text( o.hand_total);
+			$("#id").text( top.getTimeStr( o.id, true ) );
+			$("#h_h_d").text( top.getTimeStr( o.hand_house_date, true ) );
+			$("#t_h_s").text(top.getCodeName("HAND_HOUSE_STATUS", o.hand_house_status));
+			$("#tdb_t").text(top.getCodeName("BUILDING_TYPE",o.building_type));
+			$("#t_a").text(top.getCodeName("BUILDING_AREA",o.building_area));
+			$("#t_t").text(top.getCodeName("HOUSE_TYPE",o.house_type));
+			$("#tdc_t").text(top.getCodeName("CLASSICS_TYPE",o.classics_type));
+			$("#t_d").text(top.getCodeName("FITMENT_DEGREE",o.fitment_degree));
+		}else{
+          top.showInfoWinError("操作失败");
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	
+	function abolish(){
+	   initData();
+	}
+
+	function initCheckedValue(boxes,values) {
+	    if ( !values ) return ;
+	    if ( values == null || values == '' ) return ;
+		for (var i = 0; i < boxes.length; i++) {
+			if ( values.indexOf(boxes[i].value+",") != -1 || values.indexOf(","+boxes[i].value) != -1 ) {
+				boxes[i].checked = true;
+			}
+        }
+	}
+	</script>
+		<style>
+body,td {
+	font-size: 13px;
+}
+
+.roomTd {
+	border: 1px;
+	border-style: dotted none none none;
+	border-color: blue;
+	color: #000000;
+	padding-left: 5px;
+}
+
+#KinSlideshow {
+	overflow: hidden;
+	width: 500px;
+	height: 450px;
+}
+
+.inputBottomLine {
+	border-top: hide;
+	border-left: hide;
+	border-center: hide;
+}
+
+#hall_count,#room_count,#bath_count {
+	width: 50px;
+}
+
+#function_require,#design_key {
+	width: 65%;
+}
+
+#project_addr {
+	width: 80%;
+}
+
+#struct_area,#usable_area,#planinvest_money,#major_material{
+	width: 60px;
+}
+</style>
+	</head>
+	<body>
+	<br/>
+				<B>楼盘信息：</B>
+				<table border="1" cellpadding="2px" cellspacing="1" width="99%" align="center" style="background-color: #b9d8f3;">
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center">
+							楼盘名称
+						</td>
+						<td align="left">
+						   <span id="b_n"></span><input  type="text" id="building_name">
+						</td>
+						<td width="15%" align="center">
+							楼盘简称
+						</td>
+						<td align="left">
+							<span id="s_n"></span><input type="text" id="short_name"/>
+						</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center">
+							楼盘区域
+						</td>
+						<td align="left" id="tdbuilding_area"><span id="t_a"></span></td>
+						<td width="15%" align="center">
+							开发户数
+						</td>
+						<td align="left">
+							<span id="h_n"></span><input type="text" id="house_num"/>
+						</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center">
+							楼盘地址
+						</td>
+						<td align="left" colspan="3">
+							<span id="b_a"></span><textarea id="building_addr" cols="90" rows="2"></textarea>  
+						</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center">
+							住宅类型
+						</td>
+						<td align="left" id="tdhouse_type"><span id="t_t"></span></td>
+						<td width="15%" align="center">
+							交房类型
+						</td>
+						<td align="left" id="tdhand_house_status"> <span id="t_h_s"></span></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center">
+							楼盘均价
+						</td>
+						<td align="left">
+							<span id="a_p"></span><input type="text" id="avg_price"/>
+						</td>
+						<td width="15%" align="center">
+							交房时间
+						</td>
+						<td align="left">
+							<span id="h_h_d"></span><input type="text" id="hand_house_date" onclick="new Calendar().show(this);" readonly="true"/>
+						</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center">
+							楼盘类型
+						</td>
+						<td align="left" id="tdbuilding_type"><span id="tdb_t"></span></td>
+						<td width="15%" align="center">
+							经典户型
+						</td>
+						<td align="left" id="tdclassics_type"><span id="tdc_t"></span></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center">
+							装修程度
+						</td>
+						<td align="left" id="tdfitment_degree"><span id="t_d"></span></td>
+						<td width="15%" align="center">
+							应交房合计
+						</td>
+						<td align="left" >
+							<span id="h_t"></span><input type="text" id="hand_total"/>
+						</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td colspan="4">
+							<table border="1" cellpadding="3" cellspacing="1" width="100%" align="center" style="background-color: #b9d8f3;">
+								<tr class="tr_data" height="25px">
+									<td width="15%">公司类型</td>
+									<td>公司名称</td>
+									<td>联系人</td>
+									<td>联系电话</td>
+									<td>办公电话</td>
+								</tr>
+								<tr class="tr_data" height="25px">
+									<td>开发公司</td>
+									<td><span id="d_c"></span><input type="text" id="develop_company"/></td>
+									<td><span id="d_l"></span><input type="text" id="dc_linkman"/></td>
+									<td><span id="d_t"></span><input type="text" id="dc_tel"/></td>
+									<td><span id="dc_w"></span><input type="text" id="dc_work_tel"/></td>
+								</tr>
+								<tr class="tr_data" height="25px">
+									<td>销售公司</td>
+									<td><span id="s_c"></span><input type="text" id="sales_company"/></td>
+									<td><span id="s_l"></span><input type="text" id="sc_linkman"/></td>
+									<td><span id="s_t"></span><input type="text" id="sc_tel"/></td>
+									<td><span id="s_w_t"></span><input type="text" id="sc_work_tel"/></td>
+								</tr>
+								<tr class="tr_data" height="25px">
+									<td>建筑公司</td>
+									<td><span id="b_co"></span><input type="text" id="building_company"/></td>
+									<td><span id="bc_li"></span><input type="text" id="bc_linkman"/></td>
+									<td><span id="bc_t"></span><input type="text" id="bc_tel"/></td>
+									<td><span id="bc_w"></span><input type="text" id="bc_work_tel"/></td>
+								</tr>
+								<tr class="tr_data" height="25px">
+									<td>物业公司</td>
+									<td><span id="p_c"></span><input type="text" id="property_company"/></td>
+									<td><span id="p_li"></span><input type="text" id="pc_linkman"/></td>
+									<td><span id="p_t"></span><input type="text" id="pc_tel"/></td>
+									<td><span id="p_w"></span><input type="text" id="pc_work_tel"/></td>
+								</tr>
+							</td>
+						</table>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center">
+							填报人
+						</td>
+						<td align="left" colspan="3">
+							<span id="f_u"></span><input type="text"  id="fill_user"/>
+						</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="15%" align="center">
+							备注
+						</td>
+						<td align="left" colspan="3">
+							<span id="me"></span><textarea id="memo" cols="90" rows="2"></textarea>  
+						</td>
+					</tr>
+				</table>
+				<p align="center">
+				<table>
+					<tr>
+						<td>
+							<span id="saveBtn" class="buttonTwo">
+								<a href="javascript:void(0)" onclick="doSubmit()">编辑</a>
+							</span>
+						</td>
+						<td>
+							<span id="cancleBtn" class="buttonTwo" style="display:none;">
+								<a href="javascript:void(0)" onclick="abolish()">取消</a>
+							</span>
+						</td>
+					</tr>
+				</table>
+                </p>
+	</body>
+</html>

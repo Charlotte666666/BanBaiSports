@@ -1,0 +1,223 @@
+<html>
+<head>
+    <meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>有奖竞猜</title>
+	<link rel="stylesheet" href="../css/themes/default/jquery.mobile-1.4.5.min.css">
+	<script src="../js/jquery-1.10.2.min.js"></script>
+	<script src="../js/jquery.mobile-1.4.5.min.js"></script>
+
+  <script type="text/javascript">
+   var schedule_id=1;
+   var member_id=0;
+   var teamList=[];
+   var guessInfoList=[];
+   var guessCountList=[];
+   var g_UrlBase="";
+   
+   $(document).ready(function() {
+       schedule_id=getUrlParam(document.URL,"schedule_id");
+	   member_id=getUrlParam(document.URL,"member_id");
+	   getList();
+   } );
+   
+   function getList(){
+       var aoData=[];
+       aoData.push( { "name": "guess.member_id", "value": member_id } );
+	   aoData.push( { "name": "guess.schedule_id", "value": schedule_id } );
+	   doSendAjaxRequest("/actions/Guess.action?getGuessChoicesBySchedule",aoData,getGuessChoicesByScheduleCallback);
+   }
+   
+   function getGuessChoicesByScheduleCallback(obj){
+       var ht='';
+	   try{
+	     guessCountList=obj.body.guessCountList;
+		 teamList=obj.body.teamList;
+		 guessInfoList=obj.body.guessInfoList;
+		 var cs=[];
+		 var cn=[];
+		 var countValue=[];
+		 for ( var i=0;i<guessInfoList.length;i++ ) {
+		    ht+='<table width="98%" cellspacing="0" cellpadding="2px" border="0" style="background-color: #ffffff;margin:5px auto;">';
+			ht+='<tr height="30px" bgcolor="#80dcfd">';
+			ht+='<td align="left" colspan="3"><font size="4" color="#000000">&nbsp;'+(i+1)+")&nbsp;"+guessInfoList[i].guess_title+'</font></td>';
+			ht+='</tr>';
+			
+			  countValue=guessInfoList[i].countValue.split(";");
+			  var max=0;
+			  for (var k=0;k<countValue.length;k++) {
+			    if ( !countValue[k] || countValue[k] == '' ) continue;
+			    if ( max < Number(countValue[k]) ) {
+				  max = Number(countValue[k]);
+				}
+			  }
+			  if ( max > 5000 ) {
+			  } else if ( max > 1000 ) {
+			    max=5000;
+			  } else if ( max > 500 ) {
+			    max=1000;
+			  } else if ( max > 100 ) {
+			    max=500;
+			  } else if ( max > 50 ) {
+			    max=100;
+			  } else if ( max > 10 ) {
+			    max=50;
+			  } else {
+			    max=10;
+			  }
+			  var sw=$(window).width();
+			  
+			if ( guessInfoList[i].guess_type == 'TEAM') {
+			  for ( var n=0;n<teamList.length;n++ ) {
+				  ht+='<tr height="30px">';
+				  ht+='<td align="center" width="25px" valign="middle" >';
+				  if ( guessInfoList[i].selectValue == teamList[n].id ) {
+				    ht+='<img height="20px" src="../img/fame-star.png"></img>';
+				  }
+				  ht+='</td>';
+				  ht+='<td align="left" width="150px" >'+teamList[n].team_name+'</td>';
+				  ht+='<td align="left" width="'+(sw-175)+'px" valign="middle" align="left">';
+				  ht+='<table cellspacing="0" height="6px" cellpadding="0" border="0">';
+				  if ( Number(countValue[n]) == 0 ) {
+				    ht+='<tr height="5px"><td height="5px" width="10px"></td><td>&nbsp;</td></tr>';
+				  } else {
+				    ht+='<tr height="5px"><td height="5px" width="'+(Number(countValue[n])/max)*(sw-175)+'px" style="background-color:#bad55e"></td><td>&nbsp;<font size="2">'+countValue[n]+'</font></td></tr>';
+				  }
+				  ht+='</table>';
+				  ht+='</td>';
+				  ht+='</tr>';
+			  }
+			} else {
+			  cs=guessInfoList[i].choices.split(";");
+			  cn=guessInfoList[i].choices_name.split(";");
+			  for ( var n=0;n<cs.length;n++ ) {
+			      if ( !cs[n] || cs[n] == '' ) continue;
+				  ht+='<tr height="30px">';
+				  ht+='<td align="center" width="25px" valign="middle" >';
+				  if ( guessInfoList[i].selectValue == cs[n] ) {
+				    ht+='<img height="20px" src="../img/fame-star.png"></img>';
+				  }
+				  ht+='</td>';
+				  ht+='<td align="left" width="150px" >'+cs[n]+': '+cn[n]+'</td>';
+				  ht+='<td align="left" width="'+(sw-175)+'px" valign="middle" align="left">';
+				  ht+='<table cellspacing="0" height="6px" cellpadding="0" border="0">';
+				  if ( Number(countValue[n]) == 0 ) {
+				    ht+='<tr height="5px"><td height="5px" width="10px"></td><td>&nbsp;</td></tr>';
+				  } else {
+				    ht+='<tr height="5px"><td height="5px" width="'+(Number(countValue[n])/max)*(sw-175)+'px" style="background-color:#bad55e"></td><td>&nbsp;<font size="2">'+countValue[n]+'</font></td></tr>';
+				  }
+				  ht+='</table>';
+				  ht+='</td>';
+				  ht+='</tr>';
+			  }
+			}
+			if ( guessInfoList[i].isTimeOut == 0 ) {
+				ht+='<tr height="30px">';
+				ht+='<td align="center" colspan="3"><table width="100%"><tr height="30px" >';
+				ht+='<td width="60%" bgcolor="#eaeaea">&nbsp;';
+				if ( guessInfoList[i].guess_type == 'TEAM') {
+				   ht+='<select id="select_'+guessInfoList[i].id+'">';
+				   ht+='<option value="选择球队">&nbsp;</option>';
+				   for ( var k=0;k<teamList.length;k++ ) {
+				     ht+='<option value="'+teamList[k].id+'">'+teamList[k].team_name+'</option>';
+				   }
+				   ht+='</select>';
+				} else {
+				  for ( var n=0;n<cs.length;n++ ) {
+					if ( !cs[n] || cs[n] == '' ) continue;
+					ht+='&nbsp;<input type="radio" name="r'+guessInfoList[i].id+'" value="'+cs[n]+'" /><font color="#000000" size="4">'+cs[n]+"</font>&nbsp;&nbsp;";
+				  }
+				}
+				ht+='</td>';
+				ht+='<td width="40%" bgcolor="#dc6263" align="center" onclick="doSubmit('+guessInfoList[i].id+',\''+guessInfoList[i].guess_type+'\')" ><img src="../img/thumb-finger-up.png" height="20px"></img>&nbsp;<span><font color="#ffffff" size="5">我要投票</font></span>';
+				ht+='</td></tr></table></td>';
+				ht+='</tr>';
+			}
+		    ht+='</table><br/>';
+		 }
+		 $("#content").html( ht );
+	   }catch(e){
+	   }
+   }
+
+   function doSubmit(gid,type){
+     var val="";
+	 if ( type == 'TEAM' ) {
+	   val=$("#select_"+gid).val();
+	 } else {
+	   val=getRadioValue( document.getElementsByName("r"+gid) );
+	 }
+	 if ( val == '' ) return ;
+     var aoData=[];
+     aoData.push( { "name": "guess.schedule_id", "value": schedule_id } );
+     aoData.push( { "name": "guess.member_id", "value": member_id } );
+	 aoData.push( { "name": "guess.guess_id", "value": gid } );
+     aoData.push( { "name": "guess.guess_value", "value": val } );
+	 $("#optResultSpan").html("");
+	 doSendAjaxRequest("/actions/Guess.action?insertGuess",aoData,optCallback);
+   }
+   
+   function getRadioValue(ds){
+	  if ( !ds ) return "";
+	  for ( var i=0;i<ds.length;i++ ) {
+			if ( ds[i].checked ) {
+				return ds[i].value;
+			}
+	  }
+	  return "";
+	}
+	
+   function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+		  getList();
+	    } else {
+		  $("#optResultSpan").html("提交失败");
+		}
+	   }catch(e){
+		  $("#optResultSpan").html("提交失败");
+	   }
+   }
+   
+  function doSendAjaxRequest(xurl,param,fnCallback){
+	    if ( xurl.indexOf('http://') == -1 ) xurl = g_UrlBase+xurl;
+		$.ajax( {
+			"url":  xurl,
+			"data": param,
+			"timeout" : 10000,
+			"contentType" : "application/x-www-form-urlencoded; charset=utf-8",
+			"success": function (json) {
+				try{ fnCallback( json );}catch(e){}
+			},
+			"dataType": "json",
+			"cache": false,
+			"type": "POST",
+			"error": function (xhr, error, thrown) {
+			}
+		} );
+ }
+ 
+ function getUrlParam(xurl,name){
+	    var para="";
+	    if(xurl.lastIndexOf("?")>0){
+	        para=xurl.substring(xurl.lastIndexOf("?")+1,xurl.length);
+			var arr=para.split("&");
+			para="";
+			for(var i=0;i<arr.length;i++){
+			   if(arr[i].split("=")[0]==name) return arr[i].split("=")[1];
+			}
+			return "";
+	   }else{
+	        return "";
+	   }
+	}
+  </script> 
+  
+</head>
+<body>
+ <center>
+  <p id="content" >
+  </p>
+ </center>
+</body>
+</html>

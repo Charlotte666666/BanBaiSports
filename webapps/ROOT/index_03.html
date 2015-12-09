@@ -1,0 +1,260 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>气象资料存储管理系统</title>
+<link href="css/login_css.css" rel="stylesheet" type="text/css">
+<link href="css/comm.css" rel="stylesheet" type="text/css" />
+<link href="css/map_css.css" rel="stylesheet" type="text/css" />
+<link href="css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css" >
+<link href="css/commMenu.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="js/SimpleMap.js"></script>
+<script type="text/javascript" src="js/helpyouworkeasy-core.js"></script>
+<script type="text/javascript" src="js/md5.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.16.custom.min.js"></script>
+
+<script type="text/javascript">
+var adjustInter = -1;
+var userConfig = null;
+var interId = 0;
+var hasRunServers="";
+
+jQuery(document).ready(function() {
+    g_systemVersion="v1.0.0";
+    initGlobalData(true);
+	adjustPosition();
+	$("#userCode").focus();
+	window.onresize = function(){ adjustPosition(); };
+ });
+
+ function adjustPosition(){
+	if ( adjustInter != -1 ) {
+	   clearInterval( adjustInter );
+	   adjustInter = -1;
+	}
+    var wh=$(window).height();
+	var ww=$(window).width();
+	
+	$('#versionInfo').css("top",wh - 17);
+	$('#versionInfoTxt').html( "<font color='white'>版本:&nbsp;"+g_systemVersion+"</font>&nbsp;&nbsp;<span style='cursor:pointer' onclick='javascript:showHelpWin(400,220,\"pages/pro01/help.html\")'>系统帮助</span>" );
+    $('#loginMain').height(wh - 51);
+	$('#main_footer').css("top",wh - 18);
+	$('#mainContent').height(wh - 62);
+	$('#m_workbench').height(wh - 62);
+	$('#loginResult').css({"left":(ww - 100)/2+"px"});
+ }
+
+ function loginSuccess(){
+    $("body").css({"background-image":"url(img/bg2_body1.png)"});
+	$('#loginTop').hide();
+	$('#loginClear').hide();
+	$('#loginMain').hide();
+	$('#ind_footer').hide();
+	$('#loginResult').hide();
+	$('#main').show();
+	$("#userPass").val("");
+	$('#loginResult').html("");
+	adjustInter = setInterval("adjustPosition()",500);
+	var url = "/actions/Metadata.action?getRunServerListByUser";
+	var aoData=[];
+    aoData.push( { "name": "userCode", "value": g_currentUser.userCode } );
+	top.sendAjaxRequest(url, aoData, getUserServerListCallback);
+	
+	$("#m_workbench").html( '<iframe id="workbenchFrame" src="pages/pro03/main.html" width="100%" style="position:absolute;left:0px;top:41px;background-color:#ffffff;" height="'+($("#m_workbench").height()+1)+'" frameborder="0"></iframe>' );
+ }
+
+ function getUserServerListCallback(obj){
+	try{
+		if ( obj.status == true ){
+			hasRunServers=obj.msg;
+		}else{
+		}
+	}catch(e){
+	}
+}
+ 
+ function loginFail(){
+    $("body").css({"background-image":"url(img/bg1_home2.jpg)"});
+	$('#loginTop').show();
+	$('#loginClear').show();
+	$('#loginMain').show();
+	$('#ind_footer').show();
+	$('#loginResult').show();
+	$("#m_workbench").show();
+	$("#mainContent").hide();
+	$('#main').hide();
+ }
+ 
+ function toSysTab(xurl){
+   if ( xurl == 'workbench' ) {
+     $('#m_workbench').show();
+	 $('#mainContent').hide();
+	 return ;
+   }
+   $('#m_workbench').hide();
+   $("#mainContent").show();
+   $("#mainContent").html( '<iframe id="mainFrame" src="'+xurl+'" width="100%" height="'+($("#mainContent").height()+2)+'" style="position:absolute;left:0px;top:40px;background-color:#ffffff" frameborder="0"></iframe>' );
+ }
+ 
+ function doLogin(){
+   	   var userCode = $("#userCode").val();
+   	   var pass = $("#userPass").val();
+   	   if ( userCode == '' || pass == '' ) {
+   	 	 showInfoWin("请输入登录账号和密码");
+   	 	 return ;
+   	   }
+	   $('#loginResult').html("");
+	   var aoData=[];
+       aoData.push( { "name": "user.userCode", "value": userCode } );
+       aoData.push( { "name": "user.password", "value": hex_md5(pass) } );
+	   sendAjaxRequest("/actions/User.action?signon",aoData,loginCallback);
+ }
+ function loginCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	    	setCurrentUser(obj.body,obj.msg);
+			loginSuccess();
+	    }else{
+		  $('#loginResult').html("登录失败:"+obj.msg);
+	    }
+	   }catch(e){
+		  $('#loginResult').html("登录异常:"+e.message);
+	   }
+ }
+ 
+ function register(){
+    var xurl="pages/organization/userInfo.html?opt=register";
+	top.openDialog("用户注册",xurl,true,400,400,null);
+ }
+
+ // 初始化项目个性化全局缓存数据
+function proInitGlobalData(){
+	g_dictionary.put("EDIT_DIC_TYPEMETA_OPT_SERVER", new Code("META_OPT_SERVER","EDIT_DIC_TYPE","策略执行的服务器","1"));
+	g_dictionary.put("EDIT_DIC_TYPEUSE_STATUS", new Code("USE_STATUS","EDIT_DIC_TYPE","策略启用状态","1"));
+	g_dictionary.put("EDIT_DIC_TYPE03_TASK_STATUS", new Code("03_TASK_STATUS","EDIT_DIC_TYPE","任务状态","1"));
+	g_dictionary.put("EDIT_DIC_TYPE03_TASK_TYPE", new Code("03_TASK_TYPE","EDIT_DIC_TYPE","归档任务名称","1"));
+	g_dictionary.put("EDIT_DIC_TYPESAVE_MEDIUM", new Code("SAVE_MEDIUM","EDIT_DIC_TYPE","存储介质","1"));
+}
+
+function openUserConfig(){
+  var xurl="pages/system/userConfig.html";
+  openDialog("个人设置",xurl,true,350,320,null);
+}
+
+function getRunServerCodeSelectHtml(name,initValue, onchangeFn, ww){
+		if ( !initValue ) initValue = "";
+		if ( !ww ) ww="120px";
+		var ht="<select id='"+name+"' style='width:"+ww+"'>";
+		if ( onchangeFn ) ht="<select id='"+name+"' onchange='"+onchangeFn+"'>";
+		if ( g_isPermit('meta_all_server') ) {
+		  ht+="<option value=''>全部</option>";
+		}
+		var keys=g_dictionary.keySet();
+		var code=null;
+		for(var i=0;i<keys.length;i++ ){
+			code = g_dictionary.get(keys[i]);
+			if ( "META_OPT_SERVER" == code.type && hasRunServers.indexOf(","+code.code) != -1 ) {
+				ht+="<option value='"+code.code+"' ";
+				if ( code.code == initValue ) ht+=" selected ";
+				ht+=">"+code.name+"</option>";
+			}
+		}
+		ht+="</select>";
+		return ht;
+}
+
+</script>
+</head>
+<body>
+	<div id="loginTop"></div>
+	<div id="loginClear" class="clear"></div>
+	<div id="loginMain">
+	  <div class="ind_logo"><img src="img/pro01/pic1_logo.png" width="467" height="107" ></div>
+	  <div class="ind_info" style="margin-top: 20px;background-image: url(img/bg1_info_none.png);">
+	    <ul style="padding-top: 20px;padding-left: 100px;"><li>
+	      <font size="5" color="#006096"><b>气象资料存储管理系统</b></font>
+		</li>
+		</ul>
+		<ul class="user_1" style="padding-top: 20px;">
+		  <li class="u1_1"><img src="img/pic1_user.png" width="29" height="35"></li>
+		  <li class="u1_2">账&nbsp;&nbsp;号：</li>
+		  <li class="u1_3">
+			<input type="text" name="textfield" id="userCode" style="width:160px;" onkeydown="if(event.keyCode==13) doLogin();" >
+		  </li>
+		</ul><div class="clear"></div>
+		<ul class="user_2">
+		  <li class="u2_1"><img src="img/pic_1user2.png" width="24" height="30"></li>
+		  <li class="u2_2">密&nbsp;&nbsp;码：</li>
+		  <li class="u2_3">
+			<input type="password" name="textfield" id="userPass" style="width:160px;" onkeydown="if(event.keyCode==13) doLogin();" >
+		  </li>
+		</ul>
+		<ul class="user_3"><li class="u3_1" onclick="doLogin()"><a href="javascript:void(0)">登&nbsp;录</a></li><li class="u3_2" onclick="register()"><a href="javascript:void(0)" >注&nbsp;册</a></li></ul>
+	  </div>
+	</div>
+	<div id="loginResult"></div>
+	<div id="ind_footer" style="float:center">
+	 <table width="100%"><tr><td width="100%" align="center"><font color="white">Copyright &copy; 中国气象局 国家气象信息中心</font>
+	 </td></tr></table>
+	</div>
+
+<div id="main" style="display:none;background-image: url(img/empty.gif);">
+  <div id="header">
+     <div style="position: absolute; left:10px;top:5px;"><font size="5" color="#ffffff"><b>气象资料存储管理系统</b></font></div>
+	    <ul class="nav">
+		  <li><a href="javascript:void(0)" onclick="javascript:toSysTab('workbench')"><span data-hover="首页">首页</span></a></li>
+		  <li name="menu" rightId="DataSaveSys" id="m1" class="hassubnav"><a href="javascript:void(0)"><span data-hover="资料存储">资料存储</span><em class="navicon"></em></a>
+			 <ul>
+				<li name="menu" rightId="DataSaveSys_task" id="m2"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/pro03/dataTaskManage.html')">任务管理</a></li>
+				<li name="menu" rightId="DataSaveSys_dataDoc" id="m3"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/pro03/dataInfoManage.html?opt=query')">资料管理</a></li>
+				<li name="menu" rightId="DataSaveSys_taskConfig" id="m4"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/pro03/taskConfigManage.html')">归档策略管理</a></li>
+			</ul>
+		  </li>
+		  <li name="menu" rightId="InOutSys" id="m5" class="hassubnav"><a href="javascript:void(0)"><span data-hover="导入导出">导入导出</span><em class="navicon"></em></a>
+			 <ul>
+			    <li name="menu" rightId="InOutSys_log" id="m6"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/metadata/metaLogList.html')">日志查询</a></li>
+			    <li name="menu" rightId="InOutSys_out" id="m7"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/metadata/metaOutConfigManage.html')">导出配置</a></li>
+				<li name="menu" rightId="InOutSys_in" id="m8"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/metadata/metaInConfigManage.html')">要素导入配置</a></li>
+				<li name="menu" rightId="InOutSys_fileIn" id="m9"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/metadata/metaFileInConfigManage.html')">文件导入配置</a></li>
+				<li name="menu" rightId="InOutSys_ftp" id="m10"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/metadata/metaConfigFTPManage.html')">FTP分发配置</a></li>
+			</ul>
+		  </li>
+		  <li name="menu" rightId="Server" id="m11" class="hassubnav"><a href="javascript:void(0)"><span data-hover="服务器">服务器</span><em class="navicon"></em></a>
+			 <ul>
+				<li name="menu" rightId="Server_db" id="m12"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/metadata/metaDBManage.html')">数据库</a></li>
+				<li name="menu" rightId="Server_ftp" id="m13"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/metadata/metaFTPManage.html')">FTP服务器</a></li>
+				<li name="menu" rightId="Server_right" id="m14"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/metadata/runServerManage.html')">服务器权限</a></li>
+			</ul>
+		  </li>
+		  <li name="menu" rightId="coreSys" id="m15" class="hassubnav"><a href="javascript:void(0)"><span data-hover="系统管理">系统管理</span><em class="navicon"></em></a>
+			 <ul>
+				<li name="menu" rightId="coreSys" id="m16"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/organization/userManage.html')">用户管理</a></li>
+				<li name="menu" rightId="deptManage" id="m17"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/organization/deptManage.html')">部门管理</a></li>
+				<li name="menu" rightId="rightManage" id="m18"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/organization/roleManage.html')">角色管理</a></li>
+				<li name="menu" rightId="sys_code" id="m19"><a href="javascript:void(0)" onclick="javascript:toSysTab('pages/system/dicManage.html')">字典管理</a></li>
+			 </ul>
+		  </li>
+		  <li class="hassubnav"><a href="javascript:void(0)"><span data-hover="我的账号">我的账号</span><em class="navicon"></em></a>
+			  <ul>
+				<li><a href="javascript:void(0)" onclick="javascript:g_changepass()">修改密码</a></li>
+				<li><a href="javascript:void(0)" onclick="javascript:isLogout()">退出系统</a></li>
+			 </ul>     
+		  </li>
+		</ul>
+  </div>
+
+  <div id="mainContent" style="padding: 0px 0px 0px 0px;"></div>
+  <div id="m_workbench" style="padding:0px;background-color:#C7EDCC;"></div>
+  <div id="main_footer" style="padding-top: 0px;"><font color="white">
+    <table width="100%"><tr><td id="currentUserInfo" align="left" width="15%"></td><td width="85%" align="center">Copyright &copy; 中国气象局 国家气象信息中心
+	 </td></tr></table></font>
+  </div>
+</div> <!-- end of main -->
+
+<div id="versionInfo" style="position: absolute;top:1000px;left:150px"><font color="white"><span id="versionInfoTxt" >v1.0.0</span></font></div>
+
+<script type="text/javascript" >writeCommonDiv();</script>
+
+</body>
+</html>

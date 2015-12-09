@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="../../js/yetii-min.js"></script>
+
+<script type="text/javascript">
+var oTable = null;
+
+$(document).ready( function() {
+	$( "#tdstadiums" ).html( top.getCodeSelectHtml("STADIUMS","stadiums",true,null,null,"全部") );
+    loadAreaList();
+});
+
+ function loadAreaList(){
+    var iaoColumns= [
+               { "sTitle": "场地编码", "mDataProp": "area_code", "sWidth": "15%", 
+			       "fnRender": function ( oObj ) {
+                     return '<input type="text" style="width:100%" id="area_code_'+oObj.aData.id+'" value="'+oObj.aData.area_code+'" />' ;
+                   },
+                   "bUseRendered": false , "bSortable":false},
+               { "sTitle": "所属场馆", "mDataProp": "stadiums", "sWidth": "20%","sClass": "center",
+                   "fnRender": function ( oObj ) {
+				     return top.getCodeSelectHtml("STADIUMS","stadiums_"+oObj.aData.id,true,oObj.aData.stadiums);
+                   },
+                   "bUseRendered": false , "bSortable":false
+               },
+               { "sTitle": "场地标题", "mDataProp": "area_name", "sWidth": "20%",
+                   "fnRender": function ( oObj ) {
+				      return '<input type="text" style="width:100%" id="area_name_'+oObj.aData.id+'" value="'+oObj.aData.area_name+'" />' ;
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "备注", "mDataProp": "memo", "sWidth": "35%",
+                   "fnRender": function ( oObj ) {
+                      return '<input type="text" style="width:100%" id="memo_'+oObj.aData.id+'" value="'+oObj.aData.memo+'" />' ;
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "操作", "mDataProp": "id", "sWidth": "10%","bSortable":false,
+                    "fnRender": function ( oObj ) {
+                       return '<span align="center" style="cursor:pointer;" onclick="saveInfo(\''+oObj.aData.id+'\')"><img src="../../img/save.bmp" />&nbsp;保存修改</span>';
+                    },
+                    "bUseRendered": false
+               }
+        ];
+ 	
+		oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": top.getUrlBase()+"/actions/BaseInfo.action?getCompetitionAreaList",
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     aoData.push( { "name": "info.stadiums", "value": $("#stadiums").val() } );
+						 aoData.push( { "name": "optType", "value": "addRow" } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumns
+	   } );
+ }
+ 
+
+ function saveInfo(code){
+    var aoData=[];
+	aoData.push( { "name": "info.id", "value": code } );
+	aoData.push( { "name": "info.area_code", "value": $("#area_code_"+code).val() } );
+    aoData.push( { "name": "info.memo", "value": $("#memo_"+code).val() } );
+    aoData.push( { "name": "info.area_name", "value": $("#area_name_"+code).val() } );
+	aoData.push( { "name": "info.stadiums", "value": $("#stadiums_"+code).val() } );
+	
+	var xurl="/actions/BaseInfo.action?updateCompetitionArea";
+	if ( code == 0 ) {
+	  xurl="/actions/BaseInfo.action?insertCompetitionArea";
+	}
+    top.sendAjaxRequest(xurl,aoData,optCallback);
+ }
+ 
+ function doQuery(){
+	oTable.fnDraw();
+ }
+ 
+ function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      top.showInfoWinOK("操作成功");
+		  doQuery();
+	    }else{
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+ }
+
+</script>
+</head>
+<body>
+            <div style='border: 1px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="180px">&nbsp;场地信息查询&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+			      <td align="right" width="40%">所属场馆:</td><td align="left" width="60%" id="tdstadiums"></td>			  		  
+			     </tr>
+			 </table>
+			</div>
+<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+</body>
+</html> 

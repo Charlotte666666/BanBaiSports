@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+    <link rel="stylesheet" type="text/css" href="../../css/dtree.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/context-menu.css"></link>
+    <link rel="stylesheet" type="text/css" href="../../css/comm.css"/>
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+    <link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+    <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js" ></script>
+    <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+    <script type="text/javascript" language="javascript" src="../../js/context-menu.js"></script>
+    <script type="text/javascript" src="../../js/tree.js"></script>
+    
+    <script type="text/javascript" >
+       var oTable=null;
+       var d=null;
+       var currentRightName="";
+       var currentRightId="";
+       var allRightIds=[];
+       var allRightNames=[];
+	   
+       $(document).ready(function(){
+    	   top.sendAjaxRequest("/actions/Role.action?getRightList",[],initRightTree);
+    	   $("#treeDetail").height( $(window).height() - 46 );
+       });
+
+       // 初始化权限树
+       function initRightTree(obj){
+           d=new Tree("d");
+           d.setImagePath("../../img");
+           d.useIcon(false);
+           d.useLine(true);
+           d.useControl(true);
+           d.setCheckParent(false);
+           d.setCheckBox(false,"right_id");
+           d.setRoot("0","功能权限");
+           allRightIds=[];
+           if( obj.aaData ){
+               for(var i=0;i<obj.aaData.length;i++){
+            	   d.add(obj.aaData[i].rightId, obj.aaData[i].parentId, obj.aaData[i].rightName,'','',true, obj.aaData[i].rightId);
+            	   allRightIds[i]=obj.aaData[i].rightId;
+				   allRightNames[i]=obj.aaData[i].rightName;
+               }
+           }
+           $("#rightTree").html( d.toString() );
+           d.openAll();
+       }
+       
+	   function doBeforeClose(){
+		   var obj={
+    	        "rightId":currentRightId,
+    	        "rightName":currentRightName
+    	    };
+    	    top.setTempValue(obj);
+       }
+	   
+	   function onSelectedNode(nid){
+           for ( var i=0;i<allRightIds.length;i++ ) {
+		     if (  nid == allRightIds[i] ) {
+			    currentRightId=nid;
+				currentRightName=allRightNames[i];
+			    break;
+			 }
+		   }
+           top.closeSelectDialog();
+       }
+    </script>
+</head>
+<body>
+        <div style="padding:3px;float:top;">
+            <img src="../../img/folderopen.gif" style="cursor:pointer" title="全部展开" onclick="d.openAll()" />
+            <img src="../../img/folder.gif" style="cursor:pointer" title="全部收缩" onclick="d.closeAll()" />
+        </div>
+        <div class="dtree" id="rightTree" style="padding:3px;"></div>
+</body>
+</html>

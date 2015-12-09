@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;application/x-www-form-urlencoded; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+	<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+	<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+	<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+	<script type="text/javascript" src="../../js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+	<script type="text/javascript" src="../../js/jquery.dataTables.min.js"></script>
+
+<script type="text/javascript">
+var oTable = null;
+var teamList=[];
+var scheduleList=[];
+var groupList=[];
+var currentScheduleId=0;
+var isCanEditScore=false;
+
+$(document).ready( function() {
+	$( "#tdphases" ).html( top.getCodeSelectHtml("SCHEDULE_PHASES","phases",true,null,null,"全部") );
+    $( "#tdstatus" ).html( top.getCodeSelectHtml("SCHEDULE_STATUS","status",true,null,null,"全部") );
+
+	// 加载赛程信息
+	top.sendAjaxRequest("/actions/CompetitionSchedule.action?getCompetitionScheduleList",[],getCompetitionScheduleListCallback);
+});
+
+ function getCompetitionScheduleListCallback(obj){
+     try{
+		  scheduleList=obj.aaData;
+		  $("#tdschedule").html( getScheduleSelectHtml('schedule_id') );
+		  if ( scheduleList.length > 0 ) {
+		     currentScheduleId=scheduleList[0].id;
+		  }
+	 }catch(e){
+	 }
+
+	 getGroupList();
+ }
+ 
+ function getSchedule(sid){
+    if ( !scheduleList ) return null;
+	for ( var i=0;i<scheduleList.length;i++ ) {
+	  if ( scheduleList[i].id == sid ) return scheduleList[i];
+	}
+	return null;
+ }
+ 
+ function getGroupList(){
+     var o=getSchedule( $("#schedule_id").val() );
+     if ( o == null ) return ;
+     // init round select html
+	 var ht='<select id="round" >';
+	 ht+='<option value="-1">全部</option>';
+	 for ( var i=1;i<=o.round_count;i++ ) {
+	    ht+='<option value="'+i+'">第'+i+'轮</option>';
+	 }
+	 ht+='</select>';
+	 $( "#tdround" ).html( ht );
+	 isCanEditScore=true;
+	 /**if ( o.status == '1' || o.status == '0' ) {
+	   isCanEditScore=true;
+	 } else {
+	   isCanEditScore=false;
+	 } */
+
+     // 加载分组信息
+	 var aoData=[];
+	 aoData.push( { "name": "info.schedule_id", "value": top.g_GetNumValue( $("#schedule_id").val(), -1 ) } );
+	 top.sendAjaxRequest("/actions/CompetitionGroup.action?getCompetitionGroupList",aoData,getGroupListCallback);
+ }
+ 
+ function getGroupListCallback(obj){
+     try{
+		  groupList=obj.aaData;
+		  $("#tdgroup").html( getGroupSelectHtml('group_id','-1') );
+	 }catch(e){
+	 }
+	 getTeamList();
+ }
+ 
+ function getTeamList(){
+	 var aoData=[];
+	 aoData.push( { "name": "info.schedule_id", "value": top.g_GetNumValue( $("#schedule_id").val(), -1 ) } );
+	 aoData.push( { "name": "info.leader_id", "value": -1 } );
+	 aoData.push( { "name": "iDisplayStart", "value": 0 } );
+	 aoData.push( { "name": "iDisplayLength", "value": 1000 } );
+	 top.sendAjaxRequest("/actions/Team.action?getTeamList",aoData,getTeamListCallback);
+ }
+ 
+  function deleteInfo(code){
+    currentDeleteCode=code;
+	top.showConfirm("您确定要删除选中的记录吗？", doDelete);
+ }
+			
+ function doDelete(){
+    var aoData=[];
+	aoData.push( { "name": "info.id", "value": currentDeleteCode } );
+	var xurl="/actions/CompetitionResult.action?deleteCompetitionResult";
+    top.sendAjaxRequest(xurl,aoData,optCallback);
+ }
+
+ function getTeamListCallback(obj){
+     try{
+		  teamList=obj.aaData;
+		  $("#tdteam").html( getTeamSelectHtml('team_id','-1') );
+	 }catch(e){
+	 }
+	 loadList();
+ }
+ 
+ function loadList(){
+    var iaoColumns= [
+			   { "sTitle": "比赛阶段", "mDataProp": "phases", "sWidth": "8%", 
+			       "fnRender": function ( oObj ) {
+				     return top.getCodeSelectHtml("SCHEDULE_PHASES","phases_"+oObj.aData.id,true,oObj.aData.phases);
+                   },
+                   "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "轮次", "mDataProp": "round", "sWidth": "4%", 
+			       "fnRender": function ( oObj ) {
+				     return '<input type="text" id="round_'+oObj.aData.id+'" value="'+oObj.aData.round+'" size="2" />';
+                   },
+			       "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "场地", "mDataProp": "area_code", "sWidth": "4%", 
+			       "fnRender": function ( oObj ) {
+				     return '<input type="text" id="area_code_'+oObj.aData.id+'" value="'+oObj.aData.area_code+'" size="2" />';
+                   },
+			       "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "时间", "mDataProp": "start_time", "sWidth": "8%", 
+			       "fnRender": function ( oObj ) {
+				     return '<input type="text" id="start_time_'+oObj.aData.id+'" value="'+oObj.aData.start_time+'" size="5" />';
+                   },
+			       "bUseRendered": false , "bSortable":false},
+			   { "sTitle": "分组", "mDataProp": "group_id", "sWidth": "8%", 
+			       "fnRender": function ( oObj ) {
+				     return getGroupSelectHtml("group_id_"+oObj.aData.id,oObj.aData.group_id);
+                   },
+                   "bUseRendered": false , "bSortable":false},
+               { "sTitle": "1队名称", "mDataProp": "team_1", "sWidth": "8%","sClass": "center",
+                   "fnRender": function ( oObj ) {
+				     return getTeamSelectHtml("team_1_"+oObj.aData.id,oObj.aData.team_1);
+                   },
+                   "bUseRendered": false , "bSortable":false
+               },
+			   { "sTitle": "1得分", "mDataProp": "score_1", "sWidth": "8%",
+			       "fnRender": function ( oObj ) {
+				     if ( isCanEditScore ) {
+				       return '<input type="text" id="score_1_'+oObj.aData.id+'" value="'+oObj.aData.score_1+'" size="5" />';
+					 } else {
+					   return oObj.aData.score_1;
+					 }
+                   },
+			       "sClass": "center","bUseRendered": false , "bSortable":false
+               },
+			   { "sTitle": "2得分", "mDataProp": "score_2", "sWidth": "8%","sClass": "center",
+			       "fnRender": function ( oObj ) {
+				     if ( isCanEditScore ) {
+				       return '<input type="text" id="score_2_'+oObj.aData.id+'" value="'+oObj.aData.score_2+'" size="5" />';
+					 } else {
+					   return oObj.aData.score_2;
+					 }
+                   },
+                   "bUseRendered": false , "bSortable":false
+               },
+			   { "sTitle": "2队名称", "mDataProp": "team_2", "sWidth": "8%","sClass": "center",
+                   "fnRender": function ( oObj ) {
+				     return getTeamSelectHtml("team_2_"+oObj.aData.id,oObj.aData.team_2);
+                   },
+                   "bUseRendered": false , "bSortable":false
+               },
+			   { "sTitle": "待定1", "mDataProp": "pre_name_1", "sWidth": "5%",
+                   "fnRender": function ( oObj ) {
+                      return '<input id="pre_name_1_'+oObj.aData.id+'" size="3" value="'+oObj.aData.pre_name_1+'" ></input>';
+                   },
+                   "bUseRendered": false
+               },
+			   { "sTitle": "待定2", "mDataProp": "pre_name_2", "sWidth": "5%",
+                   "fnRender": function ( oObj ) {
+                      return '<input id="pre_name_2_'+oObj.aData.id+'" size="3" value="'+oObj.aData.pre_name_2+'" ></input>';
+                   },
+                   "bUseRendered": false
+               },
+               { "sTitle": "比赛状态", "mDataProp": "status", "sWidth": "6%",
+                   "fnRender": function ( oObj ) {
+				      return top.getCodeSelectHtml("RESULT_STATUS","status_"+oObj.aData.id,true,oObj.aData.status);
+                   },
+                   "bUseRendered": false, "bSortable":false
+               },
+			   { "sTitle": "操作", "mDataProp": "id", "sWidth": "10%","bSortable":false,
+                    "fnRender": function ( oObj ) {
+					   if ( isCanEditScore ) {
+					     var ht= '<span align="center" style="cursor:pointer;" onclick="saveInfo(\''+oObj.aData.id+'\')"><img src="../../img/save.bmp" /></span>&nbsp;&nbsp;<a style="cursor:pointer;color:blue;" onclick="updateDetail(\''+oObj.aData.id+'\',\''+oObj.aData.team_1+'\',\''+oObj.aData.team_2+'\',\''+oObj.aData.schedule_id+'\')">单项</a>';
+					     ht+='&nbsp;<span align="center" style="cursor:pointer;" onclick="deleteInfo(\''+oObj.aData.id+'\')"><img src="../../img/delete.gif" />&nbsp;删除</span>';
+                         return ht;
+					   } else {
+                         return '<a style="cursor:pointer;color:blue;" onclick="updateDetail(\''+oObj.aData.id+'\',\''+oObj.aData.team_1+'\',\''+oObj.aData.team_2+'\',\''+oObj.aData.schedule_id+'\')">单项</a>';
+                       }
+					},
+                    "bUseRendered": false
+               }
+        ];
+ 	
+		oTable = $('#dataTable').dataTable( {
+					"bProcessing": false,
+					"bServerSide": true,
+					"bJQueryUI": true,
+					"bFilter": false,
+					"bDestroy": true,
+					"bLengthChange": true,
+					"iDisplayLength":20,
+					"sAjaxSource": top.getUrlBase()+"/actions/CompetitionResult.action?getCompetitionResultList",
+					"oLanguage": {
+					  "sUrl": top.getUrlBase()+"/lang_zh.txt"
+				  },
+				  "fnServerData": function ( sUrl, aoData, fnCallback ) {
+						$.ajax( {
+							"url":  sUrl,
+							"data": aoData,
+							"success": function (json) {
+								fnCallback( json );
+							},
+							"dataType": "json",
+							"cache": false,
+							"type": "POST",
+							"error": function (xhr, error, thrown) {
+								top.showInfoWinError("发生异常:"+error);
+							}
+						} );
+					},
+					"fnServerParams": function ( aoData ) {
+					     aoData.push( { "name": "info.team_1", "value": top.g_GetNumValue( $("#team_id").val(), -1 ) } );
+						 aoData.push( { "name": "info.status", "value": $("#status").val() } );
+						 aoData.push( { "name": "info.phases", "value": $("#phases").val() } );
+						 aoData.push( { "name": "info.schedule_id", "value": top.g_GetNumValue( $("#schedule_id").val(), -1 ) } );
+						 aoData.push( { "name": "info.win_team", "value": top.g_GetNumValue( $("#win_team").val(), -1 ) } );
+						 aoData.push( { "name": "info.group_id", "value": top.g_GetNumValue( $("#group_id").val(), -1 ) } );
+						 aoData.push( { "name": "info.round", "value": top.g_GetNumValue( $("#round").val(), -1 ) } );
+						 aoData.push( { "name": "optType", "value": "addRow" } );
+			        },
+			      "sDom": "frtlip",
+				  "sPaginationType": "full_numbers",
+				  "aoColumns": iaoColumns
+	   } );
+ }
+
+ function getScheduleSelectHtml(sid){
+    if ( !scheduleList ) return "";
+	var ht="<select id='"+sid+"' style='width:260px' onchange='getGroupList()' >";
+	for(var i=0;i<scheduleList.length;i++){
+	  ht+="<option value='"+scheduleList[i].id+"'";
+	  ht+=">"+scheduleList[i].title+"</option>";
+	}
+	ht+="</select>";
+	return ht;
+ }
+ 
+ function getGroupSelectHtml(sid, code){
+    if ( !groupList ) return "";
+	if ( !code ) code="";
+	var ht="<select id='"+sid+"' style='width:80px'>";
+	ht+="<option value='-1'></option>";
+	for(var i=0;i<groupList.length;i++){
+	  ht+="<option value='"+groupList[i].id+"'";
+	  if ( groupList[i].id == code ) ht+="selected ";
+	  ht+=">"+groupList[i].group_name+"</option>";
+	}
+	ht+="</select>";
+	return ht;
+ }
+ 
+ function getTeamSelectHtml(sid, code){
+    if ( !teamList ) return "";
+	if ( !code ) code="";
+	var ht="<select id='"+sid+"' style='width:120px'>";
+	ht+="<option value='-1'></option>";
+	for(var i=0;i<teamList.length;i++){
+	  ht+="<option value='"+teamList[i].id+"'";
+	  if ( teamList[i].id == code ) ht+="selected ";
+	  ht+=">"+teamList[i].team_name;+"</option>";
+	}
+	ht+="</select>";
+	return ht;
+ }
+ 
+ function getTeamName(tid){
+    for(var i=0;i<teamList.length;i++){
+	  if ( teamList[i].id == tid ) return teamList[i].team_name;
+	}
+	return tid;
+ }
+
+ function saveInfo(code){
+    var aoData=[];
+	aoData.push( { "name": "info.id", "value": code } );
+	aoData.push( { "name": "info.status", "value": $("#status_"+code).val() } );
+    aoData.push( { "name": "info.phases", "value": $("#phases_"+code).val() } );
+	aoData.push( { "name": "info.pre_name_1", "value": $("#pre_name_1_"+code).val() } );
+	aoData.push( { "name": "info.pre_name_2", "value": $("#pre_name_2_"+code).val() } );
+	aoData.push( { "name": "info.schedule_id", "value": top.g_GetNumValue( $("#schedule_id").val(), -1 ) } );
+	aoData.push( { "name": "info.team_1", "value": top.g_GetNumValue( $("#team_1_"+code).val(), -1 ) } );
+	aoData.push( { "name": "info.team_2", "value": top.g_GetNumValue( $("#team_2_"+code).val(), -1 ) } );
+	aoData.push( { "name": "info.round", "value": top.g_GetNumValue( $("#round_"+code).val(), -1 ) } );
+	aoData.push( { "name": "info.group_id", "value": top.g_GetNumValue( $("#group_id_"+code).val(), -1 ) } );
+	aoData.push( { "name": "info.area_code", "value": top.g_GetNumValue( $("#area_code_"+code).val(), -1 ) } );
+	aoData.push( { "name": "info.start_time", "value": $("#start_time_"+code).val() } );
+	if ( isCanEditScore ) {
+	  aoData.push( { "name": "info.score_2", "value": top.g_GetNumValue( $("#score_2_"+code).val(), 0 ) } );
+	  aoData.push( { "name": "info.score_1", "value": top.g_GetNumValue( $("#score_1_"+code).val(), 0 ) } );
+	  aoData.push( { "name": "optType", "value": "saveScore" } );
+	}
+	
+	var xurl="/actions/CompetitionResult.action?updateCompetitionResult";
+	if ( code == 0 ) {
+	  xurl="/actions/CompetitionResult.action?insertCompetitionResult";
+	}
+    top.sendAjaxRequest(xurl,aoData,optCallback);
+ }
+ 
+ function doQuery(){
+	oTable.fnDraw();
+ }
+ 
+ function optCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      top.showInfoWinOK("操作成功");
+		  doQuery();
+	    }else{
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+ }
+ 
+ function updateDetail(id,team_1,team_2,schedule_id){
+    top.openDialog("赛程明细","pages/badminton/competitionDetail.html?id="+id+"&team_1="+team_1+"&team_2="+team_2+"&team_1_name="+getTeamName(team_1)+"&team_2_name="+getTeamName(team_2)+"&schedule_id="+schedule_id+"&isCanEditScore="+(isCanEditScore?"1":"0"),true,1100,600,doQuery);
+ }
+
+</script>
+</head>
+<body>
+            <div style='border: 1px solid #89A1B9;'>
+			 <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+			 <tr bgcolor="#C6DEFF">
+			      <td align="left" width="180px">&nbsp;比赛结果&nbsp;</td>
+				  <td align="right">
+				     <div class="buttonDivTwo"><a href="javascript:doQuery()">查询</a></div>
+				  </td>
+				  <td width="2px">&nbsp;</td>
+			  </tr>
+			 </table>
+		     <table width="100%" align="center" cellpadding="1px" cellspacing="1px" border="0" >
+			    <tr class="tr_data">
+				  <td align="right" width="10%">赛程:</td><td align="left" width="15%" id="tdschedule"></td>
+				  <td align="right" width="10%">比赛阶段:</td><td align="left" width="15%" id="tdphases"></td>
+				  <td align="right" width="10%">比赛轮次:</td><td align="left" width="15%" id="tdround"></td>
+				</tr>
+				<tr class="tr_data">
+				  <td align="right" width="10%">小组:</td><td align="left" width="15%" id="tdgroup"></td>
+			      <td align="right" width="10%">参赛球队:</td><td align="left" width="15%" id="tdteam"></td>
+                  <td align="right" width="10%">比赛状态:</td><td align="left" width="15%" id="tdstatus"></td>				  
+			     </tr>
+			 </table>
+			</div>
+<table cellpadding="0" width="100%" cellspacing="0" border="0" class="display" id="dataTable"></table>
+</body>
+</html> 

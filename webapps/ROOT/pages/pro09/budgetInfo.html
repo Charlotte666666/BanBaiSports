@@ -1,0 +1,1225 @@
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/table_jui.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link href="../../css/redmond/jquery.ui.all.css" rel="stylesheet" type="text/css"/>
+		<link rel="stylesheet" href="../../css/ui.tabs.css" type="text/css"	media="print, projection, screen"/>
+<!--[if lte IE 7]>
+<link rel="stylesheet" href="../../css/ui.tabs-ie.css" type="text/css" media="projection, screen">
+<![endif]-->
+		<script src="../../js/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+		<script src="../../js/ui.tabs.js" type="text/javascript"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/jquery.dataTables.min.js"></script>
+		<script type="text/javascript" language="javascript"
+			src="../../js/checkForm.js"></script>
+		<script type="text/javascript" language="JavaScript1.2"
+			src="../../js/Calendar3.js"></script>
+	    <script type="text/javascript" src="../../js/SimpleMap.js"></script>
+		<style type="text/css">
+		  .td_css{
+		    border:1px solid #b9d8f3
+		   }
+		</style>
+		<script type="text/javascript">
+		
+    var isSaveOK=false;
+    var require_id=0;
+    var roomInfoIndex=0;
+	var curBudgetHeadIndex=0;
+	var is_report='';
+	var cost_code='';
+	var examine_remind_id='';
+	var cust_manager='';
+	var budget_time=0;
+	var headList=null;
+	var item_index=0;
+	var choose_index=0;
+	var model_ids=[];//模板id
+	var model_names=[];//模板名称
+	$(document).ready(function() {
+     $( "#tabs ul" ).tabs();
+	 require_id=top.getUrlParam(document.URL,"require_id");
+	 //$( "#td_budget_type").html(top.getCodeSelectHtml("BUDGET_TYPE","budget_type",true));
+	 $( "#td_manager_fee_type").html(top.getCodeSelectHtml("MANAGER_FEE_TYPE","manager_fee_type",true));
+	// $("#td_examine_status").html(top.getCodeSelectHtml("EXAMINE_STATUS","examine_status",true));
+	 //初始化模板下拉列表框
+	 getModelInfo();
+	 getBudgetInfo();
+   });
+   
+   
+   //获取预算模板
+   function getModelInfo(){
+     top.sendAjaxRequest("/actions/Projectquote.action?getBudgetModelList",[],getBudgetModelListCallback);
+   }
+   
+   function getBudgetModelListCallback(obj){
+      var content="<select id='budget_type' style='width:100px;'>";
+	  content+="<option value='0'>请选择</option>";
+      try{
+	      var o=obj.aaData;
+		  for(var i=0;i<o.length;i++){
+		    model_ids.push(o[i].model_id);
+			model_names.push(o[i].model_name);
+		    content+="<option value='"+o[i].model_id+"'>"+o[i].model_name+"</option>";
+		  }
+	  }catch(e){
+	  }
+	  content+="</select>";
+	  $("#td_budget_type").html(content);
+   }
+   
+    //根据模板id获取模板名称
+   function getModelNameById(id){
+       for(var i=0;i<model_ids.length;i++){
+	      if(model_ids[i]==id){
+		     return model_names[i];
+		  }
+	   }
+	   return "";
+   }
+	//初始化方法
+   function getBudgetInfo(){
+	var aoData=[];
+	aoData.push( { "name": "requrireInfo.id", "value": require_id } ); 
+	headList=[];
+	xurl="/actions/ProjectOrder.action?getBudgetInfoById";
+	top.sendAjaxRequest(xurl,aoData,getBudgetInfoCallback);
+	
+   }
+   function getBudgetInfoCallback(obj){
+	if (obj.status == true){
+		var budgetInfo=obj.body;
+		cust_code=budgetInfo.cust_code;
+		examine_remind_id=budgetInfo.examine_remind_id;
+		budget_time=budgetInfo.budget_time;
+		cust_manager=budgetInfo.cust_manager;
+		$( "#cust_code").html(budgetInfo.cust_code);
+		$( "#cust_name").html(budgetInfo.cust_name);
+		$( "#cust_mobile").html(budgetInfo.cust_mobile);
+		$( "#addr_all").html(budgetInfo.addr_all);
+  	    $( "#usable_area").html(budgetInfo.usable_area);
+		$( "#room_count").html(budgetInfo.room_count);
+		$( "#hall_count").html(budgetInfo.hall_count);
+		$( "#bath_count").html(budgetInfo.bath_count);
+		$( "#room_type").html(top.getCodeName("ROOM_TYPE",budgetInfo.room_type));
+		$( "#manager_fee_type").val(budgetInfo.manager_fee_type);
+		$( "#manager_fee").val(budgetInfo.manager_fee);
+		$( "#taxes_scale").val(budgetInfo.taxes_scale);
+		var ch=document.getElementById("is_report");
+			if(budgetInfo.is_report!=''){
+				ch.checked=true;
+			}else{
+				ch.checked=false;
+			}
+		$( "#prefer_info").val(budgetInfo.prefer_info);
+		$( "#prefer_money").val(budgetInfo.prefer_money);
+		$( "#budget_type").val(budgetInfo.budget_type);
+		$( "#budget_time").html(top.getTimeStr(budgetInfo.budget_time,true));
+		$( "#budget_person").html(budgetInfo.budget_person);
+		$( "#examine_person").html(budgetInfo.examine_person);
+		$( "#examine_suggest").val(budgetInfo.examine_suggest);
+		$( "#examine_time").html(top.getTimeStr(budgetInfo.examine_time,true));
+		$( "#examine_status").val(budgetInfo.is_report);
+		$( "#view_cust_code").html(budgetInfo.cust_code);
+		$( "#view_cust_name").html(budgetInfo.cust_name);
+		$( "#view_cust_mobile").html(budgetInfo.cust_mobile);
+		$( "#view_addr_all").html(budgetInfo.addr_all);
+  	    $( "#view_usable_area").html(budgetInfo.usable_area);
+		$( "#view_room_count").html(budgetInfo.room_count);
+		$( "#view_hall_count").html(budgetInfo.hall_count);
+		$( "#view_bath_count").html(budgetInfo.bath_count);
+		$( "#view_room_type").html(top.getCodeName("ROOM_TYPE",budgetInfo.room_type));
+		$( "#view_manager_fee_type").html(top.getCodeName("MANAGER_FEE_TYPE",budgetInfo.manager_fee_type));
+		$( "#view_manager_fee").html(budgetInfo.manager_fee);
+		$( "#view_taxes_scale").html(budgetInfo.taxes_scale);
+		if(budgetInfo.is_report==''){
+			$( "#view_is_report").html("否");
+			$( "#view_table_examine").hide();
+		}else if(budgetInfo.is_report==''||budgetInfo.is_report=='0'){//未审核：是否上报
+			if(budgetInfo.is_report==''){	
+				$( "#view_is_report").html("否");
+			}else{
+				$( "#view_is_report").html("是");
+			}
+			$( "#view_table_examine").hide();
+			if(budgetInfo.is_report=='0'&&top.g_isPermit("09_budget_check")){
+				$("#table_examine").show();
+			}
+			$( "#td_examine_status").html(top.getCodeName("EXAMINE_STATUS",budgetInfo.is_report));
+		}else if(budgetInfo.is_report=="2"){//审核不通过
+		   $("#editBt").show();
+		   $("#table_examine").show();
+		   $( "#td_examine_status").html(top.getCodeName("EXAMINE_STATUS",budgetInfo.is_report));
+		}else{//已审核通过
+			//隐藏编辑按钮
+			$("#editBt").hide();
+			$("#tr_submit").hide();
+			$("#tr_examine_user").show();
+			$("#table_examine").show();
+			$( "#td_examine_status").html(top.getCodeName("EXAMINE_STATUS",budgetInfo.is_report));
+			$( "#examine_suggest").parent().html(budgetInfo.examine_suggest);
+			
+		    $( "#view_table_examine").show();
+			$( "#view_is_report").html("是");
+			$( "#is_report").attr("disabled","true");
+			$( "#view_examine_status").html(top.getCodeName("EXAMINE_STATUS",budgetInfo.is_report));
+		}
+		is_report=budgetInfo.is_report;
+		$( "#view_prefer_info").html(budgetInfo.prefer_info);
+		$( "#view_prefer_money").html(budgetInfo.prefer_money);
+		$( "#view_budget_type").html(getModelNameById(budgetInfo.budget_type));
+		$( "#view_budget_time").html(top.getTimeStr(budgetInfo.budget_time,true));
+		$( "#view_budget_person").html(budgetInfo.budget_person);
+		$( "#view_examine_person").html(budgetInfo.examine_person);
+		$( "#view_examine_suggest").html(budgetInfo.examine_suggest);
+		$( "#view_examine_time").html(top.getTimeStr(budgetInfo.examine_time,true));
+		headList=budgetInfo.budgetHeadInfoList;
+		initBudgetHeadInfo(headList);
+		$("#td_room_names").html(genarateRoomsSelectHtml(headList,"room_names"));
+		$("#view_td_room_names").html(genarateRoomsSelectHtml(headList,"view_room_names"));
+		getBudgetItemList();
+	}
+   }
+	function genarateRoomsSelectHtml(headList,idstr){
+		var ht='';
+		ht+='<select id="'+idstr+'" onchange="getBudgetItemList()">';
+		if(headList!=null&&headList.length>0){
+			for(var i=0;i<headList.length;i++){
+				ht+='<option value="'+headList[i].head_id+'">'+headList[i].room_name;
+				ht+='</option>';
+			}
+		//初始显示预算详情信息
+		}
+		ht+='</select>';
+		return ht;
+	}
+	//根据需求id获取表头房间信息列表
+	function getBudgetHeadList(){
+	   var aoData=[];
+	   aoData.push( { "name": "budgetHeadInfo.require_id", "value": require_id } ); 
+	   top.sendAjaxRequest("/actions/ProjectOrder.action?getBudgetHeadInfoList",aoData,getBudgetHeadListCallback);
+	}
+	//根据需求id获取表头房间信息列表回调函数
+	function getBudgetHeadListCallback(obj){
+	  if(obj.aaData.length>0){
+	    headList=obj.aaData;
+	    initBudgetHeadInfo(headList);
+		$("#td_room_names").html(genarateRoomsSelectHtml(headList,"room_names"));
+		$("#view_td_room_names").html(genarateRoomsSelectHtml(headList,"view_room_names"));
+	  }else if(obj.aaData.length==0){
+	    headList=obj.aaData;
+	    var table=document.getElementById("view_budget_head_list");
+		var edit_table=document.getElementById("edit_budget_head_list");
+		if(table.rows.length>2){
+			for(var i=2;i<table.rows.length;i++){
+			    table.deleteRow(i);
+			    edit_table.deleteRow(i);
+			    table.rows.length=table.rows.length-1;
+				edit_table.rows.length=edit_table.rows.length-1;
+				i=i-1;
+			}
+		}
+		$("#td_room_names").html(genarateRoomsSelectHtml(headList,"room_names"));
+		$("#view_td_room_names").html(genarateRoomsSelectHtml(headList,"view_room_names"));
+		getBudgetItemList();
+	  }else{
+	    top.showInfoWinError("操作失败！");
+	  }
+	}
+	
+    function editBudgetItem(){
+		$("#edit_tab1").show();
+		$("#view_tab1").hide();
+		saveModelBt();
+	}
+    function doCancelBudgetInfo(){
+		$("#edit_tab0").hide();
+		$("#view_tab0").show();
+		editModelBt();
+	}
+	function editBudgetInfo(){
+		$("#edit_tab0").show();
+		$("#view_tab0").hide();
+		if($("#examine_status").val()!="1"){
+		  $("#tr_submit").show();
+		}
+		saveModelBt();
+	}
+	function doCancelBudgetItem(){
+		$("#edit_tab1").hide();
+		$("#view_tab1").show();
+		editModelBt();
+	}
+	
+	//选中要删除的施工项目
+	function deleteBudgetItem(){
+		var ids=top.getAllCheckedValue( document.getElementsByName('budgetCheackbox') );
+		if (ids.length > 0) {			
+			top.showConfirm("您确定要删除选中条目吗？", doDeleteBudgetItem);
+		}else{
+			top.showInfoWinWarn("请选择要删除的条目");
+		}
+	}
+	//执行删除施工项目的方法
+	function doDeleteBudgetItem(){
+		var ids=top.getAllCheckedValue( document.getElementsByName('budgetCheackbox') );
+		if ( ids == '' ) {
+				  top.showInfoWinWarn("请选择需要的条目！");
+				  return ;	
+		}
+		var list=ids.split(',');
+		var str='';
+		for(var i=0;i<list.length;i++){
+			if($("#budget_id"+list[i]).val()!=''){
+				if(str!=''){
+					str+=',';
+				}
+				str+=$("#budget_id"+list[i]).val();
+			}else{
+				$("#budget_id"+list[i]).parent().parent().remove();
+			}
+		}
+		if(str==''){
+			return;
+		}
+		var aoData=[];
+		aoData.push( { "name": "budgetItemIds", "value": str} );
+		top.sendAjaxRequest("/actions/ProjectOrder.action?deleteBudgetItems",aoData,optCallback);
+	}
+	// 新建、删除或修改操作回调函数
+    function optCallback(obj){
+       try{
+			if ( obj.status == true ){
+				isSaveOK = true;
+				top.showInfoWinOK("操作成功");
+				getBudgetItemList();
+			}else{
+				isSaveOK = false;
+				top.showInfoWinError("操作失败 "+obj.msg);
+			}
+		   }catch(e){
+			  top.showInfoWinError("处理异常:"+e.message);
+		   }
+	   }
+	//校验客户基本信息
+    function checkFormDoSubmit(){	
+	var msg="";
+		//if ( $("#manager_fee").val() != '' && !IsFloat( $("#manager_fee").val() )) msg +="[管理费]应为数字类型<br>";
+		if ( $("#manager_fee").val() != '' && !IsFloat( $("#manager_fee").val() )) msg +="[管理费]应为数字类型<br>";
+		if ( $("#taxes_scale").val() != '' && !IsFloat( $("#taxes_scale").val() )) msg +="[税金]应为数字类型<br>";
+		if($("#taxes_scale").val()>1||$("#taxes_scale").val()<0){
+			msg +="[税金]应为介于0~1之间的小数<br>";
+		}
+		if ( $("#prefer_money").val() != '' && !IsFloat( $("#prefer_money").val() )) msg +="[优惠金额]应为数字类型<br>";
+		return msg;
+   }
+	//判断是否上报
+	function isReport(){
+		var ch=document.getElementById("is_report");
+		if(ch.checked==true){
+			is_report="0";
+		}else{
+		    is_report="";
+		}  
+	}
+	// 保存工程报价的基础信息
+    function saveBudgetInfo(){
+		// 检查
+		var checkMsg = checkFormDoSubmit();
+	    if ( checkMsg != '' ) {
+	       top.showInfoWinWarn(checkMsg);
+           return ;
+	    }
+
+		var aoData=[];
+		isReport();
+		aoData.push( { "name": "requrireInfo.id", "value": require_id } );
+		aoData.push( { "name": "requrireInfo.manager_fee_type", "value": $("#manager_fee_type").val() } );
+		aoData.push( { "name": "requrireInfo.manager_fee", "value": $("#manager_fee").val() } );
+		aoData.push( { "name": "requrireInfo.taxes_scale", "value": $("#taxes_scale").val() } );
+		aoData.push( { "name": "requrireInfo.is_report", "value": is_report} );
+		aoData.push( { "name": "requrireInfo.prefer_info", "value": $("#prefer_info").val() } );
+		aoData.push( { "name": "requrireInfo.prefer_money", "value": $("#prefer_money").val() } );
+		aoData.push( { "name": "requrireInfo.budget_type", "value": $("#budget_type").val() } );
+		aoData.push( { "name": "requrireInfo.examine_remind_id", "value": examine_remind_id } );
+		aoData.push( { "name": "requrireInfo.budget_time", "value": budget_time } );
+		aoData.push( { "name": "requrireInfo.cust_manager", "value": cust_manager } );
+		aoData.push( { "name": "requrireInfo.cust_code", "value": cust_code } );
+	 var xurl="/actions/ProjectOrder.action?updateBudgetInfo";
+	 top.sendAjaxRequest(xurl,aoData,saveBudgetInfoCallBack);
+   }
+    function  saveBudgetInfoCallBack(obj){
+	try{
+		if ( obj.status == true ){
+            top.showInfoWinOK("操作成功");
+			doCancelBudgetInfo();
+			if(obj.body!=''){
+				if(obj.body.examine_remind_id){
+				   examine_remind_id=obj.body.examine_remind_id;
+				}
+				budget_time=obj.body.budget_time;
+				$( "#budget_time").html(top.getTimeStr(obj.body.budget_time,true));
+				$( "#budget_person").html(top.getUserNameByCode(obj.body.budget_person));
+				
+				$("#view_budget_time").html(top.getTimeStr(obj.body.budget_time,true));
+				$("#view_budget_person").html(top.getUserNameByCode(obj.body.budget_person));
+			}
+			$( "#view_manager_fee_type").html(top.getCodeName("MANAGER_FEE_TYPE",$("#manager_fee_type").val()));
+			$( "#view_manager_fee").html($("#manager_fee").val());
+			$( "#view_taxes_scale").html($("#taxes_scale").val());
+			if(is_report!=''){//如果是否上报 选中 编辑模式 是否上报多选框不可用
+				$( "#view_is_report").html("是");
+				$("#table_examine").show();
+			}else{
+				$( "#view_is_report").html("否");
+				$("table_examine").hide();
+			}
+			$( "#view_prefer_info").html($("#prefer_info").val());
+			$( "#view_prefer_money").html($("#prefer_money").val());
+			$( "#view_budget_type").html(getModelNameById($("#budget_type").val()));
+		}else{
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+    function examineBudgetInfo(status){
+		var aoData=[];
+		aoData.push( { "name": "requrireInfo.examine_suggest", "value":$("#examine_suggest").val() } );
+		aoData.push( { "name": "requrireInfo.is_report", "value":status } );
+		aoData.push( { "name": "requrireInfo.id", "value": require_id } );
+		aoData.push( { "name": "requrireInfo.examine_remind_id","value":examine_remind_id} );
+		var xurl="/actions/ProjectOrder.action?examineBudgetInfo";
+		top.sendAjaxRequest(xurl,aoData,examineBudgetInfoCallback);
+   }
+    function  examineBudgetInfoCallback(obj){
+	  try{
+		if ( obj.status == true ){
+            top.showInfoWinOK("操作成功");
+			doCancelBudgetInfo();
+			$("#tr_submit").hide();
+			$("#tr_examine_user").show();
+			getBudgetInfo();
+		}else{
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+   }
+	// 关闭当前页面前，页面框架自动调用的函数
+	function doBeforeClose(){
+     var obj={
+              "isSaveOK":isSaveOK
+            };
+	 
+     top.setTempValue(obj);
+   }
+    function initBudgetHeadInfo(budgetHeadList){
+		var view_ht="";
+		var ht="";
+		if(budgetHeadList!=null&&budgetHeadList.length>0){
+			for(var i=0;i<budgetHeadList.length;i++){
+				ht+="<tr id='tr_room_row"+roomInfoIndex+"' class='tr_data'>";//position,room_name,head_id,earth_area,wall_area,room_height,room_id,room_index
+				ht+="<td><input type='hidden' value='"+budgetHeadList[i].head_id+"' id='budget_head_info"+roomInfoIndex+"'></input><label id='lb_room_id"+roomInfoIndex+"'>"+budgetHeadList[i].room_id+"</label><input style='width:80px' type='text' id='room_id"+roomInfoIndex+"' value='"+budgetHeadList[i].room_id+"'></td>";
+				ht+="<td><label id='lb_position"+roomInfoIndex+"'>"+top.getCodeName("BUDGET_ROOM_TYPE",budgetHeadList[i].position)+"</label>"+top.getCodeSelectHtml("BUDGET_ROOM_TYPE","position"+roomInfoIndex,true,budgetHeadList[i].position)+"</td>";
+				//ht+="<td><label id='lb_room_id"+roomInfoIndex+"'>"+budgetHeadList[i].head_id+"</label><input type='hidden' value='"+budgetHeadList[i].head_id+"' id='room_info"+roomInfoIndex+"'></input><input style='width:95%' value='"+budgetHeadList[i].head_id+"' id='head_id"+roomInfoIndex+"'/></td>";
+				ht+="<td><label id='lb_room_name"+roomInfoIndex+"'>"+budgetHeadList[i].room_name+"</label><input id='room_name"+roomInfoIndex+"' value='"+budgetHeadList[i].room_name+"' style='width:95%'/></td>";
+				ht+="<td><label id='lb_earth_area"+roomInfoIndex+"'>"+budgetHeadList[i].earth_area+"</label><input id='earth_area"+roomInfoIndex+"' value='"+budgetHeadList[i].earth_area+"' style='width:95%'/></td>";
+				ht+="<td><label id='lb_wall_area"+roomInfoIndex+"'>"+budgetHeadList[i].wall_area+"</label><input id='wall_area"+roomInfoIndex+"' value='"+budgetHeadList[i].wall_area+"'  style='width:95%'/></td>";
+				ht+="<td><label id='lb_room_height"+roomInfoIndex+"'>"+budgetHeadList[i].room_height+"</label><input id='room_height"+roomInfoIndex+"' value='"+budgetHeadList[i].room_height+"'  style='width:95%'/></td>";
+				ht+="<td id=\"img"+roomInfoIndex+"\" >";
+				ht+="<img src='../../img/edit.gif'  style='cursor:pointer;' title='编辑' onclick='editBudgetHeadInfo(\""+roomInfoIndex+"\")'>&nbsp;<img src='../../img/delete.gif'  style='cursor:pointer;' title='取消' onclick='deleteBudgetInfo(\""+roomInfoIndex+"\")'>";
+				//ht+="<img src='../../img/save.bmp'  style='cursor:pointer;' title='保存' onclick='savePayVioRecord()'>&nbsp;<img src='../../img/delete.gif'  style='cursor:pointer;' title='取消' onclick='deleteBudgetInfo()'>";
+				ht+="</td>";
+				ht+="</tr>";
+				
+				view_ht+="<tr id='view_tr_room_row"+roomInfoIndex+"'  class='tr_data'>";
+				view_ht+="<td id='view_room_id"+roomInfoIndex+"'>"+budgetHeadList[i].room_id+"</td>";
+				view_ht+="<td id='view_positon"+roomInfoIndex+"'>"+top.getCodeName("BUDGET_ROOM_TYPE",budgetHeadList[i].position)+"</td>";
+				view_ht+="<td id='view_room_name"+roomInfoIndex+"'>"+budgetHeadList[i].room_name+"</td>";
+				view_ht+="<td id='view_earth_area"+roomInfoIndex+"'>"+budgetHeadList[i].earth_area+"</td>";
+				view_ht+="<td id='view_wall_area"+roomInfoIndex+"'>"+budgetHeadList[i].wall_area+"</td>";
+				view_ht+="<td id='view_room_height"+roomInfoIndex+"'>"+budgetHeadList[i].room_height+"</td>";
+				view_ht+="</tr>";
+				roomInfoIndex++;
+			}
+			var table=document.getElementById("view_budget_head_list");
+			var edit_table=document.getElementById("edit_budget_head_list");
+			if(table.rows.length>2){
+			  for(var i=2;i<table.rows.length;i++){
+			        table.deleteRow(i);
+					edit_table.deleteRow(i);
+					table.rows.length=table.rows.length-1;
+					edit_table.rows.length=edit_table.rows.length-1;
+					i=i-1;
+			  }
+			}
+			$("#addRooomRow").before(ht);
+			$("#edit_budget_head_list input").hide();
+			$("#edit_budget_head_list select").hide();
+			$("#edit_budget_head_list label").show();
+			$("#view_budget_head_list").append(view_ht);
+			$("#view_budget_head_list").show();
+		}else{
+			$("#view_budget_head_list").show();
+		}
+	
+	}
+    function addBudgetHeadRow(){
+		var view_ht="";
+		var ht="";
+		ht+="<tr id='tr_room_row"+roomInfoIndex+"' class='tr_data'>";
+		ht+="<td><label id='lb_room_id"+roomInfoIndex+"'></label><input type='hidden' value='' id='budget_head_info"+roomInfoIndex+"'></input><input style='width:95%' value='' id='room_id"+roomInfoIndex+"'/></td>";
+		ht+="<td><label id='lb_position"+roomInfoIndex+"'></label>"+top.getCodeSelectHtml("BUDGET_ROOM_TYPE","position"+roomInfoIndex,false)+"</td>";
+		ht+="<td><label id='lb_room_name"+roomInfoIndex+"'></label><input id='room_name"+roomInfoIndex+"' value='' style='width:95%'/></td>";
+		ht+="<td><label id='lb_earth_area"+roomInfoIndex+"'></label><input id='earth_area"+roomInfoIndex+"' value='0' style='width:95%'/></td>";
+		ht+="<td><label id='lb_wall_area"+roomInfoIndex+"'></label><input id='wall_area"+roomInfoIndex+"' value='0'  style='width:95%'/></td>";
+		ht+="<td><label id='lb_room_height"+roomInfoIndex+"'></label><input id='room_height"+roomInfoIndex+"' value='0'  style='width:95%'/></td>";
+		ht+="<td id=\"img"+roomInfoIndex+"\" >";
+		ht+="<img src='../../img/save.bmp'  style='cursor:pointer;' title='保存' onclick='saveBudgetHeadInfo(\""+roomInfoIndex+"\")'>&nbsp;<img src='../../img/delete.gif'  style='cursor:pointer;' title='取消' onclick='deleteBudgetInfo(\""+roomInfoIndex+"\")'>";
+		ht+="</td>";
+		ht+="</tr>";
+		$("#addRooomRow").before(ht);
+		$("#tr_room_row"+roomInfoIndex+" input").show();
+		$("#tr_room_row"+roomInfoIndex+" select").show();
+		$("#tr_room_row"+roomInfoIndex+" label").hide();
+		view_ht+="<tr style='display:none' id='view_tr_room_row"+roomInfoIndex+"'class='tr_data'>";
+		view_ht+="<td id='view_room_id"+roomInfoIndex+"'></td>";
+		view_ht+="<td id='view_positon"+roomInfoIndex+"'></td>";
+		view_ht+="<td id='view_room_name"+roomInfoIndex+"'></td>";
+		view_ht+="<td id='view_earth_area"+roomInfoIndex+"'></td>";
+		view_ht+="<td id='view_wall_area"+roomInfoIndex+"'></td>";
+		view_ht+="<td id='view_room_height"+roomInfoIndex+"'></td>";
+		view_ht+="</tr>";
+		$("#view_budget_head_list").append(view_ht);
+		roomInfoIndex++;
+	  }
+    function editBudgetHeadInfo(index){
+		$("#img"+index).html("<img src='../../img/save.bmp'  style='cursor:pointer;' title='保存' onclick='saveBudgetHeadInfo(\""+index+"\")'>&nbsp;<img src='../../img/delete.gif'  style='cursor:pointer;' title='取消' onclick='deleteBudgetInfo(\""+index+"\")'>");
+		$("#tr_room_row"+index+" input").show();
+		$("#tr_room_row"+index+" select").show();
+		$("#tr_room_row"+index+" label").hide();
+	}
+	function saveBudgetHeadInfo(index){
+		curBudgetHeadIndex=index;
+		var xurl="";
+		var checkMsg = checkBudgetHeadInfo(index);
+		if ( checkMsg != '' ) {
+			top.showInfoWinWarn(checkMsg);
+		    return ;
+		}
+		var aoData=[];
+		//position,room_name,head_id,earth_area,wall_area,room_height,room_id,room_index
+		aoData.push( { "name": "budgetHeadInfo.cust_code", "value": cust_code } );
+		aoData.push( { "name": "budgetHeadInfo.require_id", "value": require_id } );
+		aoData.push( { "name": "budgetHeadInfo.wall_area", "value":  $("#wall_area"+index).val()} );
+		aoData.push( { "name": "budgetHeadInfo.earth_area", "value": $("#earth_area"+index).val()} );
+		aoData.push( { "name": "budgetHeadInfo.room_height", "value": $("#room_height"+index).val() } );
+		aoData.push( { "name": "budgetHeadInfo.position", "value": $("#position"+index).val() } );
+		aoData.push( { "name": "budgetHeadInfo.room_name", "value": $("#room_name"+index).val() } );
+		aoData.push( { "name": "budgetHeadInfo.room_id", "value": $("#room_id"+index).val() } );
+		//aoData.push( { "name": "budgetHeadInfo.room_index", "value": $("#room_index"+index).val() } );
+		if($("#budget_head_info"+index).val()!=''){
+			aoData.push( { "name": "budgetHeadInfo.head_id", "value": $("#budget_head_info"+index).val() } );
+			xurl="/actions/ProjectOrder.action?updateBudgetHeadInfo";
+		}else{
+			xurl="/actions/ProjectOrder.action?insertBudgetHeadInfo";
+		}
+		top.sendAjaxRequest(xurl,aoData,saveBudgetHeadInfoCallback);
+	}
+	//校验表头信息
+	function checkBudgetHeadInfo(index){
+		var msg="";
+	    if ( $("#wall_area"+index).val() != '' && !IsFloat( $("#wall_area"+index).val() )) msg += "[墙面积]应为数字类型<br>";
+	    if ( $("#earth_area"+index).val() != '' && !IsFloat( $("#earth_area"+index).val() )) msg += "[地面积]应为数字类型<br>";
+	    if ( $("#room_height"+index).val() !== '' && !IsFloat( $("#room_height"+index).val() )) msg += "[层高]应为数字类型<br>";
+	    if ( $("#room_id"+index).val() !== '' && !IsNumber( $("#room_id"+index).val() )) msg += "[房间编号]应为数字类型<br>";
+		if ( $("#position"+index).val() == '') msg += "请填写部位字段<br>";
+		if ( $("#room_name"+index).val() == '') msg += "请填写房间名称字段<br>";
+		return msg;
+	}
+	
+	function saveBudgetHeadInfoCallback(obj){
+	 try{
+
+        if ( obj.status == true ){
+             top.showInfoWinOK("操作成功");
+             getBudgetHeadList();
+			 //initBudgetHeadInfo(budgetHeadList);
+			//if(obj.msg&&obj.msg!=''){
+			//	$("#budget_head_info"+curBudgetHeadIndex).val(obj.msg); 
+			//}
+			//$("#room_names").append('<option value="'+$("#budget_head_info"+curBudgetHeadIndex).val()+'">'+$("#room_name"+curBudgetHeadIndex).val()+'</option>');
+			//$("#view_room_names").append('<option value="'+$("#budget_head_info"+curBudgetHeadIndex).val()+'">'+$("#room_name"+curBudgetHeadIndex).val()+'</option>');
+			//$("#lb_position"+curBudgetHeadIndex).html(top.getCodeName("BUDGET_ROOM_TYPE",$("#position"+curBudgetHeadIndex).val()));
+			//$("#lb_room_id"+curBudgetHeadIndex).html($("#room_id"+curBudgetHeadIndex).val());
+			//$("#lb_room_name"+curBudgetHeadIndex).html($("#room_name"+curBudgetHeadIndex).val());
+			//$("#lb_earth_area"+curBudgetHeadIndex).html($("#earth_area"+curBudgetHeadIndex).val());
+			//$("#lb_wall_area"+curBudgetHeadIndex).html($("#wall_area"+curBudgetHeadIndex).val());
+			//$("#lb_room_height"+curBudgetHeadIndex).html($("#room_height"+curBudgetHeadIndex).val());
+			////addBudgetHeadRow(curBudgetHeadIndex);
+			//$("#view_positon"+curBudgetHeadIndex).html(top.getCodeName("BUDGET_ROOM_TYPE",$("#position"+curBudgetHeadIndex).val()));
+			//$("#view_room_id"+curBudgetHeadIndex).html($("#room_id"+curBudgetHeadIndex).val());
+			//$("#view_room_name"+curBudgetHeadIndex).html($("#room_name"+curBudgetHeadIndex).val());
+			//$("#view_earth_area"+curBudgetHeadIndex).html($("#earth_area"+curBudgetHeadIndex).val());
+			//$("#view_wall_area"+curBudgetHeadIndex).html($("#wall_area"+curBudgetHeadIndex).val());
+			//$("#view_room_height"+curBudgetHeadIndex).html($("#room_height"+curBudgetHeadIndex).val());	
+			
+			
+			//$("#img"+curBudgetHeadIndex).html("<img src='../../img/edit.gif'  style='cursor:pointer;' title='编辑' onclick='editBudgetHeadInfo(\""+curBudgetHeadIndex+"\")'>&nbsp;<img src='../../img/delete.gif'  style='cursor:pointer;' title='删除' onclick='deleteBudgetInfo(\""+curBudgetHeadIndex+"\")'>");
+			//$("#tr_room_row"+curBudgetHeadIndex+" input").hide();
+			//$("#tr_room_row"+curBudgetHeadIndex+" select").hide();
+			//$("#tr_room_row"+curBudgetHeadIndex+" label").show();
+			//$("#view_tr_room_row"+curBudgetHeadIndex).show();
+			//$("#view_budget_head_list").show();
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	
+	function deleteBudgetInfo(index){
+		if(!index) {return;}
+		curBudgetHeadIndex=index;
+		top.showConfirm("确定删除该记录吗？", doDeleteBudgetHeadInfo);
+		
+	}
+	function doDeleteBudgetHeadInfo(){
+		if($("#budget_head_info"+curBudgetHeadIndex).val()==''){
+			$("#tr_room_row"+curBudgetHeadIndex).remove();
+			$("#view_tr_room_row"+curBudgetHeadIndex).remove();
+		}else{
+			var aoData=[];
+			aoData.push( { "name": "budgetHeadInfo.head_id", "value": $("#budget_head_info"+curBudgetHeadIndex).val() } );
+			xurl="/actions/ProjectOrder.action?deleteBudgetHeadInfoById";
+			top.sendAjaxRequest(xurl,aoData,deleteBudgetHeadInfoCallback);
+		}
+	}
+	function deleteBudgetHeadInfoCallback(obj){
+	 try{
+        if ( obj.status == true ){
+             top.showInfoWinOK("操作成功");
+			 getBudgetHeadList();
+        }else{
+            isSaveOK = false;
+            top.showInfoWinError("操作失败 "+obj.msg);
+        }
+       }catch(e){
+          top.showInfoWinError("处理异常:"+e.message);
+       }
+	}
+	
+	function saveQuoteDetailinfoCallback(obj){
+	    if ( !isSaveOK ) return ;
+	    try{
+        if ( obj.status == true ){
+            isSaveOK = true;
+        }else{
+            isSaveOK = false;
+        }
+       }catch(e){
+       }
+	}
+	
+	//点击不同标签页，按钮绑定不同触发事件
+    function changBtBind(tabTitle){
+		//工程信息 headInfo itemInfo
+		editModelBt();
+		if(tabTitle=='headInfo'){
+			$("#editBt").attr("onclick","editBudgetInfo()");
+			$("#saveBt").attr("onclick","saveBudgetInfo()");
+			$("#returnBt").attr("onclick","doCancelBudgetInfo()");
+			doCancelBudgetInfo();
+		//报价明细
+		}else if(tabTitle=='itemInfo'){
+			$("#editBt").attr("onclick","editBudgetItem()");
+			$("#returnBt").attr("onclick","doCancelBudgetItem()");
+			$("#saveBt").attr("onclick","saveBudgetItem()");
+			doCancelBudgetItem();
+	}
+		if(is_report=='1'){
+			$("#editBt").hide();
+		}
+	}
+	
+ //保存、编辑、取消按钮隐藏显示
+    function saveModelBt(){
+		$("#saveBt").show();
+		$("#returnBt").show();
+		$("#editBt").hide();
+	}
+    function editModelBt(){
+		$("#saveBt").hide();
+		$("#returnBt").hide();
+		$("#editBt").show();
+		
+    }
+	function openSelectBudgetItemPage(index){
+		choose_index=index;
+		var xurl='';
+		if(index!='0'){
+			xurl="pages/pro09/selectBudgetItemPage.html?opt=replace";
+		}else{
+			xurl="pages/pro09/selectBudgetItemPage.html";
+		}
+		top.openDialog("选择预算项目",xurl,true,800,530,getListCallback);
+	}
+	function getListCallback(){
+	  var ids=top.getTempValue();
+	  var aoData=[];
+	  aoData.push( { "name": "proquoteProduct.product_id", "value": ids } );
+	  top.sendAjaxRequest("/actions/Projectquote.action?getProquoteProductByIds",aoData,getProductIdsCallback);
+	}
+	function getProductIdsCallback(obj){
+		if(obj){
+		var list=obj.aaData;
+			var ht='';
+			var total=0;
+			if(choose_index!=0){
+				total=parseFloat(list[0].unit_price)*parseFloat($("#num"+choose_index).val());
+				total=total+parseFloat(list[0].zhucai_Price)+parseFloat(list[0].fuliao_cost)+parseFloat(list[0].rengong_price)+parseFloat(list[0].sunhao_price);
+				$("#product_id"+choose_index).val(list[0].product_id);
+				$("#product_name"+choose_index).html(list[0].product_name);
+				$("#product_unit"+choose_index).html(top.getCodeName("UNIT",list[0].product_unit));
+				$("#unit_price"+choose_index).html(list[0].unit_price);
+				$("#zhucai_price"+choose_index).html(list[0].zhucai_Price);
+				$("#fuliao_cost"+choose_index).html(list[0].fuliao_cost);
+				$("#rengong_price"+choose_index).html(list[0].rengong_price);
+				$("#sunhao_price"+choose_index).html(list[0].sunhao_price);
+				$("#total_price"+choose_index).html(total);
+				$("#memo"+choose_index).html(list[0].memo);
+				choose_index=0;
+				total=0;
+				return;
+			}
+			/*if(item_index==0){
+				ht+='<tr class="tr_data">';
+				ht+="<td width='5%'>选择</td><td width='6%'>排序</td><td width='10%'>产品名称</td><td width='6%'>修改</td>";
+				ht+="<td width='6%'>单位</td><td width='6%'>单价</td><td width='6%'>数量</td><td width='6%'>主材</td>";
+				ht+="<td width='6%'>辅料</td><td width='6%'>人工</td><td width='6%'>耗损</td>";
+				ht+="<td width='6%'>成本</td><td>工艺做法及材料说明</td>";
+				ht+='</tr>';
+			}*/
+			for(var i=0;i<list.length;i++){
+				item_index++;
+				ht+='<tr class="tr_data">';//head_id,product_id,product_name,product_unit,memo,budget_id,num,sunhao_price,zhucai_price,fuliao_cost,rengong_price,unit_price,total_price,order_num
+				ht+='<td><input type="hidden" id="budget_id'+item_index+'" value=""></input><input type="hidden" id="product_id'+item_index+'" value="'+list[i].product_id+'"></input><input type="checkbox" name="budgetCheackbox" value="'+item_index+'"></input></td>';
+				ht+='<td><input onchange="checkIsNum('+item_index+')" value="0"  type="text" id="order_num'+item_index+'" style="width:50px"></td>';
+				ht+='<td id="product_name'+item_index+'">'+list[i].product_name+'</td>';
+				ht+='<td><div class="buttonDivTwo"><a href="javascript:openSelectBudgetItemPage('+item_index+')">选择</a></div></td>';
+				ht+='<td id="product_unit'+item_index+'">'+top.getCodeName("UNIT",list[i].product_unit)+'</td>';
+				ht+='<td id="unit_price'+item_index+'">'+list[i].unit_price+'</td>';
+				ht+='<td><input onchange="numberChange('+item_index+')" value="0"  type="text" id="num'+item_index+'" style="width:50px"></td>';
+				ht+='<td id="zhucai_price'+item_index+'">'+list[i].zhucai_Price+'</td>';
+				ht+='<td id="fuliao_cost'+item_index+'">'+list[i].fuliao_cost+'</td>';
+				ht+='<td id="rengong_price'+item_index+'">'+list[i].rengong_price+'</td>';
+				ht+='<td id="sunhao_price'+item_index+'">'+list[i].sunhao_price+'</td>';
+				ht+='<td id="total_price'+item_index+'">'+(list[i].zhucai_Price+list[i].sunhao_price+list[i].rengong_price+list[i].fuliao_cost)+'</td>';
+				ht+='<td id="memo'+item_index+'">'+list[i].memo+'</td>';
+				ht+='</tr>';
+			}	
+			$("#itemList").append(ht);
+		}
+	}
+	function checkIsNum(index_num){
+		var msg='';
+		if(index_num!=0){
+			if ( $("#order_num"+index_num).val() != '' && !IsNumber( $("#order_num"+index_num).val() )) msg +="排列序号应是正整数!<br>";
+		}
+		if(msg!=''){
+			 top.showInfoWinWarn(msg);
+			 $("#order_num"+index_num).val(0);
+		}
+	}
+	function numberChange(index_num){
+		var msg='';
+		var total='';
+		if(index_num!=0){
+			if ( $("#num"+index_num).val() != '' && !IsNumber( $("#num"+index_num).val() )) msg +="排列序号应是正整数!<br>";
+			 total=parseFloat($("#zhucai_price"+index_num).html())+parseFloat($("#fuliao_cost"+index_num).html())+parseFloat($("#rengong_price"+index_num).html())+parseFloat($("#sunhao_price"+index_num).html());
+		
+			if(msg!=''){
+				 top.showInfoWinWarn(msg);
+				 $("#num"+index_num).val(0);
+				 $("#total_price"+index_num).html(total);
+			}else{
+				total+=parseFloat($("#num"+index_num).val()*$("#unit_price"+index_num).html());
+				$("#total_price"+index_num).html(total);
+			}
+			
+		}
+	}
+	function getBudgetItemList(){
+	   var aoData=[];
+	   var isShowed=document.getElementById("edit_tab1").style.display;
+	   if(isShowed!='none'){
+			aoData.push( { "name": "budgetItem.head_id", "value": $("#room_names").val() } );
+			$("#view_room_names").val($("#room_names").val());
+	   }else{
+			aoData.push( { "name": "budgetItem.head_id", "value": $("#view_room_names").val() } );
+			$("#room_names").val($("#view_room_names").val());
+	   }
+	   aoData.push( { "name": "budgetItem.require_id", "value": require_id } );
+	   top.sendAjaxRequest("/actions/ProjectOrder.action?getBudgetItemList",aoData,getBudgetItemListCallback);
+	}
+	function getBudgetItemListCallback(obj){
+		if(obj){
+		var list=obj.aaData;
+			var total=0;
+			var ht='';
+			var view_ht='';
+			ht+='<tr class="tr_data">';
+			ht+="<td width='5%'>选择</td><td width='6%'>排序</td><td width='10%'>产品名称</td><td width='6%'>修改</td>";
+			ht+="<td width='6%'>单位</td><td width='6%'>单价</td><td width='6%'>数量</td><td width='6%'>主材</td>";
+			ht+="<td width='6%'>辅料</td><td width='6%'>人工</td><td width='6%'>耗损</td>";
+			ht+="<td width='6%'>成本</td><td>工艺做法及材料说明</td>";
+			ht+='</tr>';
+			
+			view_ht='<tr class="tr_data">';
+			view_ht+="<td width='6%'>排序</td><td width='10%'>产品名称</td>";
+			view_ht+="<td width='6%'>单位</td><td width='6%'>单价</td><td width='6%'>数量</td><td width='6%'>主材</td>";
+			view_ht+="<td width='6%'>辅料</td><td width='6%'>人工</td><td width='6%'>耗损</td>";
+			view_ht+="<td width='6%'>成本</td><td>工艺做法及材料说明</td>";
+			view_ht+='</tr>';
+			for(var i=0;i<list.length;i++){
+				item_index++;
+				total=list[i].unit_price*list[i].num+list[i].rengong_price+list[i].sunhao_price+list[i].fuliao_cost+list[i].zhucai_price;
+				ht+='<tr class="tr_data">';//head_id,product_id,product_name,product_unit,memo,budget_id,num,sunhao_price,zhucai_price,fuliao_cost,rengong_price,unit_price,total_price,order_num
+				ht+='<td><input type="hidden" value="'+list[i].budget_id+'" id="budget_id'+item_index+'"></input><input type="hidden" id="product_id'+item_index+'" value="'+list[i].product_id+'"></input><input type="checkbox" name="budgetCheackbox" value="'+item_index+'"></input></td>';
+				ht+='<td><input onchange="checkIsNum('+item_index+')" value="'+list[i].order_num+'"  type="text" id="order_num'+item_index+'" style="width:50px"></td>';
+				ht+='<td id="product_name'+item_index+'">'+list[i].product_name+'</td>';
+				ht+='<td><div class="buttonDivTwo"><a href="javascript:openSelectBudgetItemPage('+item_index+')">选择</a></div></td>';
+				ht+='<td id="product_unit'+item_index+'">'+list[i].product_unit+'</td>';
+				ht+='<td id="unit_price'+item_index+'">'+list[i].unit_price+'</td>';
+				ht+='<td><input onchange="numberChange('+item_index+')" value="'+list[i].num+'"  type="text" id="num'+item_index+'" style="width:50px"></td>';
+				ht+='<td id="zhucai_price'+item_index+'">'+list[i].zhucai_price+'</td>';
+				ht+='<td id="fuliao_cost'+item_index+'">'+list[i].fuliao_cost+'</td>';
+				ht+='<td id="rengong_price'+item_index+'">'+list[i].rengong_price+'</td>';
+				ht+='<td id="sunhao_price'+item_index+'">'+list[i].sunhao_price+'</td>';
+				ht+='<td id="total_price'+item_index+'">'+total+'</td>';
+				ht+='<td id="memo'+item_index+'">'+list[i].memo+'</td>';
+				ht+='</tr>';
+				//view
+				view_ht+='<tr class="tr_data">';//head_id,product_id,product_name,product_unit,memo,budget_id,num,sunhao_price,zhucai_price,fuliao_cost,rengong_price,unit_price,total_price,order_num
+				view_ht+='<td>'+list[i].order_num+'</td>';
+				view_ht+='<td>'+list[i].product_name+'</td>';
+				view_ht+='<td>'+list[i].product_unit+'</td>';
+				view_ht+='<td>'+list[i].unit_price+'</td>';
+				view_ht+='<td>'+list[i].num+'</td>';
+				view_ht+='<td>'+list[i].zhucai_price+'</td>';
+				view_ht+='<td>'+list[i].fuliao_cost+'</td>';
+				view_ht+='<td>'+list[i].rengong_price+'</td>';
+				view_ht+='<td>'+list[i].sunhao_price+'</td>';
+				view_ht+='<td>'+total+'</td>';
+				view_ht+='<td>'+list[i].memo+'</td>';
+				view_ht+='</tr>';
+				total=0;
+			}
+			$("#itemList").html(ht);
+			$("#viewItemList").html(view_ht);
+		}
+	}
+	function saveBudgetItem(){
+		if(item_index==0){
+			return;
+		}
+		var num_str='';
+		var order_num_str='';
+		var sunhao_price_str='';
+		var zhucai_price_str='';
+		var fuliao_cost_str='';
+		var rengong_price_str='';
+		var unit_price_str='';
+		var total_price_str='';
+		var product_ids='';
+		var budget_ids='';
+		var memos='';
+		var  product_units='';
+		var  product_names='';
+		var isFirst=true;
+		for(var i=1;i<item_index+1;i++){
+			if( document.getElementById("budget_id"+i)){
+			$("#budget_id"+i).val();
+				if(isFirst){
+					if($("#budget_id"+i).val()==''){
+						budget_ids='0';
+					}else{
+						budget_ids=$("#budget_id"+i).val();
+					}
+					num_str=$("#num"+i).val();
+					order_num_str=$("#order_num"+i).val();
+					sunhao_price_str=$("#sunhao_price"+i).html();
+					zhucai_price_str=$("#zhucai_price"+i).html();
+					fuliao_cost_str=$("#fuliao_cost"+i).html();
+					rengong_price_str=$("#rengong_price"+i).html();
+					unit_price_str=$("#unit_price"+i).html();
+					total_price_str=$("#total_price"+i).html();
+					product_ids=$("#product_id"+i).val();
+					memos=$("#memo"+i).html();
+					product_units=$("#product_unit"+i).html();
+					product_names=$("#product_name"+i).html();
+					isFirst=false;
+				}else{
+					if($("#budget_id"+i).val()==''){
+						budget_ids+='>1-1<'+'0';
+					}else{
+						budget_ids+='>1-1<'+$("#budget_id"+i).val();
+					}
+					product_ids+='>1-1<'+$("#product_id"+i).val();
+					num_str+='>1-1<'+$("#num"+i).val();
+					order_num_str+='>1-1<'+$("#order_num"+i).val();
+					sunhao_price_str+='>1-1<'+$("#sunhao_price"+i).html();
+					zhucai_price_str+='>1-1<'+$("#zhucai_price"+i).html();
+					fuliao_cost_str+='>1-1<'+$("#fuliao_cost"+i).html();
+					rengong_price_str+='>1-1<'+$("#rengong_price"+i).html();
+					unit_price_str+='>1-1<'+$("#unit_price"+i).html();
+					total_price_str+='>1-1<'+$("#total_price"+i).html();
+					memos+='>1-1<'+$("#memo"+i).html();
+					product_units+='>1-1<'+$("#product_unit"+i).html();
+					product_names+='>1-1<'+$("#product_name"+i).html();
+				}
+			}
+		}
+		   var aoData=[];
+		   aoData.push( { "name": "budgetItem.cost_code", "value": cust_code } );
+		   aoData.push( { "name": "budgetItem.head_id", "value": $("#room_names").val() } );
+		   aoData.push( { "name": "budgetItem.require_id", "value": require_id } );
+		   aoData.push( { "name": "budgetItem.product_id", "value": product_ids } );
+		   aoData.push( { "name": "budgetItemIds", "value": budget_ids } );
+		   aoData.push( { "name": "budgetItem.memo", "value": memos } );
+		   aoData.push( { "name": "budgetItem.product_unit", "value": product_units } );
+		   aoData.push( { "name": "budgetItem.product_name", "value": product_names } );
+		   aoData.push( { "name": "num_str", "value": num_str } );
+		   aoData.push( { "name": "order_num_str", "value": order_num_str } );
+		   aoData.push( { "name": "sunhao_price_str", "value": sunhao_price_str } );
+		   aoData.push( { "name": "zhucai_price_str", "value": zhucai_price_str } );
+		   aoData.push( { "name": "fuliao_cost_str", "value": fuliao_cost_str } );
+		   aoData.push( { "name": "rengong_price_str", "value": rengong_price_str } );
+		   aoData.push( { "name": "unit_price_str", "value": unit_price_str } );
+		   aoData.push( { "name": "total_prices_str", "value": total_price_str } );
+		   top.sendAjaxRequest("/actions/ProjectOrder.action?insertBudgetItems",aoData,savteBudgetItemCallback);
+	}
+	function savteBudgetItemCallback(obj){
+	 try{
+        if ( obj.status == true ){
+			top.showInfoWinOK("操作成功");
+            getBudgetItemList();
+			doCancelBudgetItem();
+        }else{
+           
+        }
+       }catch(e){
+       }
+	}
+	
+	//生成预算项目
+	function generatorBudgetItem(){
+	   top.showConfirm("确定要生成模板中的预算项目吗？已有的预算项目将会被覆盖!",doGenerateBudgetItem);
+	}
+	//执行生成预算项目
+	function doGenerateBudgetItem(){
+	  if($("#budget_type").val()=="0"){
+	    top.showInfoWinWarn("请先选择预算采用的模板,并将其保存！");return;
+	  }
+	  if(headList==null || headList.length==0){
+	    top.showInfoWinWarn("还未有预算房间类型，请先添加房间！");return;
+	  }
+	  var headIds="";//表头id
+	  var positions="";//房间部位编码
+	  var wall_area="";//墙面积
+	  var land_area="";//地面积
+	  var floor_height="";//层高
+	  for(var i=0;i<headList.length;i++){
+	    if(i>0 && i<headList.length){
+		  headIds+=",";
+		  positions+=",";
+		  wall_area+=",";
+		  land_area+=",";
+		  floor_height+=",";
+		}
+		headIds+=headList[i].head_id;
+		positions+=headList[i].position;
+		wall_area+=headList[i].wall_area;
+		land_area+=headList[i].earth_area;
+		floor_height+=headList[i].room_height;
+	  }
+	  var aoData=[];
+	  aoData.push( {"name":"budget_type","value":$("#budget_type").val()} );
+	  aoData.push( {"name":"headIds","value":headIds} );
+	  aoData.push( {"name":"positions","value":positions} );
+	  aoData.push( {"name":"wall_area","value":wall_area} );
+	  aoData.push( {"name":"land_area","value":land_area} );
+	  aoData.push( {"name":"floor_height","value":floor_height} );
+	  aoData.push( {"name":"custRequire.require_id","value":require_id} );
+	  aoData.push( {"name":"custRequire.cust_code","value":cust_code} );
+	  top.sendAjaxRequest("/actions/ProjectOrder.action?generateBudgetItems",aoData,generatorBudgetItemCallback);
+	}
+	//生成预算项目回调函数
+	function generatorBudgetItemCallback(obj){
+	   if(obj.status==true){
+	      top.showInfoWinOK("操作成功！");
+		  getBudgetItemList();
+	   }else{
+	      top.showInfoWinError("操作失败！");
+	   }
+	}
+	</script>
+	</head>
+	<body width="97%"><br/>
+		<div id="tabs">
+			<ul>
+				<li>
+					<a onclick="changBtBind('headInfo')" href="#tabs-0"><span>表头</span>
+					</a>
+				</li>
+				<li>
+					<a onclick="changBtBind('itemInfo')" href="#tabs-1"><span>预算项目</span>
+					</a>
+				</li>
+			</ul>
+			<img src="image/return.png" title="取消" onclick="doCancelBudgetInfo()" style="margin-right:17px;float:right;cursor:pointer;display:inline-block;position:relative;top:-24px;right:0px;display:none;" id="returnBt" />
+			<img src="image/save.png" title="保存" onclick="saveBudgetInfo()" style="margin-right:17px;float:right;cursor:pointer;display:inline-block;position:relative;top:-18px;right:0px;display:none;" id="saveBt" />
+			<img src="image/edit.gif" title="编辑" onclick="editBudgetInfo()" style="margin-right:17px;float:right;cursor:pointer;display:inline-block;position:relative;top:-18px;right:0px;" id="editBt" />
+			
+		</div>
+		<div id="tabs-0">
+			<div id="edit_tab0" style="display:none">
+			
+				<table border="0" cellpadding="3" cellspacing="1" width="98%" align="center" style="background-color: #b9d8f3;border-collapse:collapse;">
+				    <tr class="tr_data" height="25px">
+						<td align="center" colspan="8" class="td_css">客户信息</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="10%" align="center" class="table_property_title td_css">客户编号：</td>
+						<td width="15%" align="left" id="cust_code" class="td_css"></td>
+						<td width="10%" align="center" class="table_property_title td_css">客户姓名：</td>
+						<td width="15%" align="left" id="cust_name" class="td_css"></td>
+						<td width="10%" align="center" class="table_property_title td_css">地址：</td>
+						<td align="left" id="addr_all" colspan="3" class="td_css"></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="10%" class="table_property_title td_css" style="border-bottom:0px;">电话：</td>
+						<td align="left" id="cust_mobile" class="td_css" style="border-bottom:0px;"></td>
+						<td width="10%" class="table_property_title td_css" style="border-bottom:0px;">房屋类型：</td>
+						<td align="left" id="position" class="td_css" style="border-bottom:0px;"></td>
+						<td width="10%" class="table_property_title td_css" style="border-bottom:0px;">户型：</td>
+						<td width="15%" align="left" class="td_css" style="border-bottom:0px;">
+							<span id="room_count" style="padding:5px"></span>室
+							<span id="hall_count" style="padding:5px"></span>厅
+							<span id="bath_count" style="padding:5px"></span>卫
+						</td>
+						<td width="15%" class="table_property_title td_css" style="border-bottom:0px;">施工面积（平方）：</td>
+						<td align="left" id="usable_area" class="td_css" style="border-bottom:0px;"></td>
+					</tr>
+				</table>
+				<table border="0" cellpadding="3" cellspacing="1" width="98%" align="center" style="background-color: #b9d8f3;border-collapse:collapse;">
+					<tr class="tr_data" height="25px">
+						<td colspan="8" class="td_css">预算信息</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="10%" class="table_property_title td_css">预算时间：</td>
+						<td width="15%" align="left" id="budget_time" class="td_css"></td>
+						<td width="10%" class="table_property_title td_css">模板:</td>
+						<td width="15%" align="left" id="td_budget_type" class="td_css"></td>
+						<td width="10%" class="table_property_title td_css">预算人：</td>
+						<td align="left" colspan="3" id="budget_person" class="td_css"></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title td_css">管理费类型：</td>
+						<td align="left" id="td_manager_fee_type" class="td_css"></td>
+						<td class="table_property_title td_css">管理费(元)：</td>
+						<td align="left"><input type="text" id="manager_fee" style="width:120px" class="td_css"/></td>
+						<td width="10%" class="table_property_title td_css">税金比例：</td> 
+						<td width="15%" align="left" class="td_css"><input type="text" id="taxes_scale" style="width:70px" value='0'/></td>
+						<td align="center" colspan="2" class="td_css"><input type="checkbox" id="is_report">是否上报</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title td_css" style="border-bottom:0px;">优惠信息：</td>
+						<td align="left" colspan="3" class="td_css" style="border-bottom:0px;"><textarea style="width:99%" rows="4" id="prefer_info"></textarea></td>
+						<td class="table_property_title td_css" colspan="2" style="border-bottom:0px;">优惠金额（合同后）：</td>
+						<td align="left" class="td_css" style="border-bottom:0px;"><input type="text" size="10" id="prefer_money"/></td>
+						<td class="td_css" style="border-bottom:0px;" align="center"><div class="buttonDivSix"><a href="javascript:void(0)" onclick="generatorBudgetItem()">生成预算项目</a></div></td>
+					</tr>
+				</table>
+				<table id="edit_budget_head_list" border="0" cellpadding="3" cellspacing="1" width="98%" align="center" style="background-color: #b9d8f3;border-top: 0;border-bottom: 0;">
+					<tr class="tr_data" height="25px">
+						<td align="center" colspan="8">房间部位</td>
+					</tr>
+					<tr class='tr_data'>
+						<td width="17%">房间编号</td>
+						<td width="18%">房间类型</td>
+						<td width="18%">房间名称</td>
+						<td width="12%">地面积(平方米)</td>
+						<td width="12%">墙面积(平方米)</td>
+						<td width="12%">层高(米)</td>
+						<td >操作</td>
+					</tr>
+					<tr class='tr_data' id="addRooomRow">
+						<td colspan='6'></td><td><img src='../../img/add.gif'  style='cursor:pointer' title='添加' onclick='addBudgetHeadRow()'></td>
+					</tr>
+				</table>
+				<table id="table_examine"  border="0" cellpadding="3" cellspacing="1" width="98%" align="center" style="background-color: #b9d8f3;border-collapse:collapse;display:none;">
+						
+						<tr  height="35px" class="tr_data">
+							<td class="table_property_title td_css" width="20%" style="border-top:0px;">审核状态</td>
+							<td align="left"  id="td_examine_status" width="30%" align="left" class="td_css" style="border-top:0px;">待审核</td>
+							<td class="table_property_title td_css" width="20%"style="border-top:0px;">审核意见</td>
+							<td align="left"  class="td_css" width="30%" style="border-top:0px;"><textarea  style="width:500px" rows = "3" id="examine_suggest"></textarea></td>
+						</tr>
+						<tr  height="35px" id="tr_examine_user" style="display:none" class="tr_data" >
+							<td width="20%" class="table_property_title td_css" >审核人</td>
+							<td width="30%" align="left"  class="td_css" ><span id="examine_person"></span></td>
+							<td width="20%" class="table_property_title td_css"  height = "35px" >审核时间</td>
+							<td width="30%" align="left" class="td_css"><span id="examine_time"></span></td>
+						</tr>
+						<tr  id="tr_submit" class="tr_data" >
+							<td align="right" colspan="2" class="td_css" style="margin-left:40px;">
+								<div class="buttonDivTwo">
+									<a href="javascript:examineBudgetInfo(1)">通过</a>
+								</div>
+							</td>
+							<td align="left" colspan="2" class="td_css" style="margin-left:40px;">
+								<div class="buttonDivTwo">
+									<a href="javascript:examineBudgetInfo(2)">不通过</a>
+								</div>
+							</td>
+						</tr>
+					</table>
+			</div>
+			<div id="view_tab0">
+					
+				<table border="0" cellpadding="3" cellspacing="1" width="98%" align="center" style="background-color: #b9d8f3;border-collapse:collapse;">
+				    <tr class="tr_data" height="25px">
+						<td align="center" colspan="8" class="td_css">客户信息</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="100px" align="center" class="table_property_title td_css">客户编号：</td>
+						<td align="left" id="view_cust_code" class="td_css"></td>
+						<td width="100px" align="center" class="table_property_title td_css">客户姓名：</td>
+						<td align="left" id="view_cust_name" class="td_css"></td>
+						<td width="100px" align="center" class="table_property_title td_css">地址：</td>
+						<td align="left" id="view_addr_all" colspan="3" class="td_css"></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="10%"class="table_property_title td_css" style="border-bottom:0px;">电话：</td>
+						<td width="15%"align="left" id="view_cust_mobile" class="td_css" style="border-bottom:0px;"></td>
+						<td width="10%"class="table_property_title td_css" style="border-bottom:0px;">房屋类型：</td>
+						<td width="15%"align="left" id="view_room_type" class="td_css" style="border-bottom:0px;"></td>
+						<td width="10%"class="table_property_title td_css" style="border-bottom:0px;">户型：</td>
+						<td width="15%"align="left" class="td_css" style="border-bottom:0px;">
+							<span id="view_room_count" style="padding:5px"></span>室
+							<span id="view_hall_count" style="padding:5px"></span>厅
+							<span id="view_bath_count" style="padding:5px"></span>卫
+						</td>
+						<td width="15%" align="center" class="table_property_title td_css" style="border-bottom:0px;">施工面积（平方）：</td>
+						<td align="left" id="view_usable_area" class="td_css" style="border-bottom:0px;"></td>
+					</tr>
+				</table>
+				<table border="1" cellpadding="3" cellspacing="1" width="98%" align="center" style="background-color: #b9d8f3;border-collapse:collapse;">
+					<tr class="tr_data" height="25px">
+						<td colspan="8" class="td_css">预算信息</td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title td_css">预算时间：</td>
+						<td align="left" id="view_budget_time" class="td_css"></td>
+						<td class="table_property_title td_css">模板：</td>
+						<td align="left" id="view_budget_type" class="td_css"></td>
+						<td class="table_property_title td_css">预算人：</td>
+						<td align="left" colspan="3" id="view_budget_person" class="td_css"></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td width="10%"class="table_property_title td_css">管理费类型：</td>
+						<td width="15%"align="left" id="view_manager_fee_type" class="td_css"></td>
+						<td width="10%"class="table_property_title td_css">管理费：</td>
+						<td width="15%" align="left" id="view_manager_fee" class="td_css">元</td>
+						<td width="10%" class="table_property_title td_css">税金比例：</td>
+						<td width="15%" align="left" class="td_css"><span id="view_taxes_scale" ></span></td>
+						<td width="10%" class="table_property_title td_css">是否上报:</td>
+						<td width="15%" align="left" class="td_css" id="view_is_report"></td>
+					</tr>
+					<tr class="tr_data" height="25px">
+						<td class="table_property_title td_css" style="border-bottom:0px;">优惠信息：</td>
+						<td align="left" colspan="4" id="view_prefer_info" class="td_css" style="border-bottom:0px;"></td>
+						<td colspan="2" class="table_property_title td_css" style="border-bottom:0px;">优惠金额（合同后）：</td>
+						<td align="left" id="view_prefer_money" class="td_css" style="border-bottom:0px;"></td>
+					</tr>
+				</table>
+					<table id="view_budget_head_list" border="0" cellpadding="3" cellspacing="1" width="98%" align="center" style="background-color: #b9d8f3;border-top: 0;border-bottom: 0;">
+						<tr class="tr_data" height="25px">
+							<td align="center" colspan="6">房间部位</td>
+						</tr>
+						<tr class='tr_data'>
+							<td width="20%">房间编号</td>
+							<td width="21%">房间类型</td>
+							<td width="20%">房间名称</td>
+							<td width="13%">地面积(平方米)</td>
+							<td width="13%">墙面积（平方米）</td>
+							<td width="13%">层高（米）</td>
+						</tr>
+					</table>
+					<table id="view_table_examine" border="0" cellpadding="3" cellspacing="1" width="98%" align="center" style="background-color: #b9d8f3;border-collapse:collapse;display:none">
+						<tr  class="tr_data"><td colspan="6" align="center" class="td_css" style="border-top:0px;">审核信息</td></tr>
+						<tr class="tr_data">
+							<td width="20%" class="table_property_title td_css">审核状态：</td>
+							<td width="30%" id="view_examine_status" align="left" class="td_css"></td>
+							<td class="table_property_title td_css" width="20%">审核意见：</td>
+							<td align="left"  id="view_examine_suggest" class="td_css" width="30%"></td>
+						</tr>
+						<tr  class="tr_data">
+							<td width="20%" class="table_property_title td_css">审核人：</td>
+							<td width="30%" align="left" class="td_css"><span id="view_examine_person"></span></td>
+							<td width="20%" class="table_property_title td_css" height = "35px" >审核时间：</td>
+							<td align="left" width="30%" id="view_examine_time" class="td_css"></td>
+						</tr>
+					</table>
+			</div>
+		</div>
+		<div id="tabs-1">
+			<div id="edit_tab1" style="display:none">
+				<table border="0" cellpadding="3" cellspacing="1" width="98%" align="center" style="background-color: #b9d8f3;border-collapse:collapse;">
+				<tr class="tr_data">
+					<td class="td_css" style="border-bottom:0px;">房间部位：</td><td id="td_room_names" class="td_css" style="border-bottom:0px;"></td>
+					<td class="td_css" style="border-bottom:0px;">
+						<div class="buttonDivTwo">
+									<a href="javascript:openSelectBudgetItemPage('0')">添加</a>
+						</div>
+					</td>
+					<td class="td_css" style="border-bottom:0px;">
+						<div class="buttonDivTwo">
+									<a href="javascript:deleteBudgetItem()">删除</a>
+						</div>
+					</td>
+					<td class="td_css" style="border-bottom:0px;">
+						<div class="buttonDivTwo">
+									<a href="javascript:saveBudgetItem()">保存</a>
+						</div>
+					</td>
+					<td width="400px" class="td_css" style="border-bottom:0px;"></td>
+				</tr>
+				</table>
+				<table id='itemList' border="0" cellpadding="3" cellspacing="1" width="98%" align="center" style="background-color: #b9d8f3;">
+					
+				</table>	
+			</div>
+			<div id="view_tab1">
+			<table border="0" cellpadding="3" cellspacing="1" width="98%" align="center" style="background-color: #b9d8f3;border-collapse:collapse;">
+				<tr class="tr_data">
+					<td width="120px" class="td_css" style="border-bottom:0px;">房间部位：</td><td  width="120px" id="view_td_room_names" class="td_css" style="border-bottom:0px;"></td>
+					<td class="td_css" style="border-bottom:0px;"></td>
+				</tr>
+				</table>
+				<table id='viewItemList' border="0" cellpadding="3" cellspacing="1" width="98%" align="center" style="background-color: #b9d8f3;">
+			</div>
+		</div>
+	</body>
+</html>

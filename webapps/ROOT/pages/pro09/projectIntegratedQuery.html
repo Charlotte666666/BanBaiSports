@@ -1,0 +1,168 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="../../css/redmond/jquery-ui-1.8.16.custom.css">
+		<link rel="stylesheet" type="text/css" href="../../css/comm.css">
+		<link rel="stylesheet" type="text/css" href="../../css/commBg.css">
+		<script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+		<script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+<style type="text/css">
+   table th{
+     padding: 3px;
+	 margin: 0px;
+	 list-style-type: none;
+	 border-top-style: none;
+	 border-right-style: none;
+	 border-bottom-style: none;
+	 border-left-style: none;
+	 font-weight: normal;
+   }
+</style>
+<script type="text/javascript" charset="utf-8">
+	var queryCtlMark=1;//查询条件显示收缩标志变量
+	
+	$(document).ready(function() {
+	    $("#dataDiv").height( $(window).height() - 150 );
+	 
+	    $("#tdproject_manager").html(top.getUserListByRole('project_manager','project_manager',true));
+		doQuery();
+	 });
+	
+	function doQuery(){
+	   var aoData=[];
+	   aoData.push( {"name":"projectOrder.project_manager","value":$("#project_manager").val()} );
+	   top.sendAjaxRequest("/actions/ProjectOrder.action?getProjectIntegratedQuery",aoData,queryDataCallBack);
+	}
+	
+	function queryDataCallBack(obj){
+	   var content="";
+
+	   if(obj.status==true){
+	     var o=obj.body;
+		 if(o){
+		    for(var i=0;i<o.length;i++){
+			   content+="<tr class='tr_data'><td rowspan='3' style='width:100px;word-wrap:break-word;word-break:break-all;;'><a href='javascript:void(0)' style='cursor:pointer;text-decoration:none;' onclick='top.openCustDetailPage(\""+o[i].cust_code+"\",\"0-0\",\"query\")'>"+o[i].cust_name+"</a></td>";
+			   content+="<td rowspan='3' style='width:170px;word-wrap:break-word;word-break:break-all;;'>"+o[i].cust_tel+"</td>";
+			   content+="<td rowspan='3' style='width:150px;word-wrap:break-word;word-break:break-all;'>"+o[i].pro_addr+"</td>";
+			   content+="<td rowspan='3' style='width:100px;word-wrap:break-word;word-break:break-all;'>"+top.getUserNameByCode(o[i].designer)+"</td>";
+			   content+="<td rowspan='3' style='width:100px;word-wrap:break-word;word-break:break-all;'>"+top.getTimeStr(o[i].project_fact_begin_date,true)+"</td>";
+			   content+="<td rowspan='3' style='width:100px;word-wrap:break-word;word-break:break-all;'>"+top.getTimeStr(o[i].project_fact_finish_date,true)+"</td>";
+			   content+="<td rowspan='3' style='width:20px;word-wrap:break-word;word-break:break-all;'>&nbsp;</td>";
+			   content+="<td rowspan='3' style='width:20px;word-wrap:break-word;word-break:break-all;'>&nbsp;</td>";
+			   content+="<td rowspan='3' style='width:20px;word-wrap:break-word;word-break:break-all;'>&nbsp;</td>";
+			   content+="<td style='width:90px;word-wrap:break-word;word-break:break-all;'>"+o[i].designMoney+"</td>";
+			   content+="<td style='width:90px;word-wrap:break-word;word-break:break-all;'>"+o[i].contractMoney+"</td>";
+			   content+="<td style='width:90px;word-wrap:break-word;word-break:break-all;'>"+o[i].firstMoney+"</td>";
+			   content+="<td style='width:90px;word-wrap:break-word;word-break:break-all;' >"+o[i].middleMoney+"</td>";
+			   content+="<td style='width:90px;word-wrap:break-word;word-break:break-all;'>"+o[i].thirdMoney+"</td>";
+			   content+="<td style='width:90px;word-wrap:break-word;word-break:break-all;'>"+o[i].finishedMoney+"</td>";
+			   content+="<td style='width:90px;word-wrap:break-word;word-break:break-all;'>"+o[i].productOrderMoney+"</td>";
+			   content+="</tr>";
+			   content+="<tr class='tr_data'>";
+			   content+="<td style='width:90px;color:blue;word-wrap:break-word;word-break:break-all;'>"+o[i].designChangeMoney+"</td>";
+			   content+="<td style='width:90px;color:blue;word-wrap:break-word;word-break:break-all;'>"+(o[i].firstChangeMoney+o[i].secondChangeMoney+o[i].thirdChangeMoney+o[i].finalChangeMoney)+"</td>";
+			   content+="<td style='width:90px;color:blue;word-wrap:break-word;word-break:break-all;'>"+o[i].firstChangeMoney+"</td>";
+			   content+="<td style='width:90px;color:blue;word-wrap:break-word;word-break:break-all;'>"+o[i].secondChangeMoney+"</td>";
+			   content+="<td style='width:90px;color:blue;word-wrap:break-word;word-break:break-all;'>"+o[i].thirdChangeMoney+"</td>";
+			   content+="<td style='width:90px;color:blue;word-wrap:break-word;word-break:break-all;'>"+o[i].finalChangeMoney+"</td>";
+			   content+="<td style='width:90px;color:blue;word-wrap:break-word;word-break:break-all;'>"+(-o[i].productBackMoney)+"</td>";
+			   content+="</tr>";
+			   content+="<tr class='tr_data'>";
+			   content+="<td style='width:90px;color:red;word-wrap:break-word;word-break:break-all;'>"+o[i].designFactMoney+"</td>";
+			   content+="<td style='width:90px;color:red;word-wrap:break-word;word-break:break-all;'>"+o[i].contracFactMoney+"</td>";
+			   content+="<td style='width:90px;color:red;word-wrap:break-word;word-break:break-all;'>"+o[i].firstFactMoney+"</td>";
+			   content+="<td style='width:90px;color:red;word-wrap:break-word;word-break:break-all;'>"+o[i].middleFactMoney+"</td>";
+			   content+="<td style='width:90px;color:red;word-wrap:break-word;word-break:break-all;'>"+o[i].thirdFactMoney+"</td>";
+			   content+="<td style='width:90px;color:red;word-wrap:break-word;word-break:break-all;'>"+o[i].finishedFactMoney+"</td>";
+			   content+="<td style='width:90px;color:red;word-wrap:break-word;word-break:break-all;'>"+o[i].productMoney+"</td>";
+			   content+="</tr>";
+			}
+		 }
+	   }
+	   $("#projectList").html(content);
+	}
+	
+ //查询条件的展开与收缩
+ function dwOup(){
+	if(queryCtlMark==0){//展开
+		$("#queryCtlIcon").attr("src","../../img/icons/arrow-up.gif"); 
+		$("#queryTab").slideToggle();
+		queryCtlMark=1;
+	}else{//收缩
+		$("#queryCtlIcon").attr("src","../../img/icons/arrow-down.gif"); 
+		$("#queryTab").slideToggle();
+		queryCtlMark=0;
+	}
+ }
+ 
+ function openCustDetail(cust_code){
+   //alert(cust_code);
+ }
+</script>
+	</head>
+	<body>
+	<div style='border: 1px solid #89A1B9;'>
+				<table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
+					<tr bgcolor="#C6DEFF">
+						<td align="left" width="150px">
+							&nbsp;工程综合查询&nbsp;
+						</td>
+						<td align="right">
+							&nbsp;
+						</td>
+						<td align="right">
+							<span><image id="queryCtlIcon" src="../../img/icons/arrow-up.gif" alt="展开" onclick="javascript:dwOup();"/></span>
+						</td>
+						<td width="2px">
+							&nbsp;
+						</td>
+					</tr>
+				</table>
+				<table width="100%" align="center" cellpadding="1px" id="queryTab" cellspacing="1px" border="0">
+					<tr class="tr_data">
+						<td align="right">项目经理</td>
+						<td id="tdproject_manager" align="left" style="width:120px;"></td>
+						<td align="left" width="100">
+						    <div class="buttonDivTwo">
+								<a href="javascript:doQuery()">查询</a>
+							</div>
+						</td>
+						<td align="left" style="width:700px;">
+						  <span style="font-weight:bold;">数据含义：黑色【合同金额、产品订单】、蓝色【工程变更金额、产品退款】、红色【已付金额】</span>
+						</td>
+					</tr>
+				</table>
+			</div>
+		<table cellpadding="0" cellspacing="2px" border="1" style="margin-left:12px;table-layout:fixed;">
+		    <thead>
+				 <tr class="tr_data" style="background-color: #b9d8f3;">	
+				    <td rowspan="2" style='width:100px;word-wrap:break-word;word-break:break-all;'>客户姓名</td>
+					<td rowspan="2" style='width:170px;word-wrap:break-word;word-break:break-all;'>电话</td>
+					<td rowspan="2" style='width:150px;word-wrap:break-word;word-break:break-all;'>地址</td>
+					<td rowspan="2" style='width:100px;word-wrap:break-word;word-break:break-all;'>设计师</td>
+					<td rowspan="2" style='width:100px;word-wrap:break-word;word-break:break-all;'>开工时间</td>
+					<td rowspan="2" style='width:100px;word-wrap:break-word;word-break:break-all;'>竣工时间</td>
+					<th colspan="3" style='word-wrap:break-word;word-break:break-all;'>售后服务</th>
+					<th colspan="7" style='word-wrap:break-word;word-break:break-all;'>财务收入(元)</th>
+				 </tr>
+				 <tr class="tr_data" style="background-color: #b9d8f3;">	
+					<th style='width:20px;word-wrap:break-word;word-break:break-all;'>投诉</th>
+					<th style='width:20px;word-wrap:break-word;word-break:break-all;'>维修</th>
+					<th style='width:20px;word-wrap:break-word;word-break:break-all;'>表扬</th>
+					<th style='width:90px;word-wrap:break-word;word-break:break-all;'>设计合同</th>
+					<th style='width:90px;word-wrap:break-word;word-break:break-all;'>主材合同</th>
+					<th style='width:90px;word-wrap:break-word;word-break:break-all;'>首期款</th>
+					<th style='width:90px;word-wrap:break-word;word-break:break-all;'>二期款</th>
+					<th style='width:90px;word-wrap:break-word;word-break:break-all;'>三期款</th>
+					<th style='width:90px;word-wrap:break-word;word-break:break-all;'>尾款</th>
+					<th style='width:90px;word-wrap:break-word;word-break:break-all;'>产品款</th>
+				 </tr>
+		    </thead>
+	    </table>
+		<div id="dataDiv" style="margin: 1px;padding:0;height:500px;background-color:#ffffff;overflow: auto;">
+		  <table cellpadding="0" cellspacing="2px" border="1" id="projectList" style="margin-left:12px;table-layout:fixed;">
+	      </table>
+		</div>
+	</body>
+</html>

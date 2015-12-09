@@ -1,0 +1,318 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="../../css/comm.css">
+  <link rel="stylesheet" type="text/css" href="../../css/fileuploader.css">	
+  <script type="text/javascript" language="javascript" src="../../js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/jquery-ui-1.8.16.custom.min.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/checkForm.js"></script>
+  <script type="text/javascript" language="javascript" src="../../js/fileuploader.js"></script>
+  <script type="text/javascript" language="JavaScript1.2" src="../../js/Calendar3.js"></script>
+ 
+  <script type="text/javascript">
+   var isSaveOK=false;
+   var optType="";
+   var gfileId = "";
+   var gfileType="";
+   var gfileName = "";
+   var gstatus = "";
+   var gfilePath = "";
+   var gfileTime = "";
+   var uploader = null;
+   var confirmRefresh=false;
+   var timeStamp=0;
+ 
+   $(document).ready(function() {
+        try{
+		  optType=top.getUrlParam(document.URL,"opt");
+		  gfileId=top.getUrlParam(document.URL,"fileId");
+		  gfileType=top.getUrlParam(document.URL,"fileType");
+		  gfileName= decodeURI( top.getUrlParam(document.URL,"fileName") );
+		  gstatus =top.getUrlParam(document.URL,"status");
+		  gfilePath = decodeURI( top.getUrlParam(document.URL,"filePath") );
+		  gfileTime = top.getUrlParam(document.URL,"fileTime");
+		  if ( !gfileTime ) gfileTime = '';
+		  if ( gfileTime != '' ) {
+		    gfileTime = top.getTimeStr( gfileTime );
+			gfileTime = gfileTime.substring(0,10);
+			$("#q_time1").val( gfileTime );
+		  }
+		}catch(e){
+		}
+		if ( optType == 'create' ) {
+		  $( "#tdStatus" ).html( top.getCodeSelectHtml("CMA_FILE_STATUS","status",false) );
+		  $( "#tdFileType" ).html( top.getCodeSelectHtml("CMA_FILE_TYPE","fileType",false) );
+		  top.getSystemCurrentTime( getSystemTimeCallback );
+		  $('#createFileDiv').show();
+		  $('#q_year_span').html( top.get5YearSelectHtml("q_year",false) );
+		} else {
+		  $('#createFileDiv').hide();
+		  $( "#tdStatus" ).html( top.getCodeSelectHtml("CMA_FILE_STATUS","status",false, gstatus) );
+		  $( "#tdFileType" ).html( top.getCodeSelectHtml("CMA_FILE_TYPE","fileType",false, gfileType) );
+		  var filePath = top.decodeParamURL( gfilePath );
+		  if ( filePath.indexOf("http://") == -1 ) {
+		      $( "#tdFilePath" ).html("<a href='"+top.getUrlBase()+"/download?filePath="+filePath+"&fileName="+ top.getDownloadFileName( filePath )+"' >"+top.getDownloadFileName(filePath)+"</a>");
+		  } else {
+		      $( "#tdFilePath" ).html("<a href='"+filePath+"' >" + filePath.substring( filePath.indexOf("filePath=")+9 ) + "</a>");
+		  }
+		  $( "#fileName" ).val( gfileName );
+		}
+		var d=new Date();
+	    timeStamp=d.getTime();
+		createUploader();
+   } );
+   
+   function createUploader(){
+            uploader = new qq.FileUploader({
+                element: document.getElementById('file-uploader-demo1'),
+                action: top.getUrlBase()+"/uploadFile",
+                debug: false,
+				disableDefaultDropzone: false,
+                extraDropzones: [qq.getByClass(document, 'qq-upload-extra-drop-area')[0]],
+				onUpload: function(id, fileName, xhr){
+				  addFileInput( fileName );
+				},
+				onProgress: function(id, fileName, loaded, total){
+				  setUploadFilePercent( fileName, loaded, total );
+				},
+				onComplete:function(id, fileName, responseJSON){
+				 try{
+				  setUploadFileStatus(fileName,responseJSON.success);
+				  if ( !responseJSON.success ) {
+				    var msg="";
+					if ( responseJSON.error == 'Exist' ) msg='文件已存在，请修改文件名后再上传。';
+					if ( msg != '' ) top.showInfoWinWarn("文件上传失败:"+msg);
+				  }
+				 }catch(e){}
+				},
+				onError: function(id, fileName, reason) {
+				 try{
+				  setUploadFileStatus(fileName,responseJSON.success);
+				 }catch(e){}
+				}
+            });
+    }
+	
+	function addFileInput(fileName){
+       gfileName = fileName;
+    }
+   
+   function setUploadFileStatus(isOK){
+	 if ( isOK ) {
+	      if ( gfilePath.indexOf("http://") == -1 ) {
+		      $( "#tdFilePath" ).html("<a href='"+top.getUrlBase()+"/download?filePath="+ gfileName+"&fileName="+top.getDownloadFileName( gfilePath )+"' >"+top.getDownloadFileName(gfilePath)+"</a>");
+		  } else {
+		      $( "#tdFilePath" ).html("<a href='"+gfileName+"' >" + gfilePath.substring( gfilePath.indexOf("filePath=")+9 ) + "</a>");
+		  }
+		  var d=new Date();
+	      timeStamp=d.getTime();
+	 }
+   }
+	
+	function getFileName( fileName ) {
+	     var subfix="";
+		 var ind=fileName.indexOf(".");
+		 if ( ind != -1 ) {
+		   subfix = fileName.substring(ind, fileName.length);
+		 }
+	     gfilePath = timeStamp + "_" + fileName;
+		 return timeStamp + "_" + subfix;
+	}
+ 
+   function doBeforeClose(){
+     var obj={
+    		  "isSaveOK":isSaveOK
+    		};
+     top.setTempValue(obj);
+   }
+   function doCancel(){
+	   top.closeDialog();
+   }
+   function doSubmit(){
+	 var aoData=[];
+	 var checkMsg = checkForm();
+	 if ( checkMsg != '' ) {
+	     top.showInfoWinWarn(checkMsg);
+         return ;
+	 }
+	 aoData.push( { "name": "time1", "value":$("#q_time1").val() } );
+     aoData.push( { "name": "file.fileId", "value": gfileId } );
+     aoData.push( { "name": "file.fileName", "value": $("#fileName").val() } );
+     aoData.push( { "name": "file.status", "value": $("#status").val() } );
+	 aoData.push( { "name": "file.filePath", "value": gfilePath } );
+     aoData.push( { "name": "file.fileType", "value": $("#fileType").val() } );
+	 
+	 var url = "/actions/ProCma.action?updateCmaFile";
+	 if ( optType == 'create' ) url = "/actions/ProCma.action?insertCmaFile";
+     top.showLoadingInfo(true);
+	 top.sendAjaxRequest(url,aoData,optCallback);
+   }
+   
+   function doCreate(){
+     var aoData=[];
+	 var timeType="M";
+	 var mon_or_sea = $("#q_mon_or_sea").val();
+	 if ( mon_or_sea == 's1' ) {
+	    mon_or_sea = 1;
+		timeType="S";
+	 } else if ( mon_or_sea == 's2' ) {
+	    mon_or_sea = 2;
+		timeType="S";
+	 } else if ( mon_or_sea == 's3' ) {
+	    mon_or_sea = 3;
+		timeType="S";
+	 } else if ( mon_or_sea == 's4' ) {
+	    mon_or_sea = 4;
+		timeType="S";
+	 }
+	 aoData.push( { "name": "time1", "value":$("#q_time1").val() } );
+     aoData.push( { "name": "timeType", "value": timeType } );
+     aoData.push( { "name": "year", "value": $("#q_year").val() } );
+	 if ( timeType=="S" ) {
+	   aoData.push( { "name": "season", "value": mon_or_sea } );
+	 } else if ( timeType=="M" ) {
+       aoData.push( { "name": "month", "value": mon_or_sea } );
+	 }
+	 if ( confirmRefresh ) {
+	    aoData.push( { "name": "eleCode", "value": "ReCreate" } );
+	 }
+	 var url = "/actions/ProCmaReport.action?createReportStatData";
+	 top.showLoadingInfo(true);
+	 top.sendAjaxRequest(url,aoData,optCreateCallback);
+   }
+   
+   function checkForm(){
+     var msg = "";
+     var temp = "";
+	 temp = document.getElementById("fileName").value;
+	 if ( temp == '' ) {
+	   msg += "请输入标题<br>";
+	 }
+	 if ( gfilePath == '' ) {
+	   msg += "请上传附件<br>";
+	 }
+     return msg;
+   }
+   
+   function getSystemTimeCallback(obj){
+	   try{
+	    if ( obj.status == true ){
+	      gfileId = obj.body;
+	    }else{
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+   function optCallback(obj){
+       top.showLoadingInfo(false);
+	   try{
+	    if ( obj.status == true ){
+	      isSaveOK = true;
+	      top.showInfoWinOK("操作成功");
+	    }else{
+	      isSaveOK = false;
+	      top.showInfoWinError("操作失败 "+obj.msg);
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+   function optCreateCallback(obj){
+       top.showLoadingInfo(false);
+	   try{
+	    confirmRefresh=false;
+	    if ( obj.status == true ){
+	      top.showInfoWinOK("操作成功");
+		  isSaveOK=true;
+	    }else{
+	      if ( obj.msg == "EXIST" ) {
+		    top.showConfirm('该评估报告已经存在，是否需要重新生成？', doCreateFileYes);
+		  } else {
+		    top.showInfoWinError("操作失败");
+		  }
+	    }
+	   }catch(e){
+		  top.showInfoWinError("处理异常:"+e.message);
+	   }
+   }
+   
+   function doCreateFileYes(){
+      confirmRefresh=true;
+	  doCreate();
+   }
+  </script> 
+
+<style>
+.rounded {
+	margin: 10px;
+	padding: 10px;
+	width:450px;
+	border: 2px solid #89A1B9;
+	-moz-border-radius: 12px;
+	-webkit-border-radius: 12px;
+	border-radius: 12px;
+	overflow: auto;
+}
+</style>
+</head>
+<body>
+<br>
+<table width="100%" border="0" padding="0" spacing="0">
+ <tr>
+    <td align="right">标题(<font color="red">*</font>):</td>
+    <td align="left"><input type="txt" id="fileName" value="" style="width:350px" size="25" /></td>
+ </tr>
+ <tr>
+    <td width="20%" align="right">类型:</td>
+    <td width="70%" align="left" id="tdFileType" ></td>
+ </tr>
+ <tr>
+    <td align="right">状态:</td>
+    <td align="left" id="tdStatus"></td>
+ </tr>
+ <tr>
+    <td align="right">发布日期:</td>
+    <td align="left"><input type="text" id="q_time1" value="" onclick="new Calendar().show(this);" style="width:80px" size="15" />
+	&nbsp;默认取服务器当前时间</td>
+ </tr>
+ <tr>
+    <td align="right">附件:</td>
+    <td align="left" id="tdFilePath"></td>
+ </tr>
+ <tr>
+    <td align="center" colspan="2" >
+	 <div class="qq-upload-extra-drop-area"></div>
+	 <div id="file-uploader-demo1"></div>
+	</td>
+ </tr>
+</table>
+<p align="right">
+   <table><tr>
+		    <td><span id="okBtn" class="buttonTwo"><a href="javascript:doSubmit()">提交</a></span></td>
+		    <td><span id="cancelBtn" class="buttonTwo"><a href="javascript:doCancel()">关闭</a></span></td>
+   </tr></table>
+</p>
+<br/>
+<br/>
+<div id="createFileDiv" class="rounded">
+  <table><tr><td width="350px">
+    生成<span id="q_year_span"></span>年<select id="q_mon_or_sea">
+	  <option value="s1">第一季度</option>
+	  <option value="s2">第二季度</option>
+	  <option value="s3">第三季度</option>
+	  <option value="s4">第四季度</option>
+	  <option value="1">1月份</option><option value="2">2月份</option>
+	  <option value="3">3月份</option><option value="4">4月份</option>
+	  <option value="5">5月份</option><option value="6">6月份</option>
+	  <option value="7">7月份</option><option value="8">8月份</option>
+	  <option value="9">9月份</option><option value="10">10月份</option>
+	  <option value="11">11月份</option><option value="12">12月份</option>
+	</select>的评估报告</td>
+	<td align="center"><span class="buttonTwo"><a href="javascript:doCreate()">生成</a></span></td></tr></table>
+</div>
+</body>
+</html>
