@@ -288,5 +288,71 @@
     send_name,request_content,id,recv_id,send_id,request_time,status
     from tbl_friend_request where (recv_id=#{recv_id} and send_id=#{send_id}) or (send_id=#{recv_id} and recv_id=#{send_id})
   </select>
+  
+  <insert id="insertFriendGroup" parameterType="FriendGroup">
+    INSERT INTO tbl_friend_group (group_name,id,create_user)
+    VALUES (#{group_name}, #{id}, #{create_user})
+  </insert>
+
+  <update id="updateFriendGroup" parameterType="FriendGroup">
+    update tbl_friend_group set 
+    group_name=#{group_name} 
+    where id=#{id}
+  </update>
+
+  <select id="getFriendGroupList" parameterType="map" resultType="FriendGroup">
+    select 
+    group_name,id,create_user
+    from tbl_friend_group where create_user=#{create_user}
+    order by group_name
+  </select>
+  
+  <select id="getFriendGroupListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_friend_group where 1=1 
+    <if test="o.group_name != '' and o.group_name != null" >
+      and group_name=#{o.group_name}
+    </if>
+    <if test="o.create_user != -1" >
+      and create_user=#{o.create_user}
+    </if>
+  </select>
+
+  <select id="getFriendGroupPageList" parameterType="map" resultType="FriendGroup">
+    select 
+    group_name,id,create_user
+    from tbl_friend_group where 1=1 
+    <if test="o.group_name != '' and o.group_name != null" >
+      and group_name=#{o.group_name}
+    </if>
+    <if test="o.create_user != -1" >
+      and create_user=#{o.create_user}
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+  
+  <select id="getGroupListByUser" parameterType="map" resultType="FriendGroup">
+    select 
+      group_name,id 
+    from tbl_friend_group where id in ( select group_id from tbl_group_user where user_id=#{user_id} )
+  </select>
+  
+  <insert id="insertGroupUser" parameterType="GroupUser">
+    INSERT INTO tbl_group_user (group_id,user_id)
+    VALUES (#{group_id}, #{user_id})
+  </insert>
+
+  <delete id="deleteGroupUser" parameterType="GroupUser">
+    delete from tbl_group_user where group_id=#{group_id} and user_id=#{user_id}
+  </delete>
+
+  <select id="getUserListByGroup" parameterType="map" resultType="GroupUser">
+    select 
+    group_id,user_id
+    from tbl_group_user where group_id=#{group_id}
+  </select>
 
 </mapper>

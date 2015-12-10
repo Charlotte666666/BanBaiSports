@@ -8065,3 +8065,8 @@ INFO 2015-12-08 16:11:31 [com.helpyouworkeasy] -Load ProCache Quartz Job:{"statu
 INFO 2015-12-08 16:11:31 [com.helpyouworkeasy] -Load ProCache Quartz Job:{"status":true,"msg":""} 
 INFO 2015-12-09 16:11:31 [com.helpyouworkeasy] -Load ProCache Quartz Job:{"status":true,"msg":""} 
 INFO 2015-12-09 16:11:31 [com.helpyouworkeasy] -Load ProCache Quartz Job:{"status":true,"msg":""} 
+INFO 2015-12-10 11:08:58 [com.helpyouworkeasy] -SYSTEM_UPLOAD_DIR=/ 
+INFO 2015-12-10 11:08:58 [com.helpyouworkeasy] -SYSTEM_DOWNLOAD_DIR=/ 
+INFO 2015-12-10 11:08:58 [com.helpyouworkeasy] -SYSTEM_METACONFIG_DIR= 
+INFO 2015-12-10 11:09:02 [com.helpyouworkeasy] -Load ProCache Quartz Job:{"status":false,"msg":""} 
+INFO 2015-12-10 11:09:02 [com.helpyouworkeasy] -Load ProCache Quartz Job:{"status":false,"msg":""} 

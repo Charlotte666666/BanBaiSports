@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.helpyouworkeasy.persistence.SmallScheduleMapper">
+
+  <insert id="insertSmallSchedule" parameterType="SmallSchedule">
+    INSERT INTO tbl_small_schedule (title,addr,img_url,team1_url,team2_url,id,create_user,create_time,op_leader_id,rule_type,inning_count,win_score,max_score,sort_type,status,invite_team,score_1,score_2)
+    VALUES (#{title}, #{addr}, #{img_url}, #{team1_url}, #{team2_url}, #{id}, #{create_user}, #{create_time}, #{op_leader_id}, #{rule_type}, #{inning_count}, #{win_score}, #{max_score}, #{sort_type}, #{status}, #{invite_team}, #{score_1}, #{score_2})
+  </insert>
+
+  <update id="updateSmallSchedule" parameterType="SmallSchedule">
+    update tbl_small_schedule set 
+    title=#{title},addr=#{addr},img_url=#{img_url},team1_url=#{team1_url},team2_url=#{team2_url},op_leader_id=#{op_leader_id},rule_type=#{rule_type},inning_count=#{inning_count},win_score=#{win_score},max_score=#{max_score},sort_type=#{sort_type},status=#{status},invite_team=#{invite_team},score_1=#{score_1},score_2=#{score_2}
+    where id=#{id}
+  </update>
+
+  <select id="getSmallScheduleListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_small_schedule where 1=1 
+    <if test="o.title != '' and o.title != null" >
+      and title=#{o.title}
+    </if>
+    <if test="o.create_user != -1" >
+      and create_user=#{o.create_user}
+    </if>
+    <if test="o.op_leader_id != -1" >
+      and op_leader_id=#{o.op_leader_id}
+    </if>
+    <if test="o.rule_type != -1" >
+      and rule_type=#{o.rule_type}
+    </if>
+    <if test="o.status != -1" >
+      and status=#{o.status}
+    </if>
+    <if test="time1 != -1" >
+      and create_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=create_time
+    </if>
+  </select>
+
+  <select id="getSmallSchedulePageList" parameterType="map" resultType="SmallSchedule">
+    select 
+    title,addr,img_url,team1_url,team2_url,id,create_user,create_time,op_leader_id,rule_type,inning_count,win_score,max_score,sort_type,status,invite_team,score_1,score_2
+    from tbl_small_schedule where 1=1 
+    <if test="o.title != '' and o.title != null" >
+      and title=#{o.title}
+    </if>
+    <if test="o.create_user != -1" >
+      and create_user=#{o.create_user}
+    </if>
+    <if test="o.op_leader_id != -1" >
+      and op_leader_id=#{o.op_leader_id}
+    </if>
+    <if test="o.rule_type != -1" >
+      and rule_type=#{o.rule_type}
+    </if>
+    <if test="o.status != -1" >
+      and status=#{o.status}
+    </if>
+    <if test="time1 != -1" >
+      and create_time>=#{time1}
+    </if>
+    <if test="time2 != -1" >
+      and #{time2}>=create_time
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+  
+  <select id="getSmallScheduleById" parameterType="map" resultType="SmallSchedule">
+    select 
+    title,addr,img_url,team1_url,team2_url,id,create_user,create_time,op_leader_id,rule_type,inning_count,win_score,max_score,sort_type,status,invite_team,score_1,score_2
+    from tbl_small_schedule where id=#{id}
+  </select>
+  
+  <insert id="insertSmallScheduleMember" parameterType="SmallScheduleMember">
+    INSERT INTO tbl_small_schedule_member (player_name,img_url,id,schedule_id,player_id,seeded_player)
+    VALUES (#{player_name}, #{img_url}, #{id}, #{schedule_id}, #{player_id}, #{seeded_player})
+  </insert>
+
+  <update id="updateSmallScheduleMember" parameterType="SmallScheduleMember">
+    update tbl_small_schedule_member set 
+    player_name=#{player_name},img_url=#{img_url},schedule_id=#{schedule_id},player_id=#{player_id},seeded_player=#{seeded_player}
+    where id=#{id}
+  </update>
+
+  <select id="getSmallScheduleMemberListCount" parameterType="map" resultType="int">
+    select count(*) as value 
+    from tbl_small_schedule_member where 1=1 
+    <if test="o.player_id != -1" >
+      and player_id=#{o.player_id}
+    </if>
+    <if test="o.schedule_id != -1" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+  </select>
+
+  <select id="getSmallScheduleMemberPageList" parameterType="map" resultType="SmallScheduleMember">
+    select 
+    player_name,img_url,id,schedule_id,player_id,seeded_player
+    from tbl_small_schedule_member where 1=1 
+    <if test="o.player_id != -1" >
+      and player_id=#{o.player_id}
+    </if>
+    <if test="o.schedule_id != -1" >
+      and schedule_id=#{o.schedule_id}
+    </if>
+  <if test="orderName != '' " >
+    order by ${orderName} ${orderAZ}
+  </if>
+  limit #{pageStart},#{pageSize}
+  </select>
+
+  
+
+</mapper>
